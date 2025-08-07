@@ -1,0 +1,179 @@
+# 功能分支推送時自動創建 PR 並執行 CI 檢查
+name: Feature Branch PR & CI
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'fix/**'
+      - 'hotfix/**'
+      - 'refactor/**'
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: write
+
+jobs:
+  create-pr:
+    name: 創建 Pull Request
+    runs-on: ubuntu-latest
+    outputs:
+      pr-number: ${{ steps.create-pr.outputs.pr_number }}
+      pr-created: ${{ steps.create-pr.outputs.pr_created }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Pull Request to develop
+        id: create-pr
+        uses: repo-sync/pull-request@v2
+        with:
+          source_branch: ${{ github.ref_name }}
+          destination_branch: develop
+          pr_title: '🚀 ${{ github.ref_name }} → develop'
+          pr_body: |
+            ## 功能分支 Pull Request
+
+            **來源分支：** `${{ github.ref_name }}`  
+            **目標分支：** `develop`  
+            **建立時間：** ${{ github.event.head_commit.timestamp }}
+
+            ### 變更內容
+            - ${{ github.event.head_commit.message }}
+
+            ### 檢查項目
+            - [ ] Lint 檢查
+            - [ ] 測試通過
+            - [ ] 程式碼審查完成
+
+            ---
+            🤖 此 PR 通過所有檢查後將自動合併到 develop 分支
+          pr_label: 'feature'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  ci-checks:
+    name: CI 檢查 (Lint & Test)
+    runs-on: ubuntu-latest
+    needs: create-pr
+    if: needs.create-pr.outputs.pr-created == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Lint
+        run: |
+          echo "🔍 執行 Lint 檢查..."
+          npm run lint
+          echo "✅ Lint 檢查通過"
+
+      - name: Run Tests
+        run: |
+          echo "🧪 執行測試..."
+          npm test
+          echo "✅ 測試通過"
+
+      - name: Run Build Test
+        run: |
+          echo "🏗️ 執行建置測試..."
+          npm run build
+          echo "✅ 建置成功"
+
+      - name: Comment PR Success
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: ${{ needs.create-pr.outputs.pr-number }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## ✅ CI 檢查通過
+              
+              所有檢查項目都已通過：
+              - ✅ Lint 檢查
+              - ✅ 測試執行
+              - ✅ 建置測試
+              
+              🎉 準備自動合併到 develop 分支！
+              
+              ---
+              🤖 由 GitHub Actions 自動檢查`
+            });
+
+      - name: Comment PR Failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: ${{ needs.create-pr.outputs.pr-number }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## ❌ CI 檢查失敗
+              
+              請檢查並修復以下問題：
+              - 檢查 Lint 錯誤
+              - 確認測試是否通過
+              - 驗證建置是否成功
+              
+              修復後推送新的 commit 將重新觸發檢查。
+              
+              ---
+              🤖 由 GitHub Actions 自動檢查`
+            });
+
+  auto-merge:
+    name: 自動合併到 develop
+    runs-on: ubuntu-latest
+    needs: [create-pr, ci-checks]
+    if: needs.ci-checks.result == 'success'
+
+    steps:
+      - name: Auto merge PR
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PAT_TOKEN }} # 使用 PAT 代替 GITHUB_TOKEN
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ needs.create-pr.outputs.pr-number }}
+            });
+
+            if (pr.mergeable && pr.state === 'open') {
+              await github.rest.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: ${{ needs.create-pr.outputs.pr-number }},
+                commit_title: `Auto merge: ${pr.title}`,
+                commit_message: `自動合併 ${pr.head.ref} 到 develop\n\n通過 CI 檢查後自動合併`,
+                merge_method: 'squash'
+              });
+              
+              console.log('✅ 成功自動合併到 develop 分支');
+            }
+
+      - name: Trigger develop-to-main workflow
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PAT_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'develop-to-main.yml',
+              ref: 'develop'
+            });
+            console.log('✅ 已觸發 develop-to-main 工作流程');

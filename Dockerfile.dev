@@ -1,0 +1,19 @@
+FROM node:20-alpine3.19
+
+WORKDIR /app
+
+# 複製 package 檔案
+COPY package*.json ./
+COPY tsconfig.json ./
+
+# 安裝所有相依套件（包含開發相依套件）
+RUN npm ci
+
+# 複製原程式碼
+COPY . .
+
+# 暴露埠號
+EXPOSE 8080
+
+# 使用 nodemon 來實現熱重載
+CMD ["npx", "nodemon", "--exec", "ts-node", "./bin/www.ts"]

@@ -1,0 +1,50 @@
+# develop 分支自動創建 PR 到 main
+name: Develop to Main PR
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch: # 支援手動觸發
+  repository_dispatch: # 支援從其他工作流程觸發
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  create-main-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get current time
+        id: time
+        run: echo "current_time=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request to main
+        uses: repo-sync/pull-request@v2
+        with:
+          source_branch: develop
+          destination_branch: main
+          pr_title: '🚀 Release: develop → main'
+          pr_body: |
+            ## 發布 Pull Request
+
+            **來源分支：** `develop`  
+            **目標分支：** `main`  
+            **建立時間：** ${{ steps.time.outputs.current_time }}
+
+            ### 說明
+            此 PR 包含 develop 分支的最新變更，準備發布到 main 分支。
+
+            ### 檢查項目
+            - [ ] 功能測試完成
+            - [ ] 程式碼審查完成
+            - [ ] 準備發布
+
+            ---
+            🤖 請手動檢查後合併到 main 分支
+          pr_label: 'release'
+          github_token: ${{ secrets.GITHUB_TOKEN }}

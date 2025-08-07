@@ -1,0 +1,40 @@
+# 建構輸出
+dist/
+build/
+
+# 相依套件
+node_modules/
+
+# 日誌文件
+*.log
+logs/
+
+# 環境變數文件
+.env
+.env.local
+.env.development.local
+.env.test.local  
+.env.production.local
+
+# Docker 相關
+Dockerfile*
+docker-compose*.yml
+
+# 資料庫遷移文件
+migrations/
+
+# 測試覆蓋率報告
+coverage/
+
+# IDE 配置
+.vscode/
+.idea/
+
+# JavaScript 文件（如果您只想檢查 TypeScript）
+*.js
+!jest.config.js
+!.eslintrc.js
+
+# 臨時文件
+*.tmp
+*.temp

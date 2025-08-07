@@ -1,0 +1,28 @@
+# 建構輸出
+dist/
+build/
+
+# 相依套件
+node_modules/
+
+# 日誌文件
+*.log
+logs/
+
+# 環境變數文件
+.env*
+
+# Docker 相關
+Dockerfile*
+docker-compose*.yml
+
+# 資料庫遷移文件
+migrations/
+
+# 測試覆蓋率報告
+coverage/
+
+# 套件鎖定文件
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
