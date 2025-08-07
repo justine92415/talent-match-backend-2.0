@@ -4,11 +4,6 @@ import dbConfig from './db'
 import webConfig from './web'
 import secretConfig from './secret'
 
-// 只有在非 production 環境下才載入 .env 檔
-if (process.env.NODE_ENV !== 'production') {
-  const result = dotenv.config()
-}
-
 const config: Config = {
   db: dbConfig,
   web: webConfig,
