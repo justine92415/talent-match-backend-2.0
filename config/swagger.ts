@@ -96,9 +96,13 @@ const swaggerDefinition = {
   }
 }
 
+// 根據環境決定檔案副檔名
+const isDevelopment = process.env.NODE_ENV !== 'production'
+const fileExtension = isDevelopment ? 'ts' : 'js'
+
 const options = {
   definition: swaggerDefinition,
-  apis: ['./routes/*.ts', './controllers/*.ts', './app.ts']
+  apis: [`./routes/*.${fileExtension}`, `./controllers/*.${fileExtension}`, `./app.${fileExtension}`]
 }
 
 export const swaggerSpec = swaggerJSDoc(options)
