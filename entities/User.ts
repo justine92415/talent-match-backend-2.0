@@ -16,7 +16,7 @@ export class User {
   google_id!: string
 
   /** 使用者真實姓名 */
-  @Column({ length: 100 })
+  @Column({ length: 100, nullable: true })
   name!: string
 
   /** 使用者暱稱 */
@@ -28,7 +28,7 @@ export class User {
   email!: string
 
   /** 密碼（加密後） */
-  @Column({ length: 255 })
+  @Column({ length: 255, nullable: true })
   password!: string
 
   /** 生日 */
