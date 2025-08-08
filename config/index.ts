@@ -4,6 +4,9 @@ import dbConfig from './db'
 import webConfig from './web'
 import secretConfig from './secret'
 
+// 載入環境變數
+dotenv.config()
+
 const config: Config = {
   db: dbConfig,
   web: webConfig,

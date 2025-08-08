@@ -9,7 +9,7 @@ export default {
   collectCoverageFrom: ['**/*.ts', '!**/*.d.ts', '!**/index.ts', '!**/node_modules/**', '!**/dist/**', '!**/tests/**'],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
-  setupFilesAfterEnv: [],
+  setupFilesAfterEnv: ['<rootDir>/tests/jest-setup.ts'],
   moduleFileExtensions: ['ts', 'js', 'json'],
   testTimeout: 10000,
   verbose: true
