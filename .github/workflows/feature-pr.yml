@@ -59,6 +59,22 @@ jobs:
     needs: create-pr
     if: needs.create-pr.outputs.pr-created == 'true'
 
+    # 🔧 新增 PostgreSQL 服務
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -78,17 +94,27 @@ jobs:
           npm run lint
           echo "✅ Lint 檢查通過"
 
+      # 🔧 修改測試步驟，加入環境變數
       - name: Run Tests
         run: |
           echo "🧪 執行測試..."
           npm test
           echo "✅ 測試通過"
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'test_jwt_secret_for_ci' }}
+          PORT: 3001
 
       - name: Run Build Test
         run: |
           echo "🏗️ 執行建置測試..."
           npm run build
           echo "✅ 建置成功"
+        env:
+          NODE_ENV: production
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'test_jwt_secret_for_ci' }}
 
       - name: Comment PR Success
         if: success()
@@ -103,7 +129,7 @@ jobs:
               
               所有檢查項目都已通過：
               - ✅ Lint 檢查
-              - ✅ 測試執行
+              - ✅ 測試執行 (包含資料庫測試)
               - ✅ 建置測試
               
               🎉 準備自動合併到 develop 分支！
@@ -124,11 +150,15 @@ jobs:
               body: `## ❌ CI 檢查失敗
               
               請檢查並修復以下問題：
-              - 檢查 Lint 錯誤
-              - 確認測試是否通過
-              - 驗證建置是否成功
+              - 🔍 檢查 Lint 錯誤
+              - 🧪 確認測試是否通過 (包含資料庫連接)
+              - 🏗️ 驗證建置是否成功
               
               修復後推送新的 commit 將重新觸發檢查。
+              
+              **常見問題排除：**
+              - 資料庫連接錯誤：檢查測試中的資料庫查詢語法
+              - 環境變數問題：確認 .env.test 配置正確
               
               ---
               🤖 由 GitHub Actions 自動檢查`
@@ -158,7 +188,7 @@ jobs:
                 repo: context.repo.repo,
                 pull_number: ${{ needs.create-pr.outputs.pr-number }},
                 commit_title: `Auto merge: ${pr.title}`,
-                commit_message: `自動合併 ${pr.head.ref} 到 develop\n\n通過 CI 檢查後自動合併`,
+                commit_message: `自動合併 ${pr.head.ref} 到 develop\n\n✅ 通過所有 CI 檢查後自動合併\n- Lint 檢查通過\n- 測試執行成功\n- 建置測試完成`,
                 merge_method: 'squash'
               });
               
