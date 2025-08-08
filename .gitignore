@@ -117,3 +117,5 @@ ConventionalCommits.md
 git-init.sh
 git-push.sh
 specs/*.md
+.github/instructions
+.github/prompts
