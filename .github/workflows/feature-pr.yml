@@ -125,6 +125,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # 🔧 新增：重置資料庫確保乾淨狀態
+      - name: Reset Database
+        run: |
+          echo "🗃️ 重置測試資料庫..."
+          # 等待 PostgreSQL 服務完全啟動
+          sleep 2
+          # 刪除並重新建立測試資料庫以確保乾淨狀態
+          PGPASSWORD=test_password psql -h localhost -U test_user -d postgres -c "DROP DATABASE IF EXISTS test_db;"
+          PGPASSWORD=test_password psql -h localhost -U test_user -d postgres -c "CREATE DATABASE test_db;"
+          echo "✅ 資料庫重置完成"
+        env:
+          PGPASSWORD: test_password
+
       - name: Run Lint
         run: |
           echo "🔍 執行 Lint 檢查..."
@@ -154,10 +167,11 @@ jobs:
       - name: Run Tests
         run: |
           echo "🧪 執行測試..."
-          npm test
+          npm test -- --runInBand --forceExit
           echo "✅ 測試通過"
         env:
           NODE_ENV: test
+          CI: true
           DB_HOST: localhost
           DB_PORT: 5432
           DB_USERNAME: test_user
@@ -165,7 +179,7 @@ jobs:
           DB_DATABASE: test_db
           DB_SYNCHRONIZE: true
           DB_ENABLE_SSL: false
-          JWT_SECRET: ${{ secrets.JWT_SECRET || 'test_jwt_secret_for_ci' }}
+          JWT_SECRET: 'test_jwt_secret_for_ci_testing_only'
           PORT: 3001
 
       - name: Run Build Test
@@ -182,7 +196,7 @@ jobs:
           DB_DATABASE: test_db
           DB_SYNCHRONIZE: false
           DB_ENABLE_SSL: false
-          JWT_SECRET: ${{ secrets.JWT_SECRET || 'test_jwt_secret_for_ci' }}
+          JWT_SECRET: 'test_jwt_secret_for_ci_build_only'
 
       - name: Comment PR Success
         if: success()

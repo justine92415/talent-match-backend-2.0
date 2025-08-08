@@ -41,7 +41,9 @@ export const dataSource = new DataSource({
   password: config.get<string>('db.password'),
   database: config.get<string>('db.database'),
   synchronize: config.get<boolean>('db.synchronize'),
-  poolSize: 10,
+  // 🔧 在測試環境中使用 dropSchema 來確保乾淨狀態
+  dropSchema: process.env.NODE_ENV === 'test',
+  poolSize: process.env.NODE_ENV === 'test' ? 5 : 10, // 測試環境使用較少連線
   entities: [
     User,
     City,
@@ -76,5 +78,16 @@ export const dataSource = new DataSource({
     AdminUser,
     CourseApplication
   ],
-  ssl: config.get<boolean>('db.ssl') ? { rejectUnauthorized: false } : false
+  ssl: config.get<boolean>('db.ssl') ? { rejectUnauthorized: false } : false,
+  // 🔧 新增：測試環境的額外設定
+  extra:
+    process.env.NODE_ENV === 'test'
+      ? {
+          // 測試環境使用較短的連線超時
+          connectionTimeoutMillis: 5000,
+          idleTimeoutMillis: 5000,
+          // 防止連線池問題
+          max: 5
+        }
+      : {}
 })

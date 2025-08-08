@@ -1,25 +1,23 @@
 import request from 'supertest'
 import app from '../../../app'
-import { clearDatabase } from '../../helpers/database'
+import { clearDatabase, initTestDatabase, closeTestDatabase } from '../../helpers/database'
 import { RegisterRequest } from '../../../types/auth'
 import { dataSource } from '../../../db/data-source'
 
 describe('Auth Login API', () => {
   beforeAll(async () => {
-    if (!dataSource.isInitialized) {
-      await dataSource.initialize()
-    }
-  })
+    // 初始化測試資料庫連線
+    await initTestDatabase()
+  }, 30000) // 增加超時時間
 
   afterAll(async () => {
-    if (dataSource.isInitialized) {
-      await dataSource.destroy()
-    }
-  })
+    // 關閉資料庫連線
+    await closeTestDatabase()
+  }, 30000) // 增加超時時間
 
   beforeEach(async () => {
     await clearDatabase()
-  })
+  }, 15000) // 增加超時時間
 
   describe('POST /api/auth/login', () => {
     it('使用有效 email 和密碼應成功登入', async () => {
