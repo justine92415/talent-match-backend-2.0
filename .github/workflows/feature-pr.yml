@@ -82,6 +82,13 @@ jobs:
         if: steps.get-pr.outputs.pr_exists == 'false' && steps.create-pr.outputs.pr_number
         run: echo "pr_number=${{ steps.create-pr.outputs.pr_number }}" >> $GITHUB_OUTPUT
 
+      - name: 顯示 PR 資訊 (除錯用)
+        run: |
+          echo "🔍 PR 資訊："
+          echo "  - PR 是否已存在: ${{ steps.get-pr.outputs.pr_exists }}"
+          echo "  - PR 編號: ${{ steps.get-pr.outputs.pr_number }}"
+          echo "  - 分支名稱: ${{ github.ref_name }}"
+
   ci-checks:
     name: CI 檢查 (Lint & Test)
     runs-on: ubuntu-latest
@@ -123,7 +130,26 @@ jobs:
           npm run lint
           echo "✅ Lint 檢查通過"
 
-      # 🔧 修改測試步驟，加入環境變數
+      # 🔧 修改測試步驟，使用您應用程式實際的環境變數
+      - name: 顯示環境資訊 (除錯用)
+        run: |
+          echo "🔍 環境資訊："
+          echo "  - Node.js 版本: $(node --version)"
+          echo "  - NPM 版本: $(npm --version)"
+          echo "  - NODE_ENV: $NODE_ENV"
+          echo "  - DB_HOST: $DB_HOST"
+          echo "  - DB_USERNAME: $DB_USERNAME"
+          echo "  - DB_DATABASE: $DB_DATABASE"
+        env:
+          NODE_ENV: test
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USERNAME: test_user
+          DB_PASSWORD: test_password
+          DB_DATABASE: test_db
+          DB_SYNCHRONIZE: true
+          DB_ENABLE_SSL: false
+
       - name: Run Tests
         run: |
           echo "🧪 執行測試..."
@@ -131,7 +157,13 @@ jobs:
           echo "✅ 測試通過"
         env:
           NODE_ENV: test
-          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USERNAME: test_user
+          DB_PASSWORD: test_password
+          DB_DATABASE: test_db
+          DB_SYNCHRONIZE: true
+          DB_ENABLE_SSL: false
           JWT_SECRET: ${{ secrets.JWT_SECRET || 'test_jwt_secret_for_ci' }}
           PORT: 3001
 
@@ -142,7 +174,13 @@ jobs:
           echo "✅ 建置成功"
         env:
           NODE_ENV: production
-          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USERNAME: test_user
+          DB_PASSWORD: test_password
+          DB_DATABASE: test_db
+          DB_SYNCHRONIZE: false
+          DB_ENABLE_SSL: false
           JWT_SECRET: ${{ secrets.JWT_SECRET || 'test_jwt_secret_for_ci' }}
 
       - name: Comment PR Success
