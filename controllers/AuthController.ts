@@ -14,8 +14,6 @@ export class AuthController {
   static async register(req: Request<{}, {}, RegisterRequest>, res: Response) {
     try {
       const { nick_name, email, password } = req.body
-
-      // 參數驗證
       const errors: Record<string, string[]> = {}
 
       // 檢查必填欄位
@@ -124,6 +122,116 @@ export class AuthController {
       })
     } catch (error) {
       console.error('註冊錯誤:', error)
+      return res.status(500).json({
+        status: 'error',
+        message: '系統錯誤，請稍後再試'
+      })
+    }
+  }
+
+  /**
+   * 使用者登入
+   */
+  static async login(req: Request, res: Response) {
+    try {
+      const { email, password } = req.body
+      const errors: Record<string, string[]> = {}
+
+      // 必填欄位驗證
+      if (!email || email.trim() === '') {
+        errors.email = ['請輸入有效的電子郵件格式']
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errors.email = ['請輸入有效的電子郵件格式']
+      }
+      if (!password || password.trim() === '') {
+        errors.password = ['密碼為必填欄位']
+      }
+      if (Object.keys(errors).length > 0) {
+        return res.status(400).json({
+          status: 'error',
+          message: '登入失敗',
+          errors
+        })
+      }
+
+      // 查詢使用者
+      const userRepository = dataSource.getRepository(User)
+      const user = await userRepository.findOne({ where: { email: email.trim().toLowerCase() } })
+      if (!user || !user.password) {
+        return res.status(401).json({
+          status: 'error',
+          message: '登入失敗',
+          errors: { credentials: ['電子郵件或密碼錯誤'] }
+        })
+      }
+
+      // 檢查帳號狀態
+      if (user.account_status === AccountStatus.DEACTIVATED) {
+        return res.status(403).json({
+          status: 'error',
+          message: '帳號停用',
+          errors: { account: ['您的帳號已被停用，請聯絡客服'] }
+        })
+      }
+
+      // 密碼比對
+      const isMatch = await bcrypt.compare(password, user.password)
+      if (!isMatch) {
+        return res.status(401).json({
+          status: 'error',
+          message: '登入失敗',
+          errors: { credentials: ['電子郵件或密碼錯誤'] }
+        })
+      }
+
+      // 產生 JWT/Refresh Token
+      const jwtSecret = process.env.JWT_SECRET || 'your-secret-key'
+      const accessToken = jwt.sign(
+        {
+          sub: user.uuid,
+          user_id: user.id,
+          role: user.role,
+          account_status: user.account_status
+        },
+        jwtSecret,
+        { expiresIn: '1h' }
+      )
+      const refreshToken = jwt.sign(
+        {
+          sub: user.uuid,
+          user_id: user.id,
+          token_type: 'refresh'
+        },
+        jwtSecret,
+        { expiresIn: '30d' }
+      )
+
+      // 更新最後登入時間
+      user.last_login_at = new Date()
+      await userRepository.save(user)
+
+      // 回傳成功
+      return res.status(200).json({
+        status: 'success',
+        message: '登入成功',
+        data: {
+          user: {
+            id: user.id,
+            uuid: user.uuid,
+            nick_name: user.nick_name,
+            email: user.email,
+            role: user.role,
+            account_status: user.account_status,
+            created_at: user.created_at?.toISOString()
+          },
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          token_type: 'Bearer',
+          expires_in: 3600
+        }
+      })
+    } catch (error) {
+      console.error('登入錯誤:', error)
       return res.status(500).json({
         status: 'error',
         message: '系統錯誤，請稍後再試'
