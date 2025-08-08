@@ -1,4 +1,5 @@
 # 功能分支推送時自動創建 PR 並執行 CI 檢查
+# 功能分支推送時自動創建 PR 並執行 CI 檢查
 name: Feature Branch PR & CI
 
 on:
