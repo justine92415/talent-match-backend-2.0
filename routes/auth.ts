@@ -390,4 +390,158 @@ router.post('/register', AuthController.register)
  */
 router.post('/login', AuthController.login)
 
+/**
+ * @swagger
+ * /api/auth/refresh:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: 重新整理 Token
+ *     description: |
+ *       使用有效的 Refresh Token 重新生成新的 Access Token 和 Refresh Token
+ *
+ *       **業務規則：**
+ *       - Refresh Token：必須是有效且未過期的 JWT token
+ *       - Token 類型：必須是 refresh 類型的 token（非 access token）
+ *       - 使用者狀態：對應的使用者帳號必須為 ACTIVE 狀態
+ *       - Token 輪換：每次更新會生成全新的 Access Token 和 Refresh Token
+ *       - 安全性：舊的 tokens 不再有效，實現 token 輪換機制
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refresh_token
+ *             properties:
+ *               refresh_token:
+ *                 type: string
+ *                 description: 有效的 Refresh Token（JWT 格式）
+ *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAiLCJ1c2VyX2lkIjoxMjMsInRva2VuX3R5cGUiOiJyZWZyZXNoIiwiaWF0IjoxNjQwOTkxNjAwLCJleHAiOjE2NDM1ODM2MDB9.example_signature"
+ *     responses:
+ *       200:
+ *         description: Token 更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         access_token:
+ *                           type: string
+ *                           description: 新的 Access Token（有效期 1 小時）
+ *                           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.new_access_token_payload.new_signature"
+ *                         refresh_token:
+ *                           type: string
+ *                           description: 新的 Refresh Token（有效期 30 天）
+ *                           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.new_refresh_token_payload.new_signature"
+ *                         token_type:
+ *                           type: string
+ *                           description: Token 類型
+ *                           example: "Bearer"
+ *                         expires_in:
+ *                           type: number
+ *                           description: Access Token 過期時間（秒）
+ *                           example: 3600
+ *             examples:
+ *               success:
+ *                 summary: Token 更新成功範例
+ *                 value:
+ *                   status: success
+ *                   message: Token 更新成功
+ *                   data:
+ *                     access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.new_access_token"
+ *                     refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.new_refresh_token"
+ *                     token_type: "Bearer"
+ *                     expires_in: 3600
+ *       400:
+ *         description: 參數驗證錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *             examples:
+ *               missing_token:
+ *                 summary: 缺少 Refresh Token
+ *                 value:
+ *                   status: error
+ *                   message: Token 更新失敗
+ *                   errors:
+ *                     refresh_token: ["Refresh Token 為必填欄位"]
+ *               empty_token:
+ *                 summary: Refresh Token 為空
+ *                 value:
+ *                   status: error
+ *                   message: Token 更新失敗
+ *                   errors:
+ *                     refresh_token: ["Refresh Token 為必填欄位"]
+ *       401:
+ *         description: Refresh Token 無效或已過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               invalid_token:
+ *                 summary: 無效的 Token 格式
+ *                 value:
+ *                   status: error
+ *                   message: Token 更新失敗
+ *                   errors:
+ *                     refresh_token: ["無效或已過期的 Refresh Token"]
+ *               expired_token:
+ *                 summary: Token 已過期
+ *                 value:
+ *                   status: error
+ *                   message: Token 更新失敗
+ *                   errors:
+ *                     refresh_token: ["無效或已過期的 Refresh Token"]
+ *               wrong_token_type:
+ *                 summary: 使用 Access Token 而非 Refresh Token
+ *                 value:
+ *                   status: error
+ *                   message: Token 更新失敗
+ *                   errors:
+ *                     refresh_token: ["無效或已過期的 Refresh Token"]
+ *               user_not_found:
+ *                 summary: 對應使用者不存在
+ *                 value:
+ *                   status: error
+ *                   message: Token 更新失敗
+ *                   errors:
+ *                     refresh_token: ["無效或已過期的 Refresh Token"]
+ *               account_deactivated:
+ *                 summary: 使用者帳號已停用
+ *                 value:
+ *                   status: error
+ *                   message: Token 更新失敗
+ *                   errors:
+ *                     refresh_token: ["無效或已過期的 Refresh Token"]
+ *               wrong_signature:
+ *                 summary: JWT 簽章驗證失敗
+ *                 value:
+ *                   status: error
+ *                   message: Token 更新失敗
+ *                   errors:
+ *                     refresh_token: ["無效或已過期的 Refresh Token"]
+ *       500:
+ *         description: 系統錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               server_error:
+ *                 summary: 系統錯誤
+ *                 value:
+ *                   status: error
+ *                   message: 系統錯誤，請稍後再試
+ */
+router.post('/refresh', AuthController.refresh)
+
 export default router
