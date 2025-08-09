@@ -41,8 +41,8 @@ export const dataSource = new DataSource({
   password: config.get<string>('db.password'),
   database: config.get<string>('db.database'),
   synchronize: config.get<boolean>('db.synchronize'),
-  // 🔧 在測試環境中使用 dropSchema 來確保乾淨狀態
-  dropSchema: process.env.NODE_ENV === 'test',
+  // 🔧 只在真正的測試執行時使用 dropSchema 來確保乾淨狀態
+  dropSchema: process.env.NODE_ENV === 'test' && (typeof jest !== 'undefined' || process.env.JEST_WORKER_ID !== undefined),
   poolSize: process.env.NODE_ENV === 'test' ? 5 : 10, // 測試環境使用較少連線
   entities: [
     User,
