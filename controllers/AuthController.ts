@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { dataSource } from '../db/data-source'
 import { User } from '../entities/User'
 import { UserRole, AccountStatus } from '../entities/enums'
-import { RegisterRequest } from '../types/auth'
+import { RegisterRequest, RefreshTokenRequest } from '../types/auth'
 
 export class AuthController {
   /**
@@ -84,7 +84,8 @@ export class AuthController {
           sub: user.uuid,
           user_id: user.id,
           role: user.role,
-          account_status: user.account_status
+          account_status: user.account_status,
+          jti: uuidv4()
         },
         jwtSecret,
         { expiresIn: '1h' }
@@ -94,7 +95,8 @@ export class AuthController {
         {
           sub: user.uuid,
           user_id: user.id,
-          token_type: 'refresh'
+          token_type: 'refresh',
+          jti: uuidv4()
         },
         jwtSecret,
         { expiresIn: '30d' }
@@ -191,7 +193,8 @@ export class AuthController {
           sub: user.uuid,
           user_id: user.id,
           role: user.role,
-          account_status: user.account_status
+          account_status: user.account_status,
+          jti: uuidv4()
         },
         jwtSecret,
         { expiresIn: '1h' }
@@ -200,7 +203,8 @@ export class AuthController {
         {
           sub: user.uuid,
           user_id: user.id,
-          token_type: 'refresh'
+          token_type: 'refresh',
+          jti: uuidv4()
         },
         jwtSecret,
         { expiresIn: '30d' }
@@ -232,6 +236,129 @@ export class AuthController {
       })
     } catch (error) {
       console.error('登入錯誤:', error)
+      return res.status(500).json({
+        status: 'error',
+        message: '系統錯誤，請稍後再試'
+      })
+    }
+  }
+
+  /**
+   * 重新整理 Token
+   */
+  static async refresh(req: Request<{}, {}, RefreshTokenRequest>, res: Response) {
+    try {
+      const { refresh_token } = req.body
+      const errors: Record<string, string[]> = {}
+
+      // 檢查必填欄位
+      if (!refresh_token || refresh_token.trim() === '') {
+        errors.refresh_token = ['Refresh Token 為必填欄位']
+      }
+
+      // 如果有驗證錯誤，直接回傳
+      if (Object.keys(errors).length > 0) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Token 更新失敗',
+          errors
+        })
+      }
+
+      // 驗證 Refresh Token
+      const jwtSecret = process.env.JWT_SECRET || 'your-secret-key'
+      let decoded: any
+
+      try {
+        decoded = jwt.verify(refresh_token, jwtSecret)
+      } catch (error) {
+        return res.status(401).json({
+          status: 'error',
+          message: 'Token 更新失敗',
+          errors: {
+            refresh_token: ['無效或已過期的 Refresh Token']
+          }
+        })
+      }
+
+      // 檢查 token 類型
+      if (decoded.token_type !== 'refresh') {
+        return res.status(401).json({
+          status: 'error',
+          message: 'Token 更新失敗',
+          errors: {
+            refresh_token: ['無效或已過期的 Refresh Token']
+          }
+        })
+      }
+
+      // 查詢使用者
+      const userRepository = dataSource.getRepository(User)
+      const user = await userRepository.findOne({
+        where: {
+          id: decoded.user_id,
+          uuid: decoded.sub
+        }
+      })
+
+      if (!user) {
+        return res.status(401).json({
+          status: 'error',
+          message: 'Token 更新失敗',
+          errors: {
+            refresh_token: ['無效或已過期的 Refresh Token']
+          }
+        })
+      }
+
+      // 檢查帳號狀態
+      if (user.account_status === AccountStatus.DEACTIVATED) {
+        return res.status(401).json({
+          status: 'error',
+          message: 'Token 更新失敗',
+          errors: {
+            refresh_token: ['無效或已過期的 Refresh Token']
+          }
+        })
+      }
+
+      // 生成新的 JWT tokens
+      const newAccessToken = jwt.sign(
+        {
+          sub: user.uuid,
+          user_id: user.id,
+          role: user.role,
+          account_status: user.account_status,
+          jti: uuidv4() // 加入唯一識別符
+        },
+        jwtSecret,
+        { expiresIn: '1h' }
+      )
+
+      const newRefreshToken = jwt.sign(
+        {
+          sub: user.uuid,
+          user_id: user.id,
+          token_type: 'refresh',
+          jti: uuidv4() // 加入唯一識別符
+        },
+        jwtSecret,
+        { expiresIn: '30d' }
+      )
+
+      // 回傳成功結果
+      return res.status(200).json({
+        status: 'success',
+        message: 'Token 更新成功',
+        data: {
+          access_token: newAccessToken,
+          refresh_token: newRefreshToken,
+          token_type: 'Bearer',
+          expires_in: 3600
+        }
+      })
+    } catch (error) {
+      console.error('Token 更新錯誤:', error)
       return res.status(500).json({
         status: 'error',
         message: '系統錯誤，請稍後再試'
