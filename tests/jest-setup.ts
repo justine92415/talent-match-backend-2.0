@@ -11,6 +11,11 @@ if (typeof jest !== 'undefined' || process.env.JEST_WORKER_ID !== undefined) {
   if (process.env.CI === 'true') {
     // GitHub Actions 環境：使用 workflow 中定義的資料庫設定
     console.log('🔧 CI 測試環境已設定，使用資料庫:', process.env.DB_DATABASE || 'test_db')
+    console.log('🔍 CI 環境變數:', {
+      DB_HOST: process.env.DB_HOST,
+      DB_USERNAME: process.env.DB_USERNAME,
+      DB_DATABASE: process.env.DB_DATABASE
+    })
   } else {
     // 本地開發環境：使用本地資料庫設定
     process.env.DB_HOST = 'localhost'
@@ -22,18 +27,20 @@ if (typeof jest !== 'undefined' || process.env.JEST_WORKER_ID !== undefined) {
   }
 }
 
-// 設定測試環境專用的環境變數（作為後備）
-if (!process.env.DB_HOST) {
-  process.env.DB_HOST = 'localhost'
-}
-if (!process.env.DB_PORT) {
-  process.env.DB_PORT = '5432'
-}
-// 移除條件檢查，確保測試環境使用正確的設定
-if (process.env.NODE_ENV === 'test') {
-  process.env.DB_DATABASE = 'talentmatch_test'
-  process.env.DB_USERNAME = 'talentmatch'
-  process.env.DB_PASSWORD = 'talentmatch10'
+// 設定測試環境專用的環境變數（作為後備，只在非 CI 環境使用）
+if (process.env.CI !== 'true') {
+  if (!process.env.DB_HOST) {
+    process.env.DB_HOST = 'localhost'
+  }
+  if (!process.env.DB_PORT) {
+    process.env.DB_PORT = '5432'
+  }
+  // 確保本地測試環境使用正確的設定
+  if (process.env.NODE_ENV === 'test') {
+    process.env.DB_DATABASE = 'talentmatch_test'
+    process.env.DB_USERNAME = 'talentmatch'
+    process.env.DB_PASSWORD = 'talentmatch10'
+  }
 }
 if (!process.env.DB_SYNCHRONIZE) {
   process.env.DB_SYNCHRONIZE = 'true'
