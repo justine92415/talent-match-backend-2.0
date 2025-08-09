@@ -1,22 +1,33 @@
 import request from 'supertest'
 import app from '../../../app'
-import { clearDatabase, initTestDatabase, closeTestDatabase } from '../../helpers/database'
+import { 
+  initTestDatabase, 
+  closeTestDatabase, 
+  startTestTransaction, 
+  rollbackTestTransaction 
+} from '../../helpers/database'
 import { RegisterRequest } from '../../../types/auth'
 
 describe('Auth Register API', () => {
   beforeAll(async () => {
     // 初始化測試資料庫連線
     await initTestDatabase()
-  }, 30000) // 增加超時時間
+  })
 
   afterAll(async () => {
     // 關閉資料庫連線
     await closeTestDatabase()
-  }, 30000) // 增加超時時間
+  })
 
   beforeEach(async () => {
-    await clearDatabase()
-  }, 15000) // 增加超時時間
+    // 使用事務隔離，更高效
+    await startTestTransaction()
+  })
+
+  afterEach(async () => {
+    // 回滾事務，快速清理測試數據
+    await rollbackTestTransaction()
+  })
 
   describe('POST /api/auth/register', () => {
     it('使用有效資料應成功註冊新使用者', async () => {

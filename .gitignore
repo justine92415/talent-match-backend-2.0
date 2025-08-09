@@ -119,3 +119,4 @@ git-push.sh
 specs/*.md
 .github/instructions
 .github/prompts
+CLAUDE.md

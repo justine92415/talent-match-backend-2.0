@@ -1,6 +1,11 @@
 import request from 'supertest'
 import app from '../../../app'
-import { clearDatabase, initTestDatabase, closeTestDatabase } from '../../helpers/database'
+import { 
+  initTestDatabase, 
+  closeTestDatabase, 
+  startTestTransaction, 
+  rollbackTestTransaction 
+} from '../../helpers/database'
 import { RegisterRequest } from '../../../types/auth'
 import jwt from 'jsonwebtoken'
 import { v4 as uuidv4 } from 'uuid'
@@ -9,16 +14,20 @@ describe('Auth Refresh API', () => {
   beforeAll(async () => {
     // 初始化測試資料庫連線
     await initTestDatabase()
-  }, 30000) // 增加超時時間
+  })
 
   afterAll(async () => {
     // 關閉資料庫連線
     await closeTestDatabase()
-  }, 30000) // 增加超時時間
+  })
 
   beforeEach(async () => {
-    await clearDatabase()
-  }, 15000) // 增加超時時間
+    await startTestTransaction()
+  })
+
+  afterEach(async () => {
+    await rollbackTestTransaction()
+  })
 
   describe('POST /api/auth/refresh', () => {
     let validRefreshToken: string
