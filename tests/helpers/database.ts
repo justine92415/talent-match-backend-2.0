@@ -1,13 +1,62 @@
 import { dataSource } from '../../db/data-source'
 import { User } from '../../entities/User'
 
+// 全域測試資料庫管理器
+class TestDatabaseManager {
+  private static instance: TestDatabaseManager
+  private isInitialized = false
+
+  private constructor() {}
+
+  static getInstance(): TestDatabaseManager {
+    if (!TestDatabaseManager.instance) {
+      TestDatabaseManager.instance = new TestDatabaseManager()
+    }
+    return TestDatabaseManager.instance
+  }
+
+  async initialize(): Promise<void> {
+    if (this.isInitialized) {
+      return
+    }
+
+    try {
+      // 如果資料來源已經初始化，先銷毀它
+      if (dataSource.isInitialized) {
+        await dataSource.destroy()
+      }
+
+      await dataSource.initialize()
+      this.isInitialized = true
+      console.log('✅ 測試資料庫連線已建立')
+    } catch (error) {
+      console.error('❌ 測試資料庫連線失敗:', error)
+      throw error
+    }
+  }
+
+  async destroy(): Promise<void> {
+    if (!this.isInitialized) {
+      return
+    }
+
+    try {
+      if (dataSource.isInitialized) {
+        await dataSource.destroy()
+      }
+      this.isInitialized = false
+      console.log('✅ 測試資料庫連線已關閉')
+    } catch (error) {
+      console.error('❌ 關閉測試資料庫連線時發生錯誤:', error)
+    }
+  }
+}
+
 // 測試用資料庫清理工具
 export const clearDatabase = async (): Promise<void> => {
   try {
-    // 確保資料庫連線已建立
-    if (!dataSource.isInitialized) {
-      await dataSource.initialize()
-    }
+    const dbManager = TestDatabaseManager.getInstance()
+    await dbManager.initialize()
 
     // 使用交易來確保資料一致性
     await dataSource.transaction(async manager => {
@@ -30,25 +79,12 @@ export const clearDatabase = async (): Promise<void> => {
 
 // 初始化測試資料庫連線
 export const initTestDatabase = async (): Promise<void> => {
-  try {
-    if (!dataSource.isInitialized) {
-      await dataSource.initialize()
-      console.log('✅ 測試資料庫連線已建立')
-    }
-  } catch (error) {
-    console.error('❌ 測試資料庫連線失敗:', error)
-    throw error
-  }
+  const dbManager = TestDatabaseManager.getInstance()
+  await dbManager.initialize()
 }
 
 // 關閉測試資料庫連線
 export const closeTestDatabase = async (): Promise<void> => {
-  try {
-    if (dataSource.isInitialized) {
-      await dataSource.destroy()
-      console.log('✅ 測試資料庫連線已關閉')
-    }
-  } catch (error) {
-    console.error('❌ 關閉測試資料庫連線時發生錯誤:', error)
-  }
+  const dbManager = TestDatabaseManager.getInstance()
+  await dbManager.destroy()
 }

@@ -2,8 +2,10 @@ import { dataSource } from '../db/data-source'
 
 // 全域測試設定
 export const setupTests = async (): Promise<void> => {
-  // 確保測試環境
-  process.env.NODE_ENV = 'test'
+  // 只在 Jest 執行時設定測試環境
+  if (typeof jest !== 'undefined' || process.env.JEST_WORKER_ID !== undefined) {
+    process.env.NODE_ENV = 'test'
+  }
 
   // 設定測試環境專用的環境變數
   if (!process.env.DB_HOST) process.env.DB_HOST = 'localhost'
@@ -29,5 +31,5 @@ export const teardownTests = async (): Promise<void> => {
   }
 }
 
-// 在測試開始前執行設定
-setupTests()
+// 移除自動執行，改為手動在測試中呼叫
+// setupTests()

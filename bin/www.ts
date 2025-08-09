@@ -45,7 +45,11 @@ server.listen(port, async () => {
     logger.info(`伺服器運作中. port: ${port}`)
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : '未知錯誤'
+    const errorStack = error instanceof Error ? error.stack : ''
     logger.error(`資料庫連線失敗: ${errorMessage}`)
+    if (errorStack) {
+      logger.error(`錯誤堆疊: ${errorStack}`)
+    }
     process.exit(1)
   }
 })
