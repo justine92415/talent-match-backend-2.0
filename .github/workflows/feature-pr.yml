@@ -121,10 +121,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # 🔧 新增：重置資料庫確保乾淨狀態
       - name: Reset Database
         run: |
           echo "🗃️ 重置測試資料庫..."
+          # 等待 PostgreSQL 服務完全啟動
           sleep 2
+          # 刪除並重新建立測試資料庫以確保乾淨狀態
           PGPASSWORD=test_password psql -h localhost -U test_user -d postgres -c "DROP DATABASE IF EXISTS test_db;"
           PGPASSWORD=test_password psql -h localhost -U test_user -d postgres -c "CREATE DATABASE test_db;"
           echo "✅ 資料庫重置完成"
