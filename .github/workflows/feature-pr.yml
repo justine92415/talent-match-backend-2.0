@@ -77,9 +77,11 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 設置新創建的 PR 編號
+        id: set-pr-number
         if: steps.get-pr.outputs.pr_exists == 'false' && steps.create-pr.outputs.pr_number
         run: |
           echo "pr_number=${{ steps.create-pr.outputs.pr_number }}" >> $GITHUB_OUTPUT
+          echo "PR 編號已設定: ${{ steps.create-pr.outputs.pr_number }}"
 
       - name: 顯示 PR 資訊 (除錯用)
         run: |
