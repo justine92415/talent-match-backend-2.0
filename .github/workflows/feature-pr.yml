@@ -1,5 +1,4 @@
 # 功能分支推送時自動創建 PR 並執行 CI 檢查
-# 功能分支推送時自動創建 PR 並執行 CI 檢查
 name: Feature Branch PR & CI
 
 on:
@@ -41,12 +40,10 @@ jobs:
             });
 
             if (pulls.length > 0) {
-              // PR 已存在
               console.log(`✅ 找到現有 PR: #${pulls[0].number}`);
               core.setOutput('pr_number', pulls[0].number);
               core.setOutput('pr_exists', 'true');
             } else {
-              // 需要創建新 PR
               console.log('📝 需要創建新的 PR');
               core.setOutput('pr_exists', 'false');
             }
@@ -81,7 +78,8 @@ jobs:
 
       - name: 設置新創建的 PR 編號
         if: steps.get-pr.outputs.pr_exists == 'false' && steps.create-pr.outputs.pr_number
-        run: echo "pr_number=${{ steps.create-pr.outputs.pr_number }}" >> $GITHUB_OUTPUT
+        run: |
+          echo "pr_number=${{ steps.create-pr.outputs.pr_number }}" >> $GITHUB_OUTPUT
 
       - name: 顯示 PR 資訊 (除錯用)
         run: |
@@ -94,9 +92,7 @@ jobs:
     name: CI 檢查 (Lint & Test)
     runs-on: ubuntu-latest
     needs: setup-pr
-    # 🔧 修改條件：只要有 PR 就執行（不管是新建還是現有的）
 
-    # 🔧 新增 PostgreSQL 服務
     services:
       postgres:
         image: postgres:15
@@ -144,7 +140,6 @@ jobs:
           npm run lint
           echo "✅ Lint 檢查通過"
 
-      # 🔧 修改測試步驟，使用您應用程式實際的環境變數
       - name: 顯示環境資訊 (除錯用)
         run: |
           echo "🔍 環境資訊："
@@ -199,12 +194,13 @@ jobs:
           JWT_SECRET: 'test_jwt_secret_for_ci_build_only'
 
       - name: Comment PR Success
-        if: success()
+        if: success() && needs.setup-pr.outputs.pr-number
         uses: actions/github-script@v7
         with:
           script: |
-            const prNumber = ${{ needs.setup-pr.outputs.pr-number }};
-            github.rest.issues.createComment({
+            const prNumber = parseInt('${{ needs.setup-pr.outputs.pr-number }}');
+
+            await github.rest.issues.createComment({
               issue_number: prNumber,
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -222,12 +218,13 @@ jobs:
             });
 
       - name: Comment PR Failure
-        if: failure()
+        if: failure() && needs.setup-pr.outputs.pr-number
         uses: actions/github-script@v7
         with:
           script: |
-            const prNumber = ${{ needs.setup-pr.outputs.pr-number }};
-            github.rest.issues.createComment({
+            const prNumber = parseInt('${{ needs.setup-pr.outputs.pr-number }}');
+
+            await github.rest.issues.createComment({
               issue_number: prNumber,
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -252,15 +249,16 @@ jobs:
     name: 自動合併到 develop
     runs-on: ubuntu-latest
     needs: [setup-pr, ci-checks]
-    if: needs.ci-checks.result == 'success'
+    if: needs.ci-checks.result == 'success' && needs.setup-pr.outputs.pr-number
 
     steps:
       - name: Auto merge PR
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.PAT_TOKEN }} # 使用 PAT 代替 GITHUB_TOKEN
+          github-token: ${{ secrets.PAT_TOKEN }}
           script: |
-            const prNumber = ${{ needs.setup-pr.outputs.pr-number }};
+            const prNumber = parseInt('${{ needs.setup-pr.outputs.pr-number }}');
+
             const { data: pr } = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
