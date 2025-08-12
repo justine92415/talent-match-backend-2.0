@@ -25,15 +25,29 @@ export interface TeacherApplicationResponse {
   teacher: TeacherProfile
 }
 
+export interface TeacherApplyRequest {
+  nationality: string
+  introduction: string
+}
+
+export interface TeacherUpdateRequest {
+  nationality?: string
+  introduction?: string
+}
+
 export interface TeacherApplyResponse {
-  teacher: {
-    id: number
-    uuid: string
-    user_id: number
-    nationality: string
-    introduction: string
-    application_status: 'pending'
-    application_submitted_at: string | null
-    created_at: string
+  status: 'success' | 'error'
+  message: string
+  data?: {
+    application: {
+      id: number
+      user_id: number
+      nationality: string
+      introduction: string
+      application_status: string
+      created_at: string
+      updated_at: string
+    }
   }
+  errors?: Record<string, string[]>
 }
