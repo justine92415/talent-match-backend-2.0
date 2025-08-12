@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import { dataSource } from '../db/data-source'
 import { Teacher } from '../entities/Teacher'
 import { ApplicationStatus } from '../entities/enums'
-import { TeacherApplyRequest, TeacherApplyResponse, TeacherUpdateRequest } from '../types/teachers'
+import { TeacherApplyRequest, TeacherApplyResponse, TeacherUpdateRequest, TeacherProfileRequest, TeacherProfileResponse } from '../types/teachers'
 
 export class TeachersController {
   /**
@@ -339,6 +339,167 @@ export class TeachersController {
       res.status(200).json(response)
     } catch (error) {
       console.error('Resubmit teacher application error:', error)
+      res.status(500).json({
+        status: 'error',
+        message: '系統錯誤，請稍後再試'
+      })
+    }
+  }
+
+  /**
+   * 取得教師基本資料
+   */
+  static async getProfile(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.id
+
+      if (!userId) {
+        res.status(401).json({
+          status: 'error',
+          message: '未授權'
+        })
+        return
+      }
+
+      const teacherRepository = dataSource.getRepository(Teacher)
+
+      const teacher = await teacherRepository.findOne({
+        where: { user_id: userId }
+      })
+
+      if (!teacher) {
+        res.status(404).json({
+          status: 'error',
+          message: '找不到教師資料'
+        })
+        return
+      }
+
+      const response: TeacherProfileResponse = {
+        status: 'success',
+        message: '取得教師資料成功',
+        data: {
+          teacher: {
+            id: teacher.id,
+            user_id: teacher.user_id,
+            nationality: teacher.nationality,
+            introduction: teacher.introduction,
+            application_status: teacher.application_status,
+            created_at: teacher.created_at.toISOString(),
+            updated_at: teacher.updated_at.toISOString()
+          }
+        }
+      }
+
+      res.status(200).json(response)
+    } catch (error) {
+      console.error('Get teacher profile error:', error)
+      res.status(500).json({
+        status: 'error',
+        message: '系統錯誤，請稍後再試'
+      })
+    }
+  }
+
+  /**
+   * 更新教師基本資料
+   */
+  static async updateProfile(req: Request, res: Response): Promise<void> {
+    try {
+      const { nationality, introduction }: TeacherProfileRequest = req.body
+      const userId = req.user?.id
+
+      if (!userId) {
+        res.status(401).json({
+          status: 'error',
+          message: '未授權'
+        })
+        return
+      }
+
+      // 參數驗證
+      const errors: Record<string, string[]> = {}
+
+      if (nationality !== undefined) {
+        if (!nationality || nationality.trim() === '') {
+          errors.nationality = ['國籍不能為空']
+        } else if (nationality.length > 50) {
+          errors.nationality = ['國籍長度不能超過 50 字']
+        }
+      }
+
+      if (introduction !== undefined) {
+        if (!introduction || introduction.trim() === '') {
+          errors.introduction = ['自我介紹不能為空']
+        } else if (introduction.length < 100) {
+          errors.introduction = ['自我介紹至少需要 100 字']
+        } else if (introduction.length > 1000) {
+          errors.introduction = ['自我介紹不能超過 1000 字']
+        }
+      }
+
+      if (Object.keys(errors).length > 0) {
+        res.status(400).json({
+          status: 'error',
+          message: '參數驗證失敗',
+          errors
+        })
+        return
+      }
+
+      const teacherRepository = dataSource.getRepository(Teacher)
+
+      // 檢查教師記錄是否存在
+      const teacher = await teacherRepository.findOne({
+        where: { user_id: userId }
+      })
+
+      if (!teacher) {
+        res.status(404).json({
+          status: 'error',
+          message: '找不到教師資料'
+        })
+        return
+      }
+
+      // 準備更新資料
+      const updateData: Partial<Teacher> = {}
+      if (nationality !== undefined) {
+        updateData.nationality = nationality.trim()
+      }
+      if (introduction !== undefined) {
+        updateData.introduction = introduction.trim()
+      }
+
+      // 如果沒有提供任何更新欄位，仍然允許（部分更新的情況）
+      if (Object.keys(updateData).length > 0) {
+        await teacherRepository.update({ user_id: userId }, updateData)
+      }
+
+      // 取得更新後的資料
+      const updatedTeacher = await teacherRepository.findOne({
+        where: { user_id: userId }
+      })
+
+      const response: TeacherProfileResponse = {
+        status: 'success',
+        message: '教師資料更新成功',
+        data: {
+          teacher: {
+            id: updatedTeacher!.id,
+            user_id: updatedTeacher!.user_id,
+            nationality: updatedTeacher!.nationality,
+            introduction: updatedTeacher!.introduction,
+            application_status: updatedTeacher!.application_status,
+            created_at: updatedTeacher!.created_at.toISOString(),
+            updated_at: updatedTeacher!.updated_at.toISOString()
+          }
+        }
+      }
+
+      res.status(200).json(response)
+    } catch (error) {
+      console.error('Update teacher profile error:', error)
       res.status(500).json({
         status: 'error',
         message: '系統錯誤，請稍後再試'

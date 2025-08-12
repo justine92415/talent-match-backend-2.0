@@ -3,6 +3,16 @@ export interface TeacherApplyRequest {
   introduction: string
 }
 
+export interface TeacherUpdateRequest {
+  nationality?: string
+  introduction?: string
+}
+
+export interface TeacherProfileRequest {
+  nationality?: string
+  introduction?: string
+}
+
 export interface TeacherProfile {
   id: number
   uuid: string
@@ -25,21 +35,28 @@ export interface TeacherApplicationResponse {
   teacher: TeacherProfile
 }
 
-export interface TeacherApplyRequest {
-  nationality: string
-  introduction: string
-}
-
-export interface TeacherUpdateRequest {
-  nationality?: string
-  introduction?: string
-}
-
 export interface TeacherApplyResponse {
   status: 'success' | 'error'
   message: string
   data?: {
     application: {
+      id: number
+      user_id: number
+      nationality: string
+      introduction: string
+      application_status: string
+      created_at: string
+      updated_at: string
+    }
+  }
+  errors?: Record<string, string[]>
+}
+
+export interface TeacherProfileResponse {
+  status: 'success' | 'error'
+  message: string
+  data?: {
+    teacher: {
       id: number
       user_id: number
       nationality: string
