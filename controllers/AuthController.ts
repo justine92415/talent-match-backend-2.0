@@ -5,7 +5,8 @@ import { v4 as uuidv4 } from 'uuid'
 import { dataSource } from '../db/data-source'
 import { User } from '../entities/User'
 import { UserRole, AccountStatus } from '../entities/enums'
-import { RegisterRequest, RefreshTokenRequest } from '../types/auth'
+import { RegisterRequest, RefreshTokenRequest, ForgotPasswordRequest, ResetPasswordRequest } from '../types/auth'
+import crypto from 'crypto'
 
 export class AuthController {
   /**
@@ -363,6 +364,94 @@ export class AuthController {
         status: 'error',
         message: '系統錯誤，請稍後再試'
       })
+    }
+  }
+
+  /**
+   * 忘記密碼：產生重設令牌（安全考量：不透露 email 是否存在）
+   */
+  static async forgotPassword(req: Request<{}, {}, ForgotPasswordRequest>, res: Response) {
+    try {
+      const { email } = req.body
+      const errors: Record<string, string[]> = {}
+
+      if (!email || email.trim() === '' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+        errors.email = ['請輸入有效的電子郵件格式']
+      }
+
+      if (Object.keys(errors).length > 0) {
+        return res.status(400).json({ status: 'error', message: '請求失敗', errors })
+      }
+
+      const userRepository = dataSource.getRepository(User)
+      const user = await userRepository.findOne({ where: { email: email.trim().toLowerCase() } })
+
+      if (user && user.account_status !== AccountStatus.DEACTIVATED) {
+        // 產生安全令牌與到期時間（1 小時）
+        const token = crypto.randomBytes(32).toString('hex')
+        user.password_reset_token = token
+        user.password_reset_expires_at = new Date(Date.now() + 60 * 60 * 1000)
+        await userRepository.save(user)
+        // 備註：此處省略實際寄信實作
+      }
+
+      // 不論 email 是否存在，皆回傳成功（安全考量）
+      return res.status(200).json({
+        status: 'success',
+        message: '如果該電子郵件已註冊，您將收到密碼重設指示',
+        data: null
+      })
+    } catch (error) {
+      console.error('忘記密碼錯誤:', error)
+      return res.status(500).json({ status: 'error', message: '系統錯誤，請稍後再試' })
+    }
+  }
+
+  /**
+   * 重設密碼：驗證令牌與新密碼，更新後清除令牌
+   */
+  static async resetPassword(req: Request<{}, {}, ResetPasswordRequest>, res: Response) {
+    try {
+      const { token, password, password_confirmation } = req.body
+      const errors: Record<string, string[]> = {}
+
+      if (!token || token.trim() === '') {
+        errors.token = ['無效或已過期的重設令牌']
+      }
+      if (!password || password.length < 8 || !/(?=.*[a-zA-Z])(?=.*[\u4e00-\u9fa5])/.test(password)) {
+        errors.password = ['密碼必須至少8字元且包含中英文']
+      }
+      if (password_confirmation === undefined || password_confirmation !== password) {
+        errors.password_confirmation = ['密碼確認不一致']
+      }
+
+      if (Object.keys(errors).length > 0) {
+        return res.status(400).json({ status: 'error', message: '密碼重設失敗', errors })
+      }
+
+      const userRepository = dataSource.getRepository(User)
+      const user = await userRepository.findOne({ where: { password_reset_token: token } })
+
+      if (!user || !user.password_reset_expires_at || user.password_reset_expires_at.getTime() <= Date.now()) {
+        return res.status(400).json({
+          status: 'error',
+          message: '密碼重設失敗',
+          errors: { token: ['無效或已過期的重設令牌'] }
+        })
+      }
+
+      // 更新密碼與清除令牌
+      const saltRounds = 12
+      const hashed = await bcrypt.hash(password, saltRounds)
+      user.password = hashed
+      user.password_reset_token = null as unknown as string
+      user.password_reset_expires_at = null as unknown as Date
+      await userRepository.save(user)
+
+      return res.status(200).json({ status: 'success', message: '密碼重設成功', data: null })
+    } catch (error) {
+      console.error('重設密碼錯誤:', error)
+      return res.status(500).json({ status: 'error', message: '系統錯誤，請稍後再試' })
     }
   }
 }
