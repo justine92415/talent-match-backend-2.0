@@ -68,3 +68,62 @@ export interface TeacherProfileResponse {
   }
   errors?: Record<string, string[]>
 }
+
+// 工作經驗相關型別
+export interface TeacherWorkExperienceRequest {
+  is_working: boolean
+  company_name: string
+  workplace: string
+  job_category: string
+  job_title: string
+  start_year: number
+  start_month: number
+  end_year?: number
+  end_month?: number
+}
+
+export interface TeacherWorkExperienceUpdateRequest {
+  is_working?: boolean
+  company_name?: string
+  workplace?: string
+  job_category?: string
+  job_title?: string
+  start_year?: number
+  start_month?: number
+  end_year?: number
+  end_month?: number
+}
+
+export interface TeacherWorkExperience {
+  id: number
+  teacher_id: number
+  is_working: boolean
+  company_name: string
+  workplace: string
+  job_category: string
+  job_title: string
+  start_year: number
+  start_month: number
+  end_year: number | null
+  end_month: number | null
+  created_at: string
+  updated_at: string
+}
+
+export interface TeacherWorkExperienceListResponse {
+  status: 'success' | 'error'
+  message: string
+  data?: {
+    work_experiences: TeacherWorkExperience[]
+  }
+  errors?: Record<string, string[]>
+}
+
+export interface TeacherWorkExperienceResponse {
+  status: 'success' | 'error'
+  message: string
+  data?: {
+    work_experience: TeacherWorkExperience
+  }
+  errors?: Record<string, string[]>
+}
