@@ -556,4 +556,280 @@ router.put('/application', authenticateToken, TeachersController.updateApplicati
  */
 router.post('/resubmit', authenticateToken, TeachersController.resubmitApplication)
 
+/**
+ * @swagger
+ * /api/teachers/profile:
+ *   get:
+ *     tags:
+ *       - Teachers
+ *     summary: 取得教師基本資料
+ *     description: |
+ *       取得當前登入教師的基本資料
+ *
+ *       **功能說明：**
+ *       - 查詢當前使用者的教師基本資料
+ *       - 包含國籍、自我介紹、申請狀態等資訊
+ *       - 如果沒有教師記錄則回傳 404
+ *
+ *       **權限要求：**
+ *       - 需要登入（Bearer Token）
+ *       - 只能查看自己的資料
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 取得教師資料成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         teacher:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: number
+ *                               example: 1
+ *                             user_id:
+ *                               type: number
+ *                               example: 123
+ *                             nationality:
+ *                               type: string
+ *                               example: "台灣"
+ *                             introduction:
+ *                               type: string
+ *                               example: "我是一位資深的程式設計教師..."
+ *                             application_status:
+ *                               type: string
+ *                               enum: [pending, approved, rejected]
+ *                               example: "pending"
+ *                             created_at:
+ *                               type: string
+ *                               format: date-time
+ *                               example: "2025-08-08T10:00:00.000Z"
+ *                             updated_at:
+ *                               type: string
+ *                               format: date-time
+ *                               example: "2025-08-08T10:00:00.000Z"
+ *             examples:
+ *               success:
+ *                 summary: 查詢成功
+ *                 value:
+ *                   status: success
+ *                   message: 取得教師資料成功
+ *                   data:
+ *                     teacher:
+ *                       id: 1
+ *                       user_id: 123
+ *                       nationality: "台灣"
+ *                       introduction: "我是一位資深的程式設計教師，具有十年以上的教學經驗..."
+ *                       application_status: "pending"
+ *                       created_at: "2025-08-08T10:00:00.000Z"
+ *                       updated_at: "2025-08-08T10:00:00.000Z"
+ *       401:
+ *         description: 未授權
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               unauthorized:
+ *                 summary: 未登入
+ *                 value:
+ *                   status: error
+ *                   message: 未授權
+ *       404:
+ *         description: 找不到教師資料
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               not_found:
+ *                 summary: 無教師記錄
+ *                 value:
+ *                   status: error
+ *                   message: 找不到教師資料
+ *       500:
+ *         description: 系統錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               server_error:
+ *                 summary: 系統錯誤
+ *                 value:
+ *                   status: error
+ *                   message: 系統錯誤，請稍後再試
+ */
+router.get('/profile', authenticateToken, TeachersController.getProfile)
+
+/**
+ * @swagger
+ * /api/teachers/profile:
+ *   put:
+ *     tags:
+ *       - Teachers
+ *     summary: 更新教師基本資料
+ *     description: |
+ *       更新教師的基本資料（國籍和自我介紹）
+ *
+ *       **業務規則：**
+ *       - 國籍和自我介紹為可選欄位，允許部分更新
+ *       - 國籍長度限制：1-50 字
+ *       - 自我介紹長度限制：100-1000 字
+ *       - 空值和無效值會被拒絕
+ *
+ *       **權限要求：**
+ *       - 需要登入（Bearer Token）
+ *       - 只能更新自己的資料
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nationality:
+ *                 type: string
+ *                 description: 國籍
+ *                 example: "美國"
+ *                 minLength: 1
+ *                 maxLength: 50
+ *               introduction:
+ *                 type: string
+ *                 description: 自我介紹
+ *                 example: "更新後的自我介紹：我是一位擁有十五年教學經驗的資深講師，專精於全端開發技術，包括前端框架、後端架構設計、資料庫管理等領域。我致力於培養學生的實際開發能力和解決問題的思維。"
+ *                 minLength: 100
+ *                 maxLength: 1000
+ *           examples:
+ *             update_both:
+ *               summary: 更新國籍和自我介紹
+ *               value:
+ *                 nationality: "美國"
+ *                 introduction: "更新後的自我介紹：我是一位擁有十五年教學經驗的資深講師，專精於全端開發技術，包括前端框架、後端架構設計、資料庫管理等領域。我致力於培養學生的實際開發能力和解決問題的思維。"
+ *             update_nationality_only:
+ *               summary: 只更新國籍
+ *               value:
+ *                 nationality: "新加坡"
+ *             update_introduction_only:
+ *               summary: 只更新自我介紹
+ *               value:
+ *                 introduction: "更新後的自我介紹：我是一位專業的軟體開發講師，擁有豐富的實務經驗和教學熱忱。我擅長將複雜的技術概念以簡單易懂的方式傳達，幫助學生建立紮實的技術基礎。"
+ *     responses:
+ *       200:
+ *         description: 教師資料更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         teacher:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: number
+ *                               example: 1
+ *                             user_id:
+ *                               type: number
+ *                               example: 123
+ *                             nationality:
+ *                               type: string
+ *                               example: "美國"
+ *                             introduction:
+ *                               type: string
+ *                               example: "更新後的自我介紹內容..."
+ *                             application_status:
+ *                               type: string
+ *                               example: "pending"
+ *                             created_at:
+ *                               type: string
+ *                               format: date-time
+ *                               example: "2025-08-08T10:00:00.000Z"
+ *                             updated_at:
+ *                               type: string
+ *                               format: date-time
+ *                               example: "2025-08-08T10:05:00.000Z"
+ *             examples:
+ *               success:
+ *                 summary: 更新成功
+ *                 value:
+ *                   status: success
+ *                   message: 教師資料更新成功
+ *                   data:
+ *                     teacher:
+ *                       id: 1
+ *                       user_id: 123
+ *                       nationality: "美國"
+ *                       introduction: "更新後的自我介紹內容..."
+ *                       application_status: "pending"
+ *                       created_at: "2025-08-08T10:00:00.000Z"
+ *                       updated_at: "2025-08-08T10:05:00.000Z"
+ *       400:
+ *         description: 參數驗證錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               validation_error:
+ *                 summary: 參數驗證失敗
+ *                 value:
+ *                   status: error
+ *                   message: 參數驗證失敗
+ *                   errors:
+ *                     nationality: ["國籍長度不能超過 50 字"]
+ *                     introduction: ["自我介紹至少需要 100 字"]
+ *       401:
+ *         description: 未授權
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               unauthorized:
+ *                 summary: 未登入
+ *                 value:
+ *                   status: error
+ *                   message: 未授權
+ *       404:
+ *         description: 找不到教師資料
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               not_found:
+ *                 summary: 無教師記錄
+ *                 value:
+ *                   status: error
+ *                   message: 找不到教師資料
+ *       500:
+ *         description: 系統錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               server_error:
+ *                 summary: 系統錯誤
+ *                 value:
+ *                   status: error
+ *                   message: 系統錯誤，請稍後再試
+ */
+router.put('/profile', authenticateToken, TeachersController.updateProfile)
+
 export default router
