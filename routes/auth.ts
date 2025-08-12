@@ -544,4 +544,135 @@ router.post('/login', AuthController.login)
  */
 router.post('/refresh', AuthController.refresh)
 
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: 忘記密碼
+ *     description: |
+ *       提交 Email 後，若帳號存在且非停用，系統會產生重設令牌並寄送重設信（此實作省略寄信）。
+ *
+ *       安全考量：不透露 email 是否存在，皆回傳成功訊息。
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 maxLength: 255
+ *                 example: "user@example.com"
+ *     responses:
+ *       200:
+ *         description: 已受理
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *             examples:
+ *               accepted:
+ *                 value:
+ *                   status: success
+ *                   message: 如果該電子郵件已註冊，您將收到密碼重設指示
+ *                   data: null
+ *       400:
+ *         description: 參數驗證錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *             examples:
+ *               invalid_email:
+ *                 value:
+ *                   status: error
+ *                   message: 請求失敗
+ *                   errors:
+ *                     email: ["請輸入有效的電子郵件格式"]
+ *       500:
+ *         description: 伺服器錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post('/forgot-password', AuthController.forgotPassword)
+
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: 重設密碼
+ *     description: 驗證重設令牌與新密碼，更新密碼並清除令牌。
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - password
+ *               - password_confirmation
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 example: "a3f5..."
+ *               password:
+ *                 type: string
+ *                 description: 至少8字且包含中英文
+ *                 example: "Password123中文"
+ *               password_confirmation:
+ *                 type: string
+ *                 example: "Password123中文"
+ *     responses:
+ *       200:
+ *         description: 密碼重設成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *             examples:
+ *               success:
+ *                 value:
+ *                   status: success
+ *                   message: 密碼重設成功
+ *                   data: null
+ *       400:
+ *         description: 參數或令牌驗證錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *             examples:
+ *               invalid_token:
+ *                 value:
+ *                   status: error
+ *                   message: 密碼重設失敗
+ *                   errors:
+ *                     token: ["無效或已過期的重設令牌"]
+ *               password_policy:
+ *                 value:
+ *                   status: error
+ *                   message: 密碼重設失敗
+ *                   errors:
+ *                     password: ["密碼必須至少8字元且包含中英文"]
+ *                     password_confirmation: ["密碼確認不一致"]
+ *       500:
+ *         description: 伺服器錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post('/reset-password', AuthController.resetPassword)
+
 export default router
