@@ -40,11 +40,11 @@ export class TeacherWorkExperience {
 
   /** 結束年份 */
   @Column({ type: 'integer', nullable: true })
-  end_year!: number
+  end_year!: number | null
 
   /** 結束月份 */
   @Column({ type: 'integer', nullable: true })
-  end_month!: number
+  end_month!: number | null
 
   /** 建立時間 */
   @CreateDateColumn({ type: 'timestamp' })
