@@ -3,6 +3,7 @@ import authRouter from './auth'
 import pingRouter from './ping'
 import validationRouter from './validation'
 import usersRouter from './users'
+import teachersRouter from './teachers'
 
 const router = Router()
 
@@ -14,6 +15,9 @@ router.use('/validation', validationRouter)
 
 // 掛載使用者相關路由到 /users
 router.use('/users', usersRouter)
+
+// 掛載教師相關路由到 /teachers
+router.use('/teachers', teachersRouter)
 
 // 掛載 ping 路由
 router.use('/', pingRouter)

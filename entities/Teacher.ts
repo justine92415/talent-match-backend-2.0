@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Generated } from 'typeorm'
 import { ApplicationStatus } from './enums'
 
 @Entity('teachers')
@@ -8,6 +8,7 @@ export class Teacher {
   id!: number
 
   /** 教師唯一識別碼 */
+  @Generated('uuid')
   @Column({ type: 'uuid' })
   uuid!: string
 
