@@ -2,6 +2,8 @@ import { Request, Response } from 'express'
 import { dataSource } from '../db/data-source'
 import { Teacher } from '../entities/Teacher'
 import { TeacherWorkExperience } from '../entities/TeacherWorkExperience'
+import { TeacherLearningExperience } from '../entities/TeacherLearningExperience'
+import { TeacherCertificate } from '../entities/TeacherCertificate'
 import { ApplicationStatus } from '../entities/enums'
 import {
   TeacherApplyRequest,
@@ -12,7 +14,15 @@ import {
   TeacherWorkExperienceRequest,
   TeacherWorkExperienceUpdateRequest,
   TeacherWorkExperienceListResponse,
-  TeacherWorkExperienceResponse
+  TeacherWorkExperienceResponse,
+  TeacherLearningExperienceRequest,
+  TeacherLearningExperienceUpdateRequest,
+  TeacherLearningExperienceListResponse,
+  TeacherLearningExperienceResponse,
+  TeacherCertificateRequest,
+  TeacherCertificateUpdateRequest,
+  TeacherCertificateListResponse,
+  TeacherCertificateResponse
 } from '../types/teachers'
 
 export class TeachersController {
@@ -1032,6 +1042,989 @@ export class TeachersController {
       })
     } catch (error) {
       console.error('Delete work experience error:', error)
+      res.status(500).json({
+        status: 'error',
+        message: '系統錯誤，請稍後再試'
+      })
+    }
+  }
+
+  /**
+   * 取得學習經歷列表
+   */
+  static async getLearningExperiences(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.id
+
+      if (!userId) {
+        res.status(401).json({
+          status: 'error',
+          message: '請先登入'
+        })
+        return
+      }
+
+      // 取得教師資料
+      const teacherRepository = dataSource.getRepository(Teacher)
+      const teacher = await teacherRepository.findOne({
+        where: { user_id: userId }
+      })
+
+      if (!teacher) {
+        res.status(404).json({
+          status: 'error',
+          message: '找不到教師資料'
+        })
+        return
+      }
+
+      // 取得學習經歷列表
+      const learningExperienceRepository = dataSource.getRepository(TeacherLearningExperience)
+      const learningExperiences = await learningExperienceRepository.find({
+        where: { teacher_id: teacher.id },
+        order: { start_year: 'DESC', start_month: 'DESC' }
+      })
+
+      const response: TeacherLearningExperienceListResponse = {
+        status: 'success',
+        message: '取得學習經歷列表成功',
+        data: {
+          learning_experiences: learningExperiences.map(exp => ({
+            id: exp.id,
+            teacher_id: exp.teacher_id,
+            is_in_school: exp.is_in_school,
+            degree: exp.degree,
+            school_name: exp.school_name,
+            department: exp.department,
+            region: exp.region,
+            start_year: exp.start_year,
+            start_month: exp.start_month,
+            end_year: exp.end_year,
+            end_month: exp.end_month,
+            file_path: exp.file_path,
+            created_at: exp.created_at.toISOString(),
+            updated_at: exp.updated_at.toISOString()
+          }))
+        }
+      }
+
+      res.status(200).json(response)
+    } catch (error) {
+      console.error('Get learning experiences error:', error)
+      res.status(500).json({
+        status: 'error',
+        message: '系統錯誤，請稍後再試'
+      })
+    }
+  }
+
+  /**
+   * 新增學習經歷
+   */
+  static async createLearningExperience(req: Request, res: Response): Promise<void> {
+    try {
+      const {
+        is_in_school,
+        degree,
+        school_name,
+        department,
+        region,
+        start_year,
+        start_month,
+        end_year,
+        end_month,
+        file_path
+      }: TeacherLearningExperienceRequest = req.body
+      const userId = req.user?.id
+
+      if (!userId) {
+        res.status(401).json({
+          status: 'error',
+          message: '請先登入'
+        })
+        return
+      }
+
+      // 參數驗證
+      const errors: Record<string, string[]> = {}
+
+      if (typeof is_in_school !== 'boolean') {
+        errors.is_in_school = ['是否在學為必填欄位']
+      }
+
+      if (!degree || degree.trim() === '') {
+        errors.degree = ['學位為必填欄位']
+      } else if (degree.length > 50) {
+        errors.degree = ['學位長度不能超過 50 字']
+      }
+
+      if (!school_name || school_name.trim() === '') {
+        errors.school_name = ['學校名稱為必填欄位']
+      } else if (school_name.length > 200) {
+        errors.school_name = ['學校名稱長度不能超過 200 字']
+      }
+
+      if (!department || department.trim() === '') {
+        errors.department = ['科系為必填欄位']
+      } else if (department.length > 200) {
+        errors.department = ['科系長度不能超過 200 字']
+      }
+
+      if (typeof region !== 'boolean') {
+        errors.region = ['地區為必填欄位']
+      }
+
+      if (!start_year || !Number.isInteger(start_year) || start_year < 1900 || start_year > new Date().getFullYear()) {
+        errors.start_year = ['開始年份必須為有效的年份']
+      }
+
+      if (!start_month || !Number.isInteger(start_month) || start_month < 1 || start_month > 12) {
+        errors.start_month = ['開始月份必須為 1-12 之間的數字']
+      }
+
+      // 非在學狀態必須提供結束時間
+      if (!is_in_school) {
+        if (!end_year || !Number.isInteger(end_year) || end_year < 1900 || end_year > new Date().getFullYear()) {
+          errors.end_year = ['非在學狀態必須提供有效的結束年份']
+        }
+
+        if (!end_month || !Number.isInteger(end_month) || end_month < 1 || end_month > 12) {
+          errors.end_month = ['非在學狀態必須提供有效的結束月份']
+        }
+
+        // 檢查結束時間不能早於開始時間
+        if (end_year && end_month && start_year && start_month) {
+          const startDate = new Date(start_year, start_month - 1)
+          const endDate = new Date(end_year, end_month - 1)
+
+          if (endDate <= startDate) {
+            errors.end_year = ['結束時間不能早於或等於開始時間']
+          }
+        }
+      }
+
+      if (Object.keys(errors).length > 0) {
+        res.status(400).json({
+          status: 'error',
+          message: '參數驗證失敗',
+          errors
+        })
+        return
+      }
+
+      // 特殊業務邏輯驗證
+      if (!is_in_school && (!end_year || !end_month)) {
+        res.status(400).json({
+          status: 'error',
+          message: '非在學狀態必須提供結束時間'
+        })
+        return
+      }
+
+      // 取得教師資料
+      const teacherRepository = dataSource.getRepository(Teacher)
+      const teacher = await teacherRepository.findOne({
+        where: { user_id: userId }
+      })
+
+      if (!teacher) {
+        res.status(404).json({
+          status: 'error',
+          message: '找不到教師資料'
+        })
+        return
+      }
+
+      // 新增學習經歷記錄
+      const learningExperienceRepository = dataSource.getRepository(TeacherLearningExperience)
+
+      const learningExperience = new TeacherLearningExperience()
+      learningExperience.teacher_id = teacher.id
+      learningExperience.is_in_school = is_in_school
+      learningExperience.degree = degree.trim()
+      learningExperience.school_name = school_name.trim()
+      learningExperience.department = department.trim()
+      learningExperience.region = region
+      learningExperience.start_year = start_year
+      learningExperience.start_month = start_month
+      learningExperience.end_year = is_in_school ? null : end_year || null
+      learningExperience.end_month = is_in_school ? null : end_month || null
+      learningExperience.file_path = file_path || null
+
+      const savedLearningExperience = await learningExperienceRepository.save(learningExperience)
+
+      const response: TeacherLearningExperienceResponse = {
+        status: 'success',
+        message: '新增學習經歷成功',
+        data: {
+          learning_experience: {
+            id: savedLearningExperience.id,
+            teacher_id: savedLearningExperience.teacher_id,
+            is_in_school: savedLearningExperience.is_in_school,
+            degree: savedLearningExperience.degree,
+            school_name: savedLearningExperience.school_name,
+            department: savedLearningExperience.department,
+            region: savedLearningExperience.region,
+            start_year: savedLearningExperience.start_year,
+            start_month: savedLearningExperience.start_month,
+            end_year: savedLearningExperience.end_year,
+            end_month: savedLearningExperience.end_month,
+            file_path: savedLearningExperience.file_path,
+            created_at: savedLearningExperience.created_at.toISOString(),
+            updated_at: savedLearningExperience.updated_at.toISOString()
+          }
+        }
+      }
+
+      res.status(201).json(response)
+    } catch (error) {
+      console.error('Create learning experience error:', error)
+      res.status(500).json({
+        status: 'error',
+        message: '系統錯誤，請稍後再試'
+      })
+    }
+  }
+
+  /**
+   * 更新學習經歷
+   */
+  static async updateLearningExperience(req: Request, res: Response): Promise<void> {
+    try {
+      const learningExperienceId = parseInt(req.params.id)
+      const updateData: TeacherLearningExperienceUpdateRequest = req.body
+      const userId = req.user?.id
+
+      if (!userId) {
+        res.status(401).json({
+          status: 'error',
+          message: '請先登入'
+        })
+        return
+      }
+
+      if (!learningExperienceId || !Number.isInteger(learningExperienceId)) {
+        res.status(400).json({
+          status: 'error',
+          message: '無效的學習經歷ID'
+        })
+        return
+      }
+
+      // 參數驗證
+      const errors: Record<string, string[]> = {}
+
+      if (updateData.degree !== undefined) {
+        if (!updateData.degree || updateData.degree.trim() === '') {
+          errors.degree = ['學位不能為空']
+        } else if (updateData.degree.length > 50) {
+          errors.degree = ['學位長度不能超過 50 字']
+        }
+      }
+
+      if (updateData.school_name !== undefined) {
+        if (!updateData.school_name || updateData.school_name.trim() === '') {
+          errors.school_name = ['學校名稱不能為空']
+        } else if (updateData.school_name.length > 200) {
+          errors.school_name = ['學校名稱長度不能超過 200 字']
+        }
+      }
+
+      if (updateData.department !== undefined) {
+        if (!updateData.department || updateData.department.trim() === '') {
+          errors.department = ['科系不能為空']
+        } else if (updateData.department.length > 200) {
+          errors.department = ['科系長度不能超過 200 字']
+        }
+      }
+
+      if (updateData.start_year !== undefined) {
+        if (!Number.isInteger(updateData.start_year) || updateData.start_year < 1900 || updateData.start_year > new Date().getFullYear()) {
+          errors.start_year = ['開始年份必須為有效的年份']
+        }
+      }
+
+      if (updateData.start_month !== undefined) {
+        if (!Number.isInteger(updateData.start_month) || updateData.start_month < 1 || updateData.start_month > 12) {
+          errors.start_month = ['開始月份必須為 1-12 之間的數字']
+        }
+      }
+
+      if (updateData.end_year !== undefined) {
+        if (
+          updateData.end_year !== null &&
+          (!Number.isInteger(updateData.end_year) || updateData.end_year < 1900 || updateData.end_year > new Date().getFullYear())
+        ) {
+          errors.end_year = ['結束年份必須為有效的年份']
+        }
+      }
+
+      if (updateData.end_month !== undefined) {
+        if (updateData.end_month !== null && (!Number.isInteger(updateData.end_month) || updateData.end_month < 1 || updateData.end_month > 12)) {
+          errors.end_month = ['結束月份必須為 1-12 之間的數字']
+        }
+      }
+
+      if (Object.keys(errors).length > 0) {
+        res.status(400).json({
+          status: 'error',
+          message: '參數驗證失敗',
+          errors
+        })
+        return
+      }
+
+      // 取得教師資料
+      const teacherRepository = dataSource.getRepository(Teacher)
+      const teacher = await teacherRepository.findOne({
+        where: { user_id: userId }
+      })
+
+      if (!teacher) {
+        res.status(404).json({
+          status: 'error',
+          message: '找不到教師資料'
+        })
+        return
+      }
+
+      // 檢查學習經歷記錄是否存在且屬於該教師
+      const learningExperienceRepository = dataSource.getRepository(TeacherLearningExperience)
+      const learningExperience = await learningExperienceRepository.findOne({
+        where: { id: learningExperienceId, teacher_id: teacher.id }
+      })
+
+      if (!learningExperience) {
+        // 檢查是否存在但不屬於該教師
+        const existsButNotOwned = await learningExperienceRepository.findOne({
+          where: { id: learningExperienceId }
+        })
+
+        if (existsButNotOwned) {
+          res.status(403).json({
+            status: 'error',
+            message: '權限不足，無法修改此學習經歷'
+          })
+          return
+        }
+
+        res.status(404).json({
+          status: 'error',
+          message: '找不到指定的學習經歷'
+        })
+        return
+      }
+
+      // 更新資料
+      if (updateData.is_in_school !== undefined) {
+        learningExperience.is_in_school = updateData.is_in_school
+      }
+      if (updateData.degree !== undefined) {
+        learningExperience.degree = updateData.degree.trim()
+      }
+      if (updateData.school_name !== undefined) {
+        learningExperience.school_name = updateData.school_name.trim()
+      }
+      if (updateData.department !== undefined) {
+        learningExperience.department = updateData.department.trim()
+      }
+      if (updateData.region !== undefined) {
+        learningExperience.region = updateData.region
+      }
+      if (updateData.start_year !== undefined) {
+        learningExperience.start_year = updateData.start_year
+      }
+      if (updateData.start_month !== undefined) {
+        learningExperience.start_month = updateData.start_month
+      }
+      if (updateData.end_year !== undefined) {
+        learningExperience.end_year = updateData.end_year
+      }
+      if (updateData.end_month !== undefined) {
+        learningExperience.end_month = updateData.end_month
+      }
+      if (updateData.file_path !== undefined) {
+        learningExperience.file_path = updateData.file_path
+      }
+
+      const updatedLearningExperience = await learningExperienceRepository.save(learningExperience)
+
+      const response: TeacherLearningExperienceResponse = {
+        status: 'success',
+        message: '更新學習經歷成功',
+        data: {
+          learning_experience: {
+            id: updatedLearningExperience.id,
+            teacher_id: updatedLearningExperience.teacher_id,
+            is_in_school: updatedLearningExperience.is_in_school,
+            degree: updatedLearningExperience.degree,
+            school_name: updatedLearningExperience.school_name,
+            department: updatedLearningExperience.department,
+            region: updatedLearningExperience.region,
+            start_year: updatedLearningExperience.start_year,
+            start_month: updatedLearningExperience.start_month,
+            end_year: updatedLearningExperience.end_year,
+            end_month: updatedLearningExperience.end_month,
+            file_path: updatedLearningExperience.file_path,
+            created_at: updatedLearningExperience.created_at.toISOString(),
+            updated_at: updatedLearningExperience.updated_at.toISOString()
+          }
+        }
+      }
+
+      res.status(200).json(response)
+    } catch (error) {
+      console.error('Update learning experience error:', error)
+      res.status(500).json({
+        status: 'error',
+        message: '系統錯誤，請稍後再試'
+      })
+    }
+  }
+
+  /**
+   * 刪除學習經歷
+   */
+  static async deleteLearningExperience(req: Request, res: Response): Promise<void> {
+    try {
+      const learningExperienceId = parseInt(req.params.id)
+      const userId = req.user?.id
+
+      if (!userId) {
+        res.status(401).json({
+          status: 'error',
+          message: '請先登入'
+        })
+        return
+      }
+
+      if (!learningExperienceId || !Number.isInteger(learningExperienceId)) {
+        res.status(400).json({
+          status: 'error',
+          message: '無效的學習經歷ID'
+        })
+        return
+      }
+
+      // 取得教師資料
+      const teacherRepository = dataSource.getRepository(Teacher)
+      const teacher = await teacherRepository.findOne({
+        where: { user_id: userId }
+      })
+
+      if (!teacher) {
+        res.status(404).json({
+          status: 'error',
+          message: '找不到教師資料'
+        })
+        return
+      }
+
+      // 檢查學習經歷記錄是否存在且屬於該教師
+      const learningExperienceRepository = dataSource.getRepository(TeacherLearningExperience)
+      const learningExperience = await learningExperienceRepository.findOne({
+        where: { id: learningExperienceId, teacher_id: teacher.id }
+      })
+
+      if (!learningExperience) {
+        // 檢查是否存在但不屬於該教師
+        const existsButNotOwned = await learningExperienceRepository.findOne({
+          where: { id: learningExperienceId }
+        })
+
+        if (existsButNotOwned) {
+          res.status(403).json({
+            status: 'error',
+            message: '權限不足，無法刪除此學習經歷'
+          })
+          return
+        }
+
+        res.status(404).json({
+          status: 'error',
+          message: '找不到指定的學習經歷'
+        })
+        return
+      }
+
+      // 刪除記錄
+      await learningExperienceRepository.delete({ id: learningExperienceId })
+
+      res.status(200).json({
+        status: 'success',
+        message: '刪除學習經歷成功'
+      })
+    } catch (error) {
+      console.error('Delete learning experience error:', error)
+      res.status(500).json({
+        status: 'error',
+        message: '系統錯誤，請稍後再試'
+      })
+    }
+  }
+
+  // === 證書管理相關方法 ===
+
+  /**
+   * 取得教師證書列表
+   */
+  static async getCertificates(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.id
+
+      if (!userId) {
+        res.status(401).json({
+          status: 'error',
+          message: '請先登入'
+        })
+        return
+      }
+
+      const teacherRepository = dataSource.getRepository(Teacher)
+      const certificateRepository = dataSource.getRepository(TeacherCertificate)
+
+      // 檢查教師記錄是否存在
+      const teacher = await teacherRepository.findOne({
+        where: { user_id: userId }
+      })
+
+      if (!teacher) {
+        res.status(404).json({
+          status: 'error',
+          message: '找不到教師資料'
+        })
+        return
+      }
+
+      const certificates = await certificateRepository.find({
+        where: { teacher_id: teacher.id },
+        order: { created_at: 'DESC' }
+      })
+
+      const formattedCertificates = certificates.map(cert => ({
+        id: cert.id,
+        teacher_id: cert.teacher_id,
+        verifying_institution: cert.verifying_institution,
+        license_name: cert.license_name,
+        holder_name: cert.holder_name,
+        license_number: cert.license_number,
+        file_path: cert.file_path,
+        category_id: cert.category_id,
+        subject: cert.subject,
+        created_at: cert.created_at.toISOString(),
+        updated_at: cert.updated_at.toISOString()
+      }))
+
+      res.status(200).json({
+        status: 'success',
+        message: '查詢成功',
+        data: {
+          certificates: formattedCertificates
+        }
+      })
+    } catch (error) {
+      console.error('Get certificates error:', error)
+      res.status(500).json({
+        status: 'error',
+        message: '系統錯誤，請稍後再試'
+      })
+    }
+  }
+
+  /**
+   * 建立新證書
+   */
+  static async createCertificate(req: Request, res: Response): Promise<void> {
+    try {
+      const certificateData: TeacherCertificateRequest = req.body
+      const userId = req.user?.id
+
+      if (!userId) {
+        res.status(401).json({
+          status: 'error',
+          message: '請先登入'
+        })
+        return
+      }
+
+      // 參數驗證
+      const errors: Record<string, string[]> = {}
+
+      if (!certificateData.verifying_institution?.trim()) {
+        errors.verifying_institution = ['發證機構為必填欄位']
+      } else if (certificateData.verifying_institution.length > 200) {
+        errors.verifying_institution = ['發證機構長度不得超過200字']
+      }
+
+      if (!certificateData.license_name?.trim()) {
+        errors.license_name = ['證書名稱為必填欄位']
+      } else if (certificateData.license_name.length > 200) {
+        errors.license_name = ['證書名稱長度不得超過200字']
+      }
+
+      if (!certificateData.holder_name?.trim()) {
+        errors.holder_name = ['持有人姓名為必填欄位']
+      } else if (certificateData.holder_name.length > 100) {
+        errors.holder_name = ['持有人姓名長度不得超過100字']
+      }
+
+      if (!certificateData.license_number?.trim()) {
+        errors.license_number = ['證書編號為必填欄位']
+      } else if (certificateData.license_number.length > 100) {
+        errors.license_number = ['證書編號長度不得超過100字']
+      }
+
+      if (!certificateData.file_path?.trim()) {
+        errors.file_path = ['檔案路徑為必填欄位']
+      }
+
+      if (!certificateData.category_id?.trim()) {
+        errors.category_id = ['證書類別為必填欄位']
+      } else if (certificateData.category_id.length > 50) {
+        errors.category_id = ['證書類別長度不得超過50字']
+      }
+
+      if (!certificateData.subject?.trim()) {
+        errors.subject = ['證書主題為必填欄位']
+      } else if (certificateData.subject.length > 100) {
+        errors.subject = ['證書主題長度不得超過100字']
+      }
+
+      if (Object.keys(errors).length > 0) {
+        res.status(400).json({
+          status: 'error',
+          message: '參數驗證失敗',
+          errors
+        })
+        return
+      }
+
+      const teacherRepository = dataSource.getRepository(Teacher)
+      const certificateRepository = dataSource.getRepository(TeacherCertificate)
+
+      // 檢查教師記錄是否存在
+      const teacher = await teacherRepository.findOne({
+        where: { user_id: userId }
+      })
+
+      if (!teacher) {
+        res.status(404).json({
+          status: 'error',
+          message: '找不到教師資料'
+        })
+        return
+      }
+
+      const newCertificate = certificateRepository.create({
+        teacher_id: teacher.id,
+        verifying_institution: certificateData.verifying_institution.trim(),
+        license_name: certificateData.license_name.trim(),
+        holder_name: certificateData.holder_name.trim(),
+        license_number: certificateData.license_number.trim(),
+        file_path: certificateData.file_path.trim(),
+        category_id: certificateData.category_id.trim(),
+        subject: certificateData.subject.trim()
+      })
+
+      const savedCertificate = await certificateRepository.save(newCertificate)
+
+      res.status(201).json({
+        status: 'success',
+        message: '建立證書成功',
+        data: {
+          certificate: {
+            id: savedCertificate.id,
+            teacher_id: savedCertificate.teacher_id,
+            verifying_institution: savedCertificate.verifying_institution,
+            license_name: savedCertificate.license_name,
+            holder_name: savedCertificate.holder_name,
+            license_number: savedCertificate.license_number,
+            file_path: savedCertificate.file_path,
+            category_id: savedCertificate.category_id,
+            subject: savedCertificate.subject,
+            created_at: savedCertificate.created_at.toISOString(),
+            updated_at: savedCertificate.updated_at.toISOString()
+          }
+        }
+      })
+    } catch (error) {
+      console.error('Create certificate error:', error)
+      res.status(500).json({
+        status: 'error',
+        message: '系統錯誤，請稍後再試'
+      })
+    }
+  }
+
+  /**
+   * 更新證書
+   */
+  static async updateCertificate(req: Request, res: Response): Promise<void> {
+    try {
+      const certificateId = parseInt(req.params.id, 10)
+      const updateData: TeacherCertificateUpdateRequest = req.body
+      const userId = req.user?.id
+
+      if (!userId) {
+        res.status(401).json({
+          status: 'error',
+          message: '請先登入'
+        })
+        return
+      }
+
+      if (!certificateId || isNaN(certificateId)) {
+        res.status(400).json({
+          status: 'error',
+          message: '無效的證書ID'
+        })
+        return
+      }
+
+      // 參數驗證
+      const errors: Record<string, string[]> = {}
+
+      if (updateData.verifying_institution !== undefined) {
+        if (!updateData.verifying_institution?.trim()) {
+          errors.verifying_institution = ['發證機構不能為空']
+        } else if (updateData.verifying_institution.length > 200) {
+          errors.verifying_institution = ['發證機構長度不得超過200字']
+        }
+      }
+
+      if (updateData.license_name !== undefined) {
+        if (!updateData.license_name?.trim()) {
+          errors.license_name = ['證書名稱不能為空']
+        } else if (updateData.license_name.length > 200) {
+          errors.license_name = ['證書名稱長度不得超過200字']
+        }
+      }
+
+      if (updateData.holder_name !== undefined) {
+        if (!updateData.holder_name?.trim()) {
+          errors.holder_name = ['持有人姓名不能為空']
+        } else if (updateData.holder_name.length > 100) {
+          errors.holder_name = ['持有人姓名長度不得超過100字']
+        }
+      }
+
+      if (updateData.license_number !== undefined) {
+        if (!updateData.license_number?.trim()) {
+          errors.license_number = ['證書編號不能為空']
+        } else if (updateData.license_number.length > 100) {
+          errors.license_number = ['證書編號長度不得超過100字']
+        }
+      }
+
+      if (updateData.file_path !== undefined) {
+        if (!updateData.file_path?.trim()) {
+          errors.file_path = ['檔案路徑不能為空']
+        }
+      }
+
+      if (updateData.category_id !== undefined) {
+        if (!updateData.category_id?.trim()) {
+          errors.category_id = ['證書類別不能為空']
+        } else if (updateData.category_id.length > 50) {
+          errors.category_id = ['證書類別長度不得超過50字']
+        }
+      }
+
+      if (updateData.subject !== undefined) {
+        if (!updateData.subject?.trim()) {
+          errors.subject = ['證書主題不能為空']
+        } else if (updateData.subject.length > 100) {
+          errors.subject = ['證書主題長度不得超過100字']
+        }
+      }
+
+      if (Object.keys(errors).length > 0) {
+        res.status(400).json({
+          status: 'error',
+          message: '參數驗證失敗',
+          errors
+        })
+        return
+      }
+
+      const teacherRepository = dataSource.getRepository(Teacher)
+      const certificateRepository = dataSource.getRepository(TeacherCertificate)
+
+      // 檢查教師記錄是否存在
+      const teacher = await teacherRepository.findOne({
+        where: { user_id: userId }
+      })
+
+      if (!teacher) {
+        res.status(404).json({
+          status: 'error',
+          message: '找不到教師資料'
+        })
+        return
+      }
+
+      // 檢查證書是否存在且屬於該用戶
+      const existingCertificate = await certificateRepository.findOne({
+        where: { id: certificateId }
+      })
+
+      if (!existingCertificate) {
+        res.status(404).json({
+          status: 'error',
+          message: '找不到指定的證書'
+        })
+        return
+      }
+
+      if (existingCertificate.teacher_id !== teacher.id) {
+        res.status(403).json({
+          status: 'error',
+          message: '權限不足，無法修改此證書'
+        })
+        return
+      }
+
+      // 構建更新欄位
+      const fieldsToUpdate: Partial<TeacherCertificate> = {}
+
+      if (updateData.verifying_institution !== undefined) {
+        fieldsToUpdate.verifying_institution = updateData.verifying_institution.trim()
+      }
+      if (updateData.license_name !== undefined) {
+        fieldsToUpdate.license_name = updateData.license_name.trim()
+      }
+      if (updateData.holder_name !== undefined) {
+        fieldsToUpdate.holder_name = updateData.holder_name.trim()
+      }
+      if (updateData.license_number !== undefined) {
+        fieldsToUpdate.license_number = updateData.license_number.trim()
+      }
+      if (updateData.file_path !== undefined) {
+        fieldsToUpdate.file_path = updateData.file_path.trim()
+      }
+      if (updateData.category_id !== undefined) {
+        fieldsToUpdate.category_id = updateData.category_id.trim()
+      }
+      if (updateData.subject !== undefined) {
+        fieldsToUpdate.subject = updateData.subject.trim()
+      }
+
+      // 如果沒有需要更新的欄位
+      if (Object.keys(fieldsToUpdate).length === 0) {
+        res.status(400).json({
+          status: 'error',
+          message: '至少需要提供一個要更新的欄位'
+        })
+        return
+      }
+
+      // 更新證書
+      await certificateRepository.update({ id: certificateId }, fieldsToUpdate)
+
+      // 取得更新後的證書
+      const updatedCertificate = await certificateRepository.findOne({
+        where: { id: certificateId }
+      })
+
+      res.status(200).json({
+        status: 'success',
+        message: '更新證書成功',
+        data: {
+          certificate: {
+            id: updatedCertificate!.id,
+            teacher_id: updatedCertificate!.teacher_id,
+            verifying_institution: updatedCertificate!.verifying_institution,
+            license_name: updatedCertificate!.license_name,
+            holder_name: updatedCertificate!.holder_name,
+            license_number: updatedCertificate!.license_number,
+            file_path: updatedCertificate!.file_path,
+            category_id: updatedCertificate!.category_id,
+            subject: updatedCertificate!.subject,
+            created_at: updatedCertificate!.created_at.toISOString(),
+            updated_at: updatedCertificate!.updated_at.toISOString()
+          }
+        }
+      })
+    } catch (error) {
+      console.error('Update certificate error:', error)
+      res.status(500).json({
+        status: 'error',
+        message: '系統錯誤，請稍後再試'
+      })
+    }
+  }
+
+  /**
+   * 刪除證書
+   */
+  static async deleteCertificate(req: Request, res: Response): Promise<void> {
+    try {
+      const certificateId = parseInt(req.params.id, 10)
+      const userId = req.user?.id
+
+      if (!userId) {
+        res.status(401).json({
+          status: 'error',
+          message: '請先登入'
+        })
+        return
+      }
+
+      if (!certificateId || isNaN(certificateId)) {
+        res.status(400).json({
+          status: 'error',
+          message: '無效的證書ID'
+        })
+        return
+      }
+
+      const teacherRepository = dataSource.getRepository(Teacher)
+      const certificateRepository = dataSource.getRepository(TeacherCertificate)
+
+      // 檢查教師記錄是否存在
+      const teacher = await teacherRepository.findOne({
+        where: { user_id: userId }
+      })
+
+      if (!teacher) {
+        res.status(404).json({
+          status: 'error',
+          message: '找不到教師資料'
+        })
+        return
+      }
+
+      // 檢查證書是否存在
+      const existingCertificate = await certificateRepository.findOne({
+        where: { id: certificateId }
+      })
+
+      if (!existingCertificate) {
+        res.status(404).json({
+          status: 'error',
+          message: '找不到指定的證書'
+        })
+        return
+      }
+
+      // 檢查擁有權
+      if (existingCertificate.teacher_id !== teacher.id) {
+        res.status(403).json({
+          status: 'error',
+          message: '權限不足，無法刪除此證書'
+        })
+        return
+      }
+
+      // 刪除記錄
+      await certificateRepository.delete({ id: certificateId })
+
+      res.status(200).json({
+        status: 'success',
+        message: '刪除證書成功'
+      })
+    } catch (error) {
+      console.error('Delete certificate error:', error)
       res.status(500).json({
         status: 'error',
         message: '系統錯誤，請稍後再試'
