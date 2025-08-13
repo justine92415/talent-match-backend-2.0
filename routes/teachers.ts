@@ -297,6 +297,47 @@ const router = Router()
  *           format: date-time
  *           description: 更新時間
  *           example: "2025-08-12T10:00:00.000Z"
+ *     TeacherAvailableSlot:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: number
+ *           description: 時段ID
+ *           example: 1
+ *         teacher_id:
+ *           type: number
+ *           description: 教師ID
+ *           example: 1
+ *         weekday:
+ *           type: number
+ *           description: 星期 (0=週日, 1=週一, ..., 6=週六)
+ *           minimum: 0
+ *           maximum: 6
+ *           example: 1
+ *         start_time:
+ *           type: string
+ *           description: 開始時間 (HH:MM 格式)
+ *           pattern: "^([01]\\d|2[0-3]):([0-5]\\d)$"
+ *           example: "09:00"
+ *         end_time:
+ *           type: string
+ *           description: 結束時間 (HH:MM 格式)
+ *           pattern: "^([01]\\d|2[0-3]):([0-5]\\d)$"
+ *           example: "17:00"
+ *         is_active:
+ *           type: boolean
+ *           description: 是否啟用
+ *           example: true
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *           description: 建立時間
+ *           example: "2025-08-13T10:00:00.000Z"
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *           description: 更新時間
+ *           example: "2025-08-13T10:00:00.000Z"
  */
 
 /**
@@ -2885,5 +2926,314 @@ router.put('/certificates/:id', authenticateToken, TeachersController.updateCert
  *                   message: 系統錯誤，請稍後再試
  */
 router.delete('/certificates/:id', authenticateToken, TeachersController.deleteCertificate)
+
+// === 時間管理路由 ===
+
+/**
+ * @swagger
+ * /api/teachers/schedule:
+ *   get:
+ *     tags:
+ *       - Teachers
+ *     summary: 取得可預約時段設定
+ *     description: |
+ *       取得教師的可預約時段設定
+ *
+ *       **業務規則：**
+ *       - 返回所有已設定的時段
+ *       - 按星期和時間排序
+ *
+ *       **權限要求：**
+ *       - 需要登入
+ *       - 僅教師可存取
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 查詢成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         slots:
+ *                           type: array
+ *                           items:
+ *                             $ref: '#/components/schemas/TeacherAvailableSlot'
+ *             examples:
+ *               success:
+ *                 summary: 成功取得時段設定
+ *                 value:
+ *                   status: success
+ *                   message: 查詢成功
+ *                   data:
+ *                     slots:
+ *                       - id: 1
+ *                         teacher_id: 1
+ *                         weekday: 1
+ *                         start_time: "09:00"
+ *                         end_time: "12:00"
+ *                         is_active: true
+ *                         created_at: "2025-08-13T10:00:00.000Z"
+ *                         updated_at: "2025-08-13T10:00:00.000Z"
+ *       401:
+ *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 教師資料不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/schedule', authenticateToken, TeachersController.getSchedule)
+
+/**
+ * @swagger
+ * /api/teachers/schedule:
+ *   put:
+ *     tags:
+ *       - Teachers
+ *     summary: 更新可預約時段設定
+ *     description: |
+ *       更新教師的可預約時段設定
+ *
+ *       **業務規則：**
+ *       - 會完全取代現有的時段設定
+ *       - 星期範圍：0-6（0=週日）
+ *       - 時間格式：HH:MM（24小時制）
+ *       - 結束時間必須晚於開始時間
+ *
+ *       **權限要求：**
+ *       - 需要登入
+ *       - 僅教師可存取
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - slots
+ *             properties:
+ *               slots:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - weekday
+ *                     - start_time
+ *                     - end_time
+ *                   properties:
+ *                     weekday:
+ *                       type: number
+ *                       minimum: 0
+ *                       maximum: 6
+ *                       description: 星期（0=週日, 1=週一, ..., 6=週六）
+ *                       example: 1
+ *                     start_time:
+ *                       type: string
+ *                       pattern: "^([01]\\d|2[0-3]):([0-5]\\d)$"
+ *                       description: 開始時間（HH:MM 格式）
+ *                       example: "09:00"
+ *                     end_time:
+ *                       type: string
+ *                       pattern: "^([01]\\d|2[0-3]):([0-5]\\d)$"
+ *                       description: 結束時間（HH:MM 格式）
+ *                       example: "12:00"
+ *                     is_active:
+ *                       type: boolean
+ *                       description: 是否啟用（預設為 true）
+ *                       example: true
+ *           examples:
+ *             weekday_schedule:
+ *               summary: 週一到週五的時段設定
+ *               value:
+ *                 slots:
+ *                   - weekday: 1
+ *                     start_time: "09:00"
+ *                     end_time: "12:00"
+ *                     is_active: true
+ *                   - weekday: 1
+ *                     start_time: "14:00"
+ *                     end_time: "17:00"
+ *                     is_active: true
+ *                   - weekday: 2
+ *                     start_time: "09:00"
+ *                     end_time: "17:00"
+ *                     is_active: true
+ *     responses:
+ *       200:
+ *         description: 更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         slots:
+ *                           type: array
+ *                           items:
+ *                             $ref: '#/components/schemas/TeacherAvailableSlot'
+ *             examples:
+ *               success:
+ *                 summary: 成功更新時段設定
+ *                 value:
+ *                   status: success
+ *                   message: 更新時間設定成功
+ *                   data:
+ *                     slots:
+ *                       - id: 1
+ *                         teacher_id: 1
+ *                         weekday: 1
+ *                         start_time: "09:00"
+ *                         end_time: "12:00"
+ *                         is_active: true
+ *                         created_at: "2025-08-13T10:00:00.000Z"
+ *                         updated_at: "2025-08-13T10:00:00.000Z"
+ *       400:
+ *         description: 參數驗證錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *             examples:
+ *               validation_error:
+ *                 summary: 參數驗證失敗
+ *                 value:
+ *                   status: error
+ *                   message: 參數驗證失敗
+ *                   errors:
+ *                     "slots[0]": ["星期必須為 0-6 的數字"]
+ *                     "slots[1]": ["結束時間必須晚於開始時間"]
+ *       401:
+ *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 教師資料不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.put('/schedule', authenticateToken, TeachersController.updateSchedule)
+
+/**
+ * @swagger
+ * /api/teachers/schedule/conflicts:
+ *   get:
+ *     tags:
+ *       - Teachers
+ *     summary: 檢查時段衝突
+ *     description: |
+ *       檢查現有預約與時段設定的衝突
+ *
+ *       **業務規則：**
+ *       - 返回與現有預約衝突的時段
+ *       - 包含衝突的預約數量
+ *
+ *       **權限要求：**
+ *       - 需要登入
+ *       - 僅教師可存取
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 查詢成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         conflicts:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               weekday:
+ *                                 type: number
+ *                                 example: 1
+ *                               start_time:
+ *                                 type: string
+ *                                 example: "10:00"
+ *                               end_time:
+ *                                 type: string
+ *                                 example: "11:00"
+ *                               conflicting_reservations:
+ *                                 type: number
+ *                                 example: 2
+ *             examples:
+ *               no_conflicts:
+ *                 summary: 無衝突
+ *                 value:
+ *                   status: success
+ *                   message: 查詢成功
+ *                   data:
+ *                     conflicts: []
+ *               has_conflicts:
+ *                 summary: 有衝突
+ *                 value:
+ *                   status: success
+ *                   message: 查詢成功
+ *                   data:
+ *                     conflicts:
+ *                       - weekday: 1
+ *                         start_time: "10:00"
+ *                         end_time: "11:00"
+ *                         conflicting_reservations: 2
+ *       401:
+ *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 教師資料不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/schedule/conflicts', authenticateToken, TeachersController.getScheduleConflicts)
 
 export default router
