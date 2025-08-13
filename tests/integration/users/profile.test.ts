@@ -59,23 +59,19 @@ describe('Users Profile API', () => {
     })
 
     it('未提供 token 應回傳 401', async () => {
-      // Act
       const res = await request(app).get('/api/users/profile')
 
-      // Assert
       expect(res.status).toBe(401)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('未授權')
+      expect(res.body.message).toBe('請先登入')
     })
 
     it('無效 token 應回傳 401', async () => {
-      // Act
       const res = await request(app).get('/api/users/profile').set('Authorization', 'Bearer invalid-token')
 
-      // Assert
       expect(res.status).toBe(401)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('未授權')
+      expect(res.body.message).toBe('請先登入')
     })
 
     it('過期 token 應回傳 401', async () => {
@@ -89,7 +85,7 @@ describe('Users Profile API', () => {
       // Assert
       expect(res.status).toBe(401)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('未授權')
+      expect(res.body.message).toBe('請先登入')
     })
   })
 
@@ -229,7 +225,7 @@ describe('Users Profile API', () => {
       // Assert
       expect(res.status).toBe(401)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('未授權')
+      expect(res.body.message).toBe('請先登入')
     })
 
     it('嘗試更新不允許的欄位應被忽略', async () => {
