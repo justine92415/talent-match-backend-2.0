@@ -127,3 +127,65 @@ export interface TeacherWorkExperienceResponse {
   }
   errors?: Record<string, string[]>
 }
+
+// 學習經歷相關型別
+export interface TeacherLearningExperienceRequest {
+  is_in_school: boolean
+  degree: string
+  school_name: string
+  department: string
+  region: boolean
+  start_year: number
+  start_month: number
+  end_year?: number
+  end_month?: number
+  file_path?: string
+}
+
+export interface TeacherLearningExperienceUpdateRequest {
+  is_in_school?: boolean
+  degree?: string
+  school_name?: string
+  department?: string
+  region?: boolean
+  start_year?: number
+  start_month?: number
+  end_year?: number
+  end_month?: number
+  file_path?: string
+}
+
+export interface TeacherLearningExperience {
+  id: number
+  teacher_id: number
+  is_in_school: boolean
+  degree: string
+  school_name: string
+  department: string
+  region: boolean
+  start_year: number
+  start_month: number
+  end_year: number | null
+  end_month: number | null
+  file_path: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface TeacherLearningExperienceListResponse {
+  status: 'success' | 'error'
+  message: string
+  data?: {
+    learning_experiences: TeacherLearningExperience[]
+  }
+  errors?: Record<string, string[]>
+}
+
+export interface TeacherLearningExperienceResponse {
+  status: 'success' | 'error'
+  message: string
+  data?: {
+    learning_experience: TeacherLearningExperience
+  }
+  errors?: Record<string, string[]>
+}

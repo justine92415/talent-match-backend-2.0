@@ -86,6 +86,217 @@ const router = Router()
  *           example:
  *             nationality: ["國籍為必填欄位"]
  *             introduction: ["自我介紹至少需要100字元"]
+ *     ValidationErrorResponse:
+ *       type: object
+ *       properties:
+ *         status:
+ *           type: string
+ *           enum: [error]
+ *           example: error
+ *         message:
+ *           type: string
+ *           example: 參數驗證失敗
+ *         errors:
+ *           type: object
+ *           additionalProperties:
+ *             type: array
+ *             items:
+ *               type: string
+ *           example:
+ *             email: ["Email 格式不正確"]
+ *             password: ["密碼長度至少 8 位"]
+ *     TeacherLearningExperienceRequest:
+ *       type: object
+ *       required:
+ *         - is_in_school
+ *         - degree
+ *         - school_name
+ *         - department
+ *         - region
+ *         - start_year
+ *         - start_month
+ *       properties:
+ *         is_in_school:
+ *           type: boolean
+ *           description: 是否仍在學
+ *           example: false
+ *         degree:
+ *           type: string
+ *           description: 學位
+ *           example: "學士"
+ *           minLength: 1
+ *           maxLength: 50
+ *         school_name:
+ *           type: string
+ *           description: 學校名稱
+ *           example: "台灣大學"
+ *           minLength: 1
+ *           maxLength: 200
+ *         department:
+ *           type: string
+ *           description: 科系
+ *           example: "資訊工程學系"
+ *           minLength: 1
+ *           maxLength: 200
+ *         region:
+ *           type: boolean
+ *           description: 地區 (true=台灣, false=海外)
+ *           example: true
+ *         start_year:
+ *           type: integer
+ *           description: 開始年份
+ *           example: 2010
+ *           minimum: 1900
+ *           maximum: 2050
+ *         start_month:
+ *           type: integer
+ *           description: 開始月份
+ *           example: 9
+ *           minimum: 1
+ *           maximum: 12
+ *         end_year:
+ *           type: integer
+ *           nullable: true
+ *           description: 結束年份 (在學中時可為空)
+ *           example: 2014
+ *           minimum: 1900
+ *           maximum: 2050
+ *         end_month:
+ *           type: integer
+ *           nullable: true
+ *           description: 結束月份 (在學中時可為空)
+ *           example: 6
+ *           minimum: 1
+ *           maximum: 12
+ *         file_path:
+ *           type: string
+ *           nullable: true
+ *           description: 學歷證明檔案路徑
+ *           example: "uploads/certificates/degree.pdf"
+ *     TeacherLearningExperienceUpdateRequest:
+ *       type: object
+ *       properties:
+ *         is_in_school:
+ *           type: boolean
+ *           description: 是否仍在學
+ *           example: false
+ *         degree:
+ *           type: string
+ *           description: 學位
+ *           example: "碩士"
+ *           minLength: 1
+ *           maxLength: 50
+ *         school_name:
+ *           type: string
+ *           description: 學校名稱
+ *           example: "政治大學"
+ *           minLength: 1
+ *           maxLength: 200
+ *         department:
+ *           type: string
+ *           description: 科系
+ *           example: "企業管理學系"
+ *           minLength: 1
+ *           maxLength: 200
+ *         region:
+ *           type: boolean
+ *           description: 地區 (true=台灣, false=海外)
+ *           example: true
+ *         start_year:
+ *           type: integer
+ *           description: 開始年份
+ *           example: 2014
+ *           minimum: 1900
+ *           maximum: 2050
+ *         start_month:
+ *           type: integer
+ *           description: 開始月份
+ *           example: 9
+ *           minimum: 1
+ *           maximum: 12
+ *         end_year:
+ *           type: integer
+ *           nullable: true
+ *           description: 結束年份
+ *           example: 2016
+ *           minimum: 1900
+ *           maximum: 2050
+ *         end_month:
+ *           type: integer
+ *           nullable: true
+ *           description: 結束月份
+ *           example: 6
+ *           minimum: 1
+ *           maximum: 12
+ *         file_path:
+ *           type: string
+ *           nullable: true
+ *           description: 學歷證明檔案路徑
+ *           example: "uploads/certificates/master_degree.pdf"
+ *     TeacherLearningExperience:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: 學習經歷ID
+ *           example: 1
+ *         teacher_id:
+ *           type: integer
+ *           description: 教師ID
+ *           example: 123
+ *         is_in_school:
+ *           type: boolean
+ *           description: 是否仍在學
+ *           example: false
+ *         degree:
+ *           type: string
+ *           description: 學位
+ *           example: "學士"
+ *         school_name:
+ *           type: string
+ *           description: 學校名稱
+ *           example: "台灣大學"
+ *         department:
+ *           type: string
+ *           description: 科系
+ *           example: "資訊工程學系"
+ *         region:
+ *           type: boolean
+ *           description: 地區 (true=台灣, false=海外)
+ *           example: true
+ *         start_year:
+ *           type: integer
+ *           description: 開始年份
+ *           example: 2010
+ *         start_month:
+ *           type: integer
+ *           description: 開始月份
+ *           example: 9
+ *         end_year:
+ *           type: integer
+ *           nullable: true
+ *           description: 結束年份
+ *           example: 2014
+ *         end_month:
+ *           type: integer
+ *           nullable: true
+ *           description: 結束月份
+ *           example: 6
+ *         file_path:
+ *           type: string
+ *           nullable: true
+ *           description: 學歷證明檔案路徑
+ *           example: "uploads/certificates/degree.pdf"
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *           description: 建立時間
+ *           example: "2025-08-12T10:00:00.000Z"
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *           description: 更新時間
+ *           example: "2025-08-12T10:00:00.000Z"
  */
 
 /**
@@ -1554,5 +1765,517 @@ router.put('/work-experiences/:id', authenticateToken, TeachersController.update
  *                   message: 系統錯誤，請稍後再試
  */
 router.delete('/work-experiences/:id', authenticateToken, TeachersController.deleteWorkExperience)
+
+/**
+ * @swagger
+ * /api/teachers/learning-experiences:
+ *   get:
+ *     tags:
+ *       - Teachers
+ *     summary: 取得學習經歷列表
+ *     description: |
+ *       取得教師的學習經歷列表
+ *
+ *       **權限要求：**
+ *       - 需要登入
+ *       - 僅能查看自己的學習經歷
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 取得學習經歷列表成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: 取得學習經歷列表成功
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     learning_experiences:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/TeacherLearningExperience'
+ *             examples:
+ *               success:
+ *                 summary: 成功取得學習經歷列表
+ *                 value:
+ *                   status: success
+ *                   message: 取得學習經歷列表成功
+ *                   data:
+ *                     learning_experiences:
+ *                       - id: 1
+ *                         teacher_id: 123
+ *                         is_in_school: false
+ *                         degree: 學士
+ *                         school_name: 台灣大學
+ *                         department: 資訊工程學系
+ *                         region: true
+ *                         start_year: 2010
+ *                         start_month: 9
+ *                         end_year: 2014
+ *                         end_month: 6
+ *                         file_path: uploads/certificates/degree.pdf
+ *                         created_at: "2025-08-12T10:00:00.000Z"
+ *                         updated_at: "2025-08-12T10:00:00.000Z"
+ *               empty_list:
+ *                 summary: 空的學習經歷列表
+ *                 value:
+ *                   status: success
+ *                   message: 取得學習經歷列表成功
+ *                   data:
+ *                     learning_experiences: []
+ *       401:
+ *         description: 未授權
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               unauthorized:
+ *                 summary: 未登入
+ *                 value:
+ *                   status: error
+ *                   message: 請先登入
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               server_error:
+ *                 summary: 系統錯誤
+ *                 value:
+ *                   status: error
+ *                   message: 系統錯誤，請稍後再試
+ */
+router.get('/learning-experiences', authenticateToken, TeachersController.getLearningExperiences)
+
+/**
+ * @swagger
+ * /api/teachers/learning-experiences:
+ *   post:
+ *     tags:
+ *       - Teachers
+ *     summary: 新增學習經歷
+ *     description: |
+ *       新增教師的學習經歷記錄
+ *
+ *       **業務規則：**
+ *       - 非在學狀態必須提供結束時間
+ *       - 結束時間不能早於開始時間
+ *       - 學位、學校名稱、科系為必填欄位
+ *
+ *       **權限要求：**
+ *       - 需要登入
+ *       - 僅能新增自己的學習經歷
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TeacherLearningExperienceRequest'
+ *           examples:
+ *             graduated:
+ *               summary: 已畢業的學習經歷
+ *               value:
+ *                 is_in_school: false
+ *                 degree: 碩士
+ *                 school_name: 政治大學
+ *                 department: 企業管理學系
+ *                 region: true
+ *                 start_year: 2014
+ *                 start_month: 9
+ *                 end_year: 2016
+ *                 end_month: 6
+ *                 file_path: uploads/certificates/master_degree.pdf
+ *             current_student:
+ *               summary: 在學中的學習經歷
+ *               value:
+ *                 is_in_school: true
+ *                 degree: 博士
+ *                 school_name: 清華大學
+ *                 department: 電機工程學系
+ *                 region: true
+ *                 start_year: 2020
+ *                 start_month: 9
+ *     responses:
+ *       201:
+ *         description: 新增學習經歷成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: 新增學習經歷成功
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     learning_experience:
+ *                       $ref: '#/components/schemas/TeacherLearningExperience'
+ *             examples:
+ *               success:
+ *                 summary: 成功新增學習經歷
+ *                 value:
+ *                   status: success
+ *                   message: 新增學習經歷成功
+ *                   data:
+ *                     learning_experience:
+ *                       id: 1
+ *                       teacher_id: 123
+ *                       is_in_school: false
+ *                       degree: 碩士
+ *                       school_name: 政治大學
+ *                       department: 企業管理學系
+ *                       region: true
+ *                       start_year: 2014
+ *                       start_month: 9
+ *                       end_year: 2016
+ *                       end_month: 6
+ *                       file_path: uploads/certificates/master_degree.pdf
+ *                       created_at: "2025-08-12T10:00:00.000Z"
+ *                       updated_at: "2025-08-12T10:00:00.000Z"
+ *       400:
+ *         description: 參數驗證錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *             examples:
+ *               validation_error:
+ *                 summary: 參數驗證失敗
+ *                 value:
+ *                   status: error
+ *                   message: 參數驗證失敗
+ *                   errors:
+ *                     degree: ["學位為必填欄位"]
+ *                     school_name: ["學校名稱為必填欄位"]
+ *                     department: ["科系為必填欄位"]
+ *               business_rule_error:
+ *                 summary: 業務規則錯誤
+ *                 value:
+ *                   status: error
+ *                   message: 非在學狀態必須提供結束時間
+ *       401:
+ *         description: 未授權
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               unauthorized:
+ *                 summary: 未登入
+ *                 value:
+ *                   status: error
+ *                   message: 請先登入
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               server_error:
+ *                 summary: 系統錯誤
+ *                 value:
+ *                   status: error
+ *                   message: 系統錯誤，請稍後再試
+ */
+router.post('/learning-experiences', authenticateToken, TeachersController.createLearningExperience)
+
+/**
+ * @swagger
+ * /api/teachers/learning-experiences/{id}:
+ *   put:
+ *     tags:
+ *       - Teachers
+ *     summary: 更新學習經歷
+ *     description: |
+ *       更新教師的學習經歷記錄
+ *
+ *       **業務規則：**
+ *       - 只能更新自己的學習經歷
+ *       - 可以部分更新欄位
+ *       - 時間驗證規則與新增相同
+ *
+ *       **權限要求：**
+ *       - 需要登入
+ *       - 僅能更新自己的學習經歷
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 學習經歷ID
+ *         example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TeacherLearningExperienceUpdateRequest'
+ *           examples:
+ *             partial_update:
+ *               summary: 部分更新
+ *               value:
+ *                 degree: 碩士
+ *                 school_name: 政治大學
+ *                 end_year: 2016
+ *                 end_month: 6
+ *             full_update:
+ *               summary: 完整更新
+ *               value:
+ *                 is_in_school: false
+ *                 degree: 碩士
+ *                 school_name: 台灣科技大學
+ *                 department: 資訊管理學系
+ *                 region: true
+ *                 start_year: 2015
+ *                 start_month: 9
+ *                 end_year: 2017
+ *                 end_month: 6
+ *                 file_path: uploads/certificates/updated_degree.pdf
+ *     responses:
+ *       200:
+ *         description: 更新學習經歷成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: 更新學習經歷成功
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     learning_experience:
+ *                       $ref: '#/components/schemas/TeacherLearningExperience'
+ *             examples:
+ *               success:
+ *                 summary: 成功更新學習經歷
+ *                 value:
+ *                   status: success
+ *                   message: 更新學習經歷成功
+ *                   data:
+ *                     learning_experience:
+ *                       id: 1
+ *                       teacher_id: 123
+ *                       is_in_school: false
+ *                       degree: 碩士
+ *                       school_name: 政治大學
+ *                       department: 企業管理學系
+ *                       region: true
+ *                       start_year: 2014
+ *                       start_month: 9
+ *                       end_year: 2016
+ *                       end_month: 6
+ *                       file_path: uploads/certificates/master_degree.pdf
+ *                       created_at: "2025-08-12T10:00:00.000Z"
+ *                       updated_at: "2025-08-12T10:05:00.000Z"
+ *       400:
+ *         description: 參數驗證錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *             examples:
+ *               validation_error:
+ *                 summary: 參數驗證失敗
+ *                 value:
+ *                   status: error
+ *                   message: 參數驗證失敗
+ *                   errors:
+ *                     degree: ["學位不能為空"]
+ *                     end_year: ["結束年份必須為有效的年份"]
+ *               invalid_id:
+ *                 summary: 無效的ID
+ *                 value:
+ *                   status: error
+ *                   message: 無效的學習經歷ID
+ *       401:
+ *         description: 未授權
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               unauthorized:
+ *                 summary: 未登入
+ *                 value:
+ *                   status: error
+ *                   message: 請先登入
+ *       403:
+ *         description: 權限不足
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               forbidden:
+ *                 summary: 權限不足
+ *                 value:
+ *                   status: error
+ *                   message: 權限不足，無法修改此學習經歷
+ *       404:
+ *         description: 學習經歷不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               not_found:
+ *                 summary: 學習經歷不存在
+ *                 value:
+ *                   status: error
+ *                   message: 找不到指定的學習經歷
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               server_error:
+ *                 summary: 系統錯誤
+ *                 value:
+ *                   status: error
+ *                   message: 系統錯誤，請稍後再試
+ */
+router.put('/learning-experiences/:id', authenticateToken, TeachersController.updateLearningExperience)
+
+/**
+ * @swagger
+ * /api/teachers/learning-experiences/{id}:
+ *   delete:
+ *     tags:
+ *       - Teachers
+ *     summary: 刪除學習經歷
+ *     description: |
+ *       刪除教師的學習經歷記錄
+ *
+ *       **業務規則：**
+ *       - 只能刪除自己的學習經歷
+ *       - 刪除後無法復原
+ *
+ *       **權限要求：**
+ *       - 需要登入
+ *       - 僅能刪除自己的學習經歷
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 學習經歷ID
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: 刪除學習經歷成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: 刪除學習經歷成功
+ *             examples:
+ *               success:
+ *                 summary: 成功刪除學習經歷
+ *                 value:
+ *                   status: success
+ *                   message: 刪除學習經歷成功
+ *       400:
+ *         description: 參數錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               invalid_id:
+ *                 summary: 無效的ID
+ *                 value:
+ *                   status: error
+ *                   message: 無效的學習經歷ID
+ *       401:
+ *         description: 未授權
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               unauthorized:
+ *                 summary: 未登入
+ *                 value:
+ *                   status: error
+ *                   message: 請先登入
+ *       403:
+ *         description: 權限不足
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               forbidden:
+ *                 summary: 權限不足
+ *                 value:
+ *                   status: error
+ *                   message: 權限不足，無法刪除此學習經歷
+ *       404:
+ *         description: 學習經歷不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               not_found:
+ *                 summary: 學習經歷不存在
+ *                 value:
+ *                   status: error
+ *                   message: 找不到指定的學習經歷
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               server_error:
+ *                 summary: 系統錯誤
+ *                 value:
+ *                   status: error
+ *                   message: 系統錯誤，請稍後再試
+ */
+router.delete('/learning-experiences/:id', authenticateToken, TeachersController.deleteLearningExperience)
 
 export default router
