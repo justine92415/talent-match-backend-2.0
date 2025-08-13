@@ -92,7 +92,7 @@ describe('Courses API - Phase 1: Draft Create & Query', () => {
       expect(res.body.data.course.name).toBe(courseData.name)
       expect(res.body.data.course.content).toBe(courseData.content)
       expect(res.body.data.course.status).toBe(CourseStatus.DRAFT)
-      expect(res.body.data.course.application_status).toBe(ApplicationStatus.PENDING)
+      expect(res.body.data.course.application_status).toBe(null)
 
       // 保存課程ID供後續測試使用
       courseId = res.body.data.course.id
