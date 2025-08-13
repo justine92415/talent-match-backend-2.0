@@ -40,15 +40,15 @@ export class TeacherLearningExperience {
 
   /** 結束年份 */
   @Column({ type: 'integer', nullable: true })
-  end_year!: number
+  end_year!: number | null
 
   /** 結束月份 */
   @Column({ type: 'integer', nullable: true })
-  end_month!: number
+  end_month!: number | null
 
   /** 學歷證明檔案路徑 */
   @Column({ type: 'text', nullable: true })
-  file_path!: string
+  file_path!: string | null
 
   /** 建立時間 */
   @CreateDateColumn({ type: 'timestamp' })
