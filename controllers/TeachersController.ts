@@ -5,6 +5,8 @@ import { TeacherWorkExperience } from '../entities/TeacherWorkExperience'
 import { TeacherLearningExperience } from '../entities/TeacherLearningExperience'
 import { TeacherCertificate } from '../entities/TeacherCertificate'
 import { ApplicationStatus } from '../entities/enums'
+import { TeacherWorkExperienceService } from '../services/TeacherWorkExperienceService'
+import { ValidationError, NotFoundError } from '../middleware/errorHandler'
 import {
   TeacherApplyRequest,
   TeacherApplyResponse,
@@ -539,36 +541,16 @@ export class TeachersController {
       if (!userId) {
         res.status(401).json({
           status: 'error',
-          message: '未授權'
+          message: '請先登入'
         })
         return
       }
 
-      const teacherRepository = dataSource.getRepository(Teacher)
-      const workExperienceRepository = dataSource.getRepository(TeacherWorkExperience)
-
-      // 檢查教師記錄是否存在
-      const teacher = await teacherRepository.findOne({
-        where: { user_id: userId }
-      })
-
-      if (!teacher) {
-        res.status(404).json({
-          status: 'error',
-          message: '找不到教師資料'
-        })
-        return
-      }
-
-      // 取得工作經驗列表
-      const workExperiences = await workExperienceRepository.find({
-        where: { teacher_id: teacher.id },
-        order: { start_year: 'DESC', start_month: 'DESC' }
-      })
+      const workExperiences = await TeacherWorkExperienceService.getWorkExperiences(userId)
 
       const response: TeacherWorkExperienceListResponse = {
         status: 'success',
-        message: '取得工作經驗列表成功',
+        message: '查詢成功',
         data: {
           work_experiences: workExperiences.map(exp => ({
             id: exp.id,
@@ -590,11 +572,24 @@ export class TeachersController {
 
       res.status(200).json(response)
     } catch (error) {
-      console.error('Get work experiences error:', error)
-      res.status(500).json({
-        status: 'error',
-        message: '系統錯誤，請稍後再試'
-      })
+      if (error instanceof NotFoundError) {
+        res.status(404).json({
+          status: 'error',
+          message: `找不到指定的${error.message}`
+        })
+      } else if (error instanceof ValidationError) {
+        res.status(400).json({
+          status: 'error',
+          message: '參數驗證失敗',
+          errors: error.errors
+        })
+      } else {
+        console.error('Get work experiences error:', error)
+        res.status(500).json({
+          status: 'error',
+          message: '系統錯誤，請稍後再試'
+        })
+      }
     }
   }
 
@@ -603,121 +598,22 @@ export class TeachersController {
    */
   static async createWorkExperience(req: Request, res: Response): Promise<void> {
     try {
-      const { is_working, company_name, workplace, job_category, job_title, start_year, start_month, end_year, end_month }: TeacherWorkExperienceRequest =
-        req.body
+      const data: TeacherWorkExperienceRequest = req.body
       const userId = req.user?.id
 
       if (!userId) {
         res.status(401).json({
           status: 'error',
-          message: '未授權'
+          message: '請先登入'
         })
         return
       }
 
-      // 參數驗證
-      const errors: Record<string, string[]> = {}
-
-      if (is_working === undefined || is_working === null) {
-        errors.is_working = ['在職狀態為必填欄位']
-      }
-
-      if (!company_name || company_name.trim() === '') {
-        errors.company_name = ['公司名稱為必填欄位']
-      } else if (company_name.length > 200) {
-        errors.company_name = ['公司名稱長度不能超過 200 字']
-      }
-
-      if (!workplace || workplace.trim() === '') {
-        errors.workplace = ['工作地點為必填欄位']
-      } else if (workplace.length > 200) {
-        errors.workplace = ['工作地點長度不能超過 200 字']
-      }
-
-      if (!job_category || job_category.trim() === '') {
-        errors.job_category = ['工作類別為必填欄位']
-      } else if (job_category.length > 100) {
-        errors.job_category = ['工作類別長度不能超過 100 字']
-      }
-
-      if (!job_title || job_title.trim() === '') {
-        errors.job_title = ['職位名稱為必填欄位']
-      } else if (job_title.length > 100) {
-        errors.job_title = ['職位名稱長度不能超過 100 字']
-      }
-
-      if (!start_year || start_year < 1970 || start_year > new Date().getFullYear()) {
-        errors.start_year = ['開始年份格式錯誤或超出合理範圍']
-      }
-
-      if (!start_month || start_month < 1 || start_month > 12) {
-        errors.start_month = ['開始月份必須在 1-12 之間']
-      }
-
-      // 如果不是目前在職，需要結束時間
-      if (!is_working) {
-        if (!end_year || end_year < 1970 || end_year > new Date().getFullYear()) {
-          errors.end_year = ['結束年份格式錯誤或超出合理範圍']
-        }
-
-        if (!end_month || end_month < 1 || end_month > 12) {
-          errors.end_month = ['結束月份必須在 1-12 之間']
-        }
-
-        // 檢查結束時間是否晚於開始時間
-        if (end_year && end_month && start_year && start_month) {
-          const startDate = new Date(start_year, start_month - 1)
-          const endDate = new Date(end_year, end_month - 1)
-
-          if (endDate <= startDate) {
-            errors.end_date = ['結束時間必須晚於開始時間']
-          }
-        }
-      }
-
-      if (Object.keys(errors).length > 0) {
-        res.status(400).json({
-          status: 'error',
-          message: '參數驗證失敗',
-          errors
-        })
-        return
-      }
-
-      const teacherRepository = dataSource.getRepository(Teacher)
-      const workExperienceRepository = dataSource.getRepository(TeacherWorkExperience)
-
-      // 檢查教師記錄是否存在
-      const teacher = await teacherRepository.findOne({
-        where: { user_id: userId }
-      })
-
-      if (!teacher) {
-        res.status(404).json({
-          status: 'error',
-          message: '找不到教師資料'
-        })
-        return
-      }
-
-      // 建立工作經驗記錄
-      const workExperience = new TeacherWorkExperience()
-      workExperience.teacher_id = teacher.id
-      workExperience.is_working = is_working
-      workExperience.company_name = company_name.trim()
-      workExperience.workplace = workplace.trim()
-      workExperience.job_category = job_category.trim()
-      workExperience.job_title = job_title.trim()
-      workExperience.start_year = start_year
-      workExperience.start_month = start_month
-      workExperience.end_year = is_working ? null : end_year!
-      workExperience.end_month = is_working ? null : end_month!
-
-      const savedWorkExperience = await workExperienceRepository.save(workExperience)
+      const savedWorkExperience = await TeacherWorkExperienceService.createWorkExperience(userId, data)
 
       const response: TeacherWorkExperienceResponse = {
         status: 'success',
-        message: '工作經驗新增成功',
+        message: '建立工作經驗成功',
         data: {
           work_experience: {
             id: savedWorkExperience.id,
@@ -739,11 +635,24 @@ export class TeachersController {
 
       res.status(201).json(response)
     } catch (error) {
-      console.error('Create work experience error:', error)
-      res.status(500).json({
-        status: 'error',
-        message: '系統錯誤，請稍後再試'
-      })
+      if (error instanceof NotFoundError) {
+        res.status(404).json({
+          status: 'error',
+          message: `找不到指定的${error.message}`
+        })
+      } else if (error instanceof ValidationError) {
+        res.status(400).json({
+          status: 'error',
+          message: '參數驗證失敗',
+          errors: error.errors
+        })
+      } else {
+        console.error('Create work experience error:', error)
+        res.status(500).json({
+          status: 'error',
+          message: '系統錯誤，請稍後再試'
+        })
+      }
     }
   }
 
@@ -759,7 +668,7 @@ export class TeachersController {
       if (!userId) {
         res.status(401).json({
           status: 'error',
-          message: '未授權'
+          message: '請先登入'
         })
         return
       }
@@ -772,199 +681,58 @@ export class TeachersController {
         return
       }
 
-      // 參數驗證
-      const errors: Record<string, string[]> = {}
-
-      if (updateData.company_name !== undefined) {
-        if (!updateData.company_name || updateData.company_name.trim() === '') {
-          errors.company_name = ['公司名稱不能為空']
-        } else if (updateData.company_name.length > 200) {
-          errors.company_name = ['公司名稱長度不能超過 200 字']
-        }
-      }
-
-      if (updateData.workplace !== undefined) {
-        if (!updateData.workplace || updateData.workplace.trim() === '') {
-          errors.workplace = ['工作地點不能為空']
-        } else if (updateData.workplace.length > 200) {
-          errors.workplace = ['工作地點長度不能超過 200 字']
-        }
-      }
-
-      if (updateData.job_category !== undefined) {
-        if (!updateData.job_category || updateData.job_category.trim() === '') {
-          errors.job_category = ['工作類別不能為空']
-        } else if (updateData.job_category.length > 100) {
-          errors.job_category = ['工作類別長度不能超過 100 字']
-        }
-      }
-
-      if (updateData.job_title !== undefined) {
-        if (!updateData.job_title || updateData.job_title.trim() === '') {
-          errors.job_title = ['職位名稱不能為空']
-        } else if (updateData.job_title.length > 100) {
-          errors.job_title = ['職位名稱長度不能超過 100 字']
-        }
-      }
-
-      if (updateData.start_year !== undefined) {
-        if (updateData.start_year < 1970 || updateData.start_year > new Date().getFullYear()) {
-          errors.start_year = ['開始年份格式錯誤或超出合理範圍']
-        }
-      }
-
-      if (updateData.start_month !== undefined) {
-        if (updateData.start_month < 1 || updateData.start_month > 12) {
-          errors.start_month = ['開始月份必須在 1-12 之間']
-        }
-      }
-
-      if (updateData.end_year !== undefined) {
-        if (updateData.end_year !== null && (updateData.end_year < 1970 || updateData.end_year > new Date().getFullYear())) {
-          errors.end_year = ['結束年份格式錯誤或超出合理範圍']
-        }
-      }
-
-      if (updateData.end_month !== undefined) {
-        if (updateData.end_month !== null && (updateData.end_month < 1 || updateData.end_month > 12)) {
-          errors.end_month = ['結束月份必須在 1-12 之間']
-        }
-      }
-
-      if (Object.keys(errors).length > 0) {
-        res.status(400).json({
-          status: 'error',
-          message: '參數驗證失敗',
-          errors
-        })
-        return
-      }
-
-      const teacherRepository = dataSource.getRepository(Teacher)
-      const workExperienceRepository = dataSource.getRepository(TeacherWorkExperience)
-
-      // 檢查教師記錄是否存在
-      const teacher = await teacherRepository.findOne({
-        where: { user_id: userId }
-      })
-
-      if (!teacher) {
-        res.status(404).json({
-          status: 'error',
-          message: '找不到教師資料'
-        })
-        return
-      }
-
-      // 檢查工作經驗記錄是否存在且屬於該教師
-      const workExperience = await workExperienceRepository.findOne({
-        where: { id: workExperienceId, teacher_id: teacher.id }
-      })
-
-      if (!workExperience) {
-        // 檢查是否存在但不屬於該教師
-        const existsButNotOwned = await workExperienceRepository.findOne({
-          where: { id: workExperienceId }
-        })
-
-        if (existsButNotOwned) {
-          res.status(403).json({
-            status: 'error',
-            message: '無權限修改此工作經驗記錄'
-          })
-          return
-        }
-
-        res.status(404).json({
-          status: 'error',
-          message: '找不到工作經驗記錄'
-        })
-        return
-      }
-
-      // 準備更新資料
-      const fieldsToUpdate: Partial<TeacherWorkExperience> = {}
-
-      if (updateData.is_working !== undefined) {
-        fieldsToUpdate.is_working = updateData.is_working
-        // 如果改為在職狀態，清空結束時間
-        if (updateData.is_working) {
-          fieldsToUpdate.end_year = null
-          fieldsToUpdate.end_month = null
-        }
-      }
-
-      if (updateData.company_name !== undefined) {
-        fieldsToUpdate.company_name = updateData.company_name.trim()
-      }
-
-      if (updateData.workplace !== undefined) {
-        fieldsToUpdate.workplace = updateData.workplace.trim()
-      }
-
-      if (updateData.job_category !== undefined) {
-        fieldsToUpdate.job_category = updateData.job_category.trim()
-      }
-
-      if (updateData.job_title !== undefined) {
-        fieldsToUpdate.job_title = updateData.job_title.trim()
-      }
-
-      if (updateData.start_year !== undefined) {
-        fieldsToUpdate.start_year = updateData.start_year
-      }
-
-      if (updateData.start_month !== undefined) {
-        fieldsToUpdate.start_month = updateData.start_month
-      }
-
-      if (updateData.end_year !== undefined && !fieldsToUpdate.is_working) {
-        fieldsToUpdate.end_year = updateData.end_year
-      }
-
-      if (updateData.end_month !== undefined && !fieldsToUpdate.is_working) {
-        fieldsToUpdate.end_month = updateData.end_month
-      }
-
-      // 更新記錄
-      if (Object.keys(fieldsToUpdate).length > 0) {
-        await workExperienceRepository.update({ id: workExperienceId }, fieldsToUpdate)
-      }
-
-      // 取得更新後的記錄
-      const updatedWorkExperience = await workExperienceRepository.findOne({
-        where: { id: workExperienceId }
-      })
+      const updatedWorkExperience = await TeacherWorkExperienceService.updateWorkExperience(userId, workExperienceId, updateData)
 
       const response: TeacherWorkExperienceResponse = {
         status: 'success',
-        message: '工作經驗更新成功',
+        message: '更新工作經驗成功',
         data: {
           work_experience: {
-            id: updatedWorkExperience!.id,
-            teacher_id: updatedWorkExperience!.teacher_id,
-            is_working: updatedWorkExperience!.is_working,
-            company_name: updatedWorkExperience!.company_name,
-            workplace: updatedWorkExperience!.workplace,
-            job_category: updatedWorkExperience!.job_category,
-            job_title: updatedWorkExperience!.job_title,
-            start_year: updatedWorkExperience!.start_year,
-            start_month: updatedWorkExperience!.start_month,
-            end_year: updatedWorkExperience!.end_year,
-            end_month: updatedWorkExperience!.end_month,
-            created_at: updatedWorkExperience!.created_at.toISOString(),
-            updated_at: updatedWorkExperience!.updated_at.toISOString()
+            id: updatedWorkExperience.id,
+            teacher_id: updatedWorkExperience.teacher_id,
+            is_working: updatedWorkExperience.is_working,
+            company_name: updatedWorkExperience.company_name,
+            workplace: updatedWorkExperience.workplace,
+            job_category: updatedWorkExperience.job_category,
+            job_title: updatedWorkExperience.job_title,
+            start_year: updatedWorkExperience.start_year,
+            start_month: updatedWorkExperience.start_month,
+            end_year: updatedWorkExperience.end_year,
+            end_month: updatedWorkExperience.end_month,
+            created_at: updatedWorkExperience.created_at.toISOString(),
+            updated_at: updatedWorkExperience.updated_at.toISOString()
           }
         }
       }
 
       res.status(200).json(response)
     } catch (error) {
-      console.error('Update work experience error:', error)
-      res.status(500).json({
-        status: 'error',
-        message: '系統錯誤，請稍後再試'
-      })
+      if (error instanceof NotFoundError) {
+        res.status(404).json({
+          status: 'error',
+          message: `找不到指定的${error.message}`
+        })
+      } else if (error instanceof ValidationError) {
+        // 檢查是否是權限錯誤
+        if (error.errors.permission) {
+          res.status(403).json({
+            status: 'error',
+            message: error.errors.permission[0]
+          })
+        } else {
+          res.status(400).json({
+            status: 'error',
+            message: '參數驗證失敗',
+            errors: error.errors
+          })
+        }
+      } else {
+        console.error('Update work experience error:', error)
+        res.status(500).json({
+          status: 'error',
+          message: '系統錯誤，請稍後再試'
+        })
+      }
     }
   }
 
@@ -973,75 +741,35 @@ export class TeachersController {
    */
   static async deleteWorkExperience(req: Request, res: Response): Promise<void> {
     try {
+      const teacherId = req.user!.id
       const workExperienceId = parseInt(req.params.id)
-      const userId = req.user?.id
-
-      if (!userId) {
-        res.status(401).json({
-          status: 'error',
-          message: '未授權'
-        })
-        return
-      }
 
       if (isNaN(workExperienceId)) {
         res.status(400).json({
           status: 'error',
-          message: '無效的工作經驗ID'
+          message: '參數驗證失敗',
+          errors: {
+            id: ['工作經驗 ID 必須是有效的數字']
+          }
         })
         return
       }
 
-      const teacherRepository = dataSource.getRepository(Teacher)
-      const workExperienceRepository = dataSource.getRepository(TeacherWorkExperience)
-
-      // 檢查教師記錄是否存在
-      const teacher = await teacherRepository.findOne({
-        where: { user_id: userId }
-      })
-
-      if (!teacher) {
-        res.status(404).json({
-          status: 'error',
-          message: '找不到教師資料'
-        })
-        return
-      }
-
-      // 檢查工作經驗記錄是否存在且屬於該教師
-      const workExperience = await workExperienceRepository.findOne({
-        where: { id: workExperienceId, teacher_id: teacher.id }
-      })
-
-      if (!workExperience) {
-        // 檢查是否存在但不屬於該教師
-        const existsButNotOwned = await workExperienceRepository.findOne({
-          where: { id: workExperienceId }
-        })
-
-        if (existsButNotOwned) {
-          res.status(403).json({
-            status: 'error',
-            message: '無權限刪除此工作經驗記錄'
-          })
-          return
-        }
-
-        res.status(404).json({
-          status: 'error',
-          message: '找不到工作經驗記錄'
-        })
-        return
-      }
-
-      // 刪除記錄
-      await workExperienceRepository.delete({ id: workExperienceId })
+      await TeacherWorkExperienceService.deleteWorkExperience(teacherId, workExperienceId)
 
       res.status(200).json({
         status: 'success',
-        message: '工作經驗刪除成功'
+        message: '刪除工作經驗成功'
       })
     } catch (error) {
+      if (error instanceof NotFoundError) {
+        res.status(404).json({
+          status: 'error',
+          message: error.message
+        })
+        return
+      }
+
       console.error('Delete work experience error:', error)
       res.status(500).json({
         status: 'error',

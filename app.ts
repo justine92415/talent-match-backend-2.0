@@ -7,11 +7,7 @@ import swaggerUi from 'swagger-ui-express'
 import getLogger from './utils/logger'
 import routes from './routes'
 import { swaggerSpec } from './config/swagger'
-
-// 定義錯誤處理介面
-interface AppError extends Error {
-  status?: number
-}
+import { errorHandler } from './middleware/errorHandler'
 
 const logger = getLogger('App')
 
@@ -75,25 +71,7 @@ app.use(
 // API 路由
 app.use('/api', routes)
 
-// 錯誤處理中介軟體
-app.use((err: AppError, req: Request, res: Response, _next: NextFunction) => {
-  // 安全的日誌記錄
-  const reqWithLog = req as { log?: { error?: (err: unknown) => void } }
-  if (reqWithLog.log && typeof reqWithLog.log.error === 'function') {
-    reqWithLog.log.error(err)
-  }
-
-  if (err.status) {
-    res.status(err.status).json({
-      status: 'failed',
-      message: err.message
-    })
-    return
-  }
-  res.status(500).json({
-    status: 'error',
-    message: '伺服器錯誤'
-  })
-})
+// 全域錯誤處理中介軟體
+app.use(errorHandler)
 
 export default app

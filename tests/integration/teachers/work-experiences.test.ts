@@ -74,7 +74,7 @@ describe('Teachers Work Experiences API', () => {
       // Assert
       expect(res.status).toBe(404)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('找不到教師資料')
+      expect(res.body.message).toBe('找不到指定的教師資料')
     })
   })
 
@@ -117,7 +117,7 @@ describe('Teachers Work Experiences API', () => {
       // Assert
       expect(res.status).toBe(201)
       expect(res.body.status).toBe('success')
-      expect(res.body.message).toBe('工作經驗新增成功')
+      expect(res.body.message).toBe('建立工作經驗成功')
       expect(res.body.data).toHaveProperty('work_experience')
       expect(res.body.data.work_experience).toHaveProperty('id')
       expect(res.body.data.work_experience.company_name).toBe(workExperienceData.company_name)
@@ -253,7 +253,7 @@ describe('Teachers Work Experiences API', () => {
       // Assert
       expect(res.status).toBe(404)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('找不到教師資料')
+      expect(res.body.message).toBe('找不到指定的教師資料')
     })
   })
 
@@ -307,7 +307,7 @@ describe('Teachers Work Experiences API', () => {
       // Assert
       expect(res.status).toBe(200)
       expect(res.body.status).toBe('success')
-      expect(res.body.message).toBe('工作經驗更新成功')
+      expect(res.body.message).toBe('更新工作經驗成功')
       expect(res.body.data.work_experience.company_name).toBe(updateData.company_name)
       expect(res.body.data.work_experience.job_title).toBe(updateData.job_title)
       expect(res.body.data.work_experience.workplace).toBe(updateData.workplace)
@@ -343,7 +343,7 @@ describe('Teachers Work Experiences API', () => {
       // Assert
       expect(res.status).toBe(404)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('找不到工作經驗記錄')
+      expect(res.body.message).toBe('找不到指定的工作經驗')
     })
 
     it('更新其他教師的工作經驗應回傳 403', async () => {
@@ -451,7 +451,7 @@ describe('Teachers Work Experiences API', () => {
       // Assert
       expect(res.status).toBe(200)
       expect(res.body.status).toBe('success')
-      expect(res.body.message).toBe('工作經驗刪除成功')
+      expect(res.body.message).toBe('刪除工作經驗成功')
     })
 
     it('刪除不存在的工作經驗應回傳 404', async () => {
@@ -480,7 +480,7 @@ describe('Teachers Work Experiences API', () => {
       // Assert
       expect(res.status).toBe(404)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('找不到工作經驗記錄')
+      expect(res.body.message).toBe('找不到指定的工作經驗')
     })
 
     it('刪除其他教師的工作經驗應回傳 403', async () => {
