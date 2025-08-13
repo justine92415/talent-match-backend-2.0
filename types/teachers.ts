@@ -242,3 +242,50 @@ export interface TeacherCertificateResponse {
   }
   errors?: Record<string, string[]>
 }
+
+// === 時間管理相關型別 ===
+
+export interface TeacherAvailableSlot {
+  id: number
+  teacher_id: number
+  weekday: number
+  start_time: string
+  end_time: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface TeacherScheduleUpdateRequest {
+  slots: {
+    weekday: number
+    start_time: string
+    end_time: string
+    is_active?: boolean
+  }[]
+}
+
+export interface TeacherScheduleResponse {
+  status: 'success' | 'error'
+  message: string
+  data?: {
+    slots: TeacherAvailableSlot[]
+  }
+  errors?: Record<string, string[]>
+}
+
+export interface TeacherScheduleConflict {
+  weekday: number
+  start_time: string
+  end_time: string
+  conflicting_reservations: number
+}
+
+export interface TeacherScheduleConflictsResponse {
+  status: 'success' | 'error'
+  message: string
+  data?: {
+    conflicts: TeacherScheduleConflict[]
+  }
+  errors?: Record<string, string[]>
+}

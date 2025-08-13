@@ -24,6 +24,7 @@ import {
   TeacherCertificateListResponse,
   TeacherCertificateResponse
 } from '../types/teachers'
+import { TeacherAvailableSlot } from '../entities/TeacherAvailableSlot'
 
 export class TeachersController {
   /**
@@ -2025,6 +2026,267 @@ export class TeachersController {
       })
     } catch (error) {
       console.error('Delete certificate error:', error)
+      res.status(500).json({
+        status: 'error',
+        message: '系統錯誤，請稍後再試'
+      })
+    }
+  }
+
+  // === 時間管理相關方法 ===
+
+  static async getSchedule(req: any, res: any): Promise<void> {
+    try {
+      const userId = req.user?.id
+
+      if (!userId) {
+        res.status(401).json({
+          status: 'error',
+          message: '請先登入'
+        })
+        return
+      }
+
+      // 檢查教師身份
+      const teacherRepository = dataSource.getRepository(Teacher)
+      const teacher = await teacherRepository.findOne({
+        where: { user_id: userId }
+      })
+
+      if (!teacher) {
+        res.status(404).json({
+          status: 'error',
+          message: '找不到教師資料'
+        })
+        return
+      }
+
+      // 取得時間設定
+      const slotRepository = dataSource.getRepository(TeacherAvailableSlot)
+      const slots = await slotRepository.find({
+        where: { teacher_id: teacher.id },
+        order: { weekday: 'ASC', start_time: 'ASC' }
+      })
+
+      res.status(200).json({
+        status: 'success',
+        message: '查詢成功',
+        data: { schedule: slots }
+      })
+    } catch (error) {
+      console.error('Get schedule error:', error)
+      res.status(500).json({
+        status: 'error',
+        message: '系統錯誤，請稍後再試'
+      })
+    }
+  }
+
+  static async updateSchedule(req: any, res: any): Promise<void> {
+    try {
+      const userId = req.user?.id
+      const { schedule } = req.body
+
+      if (!userId) {
+        res.status(401).json({
+          status: 'error',
+          message: '請先登入'
+        })
+        return
+      }
+
+      // 參數驗證
+      const errors: Record<string, string[]> = {}
+
+      if (!schedule || !Array.isArray(schedule)) {
+        errors.schedule = ['時段設定為必填欄位']
+      } else {
+        // 驗證每個時段
+        schedule.forEach((slot, index) => {
+          const slotErrors: string[] = []
+
+          if (typeof slot.weekday !== 'number' || slot.weekday < 0 || slot.weekday > 6) {
+            slotErrors.push('星期必須為 0-6 的數字')
+          }
+
+          if (!slot.start_time || typeof slot.start_time !== 'string') {
+            slotErrors.push('開始時間為必填欄位')
+          } else if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(slot.start_time)) {
+            slotErrors.push('開始時間格式錯誤，請使用 HH:MM 格式')
+          }
+
+          if (!slot.end_time || typeof slot.end_time !== 'string') {
+            slotErrors.push('結束時間為必填欄位')
+          } else if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(slot.end_time)) {
+            slotErrors.push('結束時間格式錯誤，請使用 HH:MM 格式')
+          }
+
+          if (slot.start_time && slot.end_time && slot.start_time >= slot.end_time) {
+            slotErrors.push('結束時間必須晚於開始時間')
+          }
+
+          if (slotErrors.length > 0) {
+            errors[`schedule[${index}]`] = slotErrors
+          }
+        })
+      }
+
+      if (Object.keys(errors).length > 0) {
+        res.status(400).json({
+          status: 'error',
+          message: '參數驗證失敗',
+          errors
+        })
+        return
+      }
+
+      // 檢查教師身份
+      const teacherRepository = dataSource.getRepository(Teacher)
+      const teacher = await teacherRepository.findOne({
+        where: { user_id: userId }
+      })
+
+      if (!teacher) {
+        res.status(404).json({
+          status: 'error',
+          message: '找不到教師資料'
+        })
+        return
+      }
+
+      // 更新時間設定
+      const slotRepository = dataSource.getRepository(TeacherAvailableSlot)
+
+      // 先刪除現有的時段設定
+      await slotRepository.delete({ teacher_id: teacher.id })
+
+      // 新增新的時段設定
+      const newSlots = schedule.map((slot: any) => ({
+        teacher_id: teacher.id,
+        weekday: slot.weekday,
+        start_time: slot.start_time,
+        end_time: slot.end_time,
+        is_active: slot.is_active !== false // 預設為 true
+      }))
+
+      const savedSlots = await slotRepository.save(newSlots)
+
+      res.status(200).json({
+        status: 'success',
+        message: '更新時間表成功',
+        data: { schedule: savedSlots }
+      })
+    } catch (error) {
+      console.error('Update schedule error:', error)
+      res.status(500).json({
+        status: 'error',
+        message: '系統錯誤，請稍後再試'
+      })
+    }
+  }
+
+  static async getScheduleConflicts(req: any, res: any): Promise<void> {
+    try {
+      const userId = req.user?.id
+      const { weekday, start_time, end_time } = req.query
+
+      if (!userId) {
+        res.status(401).json({
+          status: 'error',
+          message: '請先登入'
+        })
+        return
+      }
+
+      // 參數驗證
+      const errors: Record<string, string[]> = {}
+
+      if (!weekday) {
+        errors.weekday = ['星期為必填參數']
+      } else if (isNaN(Number(weekday)) || Number(weekday) < 0 || Number(weekday) > 6) {
+        errors.weekday = ['星期必須為 0-6 的數字']
+      }
+
+      if (!start_time) {
+        errors.start_time = ['開始時間為必填參數']
+      } else if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(start_time as string)) {
+        errors.start_time = ['開始時間格式錯誤，請使用 HH:MM 格式']
+      }
+
+      if (!end_time) {
+        errors.end_time = ['結束時間為必填參數']
+      } else if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(end_time as string)) {
+        errors.end_time = ['結束時間格式錯誤，請使用 HH:MM 格式']
+      }
+
+      if (start_time && end_time && start_time >= end_time) {
+        errors.time_range = ['結束時間必須晚於開始時間']
+      }
+
+      if (Object.keys(errors).length > 0) {
+        res.status(400).json({
+          status: 'error',
+          message: '參數驗證失敗',
+          errors
+        })
+        return
+      }
+
+      // 檢查教師身份
+      const teacherRepository = dataSource.getRepository(Teacher)
+      const teacher = await teacherRepository.findOne({
+        where: { user_id: userId }
+      })
+
+      if (!teacher) {
+        res.status(404).json({
+          status: 'error',
+          message: '找不到教師資料'
+        })
+        return
+      }
+
+      // 檢查時段衝突
+      const slotRepository = dataSource.getRepository(TeacherAvailableSlot)
+      const conflictingSlots = await slotRepository.find({
+        where: {
+          teacher_id: teacher.id,
+          weekday: Number(weekday),
+          is_active: true
+        }
+      })
+
+      // 檢查時間重疊
+      const hasConflict = conflictingSlots.some(slot => {
+        const slotStart = slot.start_time
+        const slotEnd = slot.end_time
+        const queryStart = start_time as string
+        const queryEnd = end_time as string
+
+        // 檢查時間重疊：新時間的開始時間小於現有時間的結束時間 && 新時間的結束時間大於現有時間的開始時間
+        return queryStart < slotEnd && queryEnd > slotStart
+      })
+
+      const conflicts = hasConflict
+        ? conflictingSlots.filter(slot => {
+            const slotStart = slot.start_time
+            const slotEnd = slot.end_time
+            const queryStart = start_time as string
+            const queryEnd = end_time as string
+            return queryStart < slotEnd && queryEnd > slotStart
+          })
+        : []
+
+      res.status(200).json({
+        status: 'success',
+        message: '檢查完成',
+        data: {
+          has_conflict: hasConflict,
+          conflicts: conflicts
+        }
+      })
+    } catch (error) {
+      console.error('Get schedule conflicts error:', error)
       res.status(500).json({
         status: 'error',
         message: '系統錯誤，請稍後再試'
