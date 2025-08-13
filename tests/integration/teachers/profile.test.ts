@@ -61,7 +61,7 @@ describe('Teachers Profile API', () => {
 
       expect(res.status).toBe(401)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('未授權')
+      expect(res.body.message).toBe('請先登入')
     })
 
     it('沒有教師申請記錄應回傳 404', async () => {
@@ -134,7 +134,7 @@ describe('Teachers Profile API', () => {
 
       expect(res.status).toBe(401)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('未授權')
+      expect(res.body.message).toBe('請先登入')
     })
 
     it('沒有教師申請記錄應回傳 404', async () => {

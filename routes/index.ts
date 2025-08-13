@@ -4,6 +4,7 @@ import pingRouter from './ping'
 import validationRouter from './validation'
 import usersRouter from './users'
 import teachersRouter from './teachers'
+import coursesRouter from './courses'
 
 const router = Router()
 
@@ -18,6 +19,9 @@ router.use('/users', usersRouter)
 
 // 掛載教師相關路由到 /teachers
 router.use('/teachers', teachersRouter)
+
+// 掛載課程相關路由到 /courses
+router.use('/courses', coursesRouter)
 
 // 掛載 ping 路由
 router.use('/', pingRouter)
