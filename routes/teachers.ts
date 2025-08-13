@@ -2278,4 +2278,612 @@ router.put('/learning-experiences/:id', authenticateToken, TeachersController.up
  */
 router.delete('/learning-experiences/:id', authenticateToken, TeachersController.deleteLearningExperience)
 
+// === 證書管理相關路由 ===
+
+/**
+ * @swagger
+ * /api/teachers/certificates:
+ *   get:
+ *     tags:
+ *       - Teachers
+ *     summary: 取得教師證書列表
+ *     description: |
+ *       取得當前教師的所有證書列表
+ *
+ *       **業務規則：**
+ *       - 僅已登入的教師可以查看自己的證書
+ *       - 證書按建立時間降序排列（最新的在前）
+ *
+ *       **權限要求：**
+ *       - 需要登入（Bearer Token）
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 查詢成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         certificates:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: number
+ *                                 example: 1
+ *                               teacher_id:
+ *                                 type: number
+ *                                 example: 123
+ *                               verifying_institution:
+ *                                 type: string
+ *                                 example: "行政院勞動部"
+ *                               license_name:
+ *                                 type: string
+ *                                 example: "丙級電腦軟體應用技術士"
+ *                               holder_name:
+ *                                 type: string
+ *                                 example: "王小明"
+ *                               license_number:
+ *                                 type: string
+ *                                 example: "123-456789"
+ *                               file_path:
+ *                                 type: string
+ *                                 example: "uploads/certificates/software_cert.pdf"
+ *                               category_id:
+ *                                 type: string
+ *                                 example: "tech"
+ *                               subject:
+ *                                 type: string
+ *                                 example: "程式設計"
+ *                               created_at:
+ *                                 type: string
+ *                                 format: date-time
+ *                                 example: "2025-08-13T10:00:00.000Z"
+ *                               updated_at:
+ *                                 type: string
+ *                                 format: date-time
+ *                                 example: "2025-08-13T10:00:00.000Z"
+ *             examples:
+ *               success_with_data:
+ *                 summary: 有證書資料
+ *                 value:
+ *                   status: success
+ *                   message: 查詢成功
+ *                   data:
+ *                     certificates:
+ *                       - id: 1
+ *                         teacher_id: 123
+ *                         verifying_institution: "行政院勞動部"
+ *                         license_name: "丙級電腦軟體應用技術士"
+ *                         holder_name: "王小明"
+ *                         license_number: "123-456789"
+ *                         file_path: "uploads/certificates/software_cert.pdf"
+ *                         category_id: "tech"
+ *                         subject: "程式設計"
+ *                         created_at: "2025-08-13T10:00:00.000Z"
+ *                         updated_at: "2025-08-13T10:00:00.000Z"
+ *               success_empty:
+ *                 summary: 無證書資料
+ *                 value:
+ *                   status: success
+ *                   message: 查詢成功
+ *                   data:
+ *                     certificates: []
+ *       401:
+ *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               unauthorized:
+ *                 summary: 未登入
+ *                 value:
+ *                   status: error
+ *                   message: 請先登入
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               server_error:
+ *                 summary: 系統錯誤
+ *                 value:
+ *                   status: error
+ *                   message: 系統錯誤，請稍後再試
+ */
+router.get('/certificates', authenticateToken, TeachersController.getCertificates)
+
+/**
+ * @swagger
+ * /api/teachers/certificates:
+ *   post:
+ *     tags:
+ *       - Teachers
+ *     summary: 建立新證書
+ *     description: |
+ *       為當前教師建立新的證書記錄
+ *
+ *       **業務規則：**
+ *       - 所有欄位都是必填的
+ *       - 發證機構和證書名稱最長200字
+ *       - 持有人姓名、證書編號、證書主題最長100字
+ *       - 證書類別最長50字
+ *
+ *       **權限要求：**
+ *       - 需要登入（Bearer Token）
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - verifying_institution
+ *               - license_name
+ *               - holder_name
+ *               - license_number
+ *               - file_path
+ *               - category_id
+ *               - subject
+ *             properties:
+ *               verifying_institution:
+ *                 type: string
+ *                 description: 發證機構
+ *                 example: "行政院勞動部"
+ *                 minLength: 1
+ *                 maxLength: 200
+ *               license_name:
+ *                 type: string
+ *                 description: 證書名稱
+ *                 example: "丙級電腦軟體應用技術士"
+ *                 minLength: 1
+ *                 maxLength: 200
+ *               holder_name:
+ *                 type: string
+ *                 description: 證書持有人姓名
+ *                 example: "王小明"
+ *                 minLength: 1
+ *                 maxLength: 100
+ *               license_number:
+ *                 type: string
+ *                 description: 證書編號
+ *                 example: "123-456789"
+ *                 minLength: 1
+ *                 maxLength: 100
+ *               file_path:
+ *                 type: string
+ *                 description: 證書檔案路徑
+ *                 example: "uploads/certificates/software_cert.pdf"
+ *               category_id:
+ *                 type: string
+ *                 description: 證書類別ID
+ *                 example: "tech"
+ *                 minLength: 1
+ *                 maxLength: 50
+ *               subject:
+ *                 type: string
+ *                 description: 證書主題
+ *                 example: "程式設計"
+ *                 minLength: 1
+ *                 maxLength: 100
+ *     responses:
+ *       201:
+ *         description: 建立成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         certificate:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: number
+ *                               example: 1
+ *                             teacher_id:
+ *                               type: number
+ *                               example: 123
+ *                             verifying_institution:
+ *                               type: string
+ *                               example: "行政院勞動部"
+ *                             license_name:
+ *                               type: string
+ *                               example: "丙級電腦軟體應用技術士"
+ *                             holder_name:
+ *                               type: string
+ *                               example: "王小明"
+ *                             license_number:
+ *                               type: string
+ *                               example: "123-456789"
+ *                             file_path:
+ *                               type: string
+ *                               example: "uploads/certificates/software_cert.pdf"
+ *                             category_id:
+ *                               type: string
+ *                               example: "tech"
+ *                             subject:
+ *                               type: string
+ *                               example: "程式設計"
+ *                             created_at:
+ *                               type: string
+ *                               format: date-time
+ *                               example: "2025-08-13T10:00:00.000Z"
+ *                             updated_at:
+ *                               type: string
+ *                               format: date-time
+ *                               example: "2025-08-13T10:00:00.000Z"
+ *             examples:
+ *               success:
+ *                 summary: 建立成功
+ *                 value:
+ *                   status: success
+ *                   message: 建立證書成功
+ *                   data:
+ *                     certificate:
+ *                       id: 1
+ *                       teacher_id: 123
+ *                       verifying_institution: "行政院勞動部"
+ *                       license_name: "丙級電腦軟體應用技術士"
+ *                       holder_name: "王小明"
+ *                       license_number: "123-456789"
+ *                       file_path: "uploads/certificates/software_cert.pdf"
+ *                       category_id: "tech"
+ *                       subject: "程式設計"
+ *                       created_at: "2025-08-13T10:00:00.000Z"
+ *                       updated_at: "2025-08-13T10:00:00.000Z"
+ *       400:
+ *         description: 參數驗證錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *             examples:
+ *               validation_error:
+ *                 summary: 參數驗證失敗
+ *                 value:
+ *                   status: error
+ *                   message: 參數驗證失敗
+ *                   errors:
+ *                     verifying_institution: ["發證機構為必填欄位"]
+ *                     license_name: ["證書名稱為必填欄位"]
+ *       401:
+ *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               unauthorized:
+ *                 summary: 未登入
+ *                 value:
+ *                   status: error
+ *                   message: 請先登入
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               server_error:
+ *                 summary: 系統錯誤
+ *                 value:
+ *                   status: error
+ *                   message: 系統錯誤，請稍後再試
+ */
+router.post('/certificates', authenticateToken, TeachersController.createCertificate)
+
+/**
+ * @swagger
+ * /api/teachers/certificates/{id}:
+ *   put:
+ *     tags:
+ *       - Teachers
+ *     summary: 更新證書資訊
+ *     description: |
+ *       更新指定的證書資訊
+ *
+ *       **業務規則：**
+ *       - 只能更新自己的證書
+ *       - 支援部分欄位更新
+ *       - 至少需要提供一個要更新的欄位
+ *
+ *       **權限要求：**
+ *       - 需要登入（Bearer Token）
+ *       - 僅證書擁有者可以更新
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: 證書ID
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               verifying_institution:
+ *                 type: string
+ *                 description: 發證機構
+ *                 example: "新發證機構"
+ *                 maxLength: 200
+ *               license_name:
+ *                 type: string
+ *                 description: 證書名稱
+ *                 example: "更新後證書名稱"
+ *                 maxLength: 200
+ *               holder_name:
+ *                 type: string
+ *                 description: 證書持有人姓名
+ *                 example: "更新後姓名"
+ *                 maxLength: 100
+ *               license_number:
+ *                 type: string
+ *                 description: 證書編號
+ *                 example: "NEW-123456"
+ *                 maxLength: 100
+ *               file_path:
+ *                 type: string
+ *                 description: 證書檔案路徑
+ *                 example: "uploads/certificates/new_cert.pdf"
+ *               category_id:
+ *                 type: string
+ *                 description: 證書類別ID
+ *                 example: "new_category"
+ *                 maxLength: 50
+ *               subject:
+ *                 type: string
+ *                 description: 證書主題
+ *                 example: "新主題"
+ *                 maxLength: 100
+ *     responses:
+ *       200:
+ *         description: 更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         certificate:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: number
+ *                               example: 1
+ *                             teacher_id:
+ *                               type: number
+ *                               example: 123
+ *                             verifying_institution:
+ *                               type: string
+ *                               example: "新發證機構"
+ *                             license_name:
+ *                               type: string
+ *                               example: "更新後證書名稱"
+ *                             holder_name:
+ *                               type: string
+ *                               example: "更新後姓名"
+ *                             license_number:
+ *                               type: string
+ *                               example: "NEW-123456"
+ *                             file_path:
+ *                               type: string
+ *                               example: "uploads/certificates/new_cert.pdf"
+ *                             category_id:
+ *                               type: string
+ *                               example: "new_category"
+ *                             subject:
+ *                               type: string
+ *                               example: "新主題"
+ *                             created_at:
+ *                               type: string
+ *                               format: date-time
+ *                               example: "2025-08-13T10:00:00.000Z"
+ *                             updated_at:
+ *                               type: string
+ *                               format: date-time
+ *                               example: "2025-08-13T10:30:00.000Z"
+ *             examples:
+ *               success:
+ *                 summary: 更新成功
+ *                 value:
+ *                   status: success
+ *                   message: 更新證書成功
+ *                   data:
+ *                     certificate:
+ *                       id: 1
+ *                       teacher_id: 123
+ *                       verifying_institution: "新發證機構"
+ *                       license_name: "更新後證書名稱"
+ *                       holder_name: "更新後姓名"
+ *                       license_number: "NEW-123456"
+ *                       file_path: "uploads/certificates/new_cert.pdf"
+ *                       category_id: "new_category"
+ *                       subject: "新主題"
+ *                       created_at: "2025-08-13T10:00:00.000Z"
+ *                       updated_at: "2025-08-13T10:30:00.000Z"
+ *       400:
+ *         description: 參數驗證錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *             examples:
+ *               validation_error:
+ *                 summary: 參數驗證失敗
+ *                 value:
+ *                   status: error
+ *                   message: 參數驗證失敗
+ *                   errors:
+ *                     verifying_institution: ["發證機構不能為空"]
+ *       401:
+ *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               unauthorized:
+ *                 summary: 未登入
+ *                 value:
+ *                   status: error
+ *                   message: 請先登入
+ *       403:
+ *         description: 權限不足
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               forbidden:
+ *                 summary: 權限不足
+ *                 value:
+ *                   status: error
+ *                   message: 權限不足，無法修改此證書
+ *       404:
+ *         description: 證書不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               not_found:
+ *                 summary: 證書不存在
+ *                 value:
+ *                   status: error
+ *                   message: 找不到指定的證書
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               server_error:
+ *                 summary: 系統錯誤
+ *                 value:
+ *                   status: error
+ *                   message: 系統錯誤，請稍後再試
+ */
+router.put('/certificates/:id', authenticateToken, TeachersController.updateCertificate)
+
+/**
+ * @swagger
+ * /api/teachers/certificates/{id}:
+ *   delete:
+ *     tags:
+ *       - Teachers
+ *     summary: 刪除證書
+ *     description: |
+ *       刪除指定的證書
+ *
+ *       **業務規則：**
+ *       - 只能刪除自己的證書
+ *       - 刪除後無法復原
+ *
+ *       **權限要求：**
+ *       - 需要登入（Bearer Token）
+ *       - 僅證書擁有者可以刪除
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: 證書ID
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: 刪除成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *             examples:
+ *               success:
+ *                 summary: 刪除成功
+ *                 value:
+ *                   status: success
+ *                   message: 刪除證書成功
+ *       401:
+ *         description: 未登入
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               unauthorized:
+ *                 summary: 未登入
+ *                 value:
+ *                   status: error
+ *                   message: 請先登入
+ *       403:
+ *         description: 權限不足
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               forbidden:
+ *                 summary: 權限不足
+ *                 value:
+ *                   status: error
+ *                   message: 權限不足，無法刪除此證書
+ *       404:
+ *         description: 證書不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               not_found:
+ *                 summary: 證書不存在
+ *                 value:
+ *                   status: error
+ *                   message: 找不到指定的證書
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               server_error:
+ *                 summary: 系統錯誤
+ *                 value:
+ *                   status: error
+ *                   message: 系統錯誤，請稍後再試
+ */
+router.delete('/certificates/:id', authenticateToken, TeachersController.deleteCertificate)
+
 export default router

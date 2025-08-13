@@ -189,3 +189,56 @@ export interface TeacherLearningExperienceResponse {
   }
   errors?: Record<string, string[]>
 }
+
+// === 證書管理相關型別 ===
+export interface TeacherCertificateRequest {
+  verifying_institution: string
+  license_name: string
+  holder_name: string
+  license_number: string
+  file_path: string
+  category_id: string
+  subject: string
+}
+
+export interface TeacherCertificateUpdateRequest {
+  verifying_institution?: string
+  license_name?: string
+  holder_name?: string
+  license_number?: string
+  file_path?: string
+  category_id?: string
+  subject?: string
+}
+
+export interface TeacherCertificate {
+  id: number
+  teacher_id: number
+  verifying_institution: string
+  license_name: string
+  holder_name: string
+  license_number: string
+  file_path: string
+  category_id: string
+  subject: string
+  created_at: string
+  updated_at: string
+}
+
+export interface TeacherCertificateListResponse {
+  status: 'success' | 'error'
+  message: string
+  data?: {
+    certificates: TeacherCertificate[]
+  }
+  errors?: Record<string, string[]>
+}
+
+export interface TeacherCertificateResponse {
+  status: 'success' | 'error'
+  message: string
+  data?: {
+    certificate: TeacherCertificate
+  }
+  errors?: Record<string, string[]>
+}
