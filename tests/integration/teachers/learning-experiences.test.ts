@@ -55,7 +55,7 @@ describe('Teachers Learning Experiences API', () => {
 
       expect(res.status).toBe(401)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('未授權')
+      expect(res.body.message).toBe('請先登入')
     })
   })
 
@@ -230,7 +230,7 @@ describe('Teachers Learning Experiences API', () => {
 
       expect(response.status).toBe(401)
       expect(response.body.status).toBe('error')
-      expect(response.body.message).toBe('未授權')
+      expect(response.body.message).toBe('請先登入')
     })
   })
 

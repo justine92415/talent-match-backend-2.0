@@ -24,7 +24,28 @@ export const validateTeacherAccess = async (req: Request, res: Response, next: N
     })
 
     if (!teacher) {
-      ResponseHelper.notFound(res, '教師資料')
+      // 根據請求類型返回相應的錯誤訊息
+      const method = req.method
+      const path = req.path
+
+      if (method === 'POST' && path === '/') {
+        res.status(403).json({
+          status: 'error',
+          message: '權限不足，無法建立課程'
+        })
+      } else if (method === 'GET' && path.match(/^\/\d+$/)) {
+        res.status(403).json({
+          status: 'error',
+          message: '權限不足，無法查看此課程'
+        })
+      } else if (method === 'GET' && path === '/') {
+        res.status(403).json({
+          status: 'error',
+          message: '權限不足，無法查看課程列表'
+        })
+      } else {
+        ResponseHelper.forbidden(res, '執行', '操作')
+      }
       return
     }
 

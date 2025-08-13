@@ -30,10 +30,7 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     if (!token) {
       return res.status(401).json({
         status: 'error',
-        message: '未授權',
-        errors: {
-          token: ['請提供有效的存取令牌']
-        }
+        message: '請先登入'
       })
     }
 
@@ -46,10 +43,7 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     } catch (jwtError) {
       return res.status(401).json({
         status: 'error',
-        message: '未授權',
-        errors: {
-          token: ['無效或已過期的存取令牌']
-        }
+        message: '請先登入'
       })
     }
 
@@ -57,10 +51,7 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     if (decoded.token_type === 'refresh') {
       return res.status(401).json({
         status: 'error',
-        message: '未授權',
-        errors: {
-          token: ['請使用 Access Token 而非 Refresh Token']
-        }
+        message: '請先登入'
       })
     }
 
@@ -76,10 +67,7 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     if (!user) {
       return res.status(401).json({
         status: 'error',
-        message: '未授權',
-        errors: {
-          token: ['使用者不存在或已被刪除']
-        }
+        message: '請先登入'
       })
     }
 
@@ -87,10 +75,7 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     if (user.account_status === AccountStatus.DEACTIVATED) {
       return res.status(401).json({
         status: 'error',
-        message: '未授權',
-        errors: {
-          account: ['您的帳號已被停用，請聯絡客服']
-        }
+        message: '請先登入'
       })
     }
 

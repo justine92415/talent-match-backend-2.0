@@ -67,7 +67,7 @@ describe('Teachers Schedule API', () => {
 
       expect(res.status).toBe(401)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('未授權')
+      expect(res.body.message).toBe('請先登入')
     })
   })
 
@@ -115,7 +115,7 @@ describe('Teachers Schedule API', () => {
 
       expect(res.status).toBe(401)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('未授權')
+      expect(res.body.message).toBe('請先登入')
     })
 
     it('無效的星期數應回傳 400', async () => {
@@ -267,7 +267,7 @@ describe('Teachers Schedule API', () => {
 
       expect(res.status).toBe(401)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('未授權')
+      expect(res.body.message).toBe('請先登入')
     })
 
     it('缺少查詢參數應回傳 400', async () => {

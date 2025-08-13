@@ -67,7 +67,7 @@ describe('Teachers Application API', () => {
 
       expect(res.status).toBe(401)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('未授權')
+      expect(res.body.message).toBe('請先登入')
     })
 
     it('國籍為空應回傳 400 驗證錯誤', async () => {
@@ -249,7 +249,7 @@ describe('Teachers Application API', () => {
 
       expect(res.status).toBe(401)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('未授權')
+      expect(res.body.message).toBe('請先登入')
     })
 
     it('沒有申請記錄應回傳 404', async () => {
@@ -322,7 +322,7 @@ describe('Teachers Application API', () => {
 
       expect(res.status).toBe(401)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('未授權')
+      expect(res.body.message).toBe('請先登入')
     })
 
     it('沒有申請記錄應回傳 404', async () => {
@@ -427,7 +427,7 @@ describe('Teachers Application API', () => {
 
       expect(res.status).toBe(401)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('未授權')
+      expect(res.body.message).toBe('請先登入')
     })
 
     it('沒有申請記錄應回傳 404', async () => {
