@@ -46,7 +46,7 @@ describe('Teachers Application API', () => {
       // Assert - 驗證結果
       expect(res.status).toBe(201)
       expect(res.body.status).toBe('success')
-      expect(res.body.message).toBe('教師申請提交成功')
+      expect(res.body.message).toBe('建立教師申請成功')
       expect(res.body.data).toHaveProperty('application')
       expect(res.body.data.application).toHaveProperty('id')
       expect(res.body.data.application).toHaveProperty('user_id')
@@ -253,24 +253,24 @@ describe('Teachers Application API', () => {
     })
 
     it('沒有申請記錄應回傳 404', async () => {
-      // Arrange
-      const userData = {
+      // Arrange - 準備測試資料
+      const userData: RegisterRequest = {
         nick_name: '測試教師',
-        email: 'teacher8@example.com',
+        email: 'teacher@example.com',
         password: 'Password123中文'
       }
 
+      // 建立使用者並取得 token
       const registerRes = await request(app).post('/api/auth/register').send(userData).expect(201)
-
       const { access_token } = registerRes.body.data
 
-      // Act - 查詢不存在的申請
+      // Act - 在沒有申請記錄的情況下查詢申請狀態
       const res = await request(app).get('/api/teachers/application').set('Authorization', `Bearer ${access_token}`)
 
       // Assert
       expect(res.status).toBe(404)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('找不到申請記錄')
+      expect(res.body.message).toBe('找不到指定的申請記錄')
     })
   })
 
@@ -307,7 +307,7 @@ describe('Teachers Application API', () => {
       // Assert
       expect(res.status).toBe(200)
       expect(res.body.status).toBe('success')
-      expect(res.body.message).toBe('申請資料更新成功')
+      expect(res.body.message).toBe('更新申請資料成功')
       expect(res.body.data.application.nationality).toBe(updateData.nationality)
       expect(res.body.data.application.introduction).toBe(updateData.introduction)
     })
@@ -348,7 +348,7 @@ describe('Teachers Application API', () => {
       // Assert
       expect(res.status).toBe(404)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('找不到申請記錄')
+      expect(res.body.message).toBe('找不到指定的申請記錄')
     })
 
     it('參數驗證錯誤應回傳 400', async () => {
@@ -447,7 +447,7 @@ describe('Teachers Application API', () => {
       // Assert
       expect(res.status).toBe(404)
       expect(res.body.status).toBe('error')
-      expect(res.body.message).toBe('找不到申請記錄')
+      expect(res.body.message).toBe('找不到指定的申請記錄')
     })
 
     it('申請狀態不是 rejected 應回傳 422', async () => {
