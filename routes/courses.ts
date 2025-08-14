@@ -579,4 +579,373 @@ router.put('/:id', authenticateToken, validateTeacherAccess, CourseController.up
 router.get('/', authenticateToken, validateTeacherAccess, CourseController.getCourseList)
 router.get('/:id', authenticateToken, validateTeacherAccess, CourseController.getCourseById)
 
+/**
+ * @swagger
+ * /api/courses/{id}:
+ *   delete:
+ *     tags: [Courses]
+ *     summary: 刪除課程
+ *     description: |
+ *       刪除指定的課程
+ *
+ *       **權限要求：**
+ *       - 需要登入
+ *       - 只能刪除自己的課程
+ *       - 只有草稿狀態的課程可以刪除
+ *
+ *       **業務規則：**
+ *       - 軟刪除，不會真正從資料庫移除
+ *       - 已發布或封存的課程無法刪除
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 課程ID
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: 刪除成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: 刪除課程成功
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         description: 權限不足
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               not_owner:
+ *                 summary: 非課程擁有者
+ *                 value:
+ *                   status: error
+ *                   message: 權限不足，無法刪除此課程
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       422:
+ *         description: 業務邏輯錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               status_not_allowed:
+ *                 summary: 課程狀態不允許刪除
+ *                 value:
+ *                   status: error
+ *                   message: 只有草稿狀態的課程可以刪除
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.delete('/:id', authenticateToken, validateTeacherAccess, CourseController.deleteCourse)
+
+/**
+ * @swagger
+ * /api/courses/{id}/submit:
+ *   post:
+ *     tags: [Courses]
+ *     summary: 提交課程審核
+ *     description: |
+ *       將草稿狀態的課程提交審核
+ *
+ *       **權限要求：**
+ *       - 需要登入
+ *       - 只能提交自己的課程
+ *       - 只有草稿狀態的課程可以提交
+ *
+ *       **業務規則：**
+ *       - 提交後課程狀態仍為 draft，但 application_status 變為 pending
+ *       - 審核中的課程無法再次提交
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 課程ID
+ *         example: 1
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               submission_notes:
+ *                 type: string
+ *                 description: 提交說明
+ *                 example: "請審核我的課程"
+ *           examples:
+ *             with_notes:
+ *               summary: 帶提交說明
+ *               value:
+ *                 submission_notes: "請審核我的課程，已完成所有內容"
+ *             without_notes:
+ *               summary: 不帶說明
+ *               value: {}
+ *     responses:
+ *       200:
+ *         description: 提交成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: 課程已提交審核
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     course:
+ *                       $ref: '#/components/schemas/CourseResponse'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         description: 權限不足
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               not_owner:
+ *                 summary: 非課程擁有者
+ *                 value:
+ *                   status: error
+ *                   message: 權限不足，無法提交此課程
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       422:
+ *         description: 業務邏輯錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               status_not_allowed:
+ *                 summary: 課程狀態不允許提交
+ *                 value:
+ *                   status: error
+ *                   message: 只有草稿狀態的課程可以提交審核
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/:id/submit', authenticateToken, validateTeacherAccess, CourseController.submitCourse)
+
+/**
+ * @swagger
+ * /api/courses/{id}/publish:
+ *   post:
+ *     tags: [Courses]
+ *     summary: 發布課程
+ *     description: |
+ *       發布已審核通過的課程
+ *
+ *       **權限要求：**
+ *       - 需要登入
+ *       - 只能發布自己的課程
+ *       - 只有審核通過的課程可以發布
+ *
+ *       **業務規則：**
+ *       - 課程 application_status 必須為 approved
+ *       - 發布後課程狀態變為 published
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 課程ID
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: 發布成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: 課程已成功發布
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     course:
+ *                       $ref: '#/components/schemas/CourseResponse'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         description: 權限不足
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               not_owner:
+ *                 summary: 非課程擁有者
+ *                 value:
+ *                   status: error
+ *                   message: 權限不足，無法發布此課程
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       422:
+ *         description: 業務邏輯錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               not_approved:
+ *                 summary: 課程未審核通過
+ *                 value:
+ *                   status: error
+ *                   message: 只有審核通過的課程可以發布
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/:id/publish', authenticateToken, validateTeacherAccess, CourseController.publishCourse)
+
+/**
+ * @swagger
+ * /api/courses/{id}/archive:
+ *   post:
+ *     tags: [Courses]
+ *     summary: 封存課程
+ *     description: |
+ *       封存課程，使其不再對外顯示
+ *
+ *       **權限要求：**
+ *       - 需要登入
+ *       - 只能封存自己的課程
+ *       - 可封存草稿或已發布的課程
+ *
+ *       **業務規則：**
+ *       - 封存後課程狀態變為 archived
+ *       - 已封存的課程不會重複封存
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 課程ID
+ *         example: 1
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               archive_reason:
+ *                 type: string
+ *                 description: 封存原因
+ *                 example: "暫時不開課"
+ *           examples:
+ *             with_reason:
+ *               summary: 帶封存原因
+ *               value:
+ *                 archive_reason: "課程內容需要重新設計"
+ *             without_reason:
+ *               summary: 不帶原因
+ *               value: {}
+ *     responses:
+ *       200:
+ *         description: 封存成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: 課程已封存
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     course:
+ *                       $ref: '#/components/schemas/CourseResponse'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         description: 權限不足
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               not_owner:
+ *                 summary: 非課程擁有者
+ *                 value:
+ *                   status: error
+ *                   message: 權限不足，無法封存此課程
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       422:
+ *         description: 業務邏輯錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               already_archived:
+ *                 summary: 課程已封存
+ *                 value:
+ *                   status: error
+ *                   message: 課程已處於封存狀態
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/:id/archive', authenticateToken, validateTeacherAccess, CourseController.archiveCourse)
+
 export default router

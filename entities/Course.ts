@@ -76,8 +76,16 @@ export class Course {
   status!: CourseStatus
 
   /** 申請審核狀態（上架時使用） */
-  @Column({ type: 'enum', enum: ApplicationStatus })
-  application_status!: ApplicationStatus
+  @Column({ type: 'enum', enum: ApplicationStatus, nullable: true })
+  application_status!: ApplicationStatus | null
+
+  /** 提交審核時的備註 */
+  @Column({ type: 'text', nullable: true })
+  submission_notes!: string
+
+  /** 封存課程的原因 */
+  @Column({ type: 'text', nullable: true })
+  archive_reason!: string
 
   /** 建立時間 */
   @CreateDateColumn({ type: 'timestamp' })
