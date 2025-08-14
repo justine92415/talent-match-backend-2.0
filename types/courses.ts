@@ -20,6 +20,26 @@ export interface UpdateCourseRequest {
   purchase_message?: string // 購買後訊息
 }
 
+// 課程狀態管理相關型別
+export interface CourseStatusUpdateRequest {
+  review_notes?: string // 審核備註（管理員使用）
+}
+
+export interface CourseSubmitRequest {
+  // 提交審核時可能需要的額外資訊
+  submission_notes?: string // 提交說明
+}
+
+export interface CoursePublishRequest {
+  // 發布時可能需要的設定
+  publish_notes?: string // 發布說明
+}
+
+export interface CourseArchiveRequest {
+  // 封存時的原因
+  archive_reason?: string // 封存原因
+}
+
 export interface CourseListQuery {
   status?: 'draft' | 'published' | 'archived' // 課程狀態篩選
   page?: number // 頁碼，預設1
@@ -44,7 +64,9 @@ export interface CourseResponse {
   survey_url?: string
   purchase_message?: string
   status: string
-  application_status?: string
+  application_status?: string | null
+  submission_notes?: string
+  archive_reason?: string
   created_at: string
   updated_at: string
 }

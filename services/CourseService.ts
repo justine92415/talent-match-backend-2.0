@@ -1,7 +1,15 @@
 import { dataSource } from '../db/data-source'
 import { Course } from '../entities/Course'
 import { Teacher } from '../entities/Teacher'
-import { CreateCourseRequest, UpdateCourseRequest, CourseListQuery, CourseResponse, CourseListResponse } from '../types/courses'
+import {
+  CreateCourseRequest,
+  UpdateCourseRequest,
+  CourseListQuery,
+  CourseResponse,
+  CourseListResponse,
+  CourseSubmitRequest,
+  CourseArchiveRequest
+} from '../types/courses'
 import { CourseStatus, ApplicationStatus } from '../entities/enums'
 import { ValidationError, NotFoundError, ForbiddenError, BusinessError } from '../middleware/errorHandler'
 import { v4 as uuidv4 } from 'uuid'
@@ -31,7 +39,7 @@ export class CourseService {
     if (data.survey_url) course.survey_url = data.survey_url
     if (data.purchase_message) course.purchase_message = data.purchase_message
     course.status = CourseStatus.DRAFT
-    course.application_status = ApplicationStatus.PENDING
+    course.application_status = null // 課程初始狀態，尚未提交審核
     course.rate = 0
     course.review_count = 0
     course.view_count = 0
@@ -47,11 +55,11 @@ export class CourseService {
    */
   static async updateCourse(courseId: number, teacherId: number, data: UpdateCourseRequest): Promise<CourseResponse> {
     // 1. 查找並驗證課程擁有權
-    const course = await this.findCourseByIdAndTeacher(courseId, teacherId)
+    const course = await this.findCourseByIdAndTeacherForUpdate(courseId, teacherId)
 
-    // 2. 驗證課程狀態（只有草稿狀態可修改）
+    // 2. 驗證課程狀態（只有草稿狀態且非審核中可修改）
     if (course.status !== CourseStatus.DRAFT || course.application_status === ApplicationStatus.PENDING) {
-      throw new BusinessError('課程狀態不允許修改')
+      throw new BusinessError('課程已提交審核，無法修改')
     }
 
     // 3. 業務規則驗證
@@ -79,7 +87,7 @@ export class CourseService {
    * 取得課程詳情
    */
   static async getCourseById(courseId: number, teacherId: number): Promise<CourseResponse> {
-    const course = await this.findCourseByIdAndTeacher(courseId, teacherId)
+    const course = await this.findCourseByIdAndTeacherForUpdate(courseId, teacherId)
     return this.formatCourseResponse(course)
   }
 
@@ -146,9 +154,9 @@ export class CourseService {
   }
 
   /**
-   * 查找課程並驗證擁有權
+   * 查找課程並驗證擁有權 - 用於修改操作
    */
-  private static async findCourseByIdAndTeacher(courseId: number, teacherId: number): Promise<Course> {
+  private static async findCourseByIdAndTeacherForUpdate(courseId: number, teacherId: number): Promise<Course> {
     const courseRepository = dataSource.getRepository(Course)
     const course = await courseRepository.findOne({
       where: {
@@ -162,7 +170,99 @@ export class CourseService {
     }
 
     if (course.teacher_id !== teacherId) {
-      throw new ForbiddenError('查看', '課程')
+      throw new ForbiddenError('修改', '課程')
+    }
+
+    return course
+  }
+
+  /**
+   * 查找課程並驗證擁有權 - 用於刪除操作
+   */
+  private static async findCourseByIdAndTeacherForDelete(courseId: number, teacherId: number): Promise<Course> {
+    const courseRepository = dataSource.getRepository(Course)
+    const course = await courseRepository.findOne({
+      where: {
+        id: courseId,
+        deleted_at: IsNull()
+      }
+    })
+
+    if (!course) {
+      throw new NotFoundError('課程')
+    }
+
+    if (course.teacher_id !== teacherId) {
+      throw new ForbiddenError('刪除', '課程')
+    }
+
+    return course
+  }
+
+  /**
+   * 查找課程並驗證擁有權 - 用於提交操作
+   */
+  private static async findCourseByIdAndTeacherForSubmit(courseId: number, teacherId: number): Promise<Course> {
+    const courseRepository = dataSource.getRepository(Course)
+    const course = await courseRepository.findOne({
+      where: {
+        id: courseId,
+        deleted_at: IsNull()
+      }
+    })
+
+    if (!course) {
+      throw new NotFoundError('課程')
+    }
+
+    if (course.teacher_id !== teacherId) {
+      throw new ForbiddenError('提交', '課程')
+    }
+
+    return course
+  }
+
+  /**
+   * 查找課程並驗證擁有權 - 用於發布操作
+   */
+  private static async findCourseByIdAndTeacherForPublish(courseId: number, teacherId: number): Promise<Course> {
+    const courseRepository = dataSource.getRepository(Course)
+    const course = await courseRepository.findOne({
+      where: {
+        id: courseId,
+        deleted_at: IsNull()
+      }
+    })
+
+    if (!course) {
+      throw new NotFoundError('課程')
+    }
+
+    if (course.teacher_id !== teacherId) {
+      throw new ForbiddenError('發布', '課程')
+    }
+
+    return course
+  }
+
+  /**
+   * 查找課程並驗證擁有權 - 用於封存操作
+   */
+  private static async findCourseByIdAndTeacherForArchive(courseId: number, teacherId: number): Promise<Course> {
+    const courseRepository = dataSource.getRepository(Course)
+    const course = await courseRepository.findOne({
+      where: {
+        id: courseId,
+        deleted_at: IsNull()
+      }
+    })
+
+    if (!course) {
+      throw new NotFoundError('課程')
+    }
+
+    if (course.teacher_id !== teacherId) {
+      throw new ForbiddenError('封存', '課程')
     }
 
     return course
@@ -208,9 +308,102 @@ export class CourseService {
       survey_url: course.survey_url || undefined,
       purchase_message: course.purchase_message || undefined,
       status: course.status,
-      application_status: course.application_status || undefined,
+      application_status: course.application_status,
+      submission_notes: course.submission_notes || undefined,
+      archive_reason: course.archive_reason || undefined,
       created_at: course.created_at.toISOString(),
       updated_at: course.updated_at.toISOString()
     }
+  }
+
+  /**
+   * 刪除課程
+   */
+  static async deleteCourse(courseId: number, teacherId: number): Promise<void> {
+    // 1. 查找並驗證課程擁有權
+    const course = await this.findCourseByIdAndTeacherForDelete(courseId, teacherId)
+
+    // 2. 驗證課程狀態（只有草稿狀態可刪除）
+    if (course.status !== CourseStatus.DRAFT || course.application_status === ApplicationStatus.PENDING) {
+      throw new BusinessError('課程已提交審核，無法刪除')
+    }
+
+    // 3. 軟刪除課程
+    const courseRepository = dataSource.getRepository(Course)
+    await courseRepository.update(courseId, {
+      deleted_at: new Date()
+    })
+  }
+
+  /**
+   * 提交課程審核
+   */
+  static async submitCourse(courseId: number, teacherId: number, data: CourseSubmitRequest): Promise<CourseResponse> {
+    // 1. 查找並驗證課程擁有權
+    const course = await this.findCourseByIdAndTeacherForSubmit(courseId, teacherId)
+
+    // 2. 驗證課程狀態（只有草稿狀態且非審核中可提交）
+    if (course.status !== CourseStatus.DRAFT) {
+      throw new BusinessError('課程狀態不正確，無法提交審核')
+    }
+
+    if (course.application_status === ApplicationStatus.PENDING) {
+      throw new BusinessError('課程已在審核中，無法重複提交')
+    }
+
+    // 3. 更新審核狀態和提交備註
+    const courseRepository = dataSource.getRepository(Course)
+    await courseRepository.update(courseId, {
+      application_status: ApplicationStatus.PENDING,
+      submission_notes: data.submission_notes
+    })
+
+    const updatedCourse = await courseRepository.findOne({ where: { id: courseId } })
+    return this.formatCourseResponse(updatedCourse!)
+  }
+
+  /**
+   * 發布課程
+   */
+  static async publishCourse(courseId: number, teacherId: number): Promise<CourseResponse> {
+    // 1. 查找並驗證課程擁有權
+    const course = await this.findCourseByIdAndTeacherForPublish(courseId, teacherId)
+
+    // 2. 驗證課程狀態（只有審核通過的課程可發布）
+    if (course.application_status !== ApplicationStatus.APPROVED) {
+      throw new BusinessError('只能發布已批准的課程')
+    }
+
+    // 3. 更新課程狀態為已發布
+    const courseRepository = dataSource.getRepository(Course)
+    await courseRepository.update(courseId, {
+      status: CourseStatus.PUBLISHED
+    })
+
+    const updatedCourse = await courseRepository.findOne({ where: { id: courseId } })
+    return this.formatCourseResponse(updatedCourse!)
+  }
+
+  /**
+   * 封存課程
+   */
+  static async archiveCourse(courseId: number, teacherId: number, data: CourseArchiveRequest): Promise<CourseResponse> {
+    // 1. 查找並驗證課程擁有權
+    const course = await this.findCourseByIdAndTeacherForArchive(courseId, teacherId)
+
+    // 2. 只能封存已發布的課程
+    if (course.status !== CourseStatus.PUBLISHED) {
+      throw new BusinessError('只能封存已發布的課程')
+    }
+
+    // 3. 更新課程狀態為封存
+    const courseRepository = dataSource.getRepository(Course)
+    await courseRepository.update(courseId, {
+      status: CourseStatus.ARCHIVED,
+      archive_reason: data.archive_reason
+    })
+
+    const updatedCourse = await courseRepository.findOne({ where: { id: courseId } })
+    return this.formatCourseResponse(updatedCourse!)
   }
 }

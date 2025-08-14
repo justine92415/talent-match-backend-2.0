@@ -43,6 +43,31 @@ export const validateTeacherAccess = async (req: Request, res: Response, next: N
           status: 'error',
           message: '權限不足，無法查看課程列表'
         })
+      } else if (method === 'PUT' && path.match(/^\/\d+$/)) {
+        res.status(403).json({
+          status: 'error',
+          message: '權限不足，無法修改此課程'
+        })
+      } else if (method === 'DELETE' && path.match(/^\/\d+$/)) {
+        res.status(403).json({
+          status: 'error',
+          message: '權限不足，無法刪除此課程'
+        })
+      } else if (method === 'POST' && path.match(/^\/\d+\/submit$/)) {
+        res.status(403).json({
+          status: 'error',
+          message: '權限不足，無法提交此課程'
+        })
+      } else if (method === 'POST' && path.match(/^\/\d+\/publish$/)) {
+        res.status(403).json({
+          status: 'error',
+          message: '權限不足，無法發布此課程'
+        })
+      } else if (method === 'POST' && path.match(/^\/\d+\/archive$/)) {
+        res.status(403).json({
+          status: 'error',
+          message: '權限不足，無法封存此課程'
+        })
       } else {
         ResponseHelper.forbidden(res, '執行', '操作')
       }

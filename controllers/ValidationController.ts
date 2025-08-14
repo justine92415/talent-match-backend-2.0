@@ -16,7 +16,7 @@ export class ValidationController {
         errors.email = ['請輸入有效的電子郵件格式']
       } else {
         const trimmedEmail = email.trim()
-        
+
         // Email 格式驗證
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
           errors.email = ['請輸入有效的電子郵件格式']
@@ -36,8 +36,8 @@ export class ValidationController {
 
       // 檢查 email 是否已被註冊
       const userRepository = dataSource.getRepository(User)
-      const existingUser = await userRepository.findOne({ 
-        where: { email: email.trim().toLowerCase() } 
+      const existingUser = await userRepository.findOne({
+        where: { email: email.trim().toLowerCase() }
       })
 
       const available = !existingUser

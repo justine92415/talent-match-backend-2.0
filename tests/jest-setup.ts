@@ -6,7 +6,7 @@ dotenv.config()
 // 立即設定測試環境變數（在任何 beforeAll 之前執行）
 if (typeof jest !== 'undefined' || process.env.JEST_WORKER_ID !== undefined) {
   process.env.NODE_ENV = 'test'
-  
+
   // 檢查是否在 CI 環境（GitHub Actions）
   if (process.env.CI === 'true') {
     // GitHub Actions 環境：使用 workflow 中定義的資料庫設定
