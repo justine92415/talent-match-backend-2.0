@@ -58,8 +58,8 @@ export class CourseService {
     const course = await this.findCourseByIdAndTeacherForUpdate(courseId, teacherId)
 
     // 2. 驗證課程狀態（只有草稿狀態且非審核中可修改）
-    if (course.status !== CourseStatus.DRAFT) {
-      throw new BusinessError('課程狀態不允許修改')
+    if (course.status !== CourseStatus.DRAFT || course.application_status === ApplicationStatus.PENDING) {
+      throw new BusinessError('課程已提交審核，無法修改')
     }
 
     // 3. 業務規則驗證
@@ -324,8 +324,8 @@ export class CourseService {
     const course = await this.findCourseByIdAndTeacherForDelete(courseId, teacherId)
 
     // 2. 驗證課程狀態（只有草稿狀態可刪除）
-    if (course.status !== CourseStatus.DRAFT) {
-      throw new BusinessError('只有草稿狀態的課程可以刪除')
+    if (course.status !== CourseStatus.DRAFT || course.application_status === ApplicationStatus.PENDING) {
+      throw new BusinessError('課程已提交審核，無法刪除')
     }
 
     // 3. 軟刪除課程
@@ -344,7 +344,7 @@ export class CourseService {
 
     // 2. 驗證課程狀態（只有草稿狀態且非審核中可提交）
     if (course.status !== CourseStatus.DRAFT) {
-      throw new BusinessError('只能提交草稿狀態的課程')
+      throw new BusinessError('課程狀態不正確，無法提交審核')
     }
 
     if (course.application_status === ApplicationStatus.PENDING) {

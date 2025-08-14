@@ -164,7 +164,7 @@ export class CourseController {
       const course = await CourseService.submitCourse(courseId, userId, submitData)
 
       // 3. 統一成功回應
-      ResponseHelper.success(res, '課程提交審核成功', { course })
+      ResponseHelper.success(res, '課程已提交審核', { course })
     } catch (error) {
       next(error)
     }

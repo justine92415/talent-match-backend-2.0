@@ -103,7 +103,7 @@ const options = {
   definition: swaggerDefinition,
   apis: [
     isDevelopment ? './routes/*.ts' : './dist/routes/*.js',
-    isDevelopment ? './controllers/*.ts' : './dist/controllers/*.js', 
+    isDevelopment ? './controllers/*.ts' : './dist/controllers/*.js',
     isDevelopment ? './app.ts' : './dist/app.js'
   ]
 }

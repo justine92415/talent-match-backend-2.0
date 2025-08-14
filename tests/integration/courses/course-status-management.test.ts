@@ -199,6 +199,23 @@ describe('Courses API - Phase 2: Status Management', () => {
       expect(res.body.status).toBe('error')
       expect(res.body.message).toBe('權限不足，無法修改此課程')
     })
+
+    it('嘗試更新已提交審核的課程應該回傳422錯誤', async () => {
+      // Arrange - 提交課程審核
+      await request(app).post(`/api/courses/${courseId}/submit`).set('Authorization', `Bearer ${teacherToken}`).send({ submission_notes: '提交審核' })
+
+      const updateData: UpdateCourseRequest = {
+        name: '嘗試更新審核中的課程'
+      }
+
+      // Act
+      const res = await request(app).put(`/api/courses/${courseId}`).set('Authorization', `Bearer ${teacherToken}`).send(updateData)
+
+      // Assert
+      expect(res.status).toBe(422)
+      expect(res.body.status).toBe('error')
+      expect(res.body.message).toBe('課程已提交審核，無法修改')
+    })
   })
 
   describe('DELETE /api/courses/:id', () => {
@@ -255,6 +272,19 @@ describe('Courses API - Phase 2: Status Management', () => {
       expect(res.body.status).toBe('error')
       expect(res.body.message).toBe('權限不足，無法刪除此課程')
     })
+
+    it('嘗試刪除已提交審核的課程應該回傳422錯誤', async () => {
+      // Arrange - 提交課程審核
+      await request(app).post(`/api/courses/${courseId}/submit`).set('Authorization', `Bearer ${teacherToken}`).send({ submission_notes: '提交審核' })
+
+      // Act
+      const res = await request(app).delete(`/api/courses/${courseId}`).set('Authorization', `Bearer ${teacherToken}`)
+
+      // Assert
+      expect(res.status).toBe(422)
+      expect(res.body.status).toBe('error')
+      expect(res.body.message).toBe('課程已提交審核，無法刪除')
+    })
   })
 
   describe('POST /api/courses/:id/submit', () => {
@@ -270,7 +300,7 @@ describe('Courses API - Phase 2: Status Management', () => {
       // Assert
       expect(res.status).toBe(200)
       expect(res.body.status).toBe('success')
-      expect(res.body.message).toBe('課程提交審核成功')
+      expect(res.body.message).toBe('課程已提交審核')
       expect(res.body.data.course.id).toBe(courseId)
       expect(res.body.data.course.application_status).toBe(ApplicationStatus.PENDING)
       expect(res.body.data.course.submission_notes).toBe(submitData.submission_notes)

@@ -26,9 +26,7 @@ describe('Validation Email API', () => {
       }
 
       // Act
-      const res = await request(app)
-        .post('/api/validation/email')
-        .send(requestData)
+      const res = await request(app).post('/api/validation/email').send(requestData)
 
       // Assert
       expect(res.status).toBe(200)
@@ -44,19 +42,15 @@ describe('Validation Email API', () => {
         email: 'taken@example.com',
         password: 'Password123中文'
       }
-      
-      await request(app)
-        .post('/api/auth/register')
-        .send(userData)
+
+      await request(app).post('/api/auth/register').send(userData)
 
       const requestData = {
         email: 'taken@example.com'
       }
 
       // Act
-      const res = await request(app)
-        .post('/api/validation/email')
-        .send(requestData)
+      const res = await request(app).post('/api/validation/email').send(requestData)
 
       // Assert
       expect(res.status).toBe(200)
@@ -72,19 +66,15 @@ describe('Validation Email API', () => {
         email: 'Test@Example.Com',
         password: 'Password123中文'
       }
-      
-      await request(app)
-        .post('/api/auth/register')
-        .send(userData)
+
+      await request(app).post('/api/auth/register').send(userData)
 
       const requestData = {
         email: 'test@example.com' // 小寫版本
       }
 
       // Act
-      const res = await request(app)
-        .post('/api/validation/email')
-        .send(requestData)
+      const res = await request(app).post('/api/validation/email').send(requestData)
 
       // Assert
       expect(res.status).toBe(200)
@@ -100,9 +90,7 @@ describe('Validation Email API', () => {
       }
 
       // Act
-      const res = await request(app)
-        .post('/api/validation/email')
-        .send(requestData)
+      const res = await request(app).post('/api/validation/email').send(requestData)
 
       // Assert
       expect(res.status).toBe(400)
@@ -116,9 +104,7 @@ describe('Validation Email API', () => {
       const requestData = {}
 
       // Act
-      const res = await request(app)
-        .post('/api/validation/email')
-        .send(requestData)
+      const res = await request(app).post('/api/validation/email').send(requestData)
 
       // Assert
       expect(res.status).toBe(400)
@@ -134,9 +120,7 @@ describe('Validation Email API', () => {
       }
 
       // Act
-      const res = await request(app)
-        .post('/api/validation/email')
-        .send(requestData)
+      const res = await request(app).post('/api/validation/email').send(requestData)
 
       // Assert
       expect(res.status).toBe(400)
@@ -152,9 +136,7 @@ describe('Validation Email API', () => {
       }
 
       // Act
-      const res = await request(app)
-        .post('/api/validation/email')
-        .send(requestData)
+      const res = await request(app).post('/api/validation/email').send(requestData)
 
       // Assert
       expect(res.status).toBe(400)
@@ -171,9 +153,7 @@ describe('Validation Email API', () => {
       }
 
       // Act
-      const res = await request(app)
-        .post('/api/validation/email')
-        .send(requestData)
+      const res = await request(app).post('/api/validation/email').send(requestData)
 
       // Assert
       expect(res.status).toBe(400)
@@ -183,20 +163,12 @@ describe('Validation Email API', () => {
     })
 
     it('各種有效的 email 格式都應該正常處理', async () => {
-      const validEmails = [
-        'user@example.com',
-        'user.name@example.com',
-        'user+tag@example.com',
-        'user123@example-domain.co.uk',
-        'test@subdomain.example.org'
-      ]
+      const validEmails = ['user@example.com', 'user.name@example.com', 'user+tag@example.com', 'user123@example-domain.co.uk', 'test@subdomain.example.org']
 
       for (const email of validEmails) {
         const requestData = { email }
 
-        const res = await request(app)
-          .post('/api/validation/email')
-          .send(requestData)
+        const res = await request(app).post('/api/validation/email').send(requestData)
 
         expect(res.status).toBe(200)
         expect(res.body.status).toBe('success')
