@@ -1,10 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import Joi from 'joi'
 import { USER_CONFIG, PASSWORD_CONFIG, VALIDATION_MESSAGES, ERROR_MESSAGES } from '../config/constants'
-
-export interface ValidationError {
-  [key: string]: string[]
-}
+import { ValidationError } from '../types'
 
 /**
  * 登入請求驗證 Schema

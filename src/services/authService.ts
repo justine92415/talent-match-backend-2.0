@@ -6,45 +6,15 @@ import { User } from '../entities/User'
 import { UserRole, AccountStatus } from '../entities/enums'
 import { UserError, BusinessError } from '../core/errors/BusinessError'
 import { JWT_CONFIG, PASSWORD_CONFIG, ERROR_MESSAGES } from '../config/constants'
-
-export interface RegisterUserData {
-  nick_name: string
-  email: string
-  password: string
-}
-
-export interface LoginUserData {
-  email: string
-  password: string
-}
-
-export interface RefreshTokenData {
-  refresh_token: string
-}
-
-export interface ForgotPasswordData {
-  email: string
-}
-
-export interface ResetPasswordData {
-  token: string
-  new_password: string
-}
-
-export interface AuthTokens {
-  access_token: string
-  refresh_token: string
-  token_type: string
-  expires_in: number
-}
-
-export interface AuthResponse {
-  user: Omit<User, 'password' | 'login_attempts' | 'locked_until' | 'password_reset_token' | 'password_reset_expires_at'>
-  access_token: string
-  refresh_token: string
-  token_type: string
-  expires_in: number
-}
+import {
+  RegisterUserData,
+  LoginUserData,
+  RefreshTokenData,
+  ForgotPasswordData,
+  ResetPasswordData,
+  AuthTokens,
+  AuthResponse
+} from '../types'
 
 export class AuthService {
   private userRepository = dataSource.getRepository(User)

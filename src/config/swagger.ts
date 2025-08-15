@@ -333,6 +333,243 @@ const swaggerDefinition = {
             description: '更新時間'
           }
         }
+      },
+
+      // 教師申請相關 Schema
+      Teacher: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '教師 ID'
+          },
+          uuid: {
+            type: 'string',
+            format: 'uuid',
+            description: '教師 UUID'
+          },
+          user_id: {
+            type: 'integer',
+            description: '關聯的使用者 ID'
+          },
+          nationality: {
+            type: 'string',
+            maxLength: 50,
+            description: '國籍',
+            example: '台灣'
+          },
+          introduction: {
+            type: 'string',
+            minLength: 100,
+            maxLength: 1000,
+            description: '自我介紹',
+            example: '我是一位熱愛教育的專業人士，擁有豐富的教學經驗和深厚的學術背景...'
+          },
+          application_status: {
+            type: 'string',
+            enum: ['PENDING', 'APPROVED', 'REJECTED'],
+            description: '申請狀態',
+            example: 'PENDING'
+          },
+          application_submitted_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '申請提交時間',
+            nullable: true
+          },
+          application_reviewed_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '申請審核時間',
+            nullable: true
+          },
+          reviewer_id: {
+            type: 'integer',
+            description: '審核者 ID',
+            nullable: true
+          },
+          review_notes: {
+            type: 'string',
+            description: '審核備註',
+            nullable: true
+          },
+          created_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '建立時間'
+          },
+          updated_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '更新時間'
+          }
+        }
+      },
+
+      // 教師申請請求 Schema
+      TeacherApplicationRequest: {
+        type: 'object',
+        required: ['nationality', 'introduction'],
+        properties: {
+          nationality: {
+            type: 'string',
+            maxLength: 50,
+            minLength: 1,
+            description: '國籍',
+            example: '台灣'
+          },
+          introduction: {
+            type: 'string',
+            minLength: 100,
+            maxLength: 1000,
+            description: '自我介紹（至少100字元）',
+            example: '我是一位熱愛教育的專業人士，擁有豐富的教學經驗和深厚的學術背景。我在這個領域已經工作了多年，積累了豐富的實戰經驗。我希望能在這個平台上分享我的知識，幫助更多學生成長和進步，讓他們能夠在學習的道路上走得更遠。'
+          }
+        }
+      },
+
+      // 教師申請更新請求 Schema
+      TeacherApplicationUpdateRequest: {
+        type: 'object',
+        properties: {
+          nationality: {
+            type: 'string',
+            maxLength: 50,
+            minLength: 1,
+            description: '國籍',
+            example: '日本'
+          },
+          introduction: {
+            type: 'string',
+            minLength: 100,
+            maxLength: 1000,
+            description: '自我介紹（至少100字元）',
+            example: '更新後的申請介紹內容，需要長度超過100字元以符合系統驗證規則。這是教師申請的更新版本，包含了申請人更詳細的教學背景和經驗介紹。'
+          }
+        }
+      },
+
+      // 教師申請回應 Schema
+      TeacherApplicationResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              data: {
+                type: 'object',
+                properties: {
+                  teacher: {
+                    $ref: '#/components/schemas/Teacher'
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 教師申請建立回應 Schema
+      TeacherApplicationCreateResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/CreatedResponse' },
+          {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                example: '教師申請已建立'
+              },
+              data: {
+                type: 'object',
+                properties: {
+                  teacher: {
+                    allOf: [
+                      { $ref: '#/components/schemas/Teacher' },
+                      {
+                        type: 'object',
+                        properties: {
+                          application_status: {
+                            type: 'string',
+                            enum: ['PENDING'],
+                            example: 'PENDING'
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 教師申請狀態查詢回應 Schema
+      TeacherApplicationStatusResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                example: '取得申請狀態成功'
+              },
+              data: {
+                type: 'object',
+                properties: {
+                  teacher: {
+                    $ref: '#/components/schemas/Teacher'
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 教師申請更新回應 Schema
+      TeacherApplicationUpdateResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                example: '申請資料更新成功'
+              },
+              data: {
+                type: 'object',
+                properties: {
+                  teacher: {
+                    type: 'object',
+                    properties: {
+                      id: {
+                        type: 'integer',
+                        description: '教師 ID'
+                      },
+                      nationality: {
+                        type: 'string',
+                        description: '國籍'
+                      },
+                      introduction: {
+                        type: 'string',
+                        description: '自我介紹'
+                      },
+                      updated_at: {
+                        type: 'string',
+                        format: 'date-time',
+                        description: '更新時間'
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
       }
     },
 
