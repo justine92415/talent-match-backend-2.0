@@ -293,8 +293,9 @@ describe('POST /api/auth/login', () => {
       })
       
       expect(user?.last_login_at).toBeTruthy()
-      expect(new Date(user!.last_login_at).getTime()).toBeGreaterThan(
-        new Date(user!.created_at).getTime()
+      expect(user?.last_login_at).toBeInstanceOf(Date)
+      expect(user!.last_login_at!.getTime()).toBeGreaterThan(
+        user!.created_at.getTime()
       )
     })
   })

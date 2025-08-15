@@ -123,10 +123,11 @@ describe('教師申請 API 整合測試', () => {
 
       // Assert
       expect(response.status).toBe(400)
-      ValidationTestHelpers.expectResponseStructure(
-        response, 
-        expectedResponseStructures.validationErrorResponse
-      )
+      expect(response.body).toMatchObject({
+        status: 'error',
+        message: '教師申請參數驗證失敗',
+        errors: expect.any(Object)
+      })
     })
 
     it('應該拒絕過短的自我介紹並回傳 400 錯誤', async () => {
@@ -143,10 +144,10 @@ describe('教師申請 API 整合測試', () => {
       expect(response.status).toBe(400)
       expect(response.body).toMatchObject({
         status: 'error',
-        message: '參數驗證失敗',
+        message: '教師申請參數驗證失敗',
         errors: {
           introduction: expect.arrayContaining([
-            "自我介紹至少需要100字元"
+            "自我介紹至少需要100個字元"
           ])
         }
       })
@@ -166,10 +167,10 @@ describe('教師申請 API 整合測試', () => {
       expect(response.status).toBe(400)
       expect(response.body).toMatchObject({
         status: 'error',
-        message: '參數驗證失敗',
+        message: '教師申請參數驗證失敗',
         errors: {
           introduction: expect.arrayContaining([
-            expect.stringContaining('最多1000字元')
+            "自我介紹長度不能超過1000個字元"
           ])
         }
       })
@@ -343,6 +344,125 @@ describe('教師申請 API 整合測試', () => {
       expect(response.body).toMatchObject({
         status: 'error',
         message: '只能在待審核或已拒絕狀態下修改申請'
+      })
+    })
+  })
+
+  describe('POST /api/teachers/resubmit', () => {
+    it('應該成功重新提交被拒絕的申請並回傳 200 狀態', async () => {
+      // Arrange - 建立被拒絕的申請記錄
+      const rejectedApplication = await TeacherTestHelpers.createTeacherApplication(testUser.id, {
+        nationality: '台灣',
+        introduction: validIntroductions.detailed,
+        application_status: ApplicationStatus.REJECTED,
+        review_notes: '申請資料不完整',
+        reviewer_id: 1,
+        application_reviewed_at: new Date()
+      })
+
+      // Act
+      const response = await request(app)
+        .post('/api/teachers/resubmit')
+        .set('Authorization', `Bearer ${authToken}`)
+
+      // Assert
+      expect(response.status).toBe(200)
+      expect(response.body).toMatchObject({
+        status: 'success',
+        message: '申請已重新提交',
+        data: {
+          teacher: {
+            id: rejectedApplication.id,
+            uuid: expect.any(String),
+            application_status: ApplicationStatus.PENDING,
+            application_submitted_at: expect.any(String),
+            application_reviewed_at: null,
+            reviewer_id: null,
+            review_notes: null,
+            updated_at: expect.any(String)
+          }
+        }
+      })
+
+      // 驗證回應中的資料已重置
+      expect(response.body.data.teacher.application_reviewed_at).toBeNull()
+      expect(response.body.data.teacher.reviewer_id).toBeNull()
+      expect(response.body.data.teacher.review_notes).toBeNull()
+
+      // 驗證資料庫狀態已重置（檢查申請狀態）
+      const updatedTeacher = await connection.getRepository(Teacher).findOne({
+        where: { id: rejectedApplication.id }
+      })
+      expect(updatedTeacher).toBeTruthy()
+      expect(updatedTeacher!.application_status).toBe(ApplicationStatus.PENDING)
+    })
+
+    it('應該拒絕重新提交非拒絕狀態的申請並回傳 400 錯誤', async () => {
+      // Arrange - 建立待審核的申請記錄
+      await TeacherTestHelpers.createTeacherApplication(testUser.id, {
+        nationality: '台灣',
+        introduction: validIntroductions.detailed,
+        application_status: ApplicationStatus.PENDING
+      })
+
+      // Act
+      const response = await request(app)
+        .post('/api/teachers/resubmit')
+        .set('Authorization', `Bearer ${authToken}`)
+
+      // Assert
+      expect(response.status).toBe(400)
+      expect(response.body).toMatchObject({
+        status: 'error',
+        message: '此申請無法重新提交，請檢查申請狀態'
+      })
+    })
+
+    it('應該拒絕重新提交已通過的申請並回傳 400 錯誤', async () => {
+      // Arrange - 建立已通過的申請記錄
+      await TeacherTestHelpers.createTeacherApplication(testUser.id, {
+        nationality: '台灣',
+        introduction: validIntroductions.detailed,
+        application_status: ApplicationStatus.APPROVED
+      })
+
+      // Act
+      const response = await request(app)
+        .post('/api/teachers/resubmit')
+        .set('Authorization', `Bearer ${authToken}`)
+
+      // Assert
+      expect(response.status).toBe(400)
+      expect(response.body).toMatchObject({
+        status: 'error',
+        message: '此申請無法重新提交，請檢查申請狀態'
+      })
+    })
+
+    it('應該在沒有申請記錄時回傳 404 錯誤', async () => {
+      // Act - 未建立任何申請記錄就嘗試重新提交
+      const response = await request(app)
+        .post('/api/teachers/resubmit')
+        .set('Authorization', `Bearer ${authToken}`)
+
+      // Assert
+      expect(response.status).toBe(404)
+      expect(response.body).toMatchObject({
+        status: 'error',
+        message: '找不到教師申請記錄'
+      })
+    })
+
+    it('應該拒絕未認證的重新提交請求並回傳 401 錯誤', async () => {
+      // Act - 未提供認證令牌
+      const response = await request(app)
+        .post('/api/teachers/resubmit')
+
+      // Assert
+      expect(response.status).toBe(401)
+      expect(response.body).toMatchObject({
+        status: 'error',
+        message: 'Access token 為必填欄位'
       })
     })
   })

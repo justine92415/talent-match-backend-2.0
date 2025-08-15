@@ -1,9 +1,16 @@
 /**
  * API 成功回應介面
  */
-export interface ApiSuccessResponse<T = any> {
+export interface ApiSuccessResponse<T = unknown> {
   status: 'success'
   data: T
+}
+
+/**
+ * 錯誤詳細資訊型別
+ */
+export interface ErrorDetails {
+  [field: string]: string[]
 }
 
 /**
@@ -14,11 +21,11 @@ export interface ApiErrorResponse {
   error: {
     code: string
     message: string
-    details?: any
+    details?: ErrorDetails
   }
 }
 
 /**
  * API 回應聯合型別
  */
-export type ApiResponse<T = any> = ApiSuccessResponse<T> | ApiErrorResponse
+export type ApiResponse<T = unknown> = ApiSuccessResponse<T> | ApiErrorResponse

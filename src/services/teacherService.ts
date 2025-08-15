@@ -183,10 +183,47 @@ export class TeacherService {
     // 如果是被拒絕狀態，重新設為待審核
     if (teacher.application_status === ApplicationStatus.REJECTED) {
       teacher.application_status = ApplicationStatus.PENDING
-      teacher.application_reviewed_at = undefined as any
-      teacher.reviewer_id = undefined as any
-      teacher.review_notes = undefined as any
+      teacher.application_reviewed_at = undefined
+      teacher.reviewer_id = undefined
+      teacher.review_notes = undefined
     }
+
+    return await this.teacherRepository.save(teacher)
+  }
+
+  /**
+   * 重新提交申請（僅限被拒絕的申請）
+   * @param userId 使用者 ID
+   * @returns 重新提交後的教師記錄
+   */
+  async resubmitApplication(userId: number): Promise<Teacher> {
+    const teacher = await this.teacherRepository.findOne({ 
+      where: { user_id: userId } 
+    })
+    
+    if (!teacher) {
+      throw new BusinessError(
+        TEACHER_ERROR_CODES.APPLICATION_NOT_FOUND,
+        TEACHER_ERROR_MESSAGES.APPLICATION_NOT_FOUND,
+        TEACHER_HTTP_STATUS.APPLICATION_NOT_FOUND
+      )
+    }
+
+    // 檢查申請狀態是否為已拒絕
+    if (teacher.application_status !== ApplicationStatus.REJECTED) {
+      throw new BusinessError(
+        TEACHER_ERROR_CODES.CANNOT_RESUBMIT_APPLICATION,
+        TEACHER_ERROR_MESSAGES.CANNOT_RESUBMIT_APPLICATION,
+        TEACHER_HTTP_STATUS.CANNOT_RESUBMIT_APPLICATION
+      )
+    }
+
+    // 重置申請狀態為待審核
+    teacher.application_status = ApplicationStatus.PENDING
+    teacher.application_submitted_at = new Date()
+    teacher.application_reviewed_at = undefined
+    teacher.reviewer_id = undefined
+    teacher.review_notes = undefined
 
     return await this.teacherRepository.save(teacher)
   }
@@ -242,9 +279,9 @@ export class TeacherService {
 
     // 重要資料修改後需要重新審核
     teacher.application_status = ApplicationStatus.PENDING
-    teacher.application_reviewed_at = undefined as any
-    teacher.reviewer_id = undefined as any
-    teacher.review_notes = undefined as any
+    teacher.application_reviewed_at = undefined
+    teacher.reviewer_id = undefined
+    teacher.review_notes = undefined
 
     return await this.teacherRepository.save(teacher)
   }

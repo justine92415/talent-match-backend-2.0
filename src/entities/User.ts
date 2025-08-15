@@ -12,40 +12,40 @@ export class User {
   uuid!: string
 
   /** Google OAuth ID */
-  @Column({ length: 255, nullable: true })
-  google_id!: string
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  google_id?: string | null
 
   /** 使用者真實姓名 */
-  @Column({ length: 100, nullable: true })
-  name!: string
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  name?: string | null
 
   /** 使用者暱稱 */
-  @Column({ length: 50 })
+  @Column({ type: 'varchar', length: 50 })
   nick_name!: string
 
   /** 電子郵件地址 */
-  @Column({ length: 255 })
+  @Column({ type: 'varchar', length: 255 })
   email!: string
 
   /** 密碼（加密後） */
-  @Column({ length: 255, nullable: true })
-  password!: string
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  password?: string | null
 
   /** 生日 */
   @Column({ type: 'date', nullable: true })
-  birthday!: Date
+  birthday?: Date | null
 
   /** 聯絡電話 */
-  @Column({ length: 20, nullable: true })
-  contact_phone!: string
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  contact_phone?: string | null
 
   /** 頭像圖片路徑 */
   @Column({ type: 'text', nullable: true })
-  avatar_image!: string
+  avatar_image?: string | null
 
   /** Google 頭像網址 */
   @Column({ type: 'text', nullable: true })
-  avatar_google_url!: string
+  avatar_google_url?: string | null
 
   /** 使用者角色 */
   @Column({ type: 'enum', enum: UserRole })
@@ -56,16 +56,16 @@ export class User {
   account_status!: AccountStatus
 
   /** 重設密碼令牌 */
-  @Column({ length: 128, nullable: true })
-  password_reset_token!: string
+  @Column({ type: 'varchar', length: 128, nullable: true })
+  password_reset_token?: string | null
 
   /** 重設密碼令牌過期時間 */
   @Column({ type: 'timestamp', nullable: true })
-  password_reset_expires_at!: Date
+  password_reset_expires_at?: Date | null
 
   /** 最後登入時間 */
   @Column({ type: 'timestamp', nullable: true })
-  last_login_at!: Date
+  last_login_at?: Date | null
 
   /** 連續登入失敗次數 */
   @Column({ type: 'integer', default: 0 })
@@ -73,7 +73,7 @@ export class User {
 
   /** 帳號鎖定到此時間 */
   @Column({ type: 'timestamp', nullable: true })
-  locked_until!: Date
+  locked_until?: Date | null
 
   /** 建立時間 */
   @CreateDateColumn({ type: 'timestamp' })
@@ -85,5 +85,5 @@ export class User {
 
   /** 刪除時間（軟刪除） */
   @DeleteDateColumn({ type: 'timestamp', nullable: true })
-  deleted_at!: Date
+  deleted_at?: Date | null
 }

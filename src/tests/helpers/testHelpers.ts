@@ -6,23 +6,35 @@
 
 import request from 'supertest'
 import jwt from 'jsonwebtoken'
-import { DataSource } from 'typeorm'
-import app from '../../app'
 import { dataSource } from '../../db/data-source'
 import { User } from '../../entities/User'
 import { Teacher } from '../../entities/Teacher'
 import { UserRole, AccountStatus, ApplicationStatus } from '../../entities/enums'
-import ConfigManager from '../../config'
 import { 
-  validUserData,
-  createUserEntityData,
-  teacherUserEntityData,
-  suspendedUserEntityData
+  validUserData, 
+  createUserEntityData, 
+  teacherUserEntityData, 
+  suspendedUserEntityData 
 } from '../fixtures/userFixtures'
 import {
   createTeacherEntityData,
   jwtTestUsers
 } from '../fixtures/teacherFixtures'
+import ConfigManager from '../../config'
+import app from '../../app'
+import { 
+  TestUserCreateData, 
+  TestTeacherCreateData,
+  TestUserWithToken,
+  TestUserVariations,
+  TestTeacherApplicationVariations,
+  TestTeacherEnvironment,
+  HttpMethod,
+  TestRequestData,
+  TestValidationStructure,
+  DatabaseQueryCondition,
+  TestFunction
+} from '../../types'
 
 /**
  * 使用者相關測試 Helper 函式
@@ -71,7 +83,7 @@ class UserTestHelpers {
    * @param userData 使用者實體資料
    * @returns 建立的使用者實體
    */
-  static async createUserEntity(userData: Partial<any> = {}) {
+  static async createUserEntity(userData: Partial<TestUserCreateData> = {}) {
     const userRepository = dataSource.getRepository(User)
     const defaultData = createUserEntityData(userData)
     const user = userRepository.create(defaultData)
@@ -83,7 +95,7 @@ class UserTestHelpers {
    * @param userData 使用者實體資料覆寫
    * @returns 建立的教師使用者實體
    */
-  static async createTeacherUserEntity(userData: Partial<any> = {}) {
+  static async createTeacherUserEntity(userData: Partial<TestUserCreateData> = {}) {
     const userRepository = dataSource.getRepository(User)
     const defaultData = teacherUserEntityData(userData)
     const user = userRepository.create(defaultData)
@@ -95,7 +107,7 @@ class UserTestHelpers {
    * @param userData 使用者實體資料覆寫
    * @returns 建立的停用使用者實體
    */
-  static async createSuspendedUserEntity(userData: Partial<any> = {}) {
+  static async createSuspendedUserEntity(userData: Partial<TestUserCreateData> = {}) {
     const userRepository = dataSource.getRepository(User)
     const defaultData = suspendedUserEntityData(userData)
     const user = userRepository.create(defaultData)
@@ -149,7 +161,7 @@ class UserTestHelpers {
    * @param userData 使用者資料覆寫
    * @returns 使用者實體和認證 Token
    */
-  static async createTestUserWithToken(userData: Partial<any> = {}) {
+  static async createTestUserWithToken(userData: Partial<TestUserCreateData> = {}) {
     const user = await this.createUserEntity(userData)
     const authToken = this.generateAuthToken(user)
     
@@ -223,7 +235,7 @@ class TeacherTestHelpers {
    * @param teacherData 教師資料覆寫
    * @returns 建立的教師申請記錄
    */
-  static async createTeacherApplication(userId: number, teacherData: Partial<any> = {}) {
+  static async createTeacherApplication(userId: number, teacherData: Partial<TestTeacherCreateData> = {}) {
     const teacherRepository = dataSource.getRepository(Teacher)
     const defaultData = createTeacherEntityData({
       user_id: userId,
@@ -316,8 +328,8 @@ class TeacherTestHelpers {
    * @returns 使用者、教師申請記錄和認證 Token
    */
   static async createCompleteTeacherTestEnv(
-    userData: Partial<any> = {},
-    teacherData: Partial<any> = {}
+    userData: Partial<TestUserCreateData> = {},
+    teacherData: Partial<TestTeacherCreateData> = {}
   ) {
     const user = await UserTestHelpers.createUserEntity(userData)
     const teacher = await this.createTeacherApplication(user.id, teacherData)
@@ -347,7 +359,7 @@ class RequestTestHelpers {
     method: 'get' | 'post' | 'put' | 'delete',
     url: string,
     authToken: string,
-    data?: any
+    data?: TestRequestData
   ) {
     const req = request(app)[method](url).set('Authorization', `Bearer ${authToken}`)
     
@@ -368,7 +380,7 @@ class RequestTestHelpers {
   static async testUnauthenticatedRequest(
     method: 'get' | 'post' | 'put' | 'delete',
     url: string,
-    data?: any
+    data?: TestRequestData
   ) {
     const req = request(app)[method](url)
     
@@ -389,7 +401,7 @@ class RequestTestHelpers {
   static async testInvalidTokenRequest(
     method: 'get' | 'post' | 'put' | 'delete',
     url: string,
-    data?: any
+    data?: TestRequestData
   ) {
     const req = request(app)[method](url).set('Authorization', 'Bearer invalid-token')
     
@@ -410,7 +422,7 @@ class ValidationTestHelpers {
    * @param response HTTP 回應
    * @param expectedStructure 預期結構
    */
-  static expectResponseStructure(response: any, expectedStructure: any) {
+  static expectResponseStructure(response: request.Response, expectedStructure: TestValidationStructure) {
     expect(response.body).toMatchObject(expectedStructure)
   }
 
@@ -421,12 +433,12 @@ class ValidationTestHelpers {
    * @returns 查詢結果
    */
   static async expectDatabaseRecord<T>(
-    repository: any,
-    condition: any
+    repository: { findOne: (condition: DatabaseQueryCondition) => Promise<T | null> },
+    condition: DatabaseQueryCondition
   ): Promise<T> {
     const record = await repository.findOne(condition)
     expect(record).toBeTruthy()
-    return record
+    return record as T
   }
 
   /**
@@ -434,7 +446,10 @@ class ValidationTestHelpers {
    * @param repository TypeORM Repository
    * @param condition 查詢條件
    */
-  static async expectNoDatabaseRecord(repository: any, condition: any) {
+  static async expectNoDatabaseRecord(
+    repository: { findOne: (condition: DatabaseQueryCondition) => Promise<unknown | null> }, 
+    condition: DatabaseQueryCondition
+  ) {
     const record = await repository.findOne(condition)
     expect(record).toBeNull()
   }
@@ -463,7 +478,7 @@ class PerformanceTestHelpers {
    * @param maxResponseTime 最大允許回應時間（毫秒）
    */
   static async measureResponseTime(
-    apiCall: () => Promise<any>,
+    apiCall: () => Promise<request.Response>,
     maxResponseTime: number = 1000
   ) {
     const startTime = Date.now()
@@ -480,7 +495,7 @@ class PerformanceTestHelpers {
    * @param maxConcurrent 最大平行執行數
    */
   static async runConcurrentTests(
-    testFunctions: Array<() => Promise<any>>,
+    testFunctions: TestFunction[],
     maxConcurrent: number = 5
   ) {
     const results = []

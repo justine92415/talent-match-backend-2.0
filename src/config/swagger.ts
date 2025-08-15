@@ -499,6 +499,24 @@ const swaggerDefinition = {
                     ]
                   }
                 }
+              },
+              meta: {
+                type: 'object',
+                properties: {
+                  timestamp: {
+                    type: 'string',
+                    format: 'date-time',
+                    example: '2024-01-15T10:30:00.000Z'
+                  },
+                  requestId: {
+                    type: 'string',
+                    example: '1a2b3c4d5e6f'
+                  },
+                  version: {
+                    type: 'string',
+                    example: '2.0.0'
+                  }
+                }
               }
             }
           }

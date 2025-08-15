@@ -13,7 +13,10 @@ import {
   ForgotPasswordData,
   ResetPasswordData,
   AuthTokens,
-  AuthResponse
+  AuthResponse,
+  JwtTokenPayload,
+  UpdateUserProfileData,
+  FormattedUserResponse
 } from '../types'
 
 export class AuthService {
@@ -105,7 +108,7 @@ export class AuthService {
   async refreshToken(tokenData: RefreshTokenData): Promise<AuthResponse> {
     try {
       // 驗證 refresh token
-      const decoded = jwt.verify(tokenData.refresh_token, JWT_CONFIG.SECRET) as any
+      const decoded = jwt.verify(tokenData.refresh_token, JWT_CONFIG.SECRET) as JwtTokenPayload
 
       // 檢查 token 型別
       if (decoded.type !== 'refresh') {
@@ -207,7 +210,7 @@ export class AuthService {
    * @returns Promise<FormattedUserResponse> 使用者完整資料（不包含敏感資訊）
    * @throws {BusinessError} 當使用者不存在時
    */
-  async getProfile(userId: number): Promise<any> {
+  async getProfile(userId: number): Promise<FormattedUserResponse> {
     const userRepository = dataSource.getRepository(User)
     
     const user = await userRepository.findOne({
@@ -237,7 +240,7 @@ export class AuthService {
    * @throws {UserError} 當暱稱重複時
    * @throws {BusinessError} 當使用者不存在時
    */
-  async updateProfile(userId: number, updateData: any): Promise<any> {
+  async updateProfile(userId: number, updateData: UpdateUserProfileData): Promise<FormattedUserResponse> {
     const userRepository = dataSource.getRepository(User)
     
     const user = await userRepository.findOne({
@@ -402,8 +405,8 @@ export class AuthService {
     // 更新密碼並清除重設令牌
     await this.userRepository.update(user.id, {
       password: hashedPassword,
-      password_reset_token: null as any,
-      password_reset_expires_at: null as any,
+      password_reset_token: null,
+      password_reset_expires_at: null,
       updated_at: new Date()
     })
   }

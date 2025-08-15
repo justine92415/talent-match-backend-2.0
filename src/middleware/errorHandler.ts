@@ -1,9 +1,21 @@
 import { Request, Response, NextFunction } from 'express';
-import { BusinessError, UserError } from '../core/errors/BusinessError';
+import { BusinessError, UserError, ValidationError } from '../core/errors/BusinessError';
 import { ERROR_MESSAGES } from '../config/constants';
+import { ResponseFormatter } from '../utils/response-formatter';
 import getLogger from '../utils/logger';
 
 const logger = getLogger('ErrorHandler');
+
+/**
+ * 錯誤物件介面
+ */
+interface ErrorObject {
+  message?: string
+  stack?: string
+  name?: string
+  statusCode?: number
+  details?: Record<string, unknown>
+}
 
 /**
  * 全域錯誤處理中間件
@@ -14,7 +26,7 @@ const logger = getLogger('ErrorHandler');
  * - 未知錯誤
  */
 export const errorHandler = (
-  error: any,
+  error: ErrorObject,
   req: Request,
   res: Response,
   next: NextFunction
@@ -32,30 +44,37 @@ export const errorHandler = (
 
   // 處理業務邏輯錯誤
   if (error instanceof BusinessError) {
-    res.status(error.statusCode).json({
-      status: 'error',
-      message: getErrorMessage(error),
-      errors: formatBusinessError(error)
-    });
+    const errorResponse = ResponseFormatter.businessError(getErrorMessage(error));
+    // 添加詳細錯誤資訊
+    if (error instanceof ValidationError) {
+      errorResponse.errors = error.errors;
+    } else {
+      errorResponse.errors = formatBusinessError(error);
+    }
+    
+    res.status(error.statusCode).json(errorResponse);
     return;
   }
 
   // 處理其他已知錯誤類型
   if (error.name === 'ValidationError') {
-    res.status(400).json({
-      status: 'error',
-      message: ERROR_MESSAGES.VALIDATION_ERROR,
-      errors: error.details || {}
-    });
+    const errorDetails = error.details as Record<string, string[]> | undefined
+    res.status(400).json(
+      ResponseFormatter.validationError(
+        errorDetails || {},
+        ERROR_MESSAGES.VALIDATION_ERROR
+      )
+    );
     return;
   }
 
   // 處理未知錯誤
-  res.status(500).json({
-    status: 'error',
-    message: ERROR_MESSAGES.INTERNAL_SERVER_ERROR,
-    errors: process.env.NODE_ENV === 'development' ? { details: error.message } : {}
-  });
+  const serverErrorResponse = ResponseFormatter.serverError(ERROR_MESSAGES.INTERNAL_SERVER_ERROR);
+  if (process.env.NODE_ENV === 'development') {
+    serverErrorResponse.errors = { details: [error.message || '未知錯誤'] };
+  }
+  
+  res.status(500).json(serverErrorResponse);
 };
 
 /**

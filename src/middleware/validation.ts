@@ -2,6 +2,105 @@ import { Request, Response, NextFunction } from 'express'
 import Joi from 'joi'
 import { USER_CONFIG, PASSWORD_CONFIG, VALIDATION_MESSAGES, ERROR_MESSAGES } from '../config/constants'
 import { ValidationError } from '../types'
+import { ResponseFormatter } from '../utils/response-formatter'
+
+/**
+ * 請求資料型別
+ */
+interface RequestData {
+  [key: string]: unknown
+}
+
+/**
+ * 格式化 Joi 驗證錯誤為標準格式
+ */
+function formatJoiErrors(joiError: Joi.ValidationError): Record<string, string[]> {
+  const errors: Record<string, string[]> = {}
+  
+  joiError.details.forEach((detail) => {
+    const key = detail.path.join('.')
+    if (!errors[key]) {
+      errors[key] = []
+    }
+    errors[key].push(detail.message)
+  })
+  
+  return errors
+}
+
+/**
+ * 通用驗證中間件工廠函式
+ */
+export const validateRequest = (schema: Joi.Schema, errorMessage?: string) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const { error, value } = schema.validate(req.body, {
+      abortEarly: false,
+      stripUnknown: true,
+      allowUnknown: false
+    })
+
+    if (error) {
+      const formattedErrors = formatJoiErrors(error)
+      res.status(400).json(
+        ResponseFormatter.validationError(formattedErrors, errorMessage || '參數驗證失敗')
+      )
+      return
+    }
+
+    req.body = value
+    next()
+  }
+}
+
+/**
+ * 教師申請驗證 Schema
+ */
+export const teacherApplicationSchema = Joi.object({
+  nationality: Joi.string()
+    .min(1)
+    .max(50)
+    .required()
+    .messages({
+      'string.empty': '國籍不能為空',
+      'string.min': '國籍至少需要1個字元',
+      'string.max': '國籍長度不能超過50個字元',
+      'any.required': '國籍為必填欄位'
+    }),
+  introduction: Joi.string()
+    .min(100)
+    .max(1000)
+    .required()
+    .messages({
+      'string.empty': '自我介紹不能為空',
+      'string.min': '自我介紹至少需要100個字元',
+      'string.max': '自我介紹長度不能超過1000個字元',
+      'any.required': '自我介紹為必填欄位'
+    })
+})
+
+/**
+ * 教師申請更新驗證 Schema
+ */
+export const teacherApplicationUpdateSchema = Joi.object({
+  nationality: Joi.string()
+    .min(1)
+    .max(50)
+    .optional()
+    .messages({
+      'string.empty': '國籍不能為空',
+      'string.min': '國籍至少需要1個字元',
+      'string.max': '國籍長度不能超過50個字元'
+    }),
+  introduction: Joi.string()
+    .min(100)
+    .max(1000)
+    .optional()
+    .messages({
+      'string.empty': '自我介紹不能為空',
+      'string.min': '自我介紹至少需要100個字元',
+      'string.max': '自我介紹長度不能超過1000個字元'
+    })
+})
 
 /**
  * 登入請求驗證 Schema
@@ -113,21 +212,10 @@ export const validateRegisterRequest = (req: Request, res: Response, next: NextF
   const { error } = registerSchema.validate(req.body, { abortEarly: false })
 
   if (error) {
-    const validationErrors: ValidationError = {}
-
-    error.details.forEach(detail => {
-      const field = detail.path[0] as string
-      if (!validationErrors[field]) {
-        validationErrors[field] = []
-      }
-      validationErrors[field].push(detail.message)
-    })
-
-    res.status(400).json({
-      status: 'error',
-      message: ERROR_MESSAGES.REGISTRATION_FAILED,
-      errors: validationErrors
-    })
+    const formattedErrors = formatJoiErrors(error)
+    res.status(400).json(
+      ResponseFormatter.validationError(formattedErrors, ERROR_MESSAGES.REGISTRATION_FAILED)
+    )
     return
   }
 
@@ -141,21 +229,10 @@ export const validateLoginRequest = (req: Request, res: Response, next: NextFunc
   const { error } = loginSchema.validate(req.body, { abortEarly: false })
 
   if (error) {
-    const validationErrors: ValidationError = {}
-
-    error.details.forEach(detail => {
-      const field = detail.path[0] as string
-      if (!validationErrors[field]) {
-        validationErrors[field] = []
-      }
-      validationErrors[field].push(detail.message)
-    })
-
-    res.status(400).json({
-      status: 'error',
-      message: ERROR_MESSAGES.LOGIN_FAILED,
-      errors: validationErrors
-    })
+    const formattedErrors = formatJoiErrors(error)
+    res.status(400).json(
+      ResponseFormatter.validationError(formattedErrors, ERROR_MESSAGES.LOGIN_FAILED)
+    )
     return
   }
 
@@ -170,8 +247,8 @@ export const validateRefreshTokenRequest = (req: Request, res: Response, next: N
   if (error) {
     const validationErrors: ValidationError = {}
     
-    error.details.forEach((detail: any) => {
-      const field = detail.path[0]
+    error.details.forEach((detail: Joi.ValidationErrorItem) => {
+      const field = detail.path[0] as string
       if (!validationErrors[field]) {
         validationErrors[field] = []
       }

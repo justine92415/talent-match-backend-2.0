@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { TeacherController } from '../controllers/TeacherController'
 import { authenticateToken } from '../middleware/auth'
+import { validateRequest, teacherApplicationSchema, teacherApplicationUpdateSchema } from '../middleware/validation'
 
 /**
  * 教師相關路由
@@ -76,7 +77,11 @@ const teacherController = new TeacherController()
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.post('/apply', authenticateToken, teacherController.apply)
+router.post('/apply', 
+  authenticateToken, 
+  validateRequest(teacherApplicationSchema, '教師申請參數驗證失敗'), 
+  teacherController.apply
+)
 
 /**
  * @swagger
@@ -184,6 +189,109 @@ router.get('/application', authenticateToken, teacherController.getApplication)
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.put('/application', authenticateToken, teacherController.updateApplication)
+router.put('/application', 
+  authenticateToken, 
+  validateRequest(teacherApplicationUpdateSchema, '更新申請參數驗證失敗'), 
+  teacherController.updateApplication
+)
+
+/**
+ * @swagger
+ * /teachers/resubmit:
+ *   post:
+ *     tags: [Teacher Features]
+ *     summary: 重新提交申請
+ *     description: |
+ *       重新提交被拒絕的教師申請。只有被拒絕的申請才能重新提交。
+ *       
+ *       **業務規則:**
+ *       - 只有被拒絕狀態的申請才能重新提交
+ *       - 重新提交後申請狀態會重置為待審核
+ *       - 審核相關欄位會被清空（審核時間、審核員、審核備註）
+ *       - 重新設定提交時間為當前時間
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 申請重新提交成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 message:
+ *                   type: string
+ *                   example: "申請已重新提交"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     teacher:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                           example: 1
+ *                         uuid:
+ *                           type: string
+ *                           format: uuid
+ *                           example: "550e8400-e29b-41d4-a716-446655440000"
+ *                         application_status:
+ *                           type: string
+ *                           example: "PENDING"
+ *                         application_submitted_at:
+ *                           type: string
+ *                           format: date-time
+ *                           example: "2024-01-15T12:00:00.000Z"
+ *                         application_reviewed_at:
+ *                           type: string
+ *                           nullable: true
+ *                           example: null
+ *                         reviewer_id:
+ *                           type: integer
+ *                           nullable: true
+ *                           example: null
+ *                         review_notes:
+ *                           type: string
+ *                           nullable: true
+ *                           example: null
+ *                         updated_at:
+ *                           type: string
+ *                           format: date-time
+ *                           example: "2024-01-15T12:00:00.000Z"
+ *       400:
+ *         description: 申請狀態不允許重新提交
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "error"
+ *                 message:
+ *                   type: string
+ *                   example: "此申請無法重新提交，請檢查申請狀態"
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       404:
+ *         description: 找不到申請記錄
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "error"
+ *                 message:
+ *                   type: string
+ *                   example: "找不到教師申請記錄"
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/resubmit', authenticateToken, teacherController.resubmitApplication)
 
 export default router

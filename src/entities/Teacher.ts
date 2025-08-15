@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Generated } from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Generated, OneToOne, JoinColumn } from 'typeorm'
 import { ApplicationStatus } from './enums'
+import { User } from './User'
 
 @Entity('teachers')
 export class Teacher {
@@ -13,6 +14,11 @@ export class Teacher {
   uuid!: string
 
   /** 一對一關聯到使用者 */
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
+  user!: User
+
+  /** 使用者ID（外鍵） */
   @Column()
   user_id!: number
 
@@ -26,23 +32,23 @@ export class Teacher {
 
   /** 審核完成時間 */
   @Column({ type: 'timestamp', nullable: true })
-  application_reviewed_at!: Date
+  application_reviewed_at?: Date
 
   /** 審核者ID */
   @Column({ nullable: true })
-  reviewer_id!: number
+  reviewer_id?: number
 
   /** 審核備註或拒絕原因 */
   @Column({ type: 'text', nullable: true })
-  review_notes!: string
+  review_notes?: string
 
   /** 國籍 */
   @Column({ length: 50, nullable: true })
-  nationality!: string
+  nationality?: string
 
   /** 教師自我介紹 */
   @Column({ type: 'text', nullable: true })
-  introduction!: string
+  introduction?: string
 
   /** 總學生數 */
   @Column({ type: 'integer', default: 0 })
