@@ -96,6 +96,7 @@ app.use(
 )
 
 // API 路由
-// app.use('/api', routes)
+import routes from './routes'
+app.use('/api', routes)
 
 export default app
