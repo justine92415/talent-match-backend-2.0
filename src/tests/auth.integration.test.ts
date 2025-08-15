@@ -5,6 +5,22 @@ import { clearDatabase, initTestDatabase } from './helpers/database'
 import { dataSource } from '../db/data-source'
 import { User } from '../entities/User'
 import { AccountStatus, UserRole } from '../entities/enums'
+import {
+  validUserData,
+  validUserData2,
+  validUserData3,
+  validUserData4,
+  validUserData5,
+  longNicknameUserData,
+  tooLongNicknameUserData,
+  longEmailUserData,
+  invalidUserData,
+  updateProfileData,
+  passwordResetData,
+  createUserEntityData,
+  createTestUserVariations
+} from './fixtures/userFixtures'
+import { UserTestHelpers, RequestTestHelpers, ValidationTestHelpers } from './helpers/testHelpers'
 
 describe('POST /api/auth/register', () => {
   beforeAll(async () => {
@@ -17,15 +33,8 @@ describe('POST /api/auth/register', () => {
 
   describe('成功註冊案例', () => {
     it('應該成功註冊新使用者並回傳 201', async () => {
-      // Arrange
-      const userData = {
-        nick_name: '測試使用者',
-        email: 'test@example.com',
-        password: 'password123'
-      }
-
       // Act
-      const response = await request(app).post('/api/auth/register').send(userData).expect(201)
+      const response = await request(app).post('/api/auth/register').send(validUserData).expect(201)
 
       // Assert
       expect(response.body).toMatchObject({
@@ -35,8 +44,8 @@ describe('POST /api/auth/register', () => {
           user: {
             id: expect.any(Number),
             uuid: expect.any(String),
-            nick_name: userData.nick_name,
-            email: userData.email,
+            nick_name: validUserData.nick_name,
+            email: validUserData.email,
             role: 'student',
             account_status: 'active',
             created_at: expect.any(String)
@@ -54,23 +63,16 @@ describe('POST /api/auth/register', () => {
       // 確認使用者已儲存到資料庫
       const userRepository = dataSource.getRepository(User)
       const savedUser = await userRepository.findOne({
-        where: { email: userData.email }
+        where: { email: validUserData.email }
       })
       expect(savedUser).toBeTruthy()
-      expect(savedUser?.nick_name).toBe(userData.nick_name)
-      expect(savedUser?.password).not.toBe(userData.password) // 應該是加密後的密碼
+      expect(savedUser?.nick_name).toBe(validUserData.nick_name)
+      expect(savedUser?.password).not.toBe(validUserData.password) // 應該是加密後的密碼
     })
 
     it('應該成功註冊並自動生成 UUID', async () => {
-      // Arrange
-      const userData = {
-        nick_name: '測試使用者2',
-        email: 'test2@example.com',
-        password: 'password123'
-      }
-
       // Act
-      const response = await request(app).post('/api/auth/register').send(userData).expect(201)
+      const response = await request(app).post('/api/auth/register').send(validUserData2).expect(201)
 
       // Assert
       const uuid = response.body.data.user.uuid
@@ -81,21 +83,15 @@ describe('POST /api/auth/register', () => {
   describe('參數驗證錯誤案例', () => {
     it('應該拒絕重複 email 並回傳 400', async () => {
       // Arrange - 先建立一個使用者
-      const existingUserData = {
-        nick_name: '既有使用者',
-        email: 'existing@example.com',
-        password: 'password123'
-      }
-      await request(app).post('/api/auth/register').send(existingUserData).expect(201)
+      await request(app).post('/api/auth/register').send(validUserData3).expect(201)
 
-      const duplicateUserData = {
-        nick_name: '新使用者',
-        email: 'existing@example.com', // 重複的 email
-        password: 'password456'
+      const duplicateEmailData = {
+        ...validUserData4,
+        email: validUserData3.email // 重複的 email
       }
 
       // Act
-      const response = await request(app).post('/api/auth/register').send(duplicateUserData).expect(400)
+      const response = await request(app).post('/api/auth/register').send(duplicateEmailData).expect(400)
 
       // Assert
       expect(response.body).toMatchObject({
@@ -109,21 +105,15 @@ describe('POST /api/auth/register', () => {
 
     it('應該拒絕重複暱稱並回傳 400', async () => {
       // Arrange - 先建立一個使用者
-      const existingUserData = {
-        nick_name: '測試暱稱',
-        email: 'test1@example.com',
-        password: 'password123'
-      }
-      await request(app).post('/api/auth/register').send(existingUserData).expect(201)
+      await request(app).post('/api/auth/register').send(validUserData).expect(201)
 
-      const duplicateUserData = {
-        nick_name: '測試暱稱', // 重複的暱稱
-        email: 'test2@example.com',
-        password: 'password456'
+      const duplicateNickNameData = {
+        ...validUserData2,
+        nick_name: validUserData.nick_name // 重複的暱稱
       }
 
       // Act
-      const response = await request(app).post('/api/auth/register').send(duplicateUserData).expect(400)
+      const response = await request(app).post('/api/auth/register').send(duplicateNickNameData).expect(400)
 
       // Assert
       expect(response.body).toMatchObject({
@@ -136,15 +126,8 @@ describe('POST /api/auth/register', () => {
     })
 
     it('應該拒絕無效的 email 格式並回傳 400', async () => {
-      // Arrange
-      const invalidUserData = {
-        nick_name: '測試使用者',
-        email: 'invalid-email',
-        password: 'password123'
-      }
-
       // Act
-      const response = await request(app).post('/api/auth/register').send(invalidUserData).expect(400)
+      const response = await request(app).post('/api/auth/register').send(invalidUserData.invalidEmail).expect(400)
 
       // Assert
       expect(response.body).toMatchObject({
@@ -157,15 +140,8 @@ describe('POST /api/auth/register', () => {
     })
 
     it('應該拒絕過短的密碼並回傳 400', async () => {
-      // Arrange
-      const invalidUserData = {
-        nick_name: '測試使用者',
-        email: 'test@example.com',
-        password: '123' // 過短的密碼
-      }
-
       // Act
-      const response = await request(app).post('/api/auth/register').send(invalidUserData).expect(400)
+      const response = await request(app).post('/api/auth/register').send(invalidUserData.shortPassword).expect(400)
 
       // Assert
       expect(response.body).toMatchObject({
@@ -178,15 +154,8 @@ describe('POST /api/auth/register', () => {
     })
 
     it('應該拒絕空白暱稱並回傳 400', async () => {
-      // Arrange
-      const invalidUserData = {
-        nick_name: '', // 空白暱稱
-        email: 'test@example.com',
-        password: 'password123'
-      }
-
       // Act
-      const response = await request(app).post('/api/auth/register').send(invalidUserData).expect(400)
+      const response = await request(app).post('/api/auth/register').send(invalidUserData.emptyNickname).expect(400)
 
       // Assert
       expect(response.body).toMatchObject({
@@ -199,14 +168,8 @@ describe('POST /api/auth/register', () => {
     })
 
     it('應該拒絕缺少必填欄位並回傳 400', async () => {
-      // Arrange
-      const incompleteUserData = {
-        nick_name: '測試使用者'
-        // 缺少 email 和 password
-      }
-
       // Act
-      const response = await request(app).post('/api/auth/register').send(incompleteUserData).expect(400)
+      const response = await request(app).post('/api/auth/register').send(invalidUserData.missingFields).expect(400)
 
       // Assert
       expect(response.body).toMatchObject({
@@ -222,32 +185,16 @@ describe('POST /api/auth/register', () => {
 
   describe('邊界值測試', () => {
     it('應該接受最長的有效暱稱（50字元）', async () => {
-      // Arrange
-      const longNickname = 'a'.repeat(50) // 50 字元的暱稱
-      const userData = {
-        nick_name: longNickname,
-        email: 'long-nickname@example.com',
-        password: 'password123'
-      }
-
       // Act
-      const response = await request(app).post('/api/auth/register').send(userData).expect(201)
+      const response = await request(app).post('/api/auth/register').send(longNicknameUserData).expect(201)
 
       // Assert
-      expect(response.body.data.user.nick_name).toBe(longNickname)
+      expect(response.body.data.user.nick_name).toBe(longNicknameUserData.nick_name)
     })
 
     it('應該拒絕過長的暱稱（51字元）', async () => {
-      // Arrange
-      const tooLongNickname = 'a'.repeat(51) // 51 字元的暱稱
-      const userData = {
-        nick_name: tooLongNickname,
-        email: 'too-long-nickname@example.com',
-        password: 'password123'
-      }
-
       // Act
-      const response = await request(app).post('/api/auth/register').send(userData).expect(400)
+      const response = await request(app).post('/api/auth/register').send(tooLongNicknameUserData).expect(400)
 
       // Assert
       expect(response.body).toMatchObject({
@@ -260,23 +207,11 @@ describe('POST /api/auth/register', () => {
     })
 
     it('應該接受較長的有效 email', async () => {
-      // Arrange
-      // 使用符合 RFC 標準的較長 email（本地部分最多 64 字元）
-      const longLocalPart = 'very.long.email.address.test.user.with.many.dots.and.chars'
-      const longDomain = 'very-long-domain-name-for-testing-purposes.example.com'
-      const longEmail = `${longLocalPart}@${longDomain}` // 約 100 字元，符合標準
-
-      const userData = {
-        nick_name: '測試長Email',
-        email: longEmail,
-        password: 'password123'
-      }
-
       // Act
-      const response = await request(app).post('/api/auth/register').send(userData).expect(201)
+      const response = await request(app).post('/api/auth/register').send(longEmailUserData).expect(201)
 
       // Assert
-      expect(response.body.data.user.email).toBe(longEmail)
+      expect(response.body.data.user.email).toBe(longEmailUserData.email)
     })
   })
 })
@@ -293,19 +228,12 @@ describe('POST /api/auth/login', () => {
   describe('成功登入案例', () => {
     it('應該成功登入並回傳 200', async () => {
       // Arrange - 先註冊一個使用者
-      const userData = {
-        nick_name: '測試使用者',
-        email: 'test@example.com',
-        password: 'password123'
-      }
-      await request(app).post('/api/auth/register').send(userData).expect(201)
+      await request(app).post('/api/auth/register').send(validUserData).expect(201)
 
       const loginData = {
-        email: 'test@example.com',
-        password: 'password123'
-      }
-
-      // Act
+        email: validUserData.email,
+        password: validUserData.password
+      }      // Act
       const response = await request(app)
         .post('/api/auth/login')
         .send(loginData)
@@ -319,8 +247,8 @@ describe('POST /api/auth/login', () => {
           user: {
             id: expect.any(Number),
             uuid: expect.any(String),
-            nick_name: userData.nick_name,
-            email: userData.email,
+            nick_name: validUserData.nick_name,
+            email: validUserData.email,
             role: 'student',
             account_status: 'active',
             last_login_at: expect.any(String)
@@ -338,23 +266,18 @@ describe('POST /api/auth/login', () => {
       // 確認最後登入時間已更新
       const userRepository = dataSource.getRepository(User)
       const user = await userRepository.findOne({
-        where: { email: userData.email }
+        where: { email: validUserData.email }
       })
       expect(user?.last_login_at).toBeTruthy()
     })
 
     it('應該更新使用者的最後登入時間', async () => {
       // Arrange - 先註冊一個使用者
-      const userData = {
-        nick_name: '測試使用者',
-        email: 'test@example.com',
-        password: 'password123'
-      }
-      await request(app).post('/api/auth/register').send(userData).expect(201)
+      await request(app).post('/api/auth/register').send(validUserData2).expect(201)
 
       const loginData = {
-        email: 'test@example.com',
-        password: 'password123'
+        email: validUserData2.email,
+        password: validUserData2.password
       }
 
       // Act
@@ -366,12 +289,13 @@ describe('POST /api/auth/login', () => {
       // Assert
       const userRepository = dataSource.getRepository(User)
       const user = await userRepository.findOne({
-        where: { email: userData.email }
+        where: { email: validUserData2.email }
       })
       
       expect(user?.last_login_at).toBeTruthy()
-      expect(new Date(user!.last_login_at).getTime()).toBeGreaterThan(
-        new Date(user!.created_at).getTime()
+      expect(user?.last_login_at).toBeInstanceOf(Date)
+      expect(user!.last_login_at!.getTime()).toBeGreaterThan(
+        user!.created_at.getTime()
       )
     })
   })
@@ -402,15 +326,10 @@ describe('POST /api/auth/login', () => {
 
     it('應該拒絕錯誤的密碼並回傳 401', async () => {
       // Arrange - 先註冊一個使用者
-      const userData = {
-        nick_name: '測試使用者',
-        email: 'test@example.com',
-        password: 'password123'
-      }
-      await request(app).post('/api/auth/register').send(userData).expect(201)
+      await request(app).post('/api/auth/register').send(validUserData).expect(201)
 
       const loginData = {
-        email: 'test@example.com',
+        email: validUserData.email,
         password: 'wrongpassword'
       }
 
@@ -432,17 +351,12 @@ describe('POST /api/auth/login', () => {
 
     it('應該拒絕被停用的帳號並回傳 403', async () => {
       // Arrange - 先註冊一個使用者，然後手動設為停用
-      const userData = {
-        nick_name: '測試使用者',
-        email: 'test@example.com',
-        password: 'password123'
-      }
-      await request(app).post('/api/auth/register').send(userData).expect(201)
+      await request(app).post('/api/auth/register').send(validUserData).expect(201)
 
       // 手動將帳號設為停用
       const userRepository = dataSource.getRepository(User)
       await userRepository.update(
-        { email: userData.email },
+        { email: validUserData.email },
         { account_status: AccountStatus.SUSPENDED }
       )
 
@@ -468,16 +382,10 @@ describe('POST /api/auth/login', () => {
     })
 
     it('應該拒絕空白的登入欄位並回傳 400', async () => {
-      // Arrange
-      const incompleteLoginData = {
-        email: '',
-        password: ''
-      }
-
       // Act
       const response = await request(app)
         .post('/api/auth/login')
-        .send(incompleteLoginData)
+        .send(invalidUserData.emptyLogin)
         .expect(400)
 
       // Assert
@@ -492,16 +400,10 @@ describe('POST /api/auth/login', () => {
     })
 
     it('應該拒絕無效的 email 格式並回傳 400', async () => {
-      // Arrange
-      const invalidLoginData = {
-        email: 'invalid-email',
-        password: 'password123'
-      }
-
       // Act
       const response = await request(app)
         .post('/api/auth/login')
-        .send(invalidLoginData)
+        .send(invalidUserData.invalidLoginEmail)
         .expect(400)
 
       // Assert
@@ -519,16 +421,11 @@ describe('POST /api/auth/login', () => {
     describe('成功刷新案例', () => {
       it('應該成功刷新 Token 並回傳 200', async () => {
         // Arrange - 先註冊並登入取得 refresh token
-        const userData = {
-          nick_name: '測試使用者',
-          email: 'test@example.com',
-          password: 'password123'
-        }
-        await request(app).post('/api/auth/register').send(userData).expect(201)
+        await request(app).post('/api/auth/register').send(validUserData).expect(201)
         
         const loginResponse = await request(app)
           .post('/api/auth/login')
-          .send({ email: userData.email, password: userData.password })
+          .send({ email: validUserData.email, password: validUserData.password })
           .expect(200)
 
         const refreshToken = loginResponse.body.data.refresh_token
@@ -558,16 +455,11 @@ describe('POST /api/auth/login', () => {
 
       it('應該在刷新後仍保持使用者身份資訊', async () => {
         // Arrange
-        const userData = {
-          nick_name: '測試使用者2',
-          email: 'test2@example.com',
-          password: 'password123'
-        }
-        await request(app).post('/api/auth/register').send(userData).expect(201)
+        await request(app).post('/api/auth/register').send(validUserData2).expect(201)
         
         const loginResponse = await request(app)
           .post('/api/auth/login')
-          .send({ email: userData.email, password: userData.password })
+          .send({ email: validUserData2.email, password: validUserData2.password })
           .expect(200)
 
         const refreshToken = loginResponse.body.data.refresh_token
@@ -581,8 +473,8 @@ describe('POST /api/auth/login', () => {
         // Assert - 檢查回傳的 token 包含相同的使用者資訊
         expect(response.body.data.user).toMatchObject({
           id: loginResponse.body.data.user.id,
-          email: userData.email,
-          nick_name: userData.nick_name,
+          email: validUserData2.email,
+          nick_name: validUserData2.nick_name,
           role: 'student'
         })
       })
@@ -659,21 +551,15 @@ describe('POST /api/auth/login', () => {
     describe('成功發送重設密碼郵件', () => {
       it('應該成功發送重設密碼郵件並回傳 200', async () => {
         // Arrange - 先註冊一個測試使用者
-        const userData = {
-          nick_name: '測試使用者',
-          email: 'test@example.com',
-          password: 'password123'
-        }
-
         await request(app)
           .post('/api/auth/register')
-          .send(userData)
+          .send(validUserData)
           .expect(201)
 
         // Act - 發送忘記密碼請求
         const response = await request(app)
           .post('/api/auth/forgot-password')
-          .send({ email: userData.email })
+          .send(passwordResetData.validForgotPassword)
           .expect(200)
 
         // Assert - 檢查回應格式
@@ -686,7 +572,7 @@ describe('POST /api/auth/login', () => {
       it('應該為不存在的 email 也回傳成功（安全考量）', async () => {
         const response = await request(app)
           .post('/api/auth/forgot-password')
-          .send({ email: 'nonexistent@example.com' })
+          .send(passwordResetData.nonExistentEmail)
           .expect(200)
 
         expect(response.body).toMatchObject({
@@ -764,7 +650,7 @@ describe('POST /api/auth/login', () => {
         // 這個測試先跳過，等實作完成後補充
         const response = await request(app)
           .post('/api/auth/forgot-password')
-          .send({ email: 'suspended@example.com' })
+          .send(passwordResetData.suspendedAccountEmail)
           .expect(200)
 
         expect(response.body).toMatchObject({
@@ -804,10 +690,7 @@ describe('POST /api/auth/login', () => {
         // 重設密碼
         const response = await request(app)
           .post('/api/auth/reset-password')
-          .send({
-            token: resetToken,
-            new_password: 'newPassword456'
-          })
+          .send(passwordResetData.validResetPassword)
           .expect(200)
 
         expect(response.body).toHaveProperty('status', 'success')
