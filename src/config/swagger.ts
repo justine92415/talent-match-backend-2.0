@@ -438,9 +438,9 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 const options = {
   definition: swaggerDefinition,
   apis: [
-    isDevelopment ? './routes/*.ts' : './dist/routes/*.js',
-    isDevelopment ? './controllers/*.ts' : './dist/controllers/*.js',
-    isDevelopment ? './app.ts' : './dist/app.js'
+    isDevelopment ? './src/routes/*.ts' : './dist/routes/*.js',
+    isDevelopment ? './src/controllers/*.ts' : './dist/controllers/*.js',
+    isDevelopment ? './src/app.ts' : './dist/app.js'
   ]
 }
 
