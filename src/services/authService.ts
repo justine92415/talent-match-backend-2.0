@@ -6,45 +6,18 @@ import { User } from '../entities/User'
 import { UserRole, AccountStatus } from '../entities/enums'
 import { UserError, BusinessError } from '../core/errors/BusinessError'
 import { JWT_CONFIG, PASSWORD_CONFIG, ERROR_MESSAGES } from '../config/constants'
-
-export interface RegisterUserData {
-  nick_name: string
-  email: string
-  password: string
-}
-
-export interface LoginUserData {
-  email: string
-  password: string
-}
-
-export interface RefreshTokenData {
-  refresh_token: string
-}
-
-export interface ForgotPasswordData {
-  email: string
-}
-
-export interface ResetPasswordData {
-  token: string
-  new_password: string
-}
-
-export interface AuthTokens {
-  access_token: string
-  refresh_token: string
-  token_type: string
-  expires_in: number
-}
-
-export interface AuthResponse {
-  user: Omit<User, 'password' | 'login_attempts' | 'locked_until' | 'password_reset_token' | 'password_reset_expires_at'>
-  access_token: string
-  refresh_token: string
-  token_type: string
-  expires_in: number
-}
+import {
+  RegisterUserData,
+  LoginUserData,
+  RefreshTokenData,
+  ForgotPasswordData,
+  ResetPasswordData,
+  AuthTokens,
+  AuthResponse,
+  JwtTokenPayload,
+  UpdateUserProfileData,
+  FormattedUserResponse
+} from '../types'
 
 export class AuthService {
   private userRepository = dataSource.getRepository(User)
@@ -135,7 +108,7 @@ export class AuthService {
   async refreshToken(tokenData: RefreshTokenData): Promise<AuthResponse> {
     try {
       // 驗證 refresh token
-      const decoded = jwt.verify(tokenData.refresh_token, JWT_CONFIG.SECRET) as any
+      const decoded = jwt.verify(tokenData.refresh_token, JWT_CONFIG.SECRET) as JwtTokenPayload
 
       // 檢查 token 型別
       if (decoded.type !== 'refresh') {
@@ -237,7 +210,7 @@ export class AuthService {
    * @returns Promise<FormattedUserResponse> 使用者完整資料（不包含敏感資訊）
    * @throws {BusinessError} 當使用者不存在時
    */
-  async getProfile(userId: number): Promise<any> {
+  async getProfile(userId: number): Promise<FormattedUserResponse> {
     const userRepository = dataSource.getRepository(User)
     
     const user = await userRepository.findOne({
@@ -267,7 +240,7 @@ export class AuthService {
    * @throws {UserError} 當暱稱重複時
    * @throws {BusinessError} 當使用者不存在時
    */
-  async updateProfile(userId: number, updateData: any): Promise<any> {
+  async updateProfile(userId: number, updateData: UpdateUserProfileData): Promise<FormattedUserResponse> {
     const userRepository = dataSource.getRepository(User)
     
     const user = await userRepository.findOne({
@@ -432,8 +405,8 @@ export class AuthService {
     // 更新密碼並清除重設令牌
     await this.userRepository.update(user.id, {
       password: hashedPassword,
-      password_reset_token: null as any,
-      password_reset_expires_at: null as any,
+      password_reset_token: null,
+      password_reset_expires_at: null,
       updated_at: new Date()
     })
   }

@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from 'express'
 import { authService } from '../services/authService'
-import type { RegisterUserData, LoginUserData, RefreshTokenData, ForgotPasswordData } from '../services/authService'
+import type { RegisterUserData, LoginUserData, RefreshTokenData, ForgotPasswordData } from '../types'
 import { BusinessError, UserError } from '../core/errors/BusinessError'
 import { ERROR_MESSAGES } from '../config/constants'
 import { handleErrorAsync } from '../utils'
+import { ResponseFormatter } from '../utils/response-formatter'
 
 export class AuthController {
   /**
@@ -19,11 +20,7 @@ export class AuthController {
       password
     })
 
-    res.status(201).json({
-      status: 'success',
-      message: ERROR_MESSAGES.REGISTRATION_SUCCESS,
-      data: result
-    })
+    res.status(201).json(ResponseFormatter.created(result, ERROR_MESSAGES.REGISTRATION_SUCCESS))
   })
 
   /**
@@ -38,11 +35,7 @@ export class AuthController {
       password
     })
 
-    res.status(200).json({
-      status: 'success',
-      message: ERROR_MESSAGES.LOGIN_SUCCESS,
-      data: result
-    })
+    res.status(200).json(ResponseFormatter.success(result, ERROR_MESSAGES.LOGIN_SUCCESS))
   })
 
   /**
@@ -56,11 +49,7 @@ export class AuthController {
       refresh_token
     })
 
-    res.status(200).json({
-      status: 'success',
-      message: 'Token 刷新成功',
-      data: result
-    })
+    res.status(200).json(ResponseFormatter.success(result, 'Token 刷新成功'))
   })
 
   /**
@@ -71,10 +60,7 @@ export class AuthController {
 
     await authService.forgotPassword(forgotPasswordData)
 
-    res.status(200).json({
-      status: 'success',
-      message: '重設密碼郵件已發送，請檢查您的信箱'
-    })
+    res.status(200).json(ResponseFormatter.success(null, '重設密碼郵件已發送，請檢查您的信箱'))
   })
 
   /**
@@ -82,18 +68,15 @@ export class AuthController {
    */
   resetPassword = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
     const { token, new_password } = req.body
-    
+
     await authService.resetPassword({ token, new_password })
 
-    res.status(200).json({
-      status: 'success',
-      message: '密碼重設成功'
-    })
+    res.status(200).json(ResponseFormatter.success(null, '密碼重設成功'))
   })
 
   /**
    * 取得使用者個人資料
-   * 
+   *
    * @description 取得當前已認證使用者的完整個人資料
    * @route GET /api/auth/profile
    * @access Private (需要 JWT Token)
@@ -102,25 +85,16 @@ export class AuthController {
    * @returns Promise<void>
    */
   getProfile = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
-    const userId = req.user?.userId
-    if (!userId) {
-      throw new BusinessError('USER_NOT_FOUND', '使用者資訊不存在', 401)
-    }
-    
+    const userId = req.user!.userId
+
     const user = await authService.getProfile(userId)
 
-    res.status(200).json({
-      status: 'success',
-      message: '成功取得個人資料',
-      data: {
-        user
-      }
-    })
+    res.status(200).json(ResponseFormatter.success({ user }, '成功取得個人資料'))
   })
 
   /**
    * 更新使用者個人資料
-   * 
+   *
    * @description 更新當前已認證使用者的個人資料（部分更新）
    * @route PUT /api/auth/profile
    * @access Private (需要 JWT Token)
@@ -129,26 +103,18 @@ export class AuthController {
    * @returns Promise<void>
    */
   updateProfile = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
-    const userId = req.user?.userId
-    if (!userId) {
-      throw new BusinessError('USER_NOT_FOUND', '使用者資訊不存在', 401)
-    }
+    const userId = req.user!.userId
+
     const updateData = req.body
-    
+
     const user = await authService.updateProfile(userId, updateData)
 
-    res.status(200).json({
-      status: 'success',
-      message: '成功更新個人資料',
-      data: {
-        user
-      }
-    })
+    res.status(200).json(ResponseFormatter.success({ user }, '成功更新個人資料'))
   })
 
   /**
    * 刪除使用者帳號
-   * 
+   *
    * @description 軟刪除當前已認證使用者的帳號
    * @route DELETE /api/auth/profile
    * @access Private (需要 JWT Token)
@@ -157,36 +123,12 @@ export class AuthController {
    * @returns Promise<void>
    */
   deleteProfile = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
-    const userId = req.user?.userId
-    if (!userId) {
-      throw new BusinessError('USER_NOT_FOUND', '使用者資訊不存在', 401)
-    }
+    const userId = req.user!.userId
 
     await authService.deleteProfile(userId)
 
-    res.status(200).json({
-      status: 'success',
-      message: '帳號已成功刪除'
-    })
+    res.status(200).json(ResponseFormatter.success(null, '帳號已成功刪除'))
   })
-
-  /**
-   * 格式化業務錯誤為前端需要的格式
-   * @deprecated 此方法已移至全域錯誤處理中間件
-   */
-  private static formatBusinessError(error: BusinessError): Record<string, string[]> {
-    if (error instanceof UserError) {
-      switch (error.code) {
-        case 'EMAIL_EXISTS':
-          return { email: [error.message] }
-        case 'NICKNAME_EXISTS':
-          return { nick_name: [error.message] }
-        default:
-          return { general: [error.message] }
-      }
-    }
-    return { general: [error.message] }
-  }
 }
 
 export const authController = new AuthController()

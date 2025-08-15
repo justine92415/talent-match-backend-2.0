@@ -1,4 +1,18 @@
 import { dataSource } from '../db/data-source'
+import { DataSource } from 'typeorm'
+
+// 測試資料庫連線
+export const testDataSource: Promise<DataSource> = (async () => {
+  try {
+    if (!dataSource.isInitialized) {
+      await dataSource.initialize()
+    }
+    return dataSource
+  } catch (error) {
+    console.error('❌ 測試資料庫連線失敗:', error)
+    throw error
+  }
+})()
 
 // 全域測試設定
 export const setupTests = async (): Promise<void> => {

@@ -2,13 +2,15 @@ import { Router } from 'express'
 import { authController } from '../controllers/AuthController'
 import { authenticateToken } from '../middleware/auth'
 import { 
-  validateRegisterRequest, 
-  validateLoginRequest, 
-  validateRefreshTokenRequest, 
-  validateForgotPasswordRequest, 
-  validateResetPasswordRequest,
-  validateUpdateProfileRequest 
+  validateRequest,
+  registerSchema,
+  loginSchema,
+  refreshTokenSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  updateProfileSchema
 } from '../middleware/validation'
+import { ERROR_MESSAGES } from '../config/constants'
 
 const router = Router()
 
@@ -151,7 +153,7 @@ const router = Router()
  */
 router.post(
   '/register',
-  validateRegisterRequest, // 參數驗證
+  validateRequest(registerSchema, ERROR_MESSAGES.REGISTRATION_FAILED), // 參數驗證
   authController.register // 業務邏輯
 )
 
@@ -301,7 +303,7 @@ router.post(
  */
 router.post(
   '/login',
-  validateLoginRequest, // 參數驗證
+  validateRequest(loginSchema, ERROR_MESSAGES.LOGIN_FAILED), // 參數驗證
   authController.login // 業務邏輯
 )
 
@@ -400,7 +402,7 @@ router.post(
  */
 router.post(
   '/refresh-token',
-  validateRefreshTokenRequest, // 參數驗證
+  validateRequest(refreshTokenSchema, ERROR_MESSAGES.VALIDATION_ERROR), // 參數驗證
   authController.refreshToken // 業務邏輯
 )
 
@@ -492,7 +494,7 @@ router.post(
  */
 router.post(
   '/forgot-password',
-  validateForgotPasswordRequest, // 參數驗證
+  validateRequest(forgotPasswordSchema, ERROR_MESSAGES.VALIDATION_ERROR), // 參數驗證
   authController.forgotPassword // 業務邏輯
 )
 
@@ -577,7 +579,7 @@ router.post(
  *             schema:
  *               $ref: '#/components/schemas/ServerErrorResponse'
  */
-router.post('/reset-password', validateResetPasswordRequest, authController.resetPassword)
+router.post('/reset-password', validateRequest(resetPasswordSchema, ERROR_MESSAGES.VALIDATION_ERROR), authController.resetPassword)
 
 /**
  * @swagger
@@ -712,7 +714,7 @@ router.get('/profile', authenticateToken, authController.getProfile)
  *       401:
  *         description: 未授權
  */
-router.put('/profile', authenticateToken, validateUpdateProfileRequest, authController.updateProfile)
+router.put('/profile', authenticateToken, validateRequest(updateProfileSchema, ERROR_MESSAGES.VALIDATION_ERROR), authController.updateProfile)
 
 /**
  * @swagger
