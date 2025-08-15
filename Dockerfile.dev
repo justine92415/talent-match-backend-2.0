@@ -16,4 +16,4 @@ COPY . .
 EXPOSE 8080
 
 # 使用 nodemon 來實現熱重載
-CMD ["npx", "nodemon", "--exec", "ts-node", "./bin/www.ts"]
+CMD ["npx", "nodemon", "--exec", "ts-node", "./src/bin/www.ts"]
