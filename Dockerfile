@@ -34,4 +34,4 @@ COPY --from=builder /app/dist ./dist
 EXPOSE 8080
 
 # 啟動應用程式
-CMD ["node", "dist/bin/www.js"]
+CMD ["node", "dist/src/bin/www.js"]
