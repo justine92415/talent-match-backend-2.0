@@ -26,6 +26,14 @@ export class UserError extends BusinessError {
   static nicknameExists(): UserError {
     return new UserError(ERROR_CODES.NICKNAME_EXISTS, '此暱稱已被使用')
   }
+
+  static invalidCredentials(): UserError {
+    return new UserError(ERROR_CODES.INVALID_CREDENTIALS, '電子郵件或密碼錯誤', 401)
+  }
+
+  static accountSuspended(): UserError {
+    return new UserError(ERROR_CODES.ACCOUNT_SUSPENDED, '您的帳號已被停用，請聯絡客服', 403)
+  }
 }
 
 /**

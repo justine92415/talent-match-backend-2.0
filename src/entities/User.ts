@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm'
 import { UserRole, AccountStatus } from './enums'
 
 @Entity('users')
@@ -82,4 +82,8 @@ export class User {
   /** 更新時間 */
   @UpdateDateColumn({ type: 'timestamp' })
   updated_at!: Date
+
+  /** 刪除時間（軟刪除） */
+  @DeleteDateColumn({ type: 'timestamp', nullable: true })
+  deleted_at!: Date
 }

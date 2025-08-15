@@ -99,4 +99,8 @@ app.use(
 import routes from './routes'
 app.use('/api', routes)
 
+// 全域錯誤處理中間件 (必須放在最後)
+import { errorHandler } from './middleware/errorHandler'
+app.use(errorHandler)
+
 export default app
