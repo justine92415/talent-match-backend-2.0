@@ -505,8 +505,9 @@ describe('教師時間管理 API', () => {
 
         // 建立衝突的預約
         // 2025-08-18 是星期一
-        // 要測試與 09:00-10:00 時段的衝突，使用 UTC 01:30（台北時間 09:30）
-        const reservationTime = new Date('2025-08-18T01:30:00.000Z')  // UTC 01:30 = 台北時間 09:30
+        // 要測試與 09:00-10:00 時段的衝突，無論在什麼時區都要確保時間真正落在 09:00-10:00 範圍內
+        // 使用明確的台北時間 2025-08-18 09:30，轉換為 UTC 時間是 2025-08-18 01:30
+        const reservationTime = new Date('2025-08-18T09:30:00+08:00')  // 明確指定台北時區
         
         console.log('🔍 DEBUG: 衝突測試詳細資訊')
         console.log('  - 教師時段: 週一 09:00-10:00')
@@ -514,6 +515,7 @@ describe('教師時間管理 API', () => {
         console.log('  - 預約時間 (本地):', reservationTime.toString())
         console.log('  - 預約時間戳:', reservationTime.getTime())
         console.log('  - 時區偏移:', reservationTime.getTimezoneOffset())
+        console.log('  - 預約時間應該對應 UTC:', new Date('2025-08-18T01:30:00.000Z').toISOString())
         
         const conflictReservation = await createTestReservation({
           teacher_id: teacherId,
