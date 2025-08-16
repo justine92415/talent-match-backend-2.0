@@ -1,22 +1,22 @@
 import { Repository } from 'typeorm'
-import { dataSource } from '../db/data-source'
-import { Teacher } from '../entities/Teacher'
-import { User } from '../entities/User'
-import { TeacherWorkExperience } from '../entities/TeacherWorkExperience'
-import { TeacherLearningExperience } from '../entities/TeacherLearningExperience'
-import { TeacherCertificate } from '../entities/TeacherCertificate'
-import { UserRole, AccountStatus, ApplicationStatus } from '../entities/enums'
-import { BusinessError } from '../core/errors/BusinessError'
+import { dataSource } from '@db/data-source'
+import { Teacher } from '@entities/Teacher'
+import { User } from '@entities/User'
+import { TeacherWorkExperience } from '@entities/TeacherWorkExperience'
+import { TeacherLearningExperience } from '@entities/TeacherLearningExperience'
+import { TeacherCertificate } from '@entities/TeacherCertificate'
+import { UserRole, AccountStatus, ApplicationStatus } from '@entities/enums'
+import { BusinessError } from '@core/errors/BusinessError'
 import {
   TEACHER_ERROR_CODES,
   TEACHER_ERROR_MESSAGES,
   TEACHER_HTTP_STATUS
-} from '../constants/teacher'
+} from '@constants/teacher'
 import { 
   TeacherApplicationData, 
   TeacherApplicationUpdateData,
   TeacherProfileUpdateRequest
-} from '../types'
+} from '@models/index'
 
 /**
  * 教師申請和管理相關的業務服務類別

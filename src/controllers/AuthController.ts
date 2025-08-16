@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express'
-import { authService } from '../services/authService'
-import type { RegisterUserData, LoginUserData, RefreshTokenData, ForgotPasswordData } from '../types'
-import { BusinessError, UserError } from '../core/errors/BusinessError'
-import { ERROR_MESSAGES } from '../config/constants'
-import { handleErrorAsync } from '../utils'
-import { ResponseFormatter } from '../utils/response-formatter'
+import { authService } from '@services/authService'
+import type { RegisterUserData, LoginUserData, RefreshTokenData, ForgotPasswordData } from '@models/index'
+import { BusinessError, UserError } from '@core/errors/BusinessError'
+import { ERROR_MESSAGES } from '@config/constants'
+import { handleErrorAsync } from '@utils/index'
+import { ResponseFormatter } from '@utils/response-formatter'
 
 export class AuthController {
   /**

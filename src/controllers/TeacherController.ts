@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
-import { TeacherService } from '../services/teacherService'
-import { ResponseFormatter } from '../utils/response-formatter'
-import { handleErrorAsync } from '../utils'
-import { Teacher } from '../entities/Teacher'
+import { TeacherService } from '@services/teacherService'
+import { ResponseFormatter } from '@utils/response-formatter'
+import { handleErrorAsync } from '@utils/index'
+import { Teacher } from '@entities/Teacher'
 
 /**
  * 教師相關的控制器類別

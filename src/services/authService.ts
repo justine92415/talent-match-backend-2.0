@@ -1,11 +1,11 @@
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { v4 as uuidv4 } from 'uuid'
-import { dataSource } from '../db/data-source'
-import { User } from '../entities/User'
-import { UserRole, AccountStatus } from '../entities/enums'
-import { UserError, BusinessError } from '../core/errors/BusinessError'
-import { JWT_CONFIG, PASSWORD_CONFIG, ERROR_MESSAGES } from '../config/constants'
+import { dataSource } from '@db/data-source'
+import { User } from '@entities/User'
+import { UserRole, AccountStatus } from '@entities/enums'
+import { UserError, BusinessError } from '@core/errors/BusinessError'
+import { JWT_CONFIG, PASSWORD_CONFIG, ERROR_MESSAGES } from '@config/constants'
 import {
   RegisterUserData,
   LoginUserData,
@@ -17,7 +17,7 @@ import {
   JwtTokenPayload,
   UpdateUserProfileData,
   FormattedUserResponse
-} from '../types'
+} from '@models/index'
 
 export class AuthService {
   private userRepository = dataSource.getRepository(User)
