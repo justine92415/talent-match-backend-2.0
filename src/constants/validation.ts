@@ -109,13 +109,25 @@ export const LEARNING_EXPERIENCE_VALIDATION = {
  * 證書相關驗證常數
  */
 export const CERTIFICATE_VALIDATION = {
-  NAME: {
+  VERIFYING_INSTITUTION: {
     MAX_LENGTH: 100,
   },
-  ISSUER: {
+  LICENSE_NAME: {
+    MAX_LENGTH: 200,
+  },
+  HOLDER_NAME: {
     MAX_LENGTH: 100,
   },
-  DESCRIPTION: {
+  LICENSE_NUMBER: {
+    MAX_LENGTH: 100,
+  },
+  CATEGORY_ID: {
+    MAX_LENGTH: 50,
+  },
+  SUBJECT: {
+    MAX_LENGTH: 200,
+  },
+  FILE_PATH: {
     MAX_LENGTH: 500,
   },
 } as const

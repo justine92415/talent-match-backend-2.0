@@ -3,8 +3,8 @@
  * 提供教師申請測試所需的標準測試資料
  */
 
-import { ApplicationStatus, UserRole, AccountStatus } from '../../entities/enums'
-import { Teacher } from '../../entities/Teacher'
+import { ApplicationStatus, UserRole, AccountStatus } from '@entities/enums'
+import { Teacher } from '@entities/Teacher'
 
 // 有效的測試資料：自我介紹
 export const validIntroductions = {

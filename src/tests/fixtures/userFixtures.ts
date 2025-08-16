@@ -3,8 +3,8 @@
  * 遵循 TDD 指示文件：統一管理測試資料，避免重複宣告
  */
 
-import { UserRole, AccountStatus } from '../../entities/enums'
-import { User } from '../../entities/User'
+import { UserRole, AccountStatus } from '@entities/enums'
+import { User } from '@entities/User'
 
 // 基本有效使用者資料
 export const validUserData = {

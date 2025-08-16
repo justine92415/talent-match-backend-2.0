@@ -1,6 +1,6 @@
-import { User } from '../entities/User'
-import { Teacher } from '../entities/Teacher'
-import { UserRole, AccountStatus, ApplicationStatus } from '../entities/enums'
+import { User } from '@entities/User'
+import { Teacher } from '@entities/Teacher'
+import { UserRole, AccountStatus, ApplicationStatus } from '@entities/enums'
 
 /**
  * 測試用使用者建立資料介面

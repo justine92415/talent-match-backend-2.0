@@ -26,3 +26,9 @@ export {
   learningExperienceCreateSchema,
   learningExperienceUpdateSchema
 } from './teacher'
+
+// 證書相關驗證 Schema
+export {
+  certificateCreateSchema,
+  certificateUpdateSchema
+} from './certificate'

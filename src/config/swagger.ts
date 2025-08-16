@@ -965,6 +965,292 @@ const swaggerDefinition = {
             }
           }
         ]
+      },
+
+      // === 證書管理相關 Schema ===
+
+      // 教師證書基本資料 Schema
+      TeacherCertificate: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '證書ID',
+            example: 1
+          },
+          teacher_id: {
+            type: 'integer',
+            description: '教師ID',
+            example: 1
+          },
+          verifying_institution: {
+            type: 'string',
+            maxLength: 100,
+            description: '發證機構名稱',
+            example: '教育部'
+          },
+          license_name: {
+            type: 'string',
+            maxLength: 200,
+            description: '證書名稱',
+            example: '中等學校教師證書'
+          },
+          holder_name: {
+            type: 'string',
+            maxLength: 100,
+            description: '證書持有人姓名',
+            example: '王小明'
+          },
+          license_number: {
+            type: 'string',
+            maxLength: 100,
+            description: '證書編號',
+            example: 'TC2024001234'
+          },
+          file_path: {
+            type: 'string',
+            maxLength: 500,
+            description: '證書檔案路徑',
+            example: '/uploads/certificates/tc_2024001234.pdf'
+          },
+          category_id: {
+            type: 'string',
+            maxLength: 50,
+            description: '證書類別ID',
+            example: 'teaching_license'
+          },
+          subject: {
+            type: 'string',
+            maxLength: 200,
+            description: '證書主題/科目',
+            example: '數學科教學'
+          },
+          created_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '建立時間',
+            example: '2024-01-15T08:00:00.000Z'
+          },
+          updated_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '更新時間',
+            example: '2024-01-15T08:00:00.000Z'
+          }
+        },
+        required: [
+          'id',
+          'teacher_id', 
+          'verifying_institution',
+          'license_name',
+          'holder_name',
+          'license_number',
+          'file_path',
+          'category_id',
+          'subject'
+        ]
+      },
+
+      // 建立證書請求 Schema
+      CreateTeacherCertificateRequest: {
+        type: 'object',
+        properties: {
+          verifying_institution: {
+            type: 'string',
+            maxLength: 100,
+            description: '發證機構名稱（必填）',
+            example: '教育部'
+          },
+          license_name: {
+            type: 'string',
+            maxLength: 200,
+            description: '證書名稱（必填）',
+            example: '中等學校教師證書'
+          },
+          holder_name: {
+            type: 'string',
+            maxLength: 100,
+            description: '證書持有人姓名（必填）',
+            example: '王小明'
+          },
+          license_number: {
+            type: 'string',
+            maxLength: 100,
+            description: '證書編號（必填）',
+            example: 'TC2024001234'
+          },
+          file_path: {
+            type: 'string',
+            maxLength: 500,
+            description: '證書檔案路徑（必填）',
+            example: '/uploads/certificates/tc_2024001234.pdf'
+          },
+          category_id: {
+            type: 'string',
+            maxLength: 50,
+            description: '證書類別ID（必填）',
+            example: 'teaching_license'
+          },
+          subject: {
+            type: 'string',
+            maxLength: 200,
+            description: '證書主題/科目（必填）',
+            example: '數學科教學'
+          }
+        },
+        required: [
+          'verifying_institution',
+          'license_name',
+          'holder_name',
+          'license_number',
+          'file_path',
+          'category_id',
+          'subject'
+        ],
+        example: {
+          verifying_institution: '教育部',
+          license_name: '中等學校教師證書',
+          holder_name: '王小明',
+          license_number: 'TC2024001234',
+          file_path: '/uploads/certificates/tc_2024001234.pdf',
+          category_id: 'teaching_license',
+          subject: '數學科教學'
+        }
+      },
+
+      // 更新證書請求 Schema
+      UpdateTeacherCertificateRequest: {
+        type: 'object',
+        properties: {
+          verifying_institution: {
+            type: 'string',
+            maxLength: 100,
+            description: '發證機構名稱（選填）',
+            example: '教育部'
+          },
+          license_name: {
+            type: 'string',
+            maxLength: 200,
+            description: '證書名稱（選填）',
+            example: '高級中等學校教師證書'
+          },
+          holder_name: {
+            type: 'string',
+            maxLength: 100,
+            description: '證書持有人姓名（選填）',
+            example: '王小明'
+          },
+          license_number: {
+            type: 'string',
+            maxLength: 100,
+            description: '證書編號（選填）',
+            example: 'TC2024001235'
+          },
+          file_path: {
+            type: 'string',
+            maxLength: 500,
+            description: '證書檔案路徑（選填）',
+            example: '/uploads/certificates/tc_2024001235.pdf'
+          },
+          category_id: {
+            type: 'string',
+            maxLength: 50,
+            description: '證書類別ID（選填）',
+            example: 'advanced_teaching_license'
+          },
+          subject: {
+            type: 'string',
+            maxLength: 200,
+            description: '證書主題/科目（選填）',
+            example: '高中數學科教學'
+          }
+        },
+        additionalProperties: false,
+        example: {
+          license_name: '高級中等學校教師證書',
+          license_number: 'TC2024001235',
+          subject: '高中數學科教學'
+        }
+      },
+
+      // 證書列表回應 Schema
+      TeacherCertificateListResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              data: {
+                type: 'object',
+                properties: {
+                  certificates: {
+                    type: 'array',
+                    items: {
+                      $ref: '#/components/schemas/TeacherCertificate'
+                    },
+                    description: '證書列表'
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 證書建立回應 Schema
+      TeacherCertificateCreateResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/CreatedResponse' },
+          {
+            type: 'object',
+            properties: {
+              data: {
+                type: 'object',
+                properties: {
+                  certificate: {
+                    $ref: '#/components/schemas/TeacherCertificate'
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 證書更新回應 Schema
+      TeacherCertificateUpdateResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              data: {
+                type: 'object',
+                properties: {
+                  certificate: {
+                    $ref: '#/components/schemas/TeacherCertificate'
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 證書刪除回應 Schema
+      TeacherCertificateDeleteResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              data: {
+                type: 'null',
+                description: '刪除成功時無回傳資料'
+              }
+            }
+          }
+        ]
       }
     },
 

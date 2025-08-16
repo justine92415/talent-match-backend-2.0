@@ -1,10 +1,10 @@
 import request from 'supertest'
 import jwt from 'jsonwebtoken'
-import app from '../app'
-import { clearDatabase, initTestDatabase } from './helpers/database'
-import { dataSource } from '../db/data-source'
-import { User } from '../entities/User'
-import { AccountStatus, UserRole } from '../entities/enums'
+import app from '@src/app'
+import { clearDatabase, initTestDatabase } from '@tests/helpers/database'
+import { dataSource } from '@db/data-source'
+import { User } from '@entities/User'
+import { AccountStatus, UserRole } from '@entities/enums'
 import {
   validUserData,
   validUserData2,

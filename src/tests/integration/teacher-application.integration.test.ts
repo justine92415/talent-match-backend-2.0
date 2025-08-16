@@ -1,30 +1,16 @@
 import request from 'supertest'
 import { DataSource } from 'typeorm'
-import app from '../../app'
-import { initTestDatabase, clearDatabase } from '../helpers/database'
-import { dataSource } from '../../db/data-source'
-import { User } from '../../entities/User'
-import { Teacher } from '../../entities/Teacher'
-import { UserRole, AccountStatus, ApplicationStatus } from '../../entities/enums'
-import jwt from 'jsonwebtoken'
-import ConfigManager from '../../config'
+import app from '@src/app'
+import { initTestDatabase, clearDatabase } from '@tests/helpers/database'
+import { dataSource } from '@db/data-source'
+import { User } from '@entities/User'
+import { Teacher } from '@entities/Teacher'
+import { ApplicationStatus } from '@entities/enums'
 import { ERROR_MESSAGES } from '@constants/errorMessages'
 
 // 使用新的 fixtures 和 helper
-import {
-  validTeacherApplicationData,
-  invalidTeacherApplicationData,
-  teacherApplicationTestScenarios,
-  expectedResponseStructures,
-  validIntroductions,
-  jwtTestUsers
-} from '../fixtures/teacherFixtures'
-import {
-  UserTestHelpers,
-  TeacherTestHelpers,
-  RequestTestHelpers,
-  ValidationTestHelpers
-} from '../helpers/testHelpers'
+import { validTeacherApplicationData, invalidTeacherApplicationData, expectedResponseStructures, validIntroductions } from '@tests/fixtures/teacherFixtures'
+import { UserTestHelpers, TeacherTestHelpers, ValidationTestHelpers } from '@tests/helpers/testHelpers'
 
 describe('教師申請 API 整合測試', () => {
   let connection: DataSource
@@ -57,10 +43,7 @@ describe('教師申請 API 整合測試', () => {
       const applicationData = validTeacherApplicationData.basic
 
       // Act
-      const response = await request(app)
-        .post('/api/teachers/apply')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(applicationData)
+      const response = await request(app).post('/api/teachers/apply').set('Authorization', `Bearer ${authToken}`).send(applicationData)
 
       // Debug - 顯示實際回應
       if (response.status !== 201) {
@@ -70,16 +53,10 @@ describe('教師申請 API 整合測試', () => {
 
       // Assert - 使用 ValidationTestHelpers 驗證回應結構
       expect(response.status).toBe(201)
-      ValidationTestHelpers.expectResponseStructure(
-        response, 
-        expectedResponseStructures.successfulApplicationResponse
-      )
+      ValidationTestHelpers.expectResponseStructure(response, expectedResponseStructures.successfulApplicationResponse)
 
       // 驗證資料庫記錄
-      await ValidationTestHelpers.expectDatabaseRecord(
-        connection.getRepository(Teacher),
-        { where: { user_id: testUser.id } }
-      )
+      await ValidationTestHelpers.expectDatabaseRecord(connection.getRepository(Teacher), { where: { user_id: testUser.id } })
     })
 
     it('應該拒絕重複申請並回傳 409 錯誤', async () => {
@@ -93,10 +70,7 @@ describe('教師申請 API 整合測試', () => {
       const applicationData = validTeacherApplicationData.japanese
 
       // Act
-      const response = await request(app)
-        .post('/api/teachers/apply')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(applicationData)
+      const response = await request(app).post('/api/teachers/apply').set('Authorization', `Bearer ${authToken}`).send(applicationData)
 
       // Debug
       if (response.status !== 409) {
@@ -106,10 +80,7 @@ describe('教師申請 API 整合測試', () => {
 
       // Assert - 使用預期的回應結構
       expect(response.status).toBe(409)
-      ValidationTestHelpers.expectResponseStructure(
-        response, 
-        expectedResponseStructures.duplicateApplicationResponse
-      )
+      ValidationTestHelpers.expectResponseStructure(response, expectedResponseStructures.duplicateApplicationResponse)
     })
 
     it('應該拒絕無效的國籍並回傳 400 錯誤', async () => {
@@ -117,10 +88,7 @@ describe('教師申請 API 整合測試', () => {
       const invalidData = invalidTeacherApplicationData.emptyNationality
 
       // Act
-      const response = await request(app)
-        .post('/api/teachers/apply')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(invalidData)
+      const response = await request(app).post('/api/teachers/apply').set('Authorization', `Bearer ${authToken}`).send(invalidData)
 
       // Assert
       expect(response.status).toBe(400)
@@ -137,10 +105,7 @@ describe('教師申請 API 整合測試', () => {
       const invalidData = invalidTeacherApplicationData.shortIntroduction
 
       // Act
-      const response = await request(app)
-        .post('/api/teachers/apply')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(invalidData)
+      const response = await request(app).post('/api/teachers/apply').set('Authorization', `Bearer ${authToken}`).send(invalidData)
 
       // Assert
       expect(response.status).toBe(400)
@@ -148,9 +113,7 @@ describe('教師申請 API 整合測試', () => {
         status: 'error',
         message: '教師申請參數驗證失敗',
         errors: {
-          introduction: expect.arrayContaining([
-            "自我介紹至少需要100個字元"
-          ])
+          introduction: expect.arrayContaining(['自我介紹至少需要100個字元'])
         }
       })
     })
@@ -160,10 +123,7 @@ describe('教師申請 API 整合測試', () => {
       const invalidData = invalidTeacherApplicationData.longIntroduction
 
       // Act
-      const response = await request(app)
-        .post('/api/teachers/apply')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(invalidData)
+      const response = await request(app).post('/api/teachers/apply').set('Authorization', `Bearer ${authToken}`).send(invalidData)
 
       // Assert
       expect(response.status).toBe(400)
@@ -171,22 +131,15 @@ describe('教師申請 API 整合測試', () => {
         status: 'error',
         message: '教師申請參數驗證失敗',
         errors: {
-          introduction: expect.arrayContaining([
-            "自我介紹長度不能超過1000個字元"
-          ])
+          introduction: expect.arrayContaining(['自我介紹長度不能超過1000個字元'])
         }
       })
     })
 
     it('應該回傳 401 當未提供 token', async () => {
-      const response = await request(app)
-        .post('/api/teachers/apply')
-        .send(validTeacherApplicationData.basic)
-        .expect(401)
+      const response = await request(app).post('/api/teachers/apply').send(validTeacherApplicationData.basic).expect(401)
 
-      expect(response.body.message).toEqual(
-        expect.stringContaining(ERROR_MESSAGES.AUTH.TOKEN_REQUIRED)
-      )
+      expect(response.body.message).toEqual(expect.stringContaining(ERROR_MESSAGES.AUTH.TOKEN_REQUIRED))
     })
 
     it('應該拒絕非學生角色的申請並回傳 403 錯誤', async () => {
@@ -197,10 +150,7 @@ describe('教師申請 API 整合測試', () => {
       const applicationData = validTeacherApplicationData.basic
 
       // Act
-      const response = await request(app)
-        .post('/api/teachers/apply')
-        .set('Authorization', `Bearer ${teacherAuthToken}`)
-        .send(applicationData)
+      const response = await request(app).post('/api/teachers/apply').set('Authorization', `Bearer ${teacherAuthToken}`).send(applicationData)
 
       // Debug
       if (response.status !== 403) {
@@ -224,10 +174,7 @@ describe('教師申請 API 整合測試', () => {
       const applicationData = validTeacherApplicationData.basic
 
       // Act
-      const response = await request(app)
-        .post('/api/teachers/apply')
-        .set('Authorization', `Bearer ${suspendedAuthToken}`)
-        .send(applicationData)
+      const response = await request(app).post('/api/teachers/apply').set('Authorization', `Bearer ${suspendedAuthToken}`).send(applicationData)
 
       // Assert
       expect(response.status).toBe(401)
@@ -249,17 +196,12 @@ describe('教師申請 API 整合測試', () => {
       })
 
       // Act
-      const response = await request(app)
-        .get('/api/teachers/application')
-        .set('Authorization', `Bearer ${authToken}`)
+      const response = await request(app).get('/api/teachers/application').set('Authorization', `Bearer ${authToken}`)
 
       // Assert
       expect(response.status).toBe(200)
-      ValidationTestHelpers.expectResponseStructure(
-        response,
-        expectedResponseStructures.getApplicationSuccessResponse
-      )
-      
+      ValidationTestHelpers.expectResponseStructure(response, expectedResponseStructures.getApplicationSuccessResponse)
+
       // 驗證具體資料
       expect(response.body.data.teacher).toMatchObject({
         id: teacher.id,
@@ -272,16 +214,11 @@ describe('教師申請 API 整合測試', () => {
 
     it('應該在沒有申請記錄時回傳 404 錯誤', async () => {
       // Act
-      const response = await request(app)
-        .get('/api/teachers/application')
-        .set('Authorization', `Bearer ${authToken}`)
+      const response = await request(app).get('/api/teachers/application').set('Authorization', `Bearer ${authToken}`)
 
       // Assert
       expect(response.status).toBe(404)
-      ValidationTestHelpers.expectResponseStructure(
-        response,
-        expectedResponseStructures.noApplicationResponse
-      )
+      ValidationTestHelpers.expectResponseStructure(response, expectedResponseStructures.noApplicationResponse)
     })
   })
 
@@ -297,17 +234,11 @@ describe('教師申請 API 整合測試', () => {
       const updateData = validTeacherApplicationData.updated
 
       // Act
-      const response = await request(app)
-        .put('/api/teachers/application')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(updateData)
+      const response = await request(app).put('/api/teachers/application').set('Authorization', `Bearer ${authToken}`).send(updateData)
 
       // Assert
       expect(response.status).toBe(200)
-      ValidationTestHelpers.expectResponseStructure(
-        response,
-        expectedResponseStructures.updateApplicationSuccessResponse
-      )
+      ValidationTestHelpers.expectResponseStructure(response, expectedResponseStructures.updateApplicationSuccessResponse)
 
       // 驗證更新後的資料
       expect(response.body.data.teacher).toMatchObject({
@@ -330,10 +261,7 @@ describe('教師申請 API 整合測試', () => {
       }
 
       // Act
-      const response = await request(app)
-        .put('/api/teachers/application')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(updateData)
+      const response = await request(app).put('/api/teachers/application').set('Authorization', `Bearer ${authToken}`).send(updateData)
 
       // Assert
       expect(response.status).toBe(400)
@@ -357,9 +285,7 @@ describe('教師申請 API 整合測試', () => {
       })
 
       // Act
-      const response = await request(app)
-        .post('/api/teachers/resubmit')
-        .set('Authorization', `Bearer ${authToken}`)
+      const response = await request(app).post('/api/teachers/resubmit').set('Authorization', `Bearer ${authToken}`)
 
       // Assert
       expect(response.status).toBe(200)
@@ -402,9 +328,7 @@ describe('教師申請 API 整合測試', () => {
       })
 
       // Act
-      const response = await request(app)
-        .post('/api/teachers/resubmit')
-        .set('Authorization', `Bearer ${authToken}`)
+      const response = await request(app).post('/api/teachers/resubmit').set('Authorization', `Bearer ${authToken}`)
 
       // Assert
       expect(response.status).toBe(400)
@@ -423,9 +347,7 @@ describe('教師申請 API 整合測試', () => {
       })
 
       // Act
-      const response = await request(app)
-        .post('/api/teachers/resubmit')
-        .set('Authorization', `Bearer ${authToken}`)
+      const response = await request(app).post('/api/teachers/resubmit').set('Authorization', `Bearer ${authToken}`)
 
       // Assert
       expect(response.status).toBe(400)
@@ -437,9 +359,7 @@ describe('教師申請 API 整合測試', () => {
 
     it('應該在沒有申請記錄時回傳 404 錯誤', async () => {
       // Act - 未建立任何申請記錄就嘗試重新提交
-      const response = await request(app)
-        .post('/api/teachers/resubmit')
-        .set('Authorization', `Bearer ${authToken}`)
+      const response = await request(app).post('/api/teachers/resubmit').set('Authorization', `Bearer ${authToken}`)
 
       // Assert
       expect(response.status).toBe(404)
@@ -451,8 +371,7 @@ describe('教師申請 API 整合測試', () => {
 
     it('應該拒絕未認證的重新提交請求並回傳 401 錯誤', async () => {
       // Act - 未提供認證令牌
-      const response = await request(app)
-        .post('/api/teachers/resubmit')
+      const response = await request(app).post('/api/teachers/resubmit')
 
       // Assert
       expect(response.status).toBe(401)
@@ -475,9 +394,7 @@ describe('教師申請 API 整合測試', () => {
       })
 
       // Act
-      const response = await request(app)
-        .get('/api/teachers/profile')
-        .set('Authorization', `Bearer ${authToken}`)
+      const response = await request(app).get('/api/teachers/profile').set('Authorization', `Bearer ${authToken}`)
 
       // Assert
       expect(response.status).toBe(200)
@@ -516,9 +433,7 @@ describe('教師申請 API 整合測試', () => {
       })
 
       // Act
-      const response = await request(app)
-        .get('/api/teachers/profile')
-        .set('Authorization', `Bearer ${authToken}`)
+      const response = await request(app).get('/api/teachers/profile').set('Authorization', `Bearer ${authToken}`)
 
       // Assert
       expect(response.status).toBe(404)
@@ -530,9 +445,7 @@ describe('教師申請 API 整合測試', () => {
 
     it('應該在沒有教師記錄時回傳 404 錯誤', async () => {
       // Act - 未建立任何教師記錄
-      const response = await request(app)
-        .get('/api/teachers/profile')
-        .set('Authorization', `Bearer ${authToken}`)
+      const response = await request(app).get('/api/teachers/profile').set('Authorization', `Bearer ${authToken}`)
 
       // Assert
       expect(response.status).toBe(404)
@@ -544,8 +457,7 @@ describe('教師申請 API 整合測試', () => {
 
     it('應該拒絕未認證的請求並回傳 401 錯誤', async () => {
       // Act
-      const response = await request(app)
-        .get('/api/teachers/profile')
+      const response = await request(app).get('/api/teachers/profile')
 
       // Assert
       expect(response.status).toBe(401)
@@ -573,10 +485,7 @@ describe('教師申請 API 整合測試', () => {
       }
 
       // Act
-      const response = await request(app)
-        .put('/api/teachers/profile')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(updateData)
+      const response = await request(app).put('/api/teachers/profile').set('Authorization', `Bearer ${authToken}`).send(updateData)
 
       // Assert
       expect(response.status).toBe(200)
@@ -611,10 +520,7 @@ describe('教師申請 API 整合測試', () => {
       }
 
       // Act
-      const response = await request(app)
-        .put('/api/teachers/profile')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(updateData)
+      const response = await request(app).put('/api/teachers/profile').set('Authorization', `Bearer ${authToken}`).send(updateData)
 
       // Assert
       expect(response.status).toBe(200)
@@ -646,10 +552,7 @@ describe('教師申請 API 整合測試', () => {
       }
 
       // Act
-      const response = await request(app)
-        .put('/api/teachers/profile')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(updateData)
+      const response = await request(app).put('/api/teachers/profile').set('Authorization', `Bearer ${authToken}`).send(updateData)
 
       // Assert
       expect(response.status).toBe(404)
@@ -666,10 +569,7 @@ describe('教師申請 API 整合測試', () => {
       }
 
       // Act
-      const response = await request(app)
-        .put('/api/teachers/profile')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(updateData)
+      const response = await request(app).put('/api/teachers/profile').set('Authorization', `Bearer ${authToken}`).send(updateData)
 
       // Assert
       expect(response.status).toBe(404)
@@ -692,10 +592,7 @@ describe('教師申請 API 整合測試', () => {
       }
 
       // Act
-      const response = await request(app)
-        .put('/api/teachers/profile')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(invalidData)
+      const response = await request(app).put('/api/teachers/profile').set('Authorization', `Bearer ${authToken}`).send(invalidData)
 
       // Assert
       expect(response.status).toBe(400)
@@ -719,10 +616,7 @@ describe('教師申請 API 整合測試', () => {
       }
 
       // Act
-      const response = await request(app)
-        .put('/api/teachers/profile')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(invalidData)
+      const response = await request(app).put('/api/teachers/profile').set('Authorization', `Bearer ${authToken}`).send(invalidData)
 
       // Assert
       expect(response.status).toBe(400)
@@ -730,9 +624,7 @@ describe('教師申請 API 整合測試', () => {
         status: 'error',
         message: '教師資料更新參數驗證失敗',
         errors: {
-          introduction: expect.arrayContaining([
-            "自我介紹至少需要100個字元"
-          ])
+          introduction: expect.arrayContaining(['自我介紹至少需要100個字元'])
         }
       })
     })
@@ -750,10 +642,7 @@ describe('教師申請 API 整合測試', () => {
       }
 
       // Act
-      const response = await request(app)
-        .put('/api/teachers/profile')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(invalidData)
+      const response = await request(app).put('/api/teachers/profile').set('Authorization', `Bearer ${authToken}`).send(invalidData)
 
       // Assert
       expect(response.status).toBe(400)
@@ -761,9 +650,7 @@ describe('教師申請 API 整合測試', () => {
         status: 'error',
         message: '教師資料更新參數驗證失敗',
         errors: {
-          introduction: expect.arrayContaining([
-            "自我介紹長度不能超過1000個字元"
-          ])
+          introduction: expect.arrayContaining(['自我介紹長度不能超過1000個字元'])
         }
       })
     })
@@ -775,9 +662,7 @@ describe('教師申請 API 整合測試', () => {
       }
 
       // Act
-      const response = await request(app)
-        .put('/api/teachers/profile')
-        .send(updateData)
+      const response = await request(app).put('/api/teachers/profile').send(updateData)
 
       // Assert
       expect(response.status).toBe(401)

@@ -1,14 +1,22 @@
 import { Router } from 'express'
 import { TeacherController } from '@controllers/TeacherController'
 import { authenticateToken } from '@middleware/auth'
-import { validateRequest, teacherApplicationSchema, teacherApplicationUpdateSchema, teacherProfileUpdateSchema } from '@middleware/validation'
+import {
+  validateRequest,
+  teacherApplicationSchema,
+  teacherApplicationUpdateSchema,
+  teacherProfileUpdateSchema,
+  certificateCreateSchema,
+  certificateUpdateSchema
+} from '@middleware/validation'
 import learningExperienceRoutes from '@routes/learningExperienceRoutes'
+import { certificateController } from '@controllers/CertificateController'
 
 /**
  * 教師相關路由
- * 
+ *
  * 路由前綴: /api/teachers
- * 
+ *
  * @swagger
  * tags:
  *   name: Teacher Features
@@ -26,7 +34,7 @@ const teacherController = new TeacherController()
  *     summary: 申請成為教師
  *     description: |
  *       學生可以透過此端點申請成為教師。需要提供國籍和自我介紹資訊。
- *       
+ *
  *       **業務規則:**
  *       - 只有學生角色可以申請
  *       - 帳號狀態必須為活躍
@@ -78,11 +86,7 @@ const teacherController = new TeacherController()
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.post('/apply', 
-  authenticateToken, 
-  validateRequest(teacherApplicationSchema, '教師申請參數驗證失敗'), 
-  teacherController.apply
-)
+router.post('/apply', authenticateToken, validateRequest(teacherApplicationSchema, '教師申請參數驗證失敗'), teacherController.apply)
 
 /**
  * @swagger
@@ -92,7 +96,7 @@ router.post('/apply',
  *     summary: 查詢申請狀態
  *     description: |
  *       取得當前使用者的教師申請狀態和詳細資訊。
- *       
+ *
  *       **回應內容包含:**
  *       - 申請基本資訊（國籍、自我介紹）
  *       - 申請狀態（待審核、已通過、已拒絕）
@@ -140,7 +144,7 @@ router.get('/application', authenticateToken, teacherController.getApplication)
  *     summary: 更新申請資料
  *     description: |
  *       更新教師申請的資料內容。只能在「待審核」或「已拒絕」狀態下進行修改。
- *       
+ *
  *       **業務規則:**
  *       - 只能更新國籍和自我介紹
  *       - 已通過的申請無法修改
@@ -190,11 +194,7 @@ router.get('/application', authenticateToken, teacherController.getApplication)
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.put('/application', 
-  authenticateToken, 
-  validateRequest(teacherApplicationUpdateSchema, '更新申請參數驗證失敗'), 
-  teacherController.updateApplication
-)
+router.put('/application', authenticateToken, validateRequest(teacherApplicationUpdateSchema, '更新申請參數驗證失敗'), teacherController.updateApplication)
 
 /**
  * @swagger
@@ -204,7 +204,7 @@ router.put('/application',
  *     summary: 重新提交申請
  *     description: |
  *       重新提交被拒絕的教師申請。只有被拒絕的申請才能重新提交。
- *       
+ *
  *       **業務規則:**
  *       - 只有被拒絕狀態的申請才能重新提交
  *       - 重新提交後申請狀態會重置為待審核
@@ -303,11 +303,11 @@ router.post('/resubmit', authenticateToken, teacherController.resubmitApplicatio
  *     summary: 取得教師基本資料
  *     description: |
  *       取得已通過審核的教師基本資料，包含統計資訊。
- *       
+ *
  *       **權限要求:**
  *       - 需要已通過審核的教師身份
  *       - 未通過審核的申請無法存取此端點
- *       
+ *
  *       **回應內容包含:**
  *       - 基本資料（國籍、自我介紹）
  *       - 申請狀態和審核資訊
@@ -361,13 +361,13 @@ router.get('/profile', authenticateToken, teacherController.getProfile)
  *     summary: 更新教師基本資料
  *     description: |
  *       更新已通過審核的教師基本資料。修改重要資料後將觸發重新審核。
- *       
+ *
  *       **業務規則:**
  *       - 只有已通過審核的教師可以使用此功能
  *       - 修改重要資料後申請狀態會變為待審核
  *       - 審核相關欄位會被清空
  *       - 支援部分更新（可只更新國籍或自我介紹其中之一）
- *       
+ *
  *       **驗證規則:**
  *       - 國籍：1-50字元
  *       - 自我介紹：100-1000字元
@@ -452,11 +452,7 @@ router.get('/profile', authenticateToken, teacherController.getProfile)
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.put('/profile', 
-  authenticateToken, 
-  validateRequest(teacherProfileUpdateSchema, '教師資料更新參數驗證失敗'), 
-  teacherController.updateProfile
-)
+router.put('/profile', authenticateToken, validateRequest(teacherProfileUpdateSchema, '教師資料更新參數驗證失敗'), teacherController.updateProfile)
 
 /**
  * @swagger
@@ -466,11 +462,11 @@ router.put('/profile',
  *     summary: 取得工作經驗列表
  *     description: |
  *       取得當前教師的所有工作經驗記錄列表。
- *       
+ *
  *       **權限要求:**
  *       - 需要教師身份
  *       - 只能查看自己的工作經驗
- *       
+ *
  *       **回應內容:**
  *       - 按建立時間降序排列
  *       - 包含完整的工作經驗資訊
@@ -512,7 +508,7 @@ router.put('/profile',
  *     summary: 新增工作經驗
  *     description: |
  *       新增一筆工作經驗記錄。
- *       
+ *
  *       **業務規則:**
  *       - 需要教師身份
  *       - 在職工作經驗不可填寫結束日期
@@ -555,11 +551,11 @@ router.post('/work-experiences', authenticateToken, teacherController.createWork
  *     summary: 更新工作經驗
  *     description: |
  *       更新指定的工作經驗記錄。
- *       
+ *
  *       **權限要求:**
  *       - 需要教師身份
  *       - 只能更新自己的工作經驗
- *       
+ *
  *       **業務規則:**
  *       - 支援部分更新（可只更新部分欄位）
  *       - 在職工作經驗不可填寫結束日期
@@ -602,11 +598,11 @@ router.post('/work-experiences', authenticateToken, teacherController.createWork
  *     summary: 刪除工作經驗
  *     description: |
  *       刪除指定的工作經驗記錄。
- *       
+ *
  *       **權限要求:**
  *       - 需要教師身份
  *       - 只能刪除自己的工作經驗
- *       
+ *
  *       **注意事項:**
  *       - 刪除操作無法復原
  *       - 建議在前端提供確認對話框
@@ -649,5 +645,441 @@ router.delete('/work-experiences/:id', authenticateToken, teacherController.dele
 
 // 掛載學習經歷相關路由
 router.use('/learning-experiences', learningExperienceRoutes)
+
+// 證書管理路由
+/**
+ * @swagger
+ * /teachers/certificates:
+ *   get:
+ *     tags: [Teacher Features]
+ *     summary: 取得教師證書列表
+ *     description: |
+ *       取得已認證教師的所有證書記錄
+ *
+ *       **功能特色：**
+ *       - 只能查看自己的證書列表
+ *       - 依建立時間倒序排列
+ *       - 支援完整的證書資訊展示
+ *
+ *       **權限控制：**
+ *       - 需要有效的 JWT Token
+ *       - 自動依據 Token 中的教師ID篩選資料
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 成功取得證書列表
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TeacherCertificateListResponse'
+ *             examples:
+ *               successWithData:
+ *                 summary: 成功回傳證書列表
+ *                 value:
+ *                   status: "success"
+ *                   message: "取得證書列表成功"
+ *                   data:
+ *                     certificates:
+ *                       - id: 1
+ *                         teacher_id: 1
+ *                         verifying_institution: "教育部"
+ *                         license_name: "中等學校教師證書"
+ *                         holder_name: "王小明"
+ *                         license_number: "TC2024001234"
+ *                         file_path: "/uploads/certificates/tc_2024001234.pdf"
+ *                         category_id: "teaching_license"
+ *                         subject: "數學科教學"
+ *                         created_at: "2024-01-15T08:00:00.000Z"
+ *                         updated_at: "2024-01-15T08:00:00.000Z"
+ *                       - id: 2
+ *                         teacher_id: 1
+ *                         verifying_institution: "國立台灣師範大學"
+ *                         license_name: "英語教學能力認證"
+ *                         holder_name: "王小明"
+ *                         license_number: "TESOL2024567"
+ *                         file_path: "/uploads/certificates/tesol_2024567.pdf"
+ *                         category_id: "language_certification"
+ *                         subject: "英語教學"
+ *                         created_at: "2024-01-10T09:30:00.000Z"
+ *                         updated_at: "2024-01-10T09:30:00.000Z"
+ *               emptyList:
+ *                 summary: 尚無證書記錄
+ *                 value:
+ *                   status: "success"
+ *                   message: "取得證書列表成功"
+ *                   data:
+ *                     certificates: []
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 權限不足（非教師角色）
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               status: "error"
+ *               error:
+ *                 code: "INSUFFICIENT_PERMISSIONS"
+ *                 message: "只有教師可以查看證書列表"
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ *
+ *   post:
+ *     tags: [Teacher Features]
+ *     summary: 新增教師證書
+ *     description: |
+ *       新增教師的證書記錄，支援多種證書類型
+ *
+ *       **證書類型支援：**
+ *       - teaching_license: 教師證書
+ *       - language_certification: 語言認證
+ *       - professional_certificate: 專業證照
+ *       - academic_degree: 學位證書
+ *
+ *       **檔案規範：**
+ *       - 支援格式：PDF, JPG, JPEG, PNG
+ *       - 檔案大小：最大 5MB
+ *       - 檔案路徑：需為有效的系統路徑
+ *
+ *       **驗證規則：**
+ *       - 發證機構：1-100字元
+ *       - 證書名稱：1-200字元
+ *       - 持有人姓名：1-100字元
+ *       - 證書編號：1-100字元（需唯一）
+ *       - 證書主題：1-200字元
+ *       - 類別ID：1-50字元
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateTeacherCertificateRequest'
+ *           examples:
+ *             teachingLicense:
+ *               summary: 教師證書
+ *               value:
+ *                 verifying_institution: "教育部"
+ *                 license_name: "中等學校教師證書"
+ *                 holder_name: "王小明"
+ *                 license_number: "TC2024001234"
+ *                 file_path: "/uploads/certificates/tc_2024001234.pdf"
+ *                 category_id: "teaching_license"
+ *                 subject: "數學科教學"
+ *             languageCertification:
+ *               summary: 語言認證證書
+ *               value:
+ *                 verifying_institution: "國立台灣師範大學"
+ *                 license_name: "英語教學能力認證"
+ *                 holder_name: "王小明"
+ *                 license_number: "TESOL2024567"
+ *                 file_path: "/uploads/certificates/tesol_2024567.pdf"
+ *                 category_id: "language_certification"
+ *                 subject: "英語教學"
+ *     responses:
+ *       201:
+ *         description: 證書新增成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TeacherCertificateCreateResponse'
+ *             example:
+ *               status: "success"
+ *               message: "證書已新增"
+ *               data:
+ *                 certificate:
+ *                   id: 1
+ *                   teacher_id: 1
+ *                   verifying_institution: "教育部"
+ *                   license_name: "中等學校教師證書"
+ *                   holder_name: "王小明"
+ *                   license_number: "TC2024001234"
+ *                   file_path: "/uploads/certificates/tc_2024001234.pdf"
+ *                   category_id: "teaching_license"
+ *                   subject: "數學科教學"
+ *                   created_at: "2024-01-15T08:00:00.000Z"
+ *                   updated_at: "2024-01-15T08:00:00.000Z"
+ *       400:
+ *         description: 請求參數驗證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
+ *             examples:
+ *               missingFields:
+ *                 summary: 缺少必填欄位
+ *                 value:
+ *                   status: "error"
+ *                   error:
+ *                     code: "VALIDATION_ERROR"
+ *                     message: "參數驗證失敗"
+ *                     details:
+ *                       verifying_institution: ["發證機構為必填欄位"]
+ *                       license_name: ["證書名稱為必填欄位"]
+ *               invalidLength:
+ *                 summary: 欄位長度超過限制
+ *                 value:
+ *                   status: "error"
+ *                   error:
+ *                     code: "VALIDATION_ERROR"
+ *                     message: "參數驗證失敗"
+ *                     details:
+ *                       license_name: ["證書名稱長度不得超過200字元"]
+ *                       license_number: ["證書編號長度不得超過100字元"]
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 權限不足（非教師角色）
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               status: "error"
+ *               error:
+ *                 code: "INSUFFICIENT_PERMISSIONS"
+ *                 message: "只有教師可以新增證書"
+ *       409:
+ *         description: 證書編號重複
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BusinessError'
+ *             example:
+ *               status: "error"
+ *               error:
+ *                 code: "CERTIFICATE_NUMBER_EXISTS"
+ *                 message: "證書編號已存在"
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get('/certificates', authenticateToken, certificateController.getCertificates)
+router.post('/certificates', authenticateToken, validateRequest(certificateCreateSchema), certificateController.createCertificate)
+
+/**
+ * @swagger
+ * /teachers/certificates/{id}:
+ *   put:
+ *     tags: [Teacher Features]
+ *     summary: 更新教師證書
+ *     description: |
+ *       更新指定的教師證書記錄，支援部分欄位更新
+ *
+ *       **更新特色：**
+ *       - 支援部分欄位更新（Partial Update）
+ *       - 自動驗證證書所有權
+ *       - 保持資料一致性和完整性
+ *
+ *       **可更新欄位：**
+ *       - verifying_institution: 發證機構
+ *       - license_name: 證書名稱
+ *       - holder_name: 持有人姓名
+ *       - license_number: 證書編號
+ *       - file_path: 檔案路徑
+ *       - category_id: 證書類別
+ *       - subject: 證書主題
+ *
+ *       **權限控制：**
+ *       - 只能更新自己的證書
+ *       - 系統自動驗證證書所有權
+ *       - 防止跨用戶資料篡改
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: 證書ID（必須為正整數）
+ *         example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateTeacherCertificateRequest'
+ *           examples:
+ *             partialUpdate:
+ *               summary: 部分欄位更新
+ *               value:
+ *                 license_name: "高級中等學校教師證書"
+ *                 subject: "高中數學科教學"
+ *             fullUpdate:
+ *               summary: 完整欄位更新
+ *               value:
+ *                 verifying_institution: "教育部師資培育及藝術教育司"
+ *                 license_name: "高級中等學校教師證書"
+ *                 holder_name: "王小明"
+ *                 license_number: "TC2024001235"
+ *                 file_path: "/uploads/certificates/tc_2024001235_updated.pdf"
+ *                 category_id: "advanced_teaching_license"
+ *                 subject: "高中數學科教學"
+ *             licenseUpgrade:
+ *               summary: 證書升級更新
+ *               value:
+ *                 license_name: "特殊教育教師證書"
+ *                 category_id: "special_education_license"
+ *                 subject: "特殊教育教學"
+ *     responses:
+ *       200:
+ *         description: 證書更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TeacherCertificateUpdateResponse'
+ *             example:
+ *               status: "success"
+ *               message: "證書已更新"
+ *               data:
+ *                 certificate:
+ *                   id: 1
+ *                   teacher_id: 1
+ *                   verifying_institution: "教育部師資培育及藝術教育司"
+ *                   license_name: "高級中等學校教師證書"
+ *                   holder_name: "王小明"
+ *                   license_number: "TC2024001235"
+ *                   file_path: "/uploads/certificates/tc_2024001235_updated.pdf"
+ *                   category_id: "advanced_teaching_license"
+ *                   subject: "高中數學科教學"
+ *                   created_at: "2024-01-15T08:00:00.000Z"
+ *                   updated_at: "2024-01-15T10:30:00.000Z"
+ *       400:
+ *         description: 請求參數驗證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
+ *             examples:
+ *               invalidFields:
+ *                 summary: 欄位驗證失敗
+ *                 value:
+ *                   status: "error"
+ *                   error:
+ *                     code: "VALIDATION_ERROR"
+ *                     message: "參數驗證失敗"
+ *                     details:
+ *                       license_name: ["證書名稱長度不得超過200字元"]
+ *                       license_number: ["證書編號格式不正確"]
+ *               emptyUpdate:
+ *                 summary: 未提供任何更新欄位
+ *                 value:
+ *                   status: "error"
+ *                   error:
+ *                     code: "VALIDATION_ERROR"
+ *                     message: "至少需要提供一個欄位進行更新"
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 權限不足（非教師角色或非證書擁有者）
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               status: "error"
+ *               error:
+ *                 code: "INSUFFICIENT_PERMISSIONS"
+ *                 message: "您沒有權限修改此證書"
+ *       404:
+ *         description: 證書不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BusinessError'
+ *             example:
+ *               status: "error"
+ *               error:
+ *                 code: "CERTIFICATE_NOT_FOUND"
+ *                 message: "找不到指定的證書"
+ *       409:
+ *         description: 證書編號衝突
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BusinessError'
+ *             example:
+ *               status: "error"
+ *               error:
+ *                 code: "CERTIFICATE_NUMBER_EXISTS"
+ *                 message: "證書編號已被其他證書使用"
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ *
+ *   delete:
+ *     tags: [Teacher Features]
+ *     summary: 刪除教師證書
+ *     description: |
+ *       刪除指定的教師證書記錄，操作不可逆
+ *
+ *       **刪除特性：**
+ *       - 物理刪除（不可恢復）
+ *       - 自動驗證證書所有權
+ *       - 同時清理相關檔案資源
+ *
+ *       **安全措施：**
+ *       - 只能刪除自己的證書
+ *       - 系統自動驗證所有權
+ *       - 防止誤刪或惡意刪除
+ *
+ *       **注意事項：**
+ *       - 刪除後無法恢復
+ *       - 建議刪除前先確認證書資訊
+ *       - 相關的檔案也會一併清理
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: 證書ID（必須為正整數）
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: 證書刪除成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TeacherCertificateDeleteResponse'
+ *             example:
+ *               status: "success"
+ *               message: "證書已刪除"
+ *               data: null
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 權限不足（非教師角色或非證書擁有者）
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               status: "error"
+ *               error:
+ *                 code: "INSUFFICIENT_PERMISSIONS"
+ *                 message: "您沒有權限刪除此證書"
+ *       404:
+ *         description: 證書不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BusinessError'
+ *             example:
+ *               status: "error"
+ *               error:
+ *                 code: "CERTIFICATE_NOT_FOUND"
+ *                 message: "找不到指定的證書"
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.put('/certificates/:id', authenticateToken, validateRequest(certificateUpdateSchema), certificateController.updateCertificate)
+router.delete('/certificates/:id', authenticateToken, certificateController.deleteCertificate)
 
 export default router
