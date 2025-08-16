@@ -1,8 +1,8 @@
 /**
  * 教師控制器驗證工具函式
  */
-import { TEACHER_VALIDATION } from '../constants/teacher'
-import { ValidationError } from '../types'
+import { ValidationError } from '@models/index'
+import { TEACHER_VALIDATION } from '../constants/validation'
 
 /**
  * 驗證教師申請資料

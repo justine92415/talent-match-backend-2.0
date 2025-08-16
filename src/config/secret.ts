@@ -7,4 +7,20 @@ const secretConfig = {
   }
 }
 
+// JWT 相關設定
+export const JWT_CONFIG = {
+  SECRET: secretConfig.jwtSecret,
+  ACCESS_TOKEN_EXPIRES_IN: '1h',
+  REFRESH_TOKEN_EXPIRES_IN: secretConfig.jwtExpiresDay,
+  TOKEN_TYPE: 'Bearer',
+  ACCESS_TOKEN_EXPIRES_SECONDS: 60 * 60 // 1 hour in seconds
+}
+
+// 密碼相關設定
+export const PASSWORD_CONFIG = {
+  BCRYPT_SALT_ROUNDS: 12,
+  MIN_LENGTH: 8,
+  MAX_LENGTH: 128
+}
+
 export default secretConfig

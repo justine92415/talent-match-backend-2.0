@@ -4,8 +4,9 @@ import { v4 as uuidv4 } from 'uuid'
 import { dataSource } from '@db/data-source'
 import { User } from '@entities/User'
 import { UserRole, AccountStatus } from '@entities/enums'
-import { UserError, BusinessError } from '@core/errors/BusinessError'
-import { JWT_CONFIG, PASSWORD_CONFIG, ERROR_MESSAGES } from '@config/constants'
+import { Errors, BusinessError } from '@utils/errors'
+import { AuthMessages } from '@constants/errorMessages'
+import { JWT_CONFIG, PASSWORD_CONFIG } from '@config/secret'
 import {
   RegisterUserData,
   LoginUserData,
@@ -70,18 +71,18 @@ export class AuthService {
 
     // 檢查使用者是否存在
     if (!user) {
-      throw UserError.invalidCredentials()
+      throw Errors.invalidCredentials()
     }
 
     // 檢查帳號狀態
     if (user.account_status !== AccountStatus.ACTIVE) {
-      throw UserError.accountSuspended()
+      throw Errors.accountSuspended()
     }
 
     // 驗證密碼
     const isPasswordValid = await this.verifyPassword(userData.password, user.password!)
     if (!isPasswordValid) {
-      throw UserError.invalidCredentials()
+      throw Errors.invalidCredentials()
     }
 
     // 更新最後登入時間
@@ -112,17 +113,17 @@ export class AuthService {
 
       // 檢查 token 型別
       if (decoded.type !== 'refresh') {
-        throw new BusinessError('INVALID_TOKEN', 'Token 無效或已過期', 401)
+        throw Errors.invalidToken()
       }
 
       // 查詢使用者並檢查狀態
       const user = await this.userRepository.findOne({ where: { id: decoded.userId } })
       if (!user) {
-        throw new BusinessError('INVALID_TOKEN', 'Token 無效或已過期', 401)
+        throw Errors.invalidToken()
       }
 
       if (user.account_status !== AccountStatus.ACTIVE) {
-        throw new BusinessError('ACCOUNT_SUSPENDED', '帳號已停用', 403)
+        throw Errors.accountSuspended()
       }
 
       // 生成新的 tokens
@@ -140,7 +141,7 @@ export class AuthService {
       }
 
     } catch (error) {
-      if (error instanceof BusinessError) {
+      if (error instanceof Error && ['BusinessError', 'ValidationError', 'AuthError', 'SystemError'].includes(error.name)) {
         throw error
       }
 
@@ -148,11 +149,11 @@ export class AuthService {
       if (error && typeof error === 'object' && 'name' in error) {
         const errObj = error as { name: string }
         if (errObj.name === 'JsonWebTokenError' || errObj.name === 'TokenExpiredError' || errObj.name === 'NotBeforeError') {
-          throw new BusinessError('INVALID_TOKEN', 'Token 無效或已過期', 401)
+          throw Errors.tokenInvalidOrExpired()
         }
       }
 
-      throw new BusinessError('SERVER_ERROR', '系統錯誤', 500)
+      throw Errors.internalError()
     }
   }
 
@@ -164,7 +165,7 @@ export class AuthService {
       where: { email }
     })
     if (existingUser) {
-      throw UserError.emailExists()
+      throw Errors.emailExists()
     }
   }
 
@@ -176,7 +177,7 @@ export class AuthService {
       where: { nick_name: nickname }
     })
     if (existingUser) {
-      throw UserError.nicknameExists()
+      throw Errors.nicknameExists()
     }
   }
 
@@ -208,7 +209,7 @@ export class AuthService {
    * 
    * @param userId 使用者ID
    * @returns Promise<FormattedUserResponse> 使用者完整資料（不包含敏感資訊）
-   * @throws {BusinessError} 當使用者不存在時
+   * @throws {ApiError} 當使用者不存在時
    */
   async getProfile(userId: number): Promise<FormattedUserResponse> {
     const userRepository = dataSource.getRepository(User)
@@ -218,7 +219,7 @@ export class AuthService {
     })
 
     if (!user) {
-      throw new BusinessError('USER_NOT_FOUND', '使用者不存在', 404)
+      throw Errors.userNotFound()
     }
 
     return this.formatUserResponse(user)
@@ -237,8 +238,8 @@ export class AuthService {
    * @param userId 使用者ID
    * @param updateData 要更新的資料
    * @returns Promise<FormattedUserResponse> 更新後的使用者資料
-   * @throws {UserError} 當暱稱重複時
-   * @throws {BusinessError} 當使用者不存在時
+   * @throws {UserApiError} 當暱稱重複時
+   * @throws {ApiError} 當使用者不存在時
    */
   async updateProfile(userId: number, updateData: UpdateUserProfileData): Promise<FormattedUserResponse> {
     const userRepository = dataSource.getRepository(User)
@@ -248,7 +249,7 @@ export class AuthService {
     })
 
     if (!user) {
-      throw new BusinessError('USER_NOT_FOUND', '使用者不存在', 404)
+      throw Errors.userNotFound()
     }
 
     // 如果要更新暱稱，檢查是否重複
@@ -258,7 +259,7 @@ export class AuthService {
       })
       
       if (existingNickname) {
-        throw new BusinessError('NICKNAME_EXISTS', '該暱稱已被使用', 400)
+        throw Errors.nicknameExists()
       }
     }
 
@@ -271,7 +272,7 @@ export class AuthService {
     })
 
     if (!updatedUser) {
-      throw new BusinessError('UPDATE_FAILED', '更新失敗', 500)
+      throw Errors.internalError()
     }
 
     return this.formatUserResponse(updatedUser)
@@ -292,7 +293,7 @@ export class AuthService {
    * 
    * @param userId 使用者ID
    * @returns Promise<void>
-   * @throws {BusinessError} 當使用者不存在時
+   * @throws {ApiError} 當使用者不存在時
    */
   async deleteProfile(userId: number): Promise<void> {
     const userRepository = dataSource.getRepository(User)
@@ -302,7 +303,7 @@ export class AuthService {
     })
 
     if (!user) {
-      throw new BusinessError('USER_NOT_FOUND', '使用者不存在', 404)
+      throw Errors.userNotFound()
     }
 
     // 執行軟刪除
@@ -386,17 +387,17 @@ export class AuthService {
 
     // 檢查令牌是否存在
     if (!user) {
-      throw new BusinessError('INVALID_RESET_TOKEN', '重設令牌無效或已過期', 400)
+      throw Errors.resetTokenInvalid()
     }
 
     // 檢查令牌是否已過期
     if (!user.password_reset_expires_at || user.password_reset_expires_at < new Date()) {
-      throw new BusinessError('INVALID_RESET_TOKEN', '重設令牌無效或已過期', 400)
+      throw Errors.resetTokenInvalid()
     }
 
     // 檢查帳號狀態
     if (user.account_status !== AccountStatus.ACTIVE) {
-      throw new BusinessError('ACCOUNT_SUSPENDED', '帳號已停用，無法重設密碼', 400)
+      throw new BusinessError('ACCOUNT_SUSPENDED_RESET', AuthMessages.ACCOUNT_SUSPENDED_RESET, 400)
     }
 
     // 加密新密碼

@@ -238,7 +238,10 @@ describe('教師申請 API 整合測試', () => {
       expect(response.status).toBe(401)
       expect(response.body).toMatchObject({
         status: 'error',
-        message: '帳號狀態異常'
+        error: {
+          code: 'ACCOUNT_SUSPENDED',
+          message: '帳號狀態異常'
+        }
       })
     })
   })
@@ -528,7 +531,7 @@ describe('教師申請 API 整合測試', () => {
       expect(response.status).toBe(404)
       expect(response.body).toMatchObject({
         status: 'error',
-        message: '找不到教師資料或尚未通過審核'
+        message: '找不到教師記錄'
       })
     })
 
@@ -542,7 +545,7 @@ describe('教師申請 API 整合測試', () => {
       expect(response.status).toBe(404)
       expect(response.body).toMatchObject({
         status: 'error',
-        message: '找不到教師資料或尚未通過審核'
+        message: '找不到教師記錄'
       })
     })
 
@@ -659,7 +662,7 @@ describe('教師申請 API 整合測試', () => {
       expect(response.status).toBe(404)
       expect(response.body).toMatchObject({
         status: 'error',
-        message: '找不到教師資料或尚未通過審核'
+        message: '找不到教師記錄'
       })
     })
 
@@ -679,7 +682,7 @@ describe('教師申請 API 整合測試', () => {
       expect(response.status).toBe(404)
       expect(response.body).toMatchObject({
         status: 'error',
-        message: '找不到教師資料或尚未通過審核'
+        message: '找不到教師記錄'
       })
     })
 

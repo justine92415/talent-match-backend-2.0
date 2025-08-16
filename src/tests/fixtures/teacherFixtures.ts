@@ -304,7 +304,7 @@ export const expectedResponseStructures = {
   // 重複申請錯誤回應結構
   duplicateApplicationResponse: {
     status: 'error',
-    message: '您已經有教師申請記錄',
+    message: '您已提交過教師申請',
     errors: {}
   },
 

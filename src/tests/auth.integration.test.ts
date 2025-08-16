@@ -21,6 +21,7 @@ import {
   createTestUserVariations
 } from './fixtures/userFixtures'
 import { UserTestHelpers, RequestTestHelpers, ValidationTestHelpers } from './helpers/testHelpers'
+import { expectErrorResponse, TestErrorMessages } from './helpers/errorTestUtils'
 
 describe('POST /api/auth/register', () => {
   beforeAll(async () => {
@@ -93,14 +94,8 @@ describe('POST /api/auth/register', () => {
       // Act
       const response = await request(app).post('/api/auth/register').send(duplicateEmailData).expect(400)
 
-      // Assert
-      expect(response.body).toMatchObject({
-        status: 'error',
-        message: '註冊失敗',
-        errors: {
-          email: ['此電子郵件已被註冊']
-        }
-      })
+      // Assert - 使用統一錯誤訊息
+      expectErrorResponse.business(response, TestErrorMessages.AUTH.EMAIL_EXISTS)
     })
 
     it('應該拒絕重複暱稱並回傳 400', async () => {
@@ -115,71 +110,40 @@ describe('POST /api/auth/register', () => {
       // Act
       const response = await request(app).post('/api/auth/register').send(duplicateNickNameData).expect(400)
 
-      // Assert
-      expect(response.body).toMatchObject({
-        status: 'error',
-        message: '註冊失敗',
-        errors: {
-          nick_name: ['此暱稱已被使用']
-        }
-      })
+      // Assert - 使用統一錯誤訊息
+      expectErrorResponse.business(response, TestErrorMessages.AUTH.NICKNAME_EXISTS)
     })
 
     it('應該拒絕無效的 email 格式並回傳 400', async () => {
       // Act
       const response = await request(app).post('/api/auth/register').send(invalidUserData.invalidEmail).expect(400)
 
-      // Assert
-      expect(response.body).toMatchObject({
-        status: 'error',
-        message: '註冊失敗',
-        errors: {
-          email: expect.arrayContaining([expect.stringContaining('格式')])
-        }
-      })
+      // Assert - 驗證多欄位驗證錯誤
+      expectErrorResponse.validation(response, ['email'])
     })
 
     it('應該拒絕過短的密碼並回傳 400', async () => {
       // Act
       const response = await request(app).post('/api/auth/register').send(invalidUserData.shortPassword).expect(400)
 
-      // Assert
-      expect(response.body).toMatchObject({
-        status: 'error',
-        message: '註冊失敗',
-        errors: {
-          password: ['密碼必須至少8字元且包含中英文']
-        }
-      })
+      // Assert - 驗證驗證錯誤
+      expectErrorResponse.validation(response, ['password'])
     })
 
     it('應該拒絕空白暱稱並回傳 400', async () => {
       // Act
       const response = await request(app).post('/api/auth/register').send(invalidUserData.emptyNickname).expect(400)
 
-      // Assert
-      expect(response.body).toMatchObject({
-        status: 'error',
-        message: '註冊失敗',
-        errors: {
-          nick_name: expect.arrayContaining([expect.stringContaining('必填')])
-        }
-      })
+      // Assert - 驗證驗證錯誤
+      expectErrorResponse.validation(response, ['nick_name'])
     })
 
     it('應該拒絕缺少必填欄位並回傳 400', async () => {
       // Act
       const response = await request(app).post('/api/auth/register').send(invalidUserData.missingFields).expect(400)
 
-      // Assert
-      expect(response.body).toMatchObject({
-        status: 'error',
-        message: '註冊失敗',
-        errors: {
-          email: expect.arrayContaining([expect.stringContaining('必填')]),
-          password: expect.arrayContaining([expect.stringContaining('必填')])
-        }
-      })
+      // Assert - 驗證多個缺少的欄位
+      expectErrorResponse.validation(response, ['email', 'password'])
     })
   })
 
@@ -196,14 +160,8 @@ describe('POST /api/auth/register', () => {
       // Act
       const response = await request(app).post('/api/auth/register').send(tooLongNicknameUserData).expect(400)
 
-      // Assert
-      expect(response.body).toMatchObject({
-        status: 'error',
-        message: '註冊失敗',
-        errors: {
-          nick_name: expect.arrayContaining([expect.stringContaining('長度')])
-        }
-      })
+      // Assert - 驗證驗證錯誤
+      expectErrorResponse.validation(response, ['nick_name'])
     })
 
     it('應該接受較長的有效 email', async () => {
@@ -314,14 +272,8 @@ describe('POST /api/auth/login', () => {
         .send(loginData)
         .expect(401)
 
-      // Assert
-      expect(response.body).toMatchObject({
-        status: 'error',
-        message: '電子郵件或密碼錯誤',
-        errors: {
-          credentials: ['電子郵件或密碼錯誤']
-        }
-      })
+      // Assert - 使用統一錯誤訊息
+      expectErrorResponse.auth(response, TestErrorMessages.AUTH.INVALID_CREDENTIALS, 401)
     })
 
     it('應該拒絕錯誤的密碼並回傳 401', async () => {
@@ -339,14 +291,8 @@ describe('POST /api/auth/login', () => {
         .send(loginData)
         .expect(401)
 
-      // Assert
-      expect(response.body).toMatchObject({
-        status: 'error',
-        message: '電子郵件或密碼錯誤',
-        errors: {
-          credentials: ['電子郵件或密碼錯誤']
-        }
-      })
+      // Assert - 使用統一錯誤訊息
+      expectErrorResponse.auth(response, TestErrorMessages.AUTH.INVALID_CREDENTIALS, 401)
     })
 
     it('應該拒絕被停用的帳號並回傳 403', async () => {
@@ -371,14 +317,8 @@ describe('POST /api/auth/login', () => {
         .send(loginData)
         .expect(403)
 
-      // Assert
-      expect(response.body).toMatchObject({
-        status: 'error',
-        message: '帳號已停用',
-        errors: {
-          account: ['您的帳號已被停用，請聯絡客服']
-        }
-      })
+      // Assert - 使用統一錯誤訊息
+      expectErrorResponse.auth(response, TestErrorMessages.AUTH.ACCOUNT_SUSPENDED, 403)
     })
 
     it('應該拒絕空白的登入欄位並回傳 400', async () => {

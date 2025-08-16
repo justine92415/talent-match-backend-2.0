@@ -6,12 +6,7 @@ import { TeacherWorkExperience } from '@entities/TeacherWorkExperience'
 import { TeacherLearningExperience } from '@entities/TeacherLearningExperience'
 import { TeacherCertificate } from '@entities/TeacherCertificate'
 import { UserRole, AccountStatus, ApplicationStatus } from '@entities/enums'
-import { BusinessError } from '@core/errors/BusinessError'
-import {
-  TEACHER_ERROR_CODES,
-  TEACHER_ERROR_MESSAGES,
-  TEACHER_HTTP_STATUS
-} from '@constants/teacher'
+import { Errors, ValidationError } from '@utils/errors'
 import { 
   TeacherApplicationData, 
   TeacherApplicationUpdateData,
@@ -48,29 +43,17 @@ export class TeacherService {
     // 檢查使用者是否存在
     const user = await this.userRepository.findOne({ where: { id: userId } })
     if (!user) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.USER_NOT_FOUND,
-        TEACHER_ERROR_MESSAGES.USER_NOT_FOUND,
-        TEACHER_HTTP_STATUS.USER_NOT_FOUND
-      )
+      throw Errors.userNotFound()
     }
 
     // 檢查使用者角色是否為學生
     if (user.role !== UserRole.STUDENT) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.ROLE_FORBIDDEN,
-        TEACHER_ERROR_MESSAGES.ROLE_FORBIDDEN,
-        TEACHER_HTTP_STATUS.ROLE_FORBIDDEN
-      )
+      throw Errors.unauthorizedAccess('只有學生可以申請成為教師', 403)
     }
 
     // 檢查帳號狀態是否為活躍
     if (user.account_status !== AccountStatus.ACTIVE) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.ACCOUNT_INACTIVE,
-        TEACHER_ERROR_MESSAGES.ACCOUNT_INACTIVE,
-        TEACHER_HTTP_STATUS.ACCOUNT_INACTIVE
-      )
+      throw Errors.accountSuspended()
     }
 
     return user
@@ -87,11 +70,7 @@ export class TeacherService {
     })
     
     if (existingApplication) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.DUPLICATE_APPLICATION,
-        TEACHER_ERROR_MESSAGES.DUPLICATE_APPLICATION,
-        TEACHER_HTTP_STATUS.DUPLICATE_APPLICATION
-      )
+      throw Errors.applicationExists()
     }
   }
 
@@ -135,11 +114,7 @@ export class TeacherService {
     })
     
     if (!teacher) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.APPLICATION_NOT_FOUND,
-        TEACHER_ERROR_MESSAGES.APPLICATION_NOT_FOUND,
-        TEACHER_HTTP_STATUS.APPLICATION_NOT_FOUND
-      )
+      throw Errors.applicationNotFound()
     }
 
     return teacher
@@ -153,11 +128,7 @@ export class TeacherService {
   private validateApplicationEditable(teacher: Teacher): void {
     // 檢查是否可以修改（只能在待審核或已拒絕狀態下修改）
     if (teacher.application_status === ApplicationStatus.APPROVED) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.APPLICATION_APPROVED,
-        TEACHER_ERROR_MESSAGES.APPLICATION_APPROVED,
-        TEACHER_HTTP_STATUS.APPLICATION_APPROVED
-      )
+      throw Errors.invalidApplicationStatus('只能在待審核或已拒絕狀態下修改申請')
     }
   }
 
@@ -173,11 +144,7 @@ export class TeacherService {
     })
     
     if (!teacher) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.APPLICATION_NOT_FOUND,
-        TEACHER_ERROR_MESSAGES.APPLICATION_NOT_FOUND,
-        TEACHER_HTTP_STATUS.APPLICATION_NOT_FOUND
-      )
+      throw Errors.applicationNotFound()
     }
 
     // 驗證是否可以修改
@@ -213,20 +180,12 @@ export class TeacherService {
     })
     
     if (!teacher) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.APPLICATION_NOT_FOUND,
-        TEACHER_ERROR_MESSAGES.APPLICATION_NOT_FOUND,
-        TEACHER_HTTP_STATUS.APPLICATION_NOT_FOUND
-      )
+      throw Errors.applicationNotFound()
     }
 
     // 檢查申請狀態是否為已拒絕
     if (teacher.application_status !== ApplicationStatus.REJECTED) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.CANNOT_RESUBMIT_APPLICATION,
-        TEACHER_ERROR_MESSAGES.CANNOT_RESUBMIT_APPLICATION,
-        TEACHER_HTTP_STATUS.CANNOT_RESUBMIT_APPLICATION
-      )
+      throw Errors.invalidApplicationStatus('此申請無法重新提交，請檢查申請狀態')
     }
 
     // 重置申請狀態為待審核
@@ -253,11 +212,7 @@ export class TeacherService {
     })
     
     if (!teacher) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.TEACHER_NOT_FOUND,
-        TEACHER_ERROR_MESSAGES.TEACHER_NOT_FOUND,
-        TEACHER_HTTP_STATUS.TEACHER_NOT_FOUND
-      )
+      throw Errors.teacherNotFound()
     }
 
     return teacher
@@ -283,11 +238,7 @@ export class TeacherService {
     })
     
     if (!teacher) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.TEACHER_NOT_APPROVED,
-        TEACHER_ERROR_MESSAGES.TEACHER_NOT_APPROVED,
-        TEACHER_HTTP_STATUS.TEACHER_NOT_APPROVED
-      )
+      throw Errors.teacherNotFound()
     }
 
     // 更新欄位
@@ -324,21 +275,13 @@ export class TeacherService {
     })
     
     if (!user) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.ROLE_FORBIDDEN,
-        TEACHER_ERROR_MESSAGES.ROLE_FORBIDDEN,
-        TEACHER_HTTP_STATUS.ROLE_FORBIDDEN
-      )
+      throw Errors.unauthorizedAccess('需要教師權限才能執行此操作', 403)
     }
 
     // 取得教師記錄
     const teacher = await this.teacherRepository.findOne({ where: { user_id: userId } })
     if (!teacher) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.TEACHER_NOT_FOUND,
-        TEACHER_ERROR_MESSAGES.TEACHER_NOT_FOUND,
-        TEACHER_HTTP_STATUS.TEACHER_NOT_FOUND
-      )
+      throw Errors.teacherNotFound()
     }
 
     return teacher
@@ -381,11 +324,7 @@ export class TeacherService {
     })
     
     if (!savedWorkExperience) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.WORK_EXPERIENCE_NOT_FOUND,
-        '建立工作經驗失敗',
-        500
-      )
+      throw Errors.internalError()
     }
     
     return savedWorkExperience
@@ -407,20 +346,12 @@ export class TeacherService {
     })
     
     if (!workExperience) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.WORK_EXPERIENCE_NOT_FOUND,
-        TEACHER_ERROR_MESSAGES.WORK_EXPERIENCE_NOT_FOUND,
-        TEACHER_HTTP_STATUS.WORK_EXPERIENCE_NOT_FOUND
-      )
+      throw Errors.applicationNotFound('工作經驗記錄不存在')
     }
     
     // 檢查是否屬於該教師
     if (workExperience.teacher_id !== teacher.id) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.ROLE_FORBIDDEN,
-        TEACHER_ERROR_MESSAGES.ROLE_FORBIDDEN,
-        TEACHER_HTTP_STATUS.ROLE_FORBIDDEN
-      )
+      throw Errors.unauthorizedAccess('無權存取此工作經驗記錄', 403)
     }
 
     // 合併資料並驗證
@@ -447,20 +378,12 @@ export class TeacherService {
     })
     
     if (!workExperience) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.WORK_EXPERIENCE_NOT_FOUND,
-        TEACHER_ERROR_MESSAGES.WORK_EXPERIENCE_NOT_FOUND,
-        TEACHER_HTTP_STATUS.WORK_EXPERIENCE_NOT_FOUND
-      )
+      throw Errors.applicationNotFound('工作經驗記錄不存在')
     }
     
     // 檢查是否屬於該教師
     if (workExperience.teacher_id !== teacher.id) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.ROLE_FORBIDDEN,
-        TEACHER_ERROR_MESSAGES.ROLE_FORBIDDEN,
-        TEACHER_HTTP_STATUS.ROLE_FORBIDDEN
-      )
+      throw Errors.unauthorizedAccess('無權刪除此工作經驗記錄', 403)
     }
     
     await this.workExperienceRepository.remove(workExperience)
@@ -474,40 +397,40 @@ export class TeacherService {
   private validateWorkExperienceData(data: CreateWorkExperienceRequest | UpdateWorkExperienceRequest): void {
     // 基本必填欄位檢查
     if (!data.company_name?.trim()) {
-      throw new BusinessError('VALIDATION_ERROR', '公司名稱為必填欄位', 400)
+      throw Errors.validationFailed('公司名稱為必填欄位')
     }
     if (!data.workplace?.trim()) {
-      throw new BusinessError('VALIDATION_ERROR', '工作地點為必填欄位', 400)
+      throw Errors.validationFailed('工作地點為必填欄位')
     }
     if (!data.job_category?.trim()) {
-      throw new BusinessError('VALIDATION_ERROR', '工作類別為必填欄位', 400)
+      throw Errors.validationFailed('工作類別為必填欄位')
     }
     if (!data.job_title?.trim()) {
-      throw new BusinessError('VALIDATION_ERROR', '職位名稱為必填欄位', 400)
+      throw Errors.validationFailed('職位名稱為必填欄位')
     }
 
     // 字串長度檢查
     if (data.company_name?.length > 200) {
-      throw new BusinessError('VALIDATION_ERROR', '公司名稱不得超過200字元', 400)
+      throw Errors.validationFailed('公司名稱不得超過200字元')
     }
     if (data.workplace?.length > 200) {
-      throw new BusinessError('VALIDATION_ERROR', '工作地點不得超過200字元', 400)
+      throw Errors.validationFailed('工作地點不得超過200字元')
     }
     if (data.job_category?.length > 100) {
-      throw new BusinessError('VALIDATION_ERROR', '工作類別不得超過100字元', 400)
+      throw Errors.validationFailed('工作類別不得超過100字元')
     }
     if (data.job_title?.length > 100) {
-      throw new BusinessError('VALIDATION_ERROR', '職位名稱不得超過100字元', 400)
+      throw Errors.validationFailed('職位名稱不得超過100字元')
     }
 
     // 日期驗證
     const currentYear = new Date().getFullYear()
     
     if (data.start_year !== undefined && (data.start_year < 1900 || data.start_year > currentYear + 1)) {
-      throw new BusinessError('VALIDATION_ERROR', '開始年份必須在1900到明年之間', 400)
+      throw Errors.validationFailed('開始年份必須在1900到明年之間')
     }
     if (data.start_month !== undefined && (data.start_month < 1 || data.start_month > 12)) {
-      throw new BusinessError('VALIDATION_ERROR', '開始月份必須在1到12之間', 400)
+      throw Errors.validationFailed('開始月份必須在1到12之間')
     }
 
     // 業務邏輯驗證
@@ -515,19 +438,19 @@ export class TeacherService {
       if (data.is_working) {
         // 在職工作不能有結束日期
         if (data.end_year || data.end_month) {
-          throw new BusinessError('VALIDATION_ERROR', '在職工作經驗不可填寫結束日期', 400)
+          throw Errors.validationFailed('在職工作經驗不可填寫結束日期')
         }
       } else {
         // 離職工作必須有結束日期
         if (!data.end_year || !data.end_month) {
-          throw new BusinessError('VALIDATION_ERROR', '離職工作經驗必須填寫結束日期', 400)
+          throw Errors.validationFailed('離職工作經驗必須填寫結束日期')
         }
         
         if (data.end_year && (data.end_year < 1900 || data.end_year > currentYear + 1)) {
-          throw new BusinessError('VALIDATION_ERROR', '結束年份必須在1900到明年之間', 400)
+          throw Errors.validationFailed('結束年份必須在1900到明年之間')
         }
         if (data.end_month && (data.end_month < 1 || data.end_month > 12)) {
-          throw new BusinessError('VALIDATION_ERROR', '結束月份必須在1到12之間', 400)
+          throw Errors.validationFailed('結束月份必須在1到12之間')
         }
         
         // 結束日期不得早於開始日期
@@ -536,7 +459,7 @@ export class TeacherService {
           const endDate = new Date(data.end_year, data.end_month - 1)
           
           if (endDate < startDate) {
-            throw new BusinessError('VALIDATION_ERROR', '結束日期不得早於開始日期', 400)
+            throw Errors.validationFailed('結束日期不得早於開始日期')
           }
         }
       }

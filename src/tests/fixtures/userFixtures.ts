@@ -58,7 +58,7 @@ export const tooLongNicknameUserData = {
 // 長 Email 測試資料
 export const longEmailUserData = {
   nick_name: '測試長Email',
-  email: 'very.long.email.address.test.user.with.many.dots.and.chars@very-long-domain-name-for-testing-purposes.example.com',
+  email: 'very.long.email.address.test.user.with.many.dots@long-domain-name-for-testing.example.com',
   password: 'password123'
 }
 

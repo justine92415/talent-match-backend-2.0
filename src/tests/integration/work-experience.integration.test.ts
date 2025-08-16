@@ -111,14 +111,13 @@ describe('工作經驗管理 API', () => {
       expect(response.body).toMatchObject({
         status: 'error',
         error: {
-          code: 'UNAUTHORIZED',
+          code: 'UNAUTHORIZED_ACCESS',
           message: expect.any(String)
         }
       })
     })
 
     it('應該拒絕非教師的請求', async () => {
-      // 建立學生使用者
       const studentUser = await createTestUser({
         ...validUserData,
         email: createUniqueEmail(),
@@ -136,7 +135,7 @@ describe('工作經驗管理 API', () => {
       expect(response.body).toMatchObject({
         status: 'error',
         error: {
-          code: 'FORBIDDEN',
+          code: 'UNAUTHORIZED_ACCESS',
           message: expect.any(String)
         }
       })
@@ -336,7 +335,7 @@ describe('工作經驗管理 API', () => {
       expect(response.body).toMatchObject({
         status: 'error',
         error: {
-          code: 'UNAUTHORIZED',
+          code: 'UNAUTHORIZED_ACCESS',
           message: expect.any(String)
         }
       })
@@ -375,7 +374,7 @@ describe('工作經驗管理 API', () => {
       expect(response.body).toMatchObject({
         status: 'error',
         error: {
-          code: 'FORBIDDEN',
+          code: 'UNAUTHORIZED_ACCESS',
           message: expect.any(String)
         }
       })
@@ -467,7 +466,7 @@ describe('工作經驗管理 API', () => {
       expect(response.body).toMatchObject({
         status: 'error',
         error: {
-          code: 'NOT_FOUND',
+          code: 'APPLICATION_NOT_FOUND',
           message: expect.any(String)
         }
       })
@@ -505,7 +504,7 @@ describe('工作經驗管理 API', () => {
       expect(response.body).toMatchObject({
         status: 'error',
         error: {
-          code: 'FORBIDDEN',
+          code: 'UNAUTHORIZED_ACCESS',
           message: expect.any(String)
         }
       })
@@ -542,7 +541,7 @@ describe('工作經驗管理 API', () => {
       expect(response.body).toMatchObject({
         status: 'error',
         error: {
-          code: 'UNAUTHORIZED',
+          code: 'UNAUTHORIZED_ACCESS',
           message: expect.any(String)
         }
       })
@@ -590,7 +589,7 @@ describe('工作經驗管理 API', () => {
       expect(response.body).toMatchObject({
         status: 'error',
         error: {
-          code: 'NOT_FOUND',
+          code: 'APPLICATION_NOT_FOUND',
           message: expect.any(String)
         }
       })
@@ -623,7 +622,7 @@ describe('工作經驗管理 API', () => {
       expect(response.body).toMatchObject({
         status: 'error',
         error: {
-          code: 'FORBIDDEN',
+          code: 'UNAUTHORIZED_ACCESS',
           message: expect.any(String)
         }
       })
@@ -635,7 +634,7 @@ describe('工作經驗管理 API', () => {
       expect(response.body).toMatchObject({
         status: 'error',
         error: {
-          code: 'UNAUTHORIZED',
+          code: 'UNAUTHORIZED_ACCESS',
           message: expect.any(String)
         }
       })

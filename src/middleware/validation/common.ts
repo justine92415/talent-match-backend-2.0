@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import Joi from 'joi'
-import { ResponseFormatter } from '@utils/response-formatter'
+import { Errors } from '@utils/errors'
 
 /**
  * 請求資料型別
@@ -31,21 +31,22 @@ export function formatJoiErrors(joiError: Joi.ValidationError): Record<string, s
  */
 export const validateRequest = (schema: Joi.Schema, errorMessage?: string) => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    const { error, value } = schema.validate(req.body, {
-      abortEarly: false,
-      stripUnknown: true,
-      allowUnknown: false
-    })
+    try {
+      const { error, value } = schema.validate(req.body, {
+        abortEarly: false,
+        stripUnknown: true,
+        allowUnknown: false
+      })
 
-    if (error) {
-      const formattedErrors = formatJoiErrors(error)
-      res.status(400).json(
-        ResponseFormatter.validationError(formattedErrors, errorMessage || '參數驗證失敗')
-      )
-      return
+      if (error) {
+        const formattedErrors = formatJoiErrors(error)
+        throw Errors.validation(formattedErrors, errorMessage || '參數驗證失敗')
+      }
+
+      req.body = value
+      next()
+    } catch (error) {
+      next(error)
     }
-
-    req.body = value
-    next()
   }
 }

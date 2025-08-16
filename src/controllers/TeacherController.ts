@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { TeacherService } from '@services/teacherService'
-import { ResponseFormatter } from '@utils/response-formatter'
-import { handleErrorAsync } from '@utils/index'
+import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 import { Teacher } from '@entities/Teacher'
 
 /**
@@ -24,7 +23,7 @@ export class TeacherController {
 
     const teacher = await this.teacherService.apply(userId, { nationality, introduction })
     
-    res.status(201).json(ResponseFormatter.created({
+    res.status(201).json(handleCreated({
       teacher: {
         id: teacher.id,
         uuid: teacher.uuid,
@@ -50,7 +49,7 @@ export class TeacherController {
 
     const teacher = await this.teacherService.getApplication(userId)
 
-    res.status(200).json(ResponseFormatter.success({
+    res.status(200).json(handleSuccess({
       teacher: {
         id: teacher.id,
         uuid: teacher.uuid,
@@ -80,7 +79,7 @@ export class TeacherController {
       introduction
     })
 
-    res.status(200).json(ResponseFormatter.success({
+    res.status(200).json(handleSuccess({
       teacher: {
         id: teacher.id,
         uuid: teacher.uuid,
@@ -106,7 +105,7 @@ export class TeacherController {
 
     const teacher = await this.teacherService.resubmitApplication(userId)
     
-    res.status(200).json(ResponseFormatter.success({
+    res.status(200).json(handleSuccess({
       teacher: {
         id: teacher.id,
         uuid: teacher.uuid,
@@ -128,7 +127,7 @@ export class TeacherController {
 
     const teacher = await this.teacherService.getProfile(userId)
 
-    res.status(200).json(ResponseFormatter.success({
+    res.status(200).json(handleSuccess({
       teacher: {
         id: teacher.id,
         uuid: teacher.uuid,
@@ -162,7 +161,7 @@ export class TeacherController {
       introduction
     })
 
-    res.status(200).json(ResponseFormatter.success({
+    res.status(200).json(handleSuccess({
       teacher: {
         id: teacher.id,
         nationality: teacher.nationality,
@@ -182,7 +181,7 @@ export class TeacherController {
     
     const workExperiences = await this.teacherService.getWorkExperiences(userId)
     
-    res.status(200).json(ResponseFormatter.success({
+    res.status(200).json(handleSuccess({
       work_experiences: workExperiences,
       total: workExperiences.length
     }, '取得工作經驗列表成功'))
@@ -197,7 +196,7 @@ export class TeacherController {
     
     const workExperience = await this.teacherService.createWorkExperience(userId, workExperienceData)
     
-    res.status(201).json(ResponseFormatter.created({
+    res.status(201).json(handleCreated({
       work_experience: workExperience
     }, '工作經驗已新增'))
   })
@@ -212,7 +211,7 @@ export class TeacherController {
     
     const workExperience = await this.teacherService.updateWorkExperience(userId, workExperienceId, updateData)
     
-    res.status(200).json(ResponseFormatter.success({
+    res.status(200).json(handleSuccess({
       work_experience: workExperience
     }, '工作經驗已更新'))
   })
@@ -226,6 +225,6 @@ export class TeacherController {
     
     await this.teacherService.deleteWorkExperience(userId, workExperienceId)
     
-    res.status(200).json(ResponseFormatter.success(null, '工作經驗已刪除'))
+    res.status(200).json(handleSuccess(null, '工作經驗已刪除'))
   })
 }

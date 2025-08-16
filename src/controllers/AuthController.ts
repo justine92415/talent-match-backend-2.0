@@ -1,10 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
 import { authService } from '@services/authService'
 import type { RegisterUserData, LoginUserData, RefreshTokenData, ForgotPasswordData } from '@models/index'
-import { BusinessError, UserError } from '@core/errors/BusinessError'
-import { ERROR_MESSAGES } from '@config/constants'
-import { handleErrorAsync } from '@utils/index'
-import { ResponseFormatter } from '@utils/response-formatter'
+import { SuccessMessages } from '@constants/errorMessages'
+import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 
 export class AuthController {
   /**
@@ -20,7 +18,7 @@ export class AuthController {
       password
     })
 
-    res.status(201).json(ResponseFormatter.created(result, ERROR_MESSAGES.REGISTRATION_SUCCESS))
+    res.status(201).json(handleCreated(result, SuccessMessages.REGISTRATION_SUCCESS))
   })
 
   /**
@@ -35,7 +33,7 @@ export class AuthController {
       password
     })
 
-    res.status(200).json(ResponseFormatter.success(result, ERROR_MESSAGES.LOGIN_SUCCESS))
+    res.status(200).json(handleSuccess(result, SuccessMessages.LOGIN_SUCCESS))
   })
 
   /**
@@ -49,7 +47,7 @@ export class AuthController {
       refresh_token
     })
 
-    res.status(200).json(ResponseFormatter.success(result, 'Token 刷新成功'))
+    res.status(200).json(handleSuccess(result, SuccessMessages.TOKEN_REFRESH_SUCCESS))
   })
 
   /**
@@ -60,7 +58,7 @@ export class AuthController {
 
     await authService.forgotPassword(forgotPasswordData)
 
-    res.status(200).json(ResponseFormatter.success(null, '重設密碼郵件已發送，請檢查您的信箱'))
+    res.status(200).json(handleSuccess(null, SuccessMessages.PASSWORD_RESET_EMAIL_SENT))
   })
 
   /**
@@ -71,7 +69,7 @@ export class AuthController {
 
     await authService.resetPassword({ token, new_password })
 
-    res.status(200).json(ResponseFormatter.success(null, '密碼重設成功'))
+    res.status(200).json(handleSuccess(null, SuccessMessages.PASSWORD_RESET_SUCCESS))
   })
 
   /**
@@ -89,7 +87,7 @@ export class AuthController {
 
     const user = await authService.getProfile(userId)
 
-    res.status(200).json(ResponseFormatter.success({ user }, '成功取得個人資料'))
+    res.status(200).json(handleSuccess({ user }, SuccessMessages.PROFILE_RETRIEVED))
   })
 
   /**
@@ -109,7 +107,7 @@ export class AuthController {
 
     const user = await authService.updateProfile(userId, updateData)
 
-    res.status(200).json(ResponseFormatter.success({ user }, '成功更新個人資料'))
+    res.status(200).json(handleSuccess({ user }, SuccessMessages.PROFILE_UPDATED))
   })
 
   /**
@@ -127,7 +125,7 @@ export class AuthController {
 
     await authService.deleteProfile(userId)
 
-    res.status(200).json(ResponseFormatter.success(null, '帳號已成功刪除'))
+    res.status(200).json(handleSuccess(null, SuccessMessages.ACCOUNT_DELETED))
   })
 }
 
