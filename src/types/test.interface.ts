@@ -1,6 +1,6 @@
-import { User } from '../entities/User'
-import { Teacher } from '../entities/Teacher'
-import { UserRole, AccountStatus, ApplicationStatus } from '../entities/enums'
+import { User } from '@entities/User'
+import { Teacher } from '@entities/Teacher'
+import { UserRole, AccountStatus, ApplicationStatus } from '@entities/enums'
 
 /**
  * 測試用使用者建立資料介面
@@ -34,10 +34,10 @@ export interface TestTeacherCreateData {
   nationality?: string
   introduction?: string
   application_status?: ApplicationStatus
-  application_submitted_at?: Date | null
-  application_reviewed_at?: Date | null
-  reviewer_id?: number | null
-  review_notes?: string | null
+  application_submitted_at?: Date | undefined
+  application_reviewed_at?: Date | undefined
+  reviewer_id?: number | undefined
+  review_notes?: string | undefined
 }
 
 /**

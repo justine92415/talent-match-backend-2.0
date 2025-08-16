@@ -1,5 +1,5 @@
-import { dataSource } from '../../db/data-source'
-import { User } from '../../entities/User'
+import { dataSource } from '@db/data-source'
+import { User } from '@entities/User'
 
 // 全域測試資料庫管理器
 class TestDatabaseManager {

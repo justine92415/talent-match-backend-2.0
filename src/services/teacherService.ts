@@ -1,18 +1,19 @@
-import { Repository } from 'typeorm'
-import { dataSource } from '../db/data-source'
-import { Teacher } from '../entities/Teacher'
-import { User } from '../entities/User'
-import { TeacherWorkExperience } from '../entities/TeacherWorkExperience'
-import { TeacherLearningExperience } from '../entities/TeacherLearningExperience'
-import { TeacherCertificate } from '../entities/TeacherCertificate'
-import { UserRole, AccountStatus, ApplicationStatus } from '../entities/enums'
-import { BusinessError } from '../core/errors/BusinessError'
-import {
-  TEACHER_ERROR_CODES,
-  TEACHER_ERROR_MESSAGES,
-  TEACHER_HTTP_STATUS
-} from '../constants/teacher'
-import { TeacherApplicationData, TeacherApplicationUpdateData } from '../types'
+import { Repository, Not, IsNull } from 'typeorm'
+import { dataSource } from '@db/data-source'
+import { Teacher } from '@entities/Teacher'
+import { User } from '@entities/User'
+import { TeacherWorkExperience } from '@entities/TeacherWorkExperience'
+import { TeacherLearningExperience } from '@entities/TeacherLearningExperience'
+import { TeacherCertificate } from '@entities/TeacherCertificate'
+import { UserRole, AccountStatus, ApplicationStatus } from '@entities/enums'
+import { Errors, ValidationError } from '@utils/errors'
+import { 
+  TeacherApplicationData, 
+  TeacherApplicationUpdateData,
+  TeacherProfileUpdateRequest,
+  CreateWorkExperienceRequest,
+  UpdateWorkExperienceRequest
+} from '@models/index'
 
 /**
  * 教師申請和管理相關的業務服務類別
@@ -42,29 +43,17 @@ export class TeacherService {
     // 檢查使用者是否存在
     const user = await this.userRepository.findOne({ where: { id: userId } })
     if (!user) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.USER_NOT_FOUND,
-        TEACHER_ERROR_MESSAGES.USER_NOT_FOUND,
-        TEACHER_HTTP_STATUS.USER_NOT_FOUND
-      )
+      throw Errors.userNotFound()
     }
 
     // 檢查使用者角色是否為學生
     if (user.role !== UserRole.STUDENT) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.ROLE_FORBIDDEN,
-        TEACHER_ERROR_MESSAGES.ROLE_FORBIDDEN,
-        TEACHER_HTTP_STATUS.ROLE_FORBIDDEN
-      )
+      throw Errors.unauthorizedAccess('只有學生可以申請成為教師', 403)
     }
 
     // 檢查帳號狀態是否為活躍
     if (user.account_status !== AccountStatus.ACTIVE) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.ACCOUNT_INACTIVE,
-        TEACHER_ERROR_MESSAGES.ACCOUNT_INACTIVE,
-        TEACHER_HTTP_STATUS.ACCOUNT_INACTIVE
-      )
+      throw Errors.accountSuspended()
     }
 
     return user
@@ -81,11 +70,7 @@ export class TeacherService {
     })
     
     if (existingApplication) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.DUPLICATE_APPLICATION,
-        TEACHER_ERROR_MESSAGES.DUPLICATE_APPLICATION,
-        TEACHER_HTTP_STATUS.DUPLICATE_APPLICATION
-      )
+      throw Errors.applicationExists()
     }
   }
 
@@ -114,21 +99,22 @@ export class TeacherService {
   }
 
   /**
-   * 取得教師申請狀態
+   * 取得教師申請狀態（使用索引最佳化）
    * @param userId 使用者 ID
    * @returns 教師申請記錄
    */
   async getApplication(userId: number): Promise<Teacher> {
     const teacher = await this.teacherRepository.findOne({ 
-      where: { user_id: userId } 
+      where: { user_id: userId },
+      select: [
+        'id', 'uuid', 'user_id', 'nationality', 'introduction',
+        'application_status', 'application_submitted_at', 'application_reviewed_at',
+        'reviewer_id', 'review_notes', 'created_at', 'updated_at'
+      ]
     })
     
     if (!teacher) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.APPLICATION_NOT_FOUND,
-        TEACHER_ERROR_MESSAGES.APPLICATION_NOT_FOUND,
-        TEACHER_HTTP_STATUS.APPLICATION_NOT_FOUND
-      )
+      throw Errors.applicationNotFound()
     }
 
     return teacher
@@ -142,11 +128,7 @@ export class TeacherService {
   private validateApplicationEditable(teacher: Teacher): void {
     // 檢查是否可以修改（只能在待審核或已拒絕狀態下修改）
     if (teacher.application_status === ApplicationStatus.APPROVED) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.APPLICATION_APPROVED,
-        TEACHER_ERROR_MESSAGES.APPLICATION_APPROVED,
-        TEACHER_HTTP_STATUS.APPLICATION_APPROVED
-      )
+      throw Errors.invalidApplicationStatus('只能在待審核或已拒絕狀態下修改申請')
     }
   }
 
@@ -162,11 +144,7 @@ export class TeacherService {
     })
     
     if (!teacher) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.APPLICATION_NOT_FOUND,
-        TEACHER_ERROR_MESSAGES.APPLICATION_NOT_FOUND,
-        TEACHER_HTTP_STATUS.APPLICATION_NOT_FOUND
-      )
+      throw Errors.applicationNotFound()
     }
 
     // 驗證是否可以修改
@@ -202,20 +180,12 @@ export class TeacherService {
     })
     
     if (!teacher) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.APPLICATION_NOT_FOUND,
-        TEACHER_ERROR_MESSAGES.APPLICATION_NOT_FOUND,
-        TEACHER_HTTP_STATUS.APPLICATION_NOT_FOUND
-      )
+      throw Errors.applicationNotFound()
     }
 
     // 檢查申請狀態是否為已拒絕
     if (teacher.application_status !== ApplicationStatus.REJECTED) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.CANNOT_RESUBMIT_APPLICATION,
-        TEACHER_ERROR_MESSAGES.CANNOT_RESUBMIT_APPLICATION,
-        TEACHER_HTTP_STATUS.CANNOT_RESUBMIT_APPLICATION
-      )
+      throw Errors.invalidApplicationStatus('此申請無法重新提交，請檢查申請狀態')
     }
 
     // 重置申請狀態為待審核
@@ -229,44 +199,46 @@ export class TeacherService {
   }
 
   /**
-  /**
-   * 取得教師基本資料（已審核通過的教師）
+   * 取得教師基本資料（已審核通過的教師，包含統計資料）
    * @param userId 使用者 ID
    * @returns 教師資料
    */
   async getProfile(userId: number): Promise<Teacher> {
     const teacher = await this.teacherRepository.findOne({ 
-      where: { user_id: userId, application_status: ApplicationStatus.APPROVED } 
+      where: { 
+        user_id: userId, 
+        application_status: ApplicationStatus.APPROVED 
+      }
     })
     
     if (!teacher) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.TEACHER_NOT_FOUND,
-        TEACHER_ERROR_MESSAGES.TEACHER_NOT_FOUND,
-        TEACHER_HTTP_STATUS.TEACHER_NOT_FOUND
-      )
+      throw Errors.teacherNotFound()
     }
 
     return teacher
   }
 
   /**
-   * 更新教師基本資料（已審核通過的教師）
+   * 更新教師基本資料（已審核通過的教師，最佳化查詢）
    * @param userId 使用者 ID
    * @param updateData 更新資料
    * @returns 更新後的教師記錄
    */
-  async updateProfile(userId: number, updateData: { nationality?: string; introduction?: string }): Promise<Teacher> {
+  async updateProfile(userId: number, updateData: TeacherProfileUpdateRequest): Promise<Teacher> {
     const teacher = await this.teacherRepository.findOne({ 
-      where: { user_id: userId, application_status: ApplicationStatus.APPROVED } 
+      where: { 
+        user_id: userId, 
+        application_status: ApplicationStatus.APPROVED 
+      },
+      select: [
+        'id', 'uuid', 'user_id', 'nationality', 'introduction',
+        'application_status', 'application_reviewed_at', 'reviewer_id', 'review_notes',
+        'updated_at'
+      ]
     })
     
     if (!teacher) {
-      throw new BusinessError(
-        TEACHER_ERROR_CODES.TEACHER_NOT_APPROVED,
-        TEACHER_ERROR_MESSAGES.TEACHER_NOT_APPROVED,
-        TEACHER_HTTP_STATUS.TEACHER_NOT_APPROVED
-      )
+      throw Errors.teacherNotFound()
     }
 
     // 更新欄位
@@ -284,5 +256,281 @@ export class TeacherService {
     teacher.review_notes = undefined
 
     return await this.teacherRepository.save(teacher)
+  }
+
+  /**
+   * 驗證使用者是否為教師並取得教師記錄
+   * @private
+   * @param userId 使用者 ID
+   * @returns 教師記錄
+   */
+  private async validateTeacherUser(userId: number): Promise<Teacher> {
+    // 檢查使用者是否存在且為教師角色
+    const user = await this.userRepository.findOne({ 
+      where: { 
+        id: userId, 
+        role: UserRole.TEACHER,
+        account_status: AccountStatus.ACTIVE
+      } 
+    })
+    
+    if (!user) {
+      throw Errors.unauthorizedAccess('需要教師權限才能執行此操作', 403)
+    }
+
+    // 取得教師記錄
+    const teacher = await this.teacherRepository.findOne({ where: { user_id: userId } })
+    if (!teacher) {
+      throw Errors.teacherNotFound()
+    }
+
+    return teacher
+  }
+
+  /**
+   * 取得教師的工作經驗列表
+   * @param userId 使用者 ID
+   * @returns 工作經驗列表
+   */
+  async getWorkExperiences(userId: number): Promise<TeacherWorkExperience[]> {
+    const teacher = await this.validateTeacherUser(userId)
+    
+    return await this.workExperienceRepository.find({
+      where: { teacher_id: teacher.id },
+      order: { created_at: 'DESC' }
+    })
+  }
+
+  /**
+   * 建立工作經驗記錄
+   * @param userId 使用者 ID
+   * @param workExperienceData 工作經驗資料
+   * @returns 建立的工作經驗記錄
+   */
+  async createWorkExperience(userId: number, workExperienceData: CreateWorkExperienceRequest): Promise<TeacherWorkExperience> {
+    const teacher = await this.validateTeacherUser(userId)
+    
+    // 基本資料驗證
+    this.validateWorkExperienceData(workExperienceData)
+    
+    const result = await this.workExperienceRepository.insert({
+      teacher_id: teacher.id,
+      ...workExperienceData
+    })
+    
+    const workExperienceId = result.identifiers[0].id
+    const savedWorkExperience = await this.workExperienceRepository.findOne({
+      where: { id: workExperienceId }
+    })
+    
+    if (!savedWorkExperience) {
+      throw Errors.internalError()
+    }
+    
+    return savedWorkExperience
+  }
+
+  /**
+   * 更新工作經驗記錄
+   * @param userId 使用者 ID
+   * @param workExperienceId 工作經驗 ID
+   * @param updateData 更新資料
+   * @returns 更新後的工作經驗記錄
+   */
+  async updateWorkExperience(userId: number, workExperienceId: number, updateData: UpdateWorkExperienceRequest): Promise<TeacherWorkExperience> {
+    const teacher = await this.validateTeacherUser(userId)
+    
+    // 先檢查工作經驗是否存在
+    const workExperience = await this.workExperienceRepository.findOne({
+      where: { id: workExperienceId }
+    })
+    
+    if (!workExperience) {
+      throw Errors.applicationNotFound('工作經驗記錄不存在')
+    }
+    
+    // 檢查是否屬於該教師
+    if (workExperience.teacher_id !== teacher.id) {
+      throw Errors.unauthorizedAccess('無權存取此工作經驗記錄', 403)
+    }
+
+    // 合併資料並驗證
+    const mergedData = { ...workExperience, ...updateData }
+    this.validateWorkExperienceData(mergedData)
+    
+    // 更新欄位
+    Object.assign(workExperience, updateData)
+    
+    return await this.workExperienceRepository.save(workExperience)
+  }
+
+  /**
+   * 刪除工作經驗記錄
+   * @param userId 使用者 ID
+   * @param workExperienceId 工作經驗 ID
+   */
+  async deleteWorkExperience(userId: number, workExperienceId: number): Promise<void> {
+    const teacher = await this.validateTeacherUser(userId)
+    
+    // 先檢查工作經驗是否存在
+    const workExperience = await this.workExperienceRepository.findOne({
+      where: { id: workExperienceId }
+    })
+    
+    if (!workExperience) {
+      throw Errors.applicationNotFound('工作經驗記錄不存在')
+    }
+    
+    // 檢查是否屬於該教師
+    if (workExperience.teacher_id !== teacher.id) {
+      throw Errors.unauthorizedAccess('無權刪除此工作經驗記錄', 403)
+    }
+    
+    await this.workExperienceRepository.remove(workExperience)
+  }
+
+  /**
+   * 驗證工作經驗資料
+   * @private
+   * @param data 工作經驗資料
+   */
+  private validateWorkExperienceData(data: CreateWorkExperienceRequest | UpdateWorkExperienceRequest): void {
+    // 基本必填欄位檢查
+    if (!data.company_name?.trim()) {
+      throw Errors.validationFailed('公司名稱為必填欄位')
+    }
+    if (!data.workplace?.trim()) {
+      throw Errors.validationFailed('工作地點為必填欄位')
+    }
+    if (!data.job_category?.trim()) {
+      throw Errors.validationFailed('工作類別為必填欄位')
+    }
+    if (!data.job_title?.trim()) {
+      throw Errors.validationFailed('職位名稱為必填欄位')
+    }
+
+    // 字串長度檢查
+    if (data.company_name?.length > 200) {
+      throw Errors.validationFailed('公司名稱不得超過200字元')
+    }
+    if (data.workplace?.length > 200) {
+      throw Errors.validationFailed('工作地點不得超過200字元')
+    }
+    if (data.job_category?.length > 100) {
+      throw Errors.validationFailed('工作類別不得超過100字元')
+    }
+    if (data.job_title?.length > 100) {
+      throw Errors.validationFailed('職位名稱不得超過100字元')
+    }
+
+    // 日期驗證
+    const currentYear = new Date().getFullYear()
+    
+    if (data.start_year !== undefined && (data.start_year < 1900 || data.start_year > currentYear + 1)) {
+      throw Errors.validationFailed('開始年份必須在1900到明年之間')
+    }
+    if (data.start_month !== undefined && (data.start_month < 1 || data.start_month > 12)) {
+      throw Errors.validationFailed('開始月份必須在1到12之間')
+    }
+
+    // 業務邏輯驗證
+    if (data.is_working !== undefined) {
+      if (data.is_working) {
+        // 在職工作不能有結束日期
+        if (data.end_year || data.end_month) {
+          throw Errors.validationFailed('在職工作經驗不可填寫結束日期')
+        }
+      } else {
+        // 離職工作必須有結束日期
+        if (!data.end_year || !data.end_month) {
+          throw Errors.validationFailed('離職工作經驗必須填寫結束日期')
+        }
+        
+        if (data.end_year && (data.end_year < 1900 || data.end_year > currentYear + 1)) {
+          throw Errors.validationFailed('結束年份必須在1900到明年之間')
+        }
+        if (data.end_month && (data.end_month < 1 || data.end_month > 12)) {
+          throw Errors.validationFailed('結束月份必須在1到12之間')
+        }
+        
+        // 結束日期不得早於開始日期
+        if (data.start_year && data.start_month && data.end_year && data.end_month) {
+          const startDate = new Date(data.start_year, data.start_month - 1)
+          const endDate = new Date(data.end_year, data.end_month - 1)
+          
+          if (endDate < startDate) {
+            throw Errors.validationFailed('結束日期不得早於開始日期')
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * 最終提交教師申請
+   * 驗證所有必填資料完整性並更新申請狀態
+   * @param userId 使用者 ID
+   * @returns 提交後的教師記錄
+   */
+  async submitApplication(userId: number): Promise<Teacher> {
+    // 檢查申請是否存在
+    const teacher = await this.teacherRepository.findOne({ 
+      where: { user_id: userId } 
+    })
+    
+    if (!teacher) {
+      throw Errors.applicationNotFound()
+    }
+
+    // 檢查是否已經提交過
+    if (teacher.application_submitted_at) {
+      throw Errors.validationFailed('申請已經提交，無法重複提交')
+    }
+
+    // 驗證資料完整性
+    await this.validateApplicationCompleteness(teacher.id)
+
+    // 更新申請狀態
+    teacher.application_status = ApplicationStatus.PENDING
+    teacher.application_submitted_at = new Date()
+
+    return await this.teacherRepository.save(teacher)
+  }
+
+  /**
+   * 驗證申請資料完整性
+   * @private
+   * @param teacherId 教師 ID
+   */
+  private async validateApplicationCompleteness(teacherId: number): Promise<void> {
+    // 檢查工作經驗
+    const workExperienceCount = await this.workExperienceRepository.count({
+      where: { teacher_id: teacherId }
+    })
+    if (workExperienceCount === 0) {
+      throw Errors.validationFailed('申請資料不完整，至少需要一筆工作經驗')
+    }
+
+    // 檢查學習經歷（含檔案）
+    const learningExperienceCount = await this.learningExperienceRepository.count({
+      where: { 
+        teacher_id: teacherId,
+        file_path: Not(IsNull())
+      }
+    })
+    if (learningExperienceCount === 0) {
+      throw Errors.validationFailed('申請資料不完整，至少需要一筆學習經歷（含檔案）')
+    }
+
+    // 檢查證書（含檔案）
+    const certificateCount = await this.certificateRepository.count({
+      where: { 
+        teacher_id: teacherId,
+        file_path: Not(IsNull())
+      }
+    })
+    if (certificateCount === 0) {
+      throw Errors.validationFailed('申請資料不完整，至少需要一張證書（含檔案）')
+    }
   }
 }

@@ -14,15 +14,13 @@ export interface ErrorDetails {
 }
 
 /**
- * API 錯誤回應介面
+ * API 錯誤回應介面 - 簡潔版本
  */
 export interface ApiErrorResponse {
   status: 'error'
-  error: {
-    code: string
-    message: string
-    details?: ErrorDetails
-  }
+  code: string
+  message: string
+  errors?: ErrorDetails  // 只在驗證錯誤時存在
 }
 
 /**

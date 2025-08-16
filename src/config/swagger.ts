@@ -588,6 +588,955 @@ const swaggerDefinition = {
             }
           }
         ]
+      },
+
+      // ==================== 學習經歷管理相關 Schema ====================
+
+      // 學習經歷實體 Schema
+      LearningExperience: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '學習經歷 ID',
+            example: 1
+          },
+          teacher_id: {
+            type: 'integer',
+            description: '教師 ID',
+            example: 5
+          },
+          is_in_school: {
+            type: 'boolean',
+            description: '是否還在學',
+            example: false
+          },
+          degree: {
+            type: 'string',
+            maxLength: 50,
+            description: '學位',
+            example: '碩士'
+          },
+          school_name: {
+            type: 'string',
+            maxLength: 100,
+            description: '學校名稱',
+            example: '國立台灣大學'
+          },
+          department: {
+            type: 'string',
+            maxLength: 100,
+            description: '科系',
+            example: '資訊工程學系'
+          },
+          region: {
+            type: 'boolean',
+            description: '是否為台灣地區學校',
+            example: true
+          },
+          start_year: {
+            type: 'integer',
+            minimum: 1950,
+            description: '開始年份',
+            example: 2018
+          },
+          start_month: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 12,
+            description: '開始月份',
+            example: 9
+          },
+          end_year: {
+            type: 'integer',
+            minimum: 1950,
+            nullable: true,
+            description: '結束年份（在學中為 null）',
+            example: 2020
+          },
+          end_month: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 12,
+            nullable: true,
+            description: '結束月份（在學中為 null）',
+            example: 6
+          },
+          file_path: {
+            type: 'string',
+            nullable: true,
+            description: '證書檔案路徑（TODO: 檔案上傳功能開發中）',
+            example: null
+          },
+          created_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '建立時間'
+          },
+          updated_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '更新時間'
+          }
+        }
+      },
+
+      // 建立學習經歷請求 Schema
+      CreateLearningExperienceRequest: {
+        type: 'object',
+        required: ['is_in_school', 'degree', 'school_name', 'department', 'region', 'start_year', 'start_month'],
+        properties: {
+          is_in_school: {
+            type: 'boolean',
+            description: '是否還在學（在學中則不需填寫結束日期）',
+            example: false
+          },
+          degree: {
+            type: 'string',
+            maxLength: 50,
+            minLength: 1,
+            description: '學位（例：學士、碩士、博士、高中、國中等）',
+            example: '學士'
+          },
+          school_name: {
+            type: 'string',
+            maxLength: 100,
+            minLength: 1,
+            description: '學校名稱',
+            example: '國立台灣大學'
+          },
+          department: {
+            type: 'string',
+            maxLength: 100,
+            minLength: 1,
+            description: '科系或學院名稱',
+            example: '資訊工程學系'
+          },
+          region: {
+            type: 'boolean',
+            description: '是否為台灣地區學校（true: 台灣, false: 海外）',
+            example: true
+          },
+          start_year: {
+            type: 'integer',
+            minimum: 1950,
+            description: '開始年份',
+            example: 2018
+          },
+          start_month: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 12,
+            description: '開始月份',
+            example: 9
+          },
+          end_year: {
+            type: 'integer',
+            minimum: 1950,
+            nullable: true,
+            description: '結束年份（在學中請設為 null）',
+            example: 2022
+          },
+          end_month: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 12,
+            nullable: true,
+            description: '結束月份（在學中請設為 null）',
+            example: 6
+          }
+        }
+      },
+
+      // 更新學習經歷請求 Schema
+      UpdateLearningExperienceRequest: {
+        type: 'object',
+        properties: {
+          is_in_school: {
+            type: 'boolean',
+            description: '是否還在學',
+            example: true
+          },
+          degree: {
+            type: 'string',
+            maxLength: 50,
+            minLength: 1,
+            description: '學位',
+            example: '碩士'
+          },
+          school_name: {
+            type: 'string',
+            maxLength: 100,
+            minLength: 1,
+            description: '學校名稱',
+            example: '國立台灣大學'
+          },
+          department: {
+            type: 'string',
+            maxLength: 100,
+            minLength: 1,
+            description: '科系或學院名稱',
+            example: '資訊工程學系研究所'
+          },
+          region: {
+            type: 'boolean',
+            description: '是否為台灣地區學校',
+            example: true
+          },
+          start_year: {
+            type: 'integer',
+            minimum: 1950,
+            description: '開始年份',
+            example: 2022
+          },
+          start_month: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 12,
+            description: '開始月份',
+            example: 9
+          },
+          end_year: {
+            type: 'integer',
+            minimum: 1950,
+            nullable: true,
+            description: '結束年份（在學中請設為 null）',
+            example: null
+          },
+          end_month: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 12,
+            nullable: true,
+            description: '結束月份（在學中請設為 null）',
+            example: null
+          }
+        }
+      },
+
+      // 學習經歷清單回應 Schema
+      LearningExperienceListResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                example: '取得學習經歷列表成功'
+              },
+              data: {
+                type: 'object',
+                properties: {
+                  learning_experiences: {
+                    type: 'array',
+                    items: {
+                      $ref: '#/components/schemas/LearningExperience'
+                    },
+                    description: '學習經歷清單（依開始年份降序排列）'
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 單一學習經歷回應 Schema
+      LearningExperienceResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              data: {
+                type: 'object',
+                properties: {
+                  learning_experience: {
+                    $ref: '#/components/schemas/LearningExperience'
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 學習經歷建立成功回應 Schema
+      LearningExperienceCreateResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/CreatedResponse' },
+          {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                example: '學習經歷已建立'
+              },
+              data: {
+                type: 'object',
+                properties: {
+                  learning_experience: {
+                    $ref: '#/components/schemas/LearningExperience'
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // TODO: 檔案上傳系統完成後啟用
+      // 包含檔案的學習經歷建立請求 Schema
+      // CreateLearningExperienceWithFile: {
+      //   type: 'object',
+      //   properties: {
+      //     ...CreateLearningExperienceRequest.properties,
+      //     certificate_file: {
+      //       type: 'string',
+      //       format: 'binary',
+      //       description: '證書檔案（支援 PDF, JPG, JPEG, PNG，最大 5MB）'
+      //     }
+      //   }
+      // },
+
+      // 業務邏輯錯誤 Schema
+      BusinessError: {
+        allOf: [
+          { $ref: '#/components/schemas/ErrorResponse' },
+          {
+            type: 'object',
+            properties: {
+              error: {
+                type: 'object',
+                properties: {
+                  code: {
+                    type: 'string',
+                    description: '業務錯誤代碼',
+                    example: 'LEARNING_EXPERIENCE_NOT_FOUND'
+                  },
+                  message: {
+                    type: 'string',
+                    description: '業務錯誤訊息',
+                    example: '找不到學習經歷記錄'
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 驗證錯誤 Schema
+      ValidationError: {
+        allOf: [
+          { $ref: '#/components/schemas/ErrorResponse' },
+          {
+            type: 'object',
+            properties: {
+              error: {
+                type: 'object',
+                properties: {
+                  code: {
+                    type: 'string',
+                    enum: ['VALIDATION_ERROR'],
+                    example: 'VALIDATION_ERROR'
+                  },
+                  message: {
+                    type: 'string',
+                    example: '參數驗證失敗'
+                  },
+                  details: {
+                    type: 'object',
+                    additionalProperties: {
+                      type: 'array',
+                      items: {
+                        type: 'string'
+                      }
+                    },
+                    description: '詳細驗證錯誤資訊',
+                    example: {
+                      end_year: ['結束年份不得早於開始年份'],
+                      degree: ['學位為必填欄位']
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // === 證書管理相關 Schema ===
+
+      // 教師證書基本資料 Schema
+      TeacherCertificate: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '證書ID',
+            example: 1
+          },
+          teacher_id: {
+            type: 'integer',
+            description: '教師ID',
+            example: 1
+          },
+          verifying_institution: {
+            type: 'string',
+            maxLength: 100,
+            description: '發證機構名稱',
+            example: '教育部'
+          },
+          license_name: {
+            type: 'string',
+            maxLength: 200,
+            description: '證書名稱',
+            example: '中等學校教師證書'
+          },
+          holder_name: {
+            type: 'string',
+            maxLength: 100,
+            description: '證書持有人姓名',
+            example: '王小明'
+          },
+          license_number: {
+            type: 'string',
+            maxLength: 100,
+            description: '證書編號',
+            example: 'TC2024001234'
+          },
+          file_path: {
+            type: 'string',
+            maxLength: 500,
+            description: '證書檔案路徑',
+            example: '/uploads/certificates/tc_2024001234.pdf'
+          },
+          category_id: {
+            type: 'string',
+            maxLength: 50,
+            description: '證書類別ID',
+            example: 'teaching_license'
+          },
+          subject: {
+            type: 'string',
+            maxLength: 200,
+            description: '證書主題/科目',
+            example: '數學科教學'
+          },
+          created_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '建立時間',
+            example: '2024-01-15T08:00:00.000Z'
+          },
+          updated_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '更新時間',
+            example: '2024-01-15T08:00:00.000Z'
+          }
+        },
+        required: [
+          'id',
+          'teacher_id', 
+          'verifying_institution',
+          'license_name',
+          'holder_name',
+          'license_number',
+          'file_path',
+          'category_id',
+          'subject'
+        ]
+      },
+
+      // 建立證書請求 Schema
+      CreateTeacherCertificateRequest: {
+        type: 'object',
+        properties: {
+          verifying_institution: {
+            type: 'string',
+            maxLength: 100,
+            description: '發證機構名稱（必填）',
+            example: '教育部'
+          },
+          license_name: {
+            type: 'string',
+            maxLength: 200,
+            description: '證書名稱（必填）',
+            example: '中等學校教師證書'
+          },
+          holder_name: {
+            type: 'string',
+            maxLength: 100,
+            description: '證書持有人姓名（必填）',
+            example: '王小明'
+          },
+          license_number: {
+            type: 'string',
+            maxLength: 100,
+            description: '證書編號（必填）',
+            example: 'TC2024001234'
+          },
+          file_path: {
+            type: 'string',
+            maxLength: 500,
+            description: '證書檔案路徑（必填）',
+            example: '/uploads/certificates/tc_2024001234.pdf'
+          },
+          category_id: {
+            type: 'string',
+            maxLength: 50,
+            description: '證書類別ID（必填）',
+            example: 'teaching_license'
+          },
+          subject: {
+            type: 'string',
+            maxLength: 200,
+            description: '證書主題/科目（必填）',
+            example: '數學科教學'
+          }
+        },
+        required: [
+          'verifying_institution',
+          'license_name',
+          'holder_name',
+          'license_number',
+          'file_path',
+          'category_id',
+          'subject'
+        ],
+        example: {
+          verifying_institution: '教育部',
+          license_name: '中等學校教師證書',
+          holder_name: '王小明',
+          license_number: 'TC2024001234',
+          file_path: '/uploads/certificates/tc_2024001234.pdf',
+          category_id: 'teaching_license',
+          subject: '數學科教學'
+        }
+      },
+
+      // 更新證書請求 Schema
+      UpdateTeacherCertificateRequest: {
+        type: 'object',
+        properties: {
+          verifying_institution: {
+            type: 'string',
+            maxLength: 100,
+            description: '發證機構名稱（選填）',
+            example: '教育部'
+          },
+          license_name: {
+            type: 'string',
+            maxLength: 200,
+            description: '證書名稱（選填）',
+            example: '高級中等學校教師證書'
+          },
+          holder_name: {
+            type: 'string',
+            maxLength: 100,
+            description: '證書持有人姓名（選填）',
+            example: '王小明'
+          },
+          license_number: {
+            type: 'string',
+            maxLength: 100,
+            description: '證書編號（選填）',
+            example: 'TC2024001235'
+          },
+          file_path: {
+            type: 'string',
+            maxLength: 500,
+            description: '證書檔案路徑（選填）',
+            example: '/uploads/certificates/tc_2024001235.pdf'
+          },
+          category_id: {
+            type: 'string',
+            maxLength: 50,
+            description: '證書類別ID（選填）',
+            example: 'advanced_teaching_license'
+          },
+          subject: {
+            type: 'string',
+            maxLength: 200,
+            description: '證書主題/科目（選填）',
+            example: '高中數學科教學'
+          }
+        },
+        additionalProperties: false,
+        example: {
+          license_name: '高級中等學校教師證書',
+          license_number: 'TC2024001235',
+          subject: '高中數學科教學'
+        }
+      },
+
+      // 證書列表回應 Schema
+      TeacherCertificateListResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              data: {
+                type: 'object',
+                properties: {
+                  certificates: {
+                    type: 'array',
+                    items: {
+                      $ref: '#/components/schemas/TeacherCertificate'
+                    },
+                    description: '證書列表'
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 證書建立回應 Schema
+      TeacherCertificateCreateResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/CreatedResponse' },
+          {
+            type: 'object',
+            properties: {
+              data: {
+                type: 'object',
+                properties: {
+                  certificate: {
+                    $ref: '#/components/schemas/TeacherCertificate'
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 證書更新回應 Schema
+      TeacherCertificateUpdateResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              data: {
+                type: 'object',
+                properties: {
+                  certificate: {
+                    $ref: '#/components/schemas/TeacherCertificate'
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 證書刪除回應 Schema
+      TeacherCertificateDeleteResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              data: {
+                type: 'null',
+                description: '刪除成功時無回傳資料'
+              }
+            }
+          }
+        ]
+      },
+
+      // === 教師時間管理相關 Schema ===
+
+      // 可預約時段資料 Schema
+      AvailableSlot: {
+        type: 'object',
+        required: ['id', 'teacher_id', 'weekday', 'start_time', 'end_time', 'is_active', 'created_at', 'updated_at'],
+        properties: {
+          id: {
+            type: 'integer',
+            description: '時段ID',
+            example: 1
+          },
+          teacher_id: {
+            type: 'integer',
+            description: '教師ID',
+            example: 1
+          },
+          weekday: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 6,
+            description: '星期幾（0=週日, 1=週一, ..., 6=週六）',
+            example: 1
+          },
+          start_time: {
+            type: 'string',
+            pattern: '^([01]?[0-9]|2[0-3]):([0-5][0-9])$',
+            description: '開始時間 (HH:MM 格式)',
+            example: '09:00'
+          },
+          end_time: {
+            type: 'string',
+            pattern: '^([01]?[0-9]|2[0-3]):([0-5][0-9])$',
+            description: '結束時間 (HH:MM 格式)',
+            example: '10:00'
+          },
+          is_active: {
+            type: 'boolean',
+            description: '是否啟用',
+            example: true
+          },
+          created_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '建立時間',
+            example: '2025-08-16T09:00:00Z'
+          },
+          updated_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '更新時間',
+            example: '2025-08-16T09:00:00Z'
+          }
+        }
+      },
+
+      // 時段輸入資料 Schema
+      AvailableSlotInput: {
+        type: 'object',
+        required: ['weekday', 'start_time', 'end_time'],
+        properties: {
+          weekday: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 6,
+            description: '星期幾（0=週日, 1=週一, ..., 6=週六）',
+            example: 1
+          },
+          start_time: {
+            type: 'string',
+            pattern: '^([01]?[0-9]|2[0-3]):([0-5][0-9])$',
+            description: '開始時間 (HH:MM 格式)',
+            example: '09:00'
+          },
+          end_time: {
+            type: 'string',
+            pattern: '^([01]?[0-9]|2[0-3]):([0-5][0-9])$',
+            description: '結束時間 (HH:MM 格式)',
+            example: '10:00'
+          },
+          is_active: {
+            type: 'boolean',
+            description: '是否啟用（預設為 true）',
+            default: true,
+            example: true
+          }
+        }
+      },
+
+      // 取得時段設定回應 Schema
+      GetScheduleResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                example: '取得教師時段設定成功'
+              },
+              data: {
+                type: 'object',
+                properties: {
+                  available_slots: {
+                    type: 'array',
+                    items: {
+                      $ref: '#/components/schemas/AvailableSlot'
+                    },
+                    description: '可預約時段列表'
+                  },
+                  total_slots: {
+                    type: 'integer',
+                    description: '時段總數',
+                    example: 5
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 更新時段設定請求 Schema
+      UpdateScheduleRequest: {
+        type: 'object',
+        required: ['available_slots'],
+        properties: {
+          available_slots: {
+            type: 'array',
+            minItems: 0,
+            maxItems: 50,
+            items: {
+              $ref: '#/components/schemas/AvailableSlotInput'
+            },
+            description: '要設定的可預約時段列表（會完全替換現有設定）'
+          }
+        }
+      },
+
+      // 更新時段設定回應 Schema
+      UpdateScheduleResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                example: '教師時段設定更新成功'
+              },
+              data: {
+                type: 'object',
+                properties: {
+                  available_slots: {
+                    type: 'array',
+                    items: {
+                      $ref: '#/components/schemas/AvailableSlot'
+                    },
+                    description: '更新後的時段列表'
+                  },
+                  updated_count: {
+                    type: 'integer',
+                    description: '更新的時段數量',
+                    example: 2
+                  },
+                  created_count: {
+                    type: 'integer',
+                    description: '新建立的時段數量',
+                    example: 3
+                  },
+                  deleted_count: {
+                    type: 'integer',
+                    description: '刪除的時段數量',
+                    example: 1
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 衝突資訊 Schema
+      ConflictInfo: {
+        type: 'object',
+        properties: {
+          slot_id: {
+            type: 'integer',
+            description: '衝突的時段ID',
+            example: 1
+          },
+          weekday: {
+            type: 'integer',
+            description: '衝突發生的星期',
+            example: 1
+          },
+          start_time: {
+            type: 'string',
+            description: '衝突時段開始時間',
+            example: '09:00'
+          },
+          end_time: {
+            type: 'string',
+            description: '衝突時段結束時間',
+            example: '10:00'
+          },
+          conflict_date: {
+            type: 'string',
+            format: 'date',
+            description: '衝突發生日期',
+            example: '2025-08-18'
+          },
+          reservation_id: {
+            type: 'integer',
+            description: '造成衝突的預約ID',
+            example: 5
+          },
+          student_name: {
+            type: 'string',
+            description: '預約學生姓名',
+            example: '李小華'
+          },
+          course_name: {
+            type: 'string',
+            description: '預約課程名稱',
+            example: '英文會話課程'
+          }
+        }
+      },
+
+      // 檢查衝突回應 Schema
+      CheckConflictsResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                example: '時段衝突檢查完成'
+              },
+              data: {
+                type: 'object',
+                properties: {
+                  has_conflicts: {
+                    type: 'boolean',
+                    description: '是否存在衝突',
+                    example: false
+                  },
+                  conflicts: {
+                    type: 'array',
+                    items: {
+                      $ref: '#/components/schemas/ConflictInfo'
+                    },
+                    description: '衝突詳細資訊列表'
+                  },
+                  total_conflicts: {
+                    type: 'integer',
+                    description: '衝突總數',
+                    example: 0
+                  },
+                  check_period: {
+                    type: 'object',
+                    properties: {
+                      from_date: {
+                        type: 'string',
+                        format: 'date',
+                        description: '檢查起始日期',
+                        example: '2025-08-20'
+                      },
+                      to_date: {
+                        type: 'string',
+                        format: 'date',
+                        description: '檢查結束日期',
+                        example: '2025-09-20'
+                      }
+                    },
+                    description: '檢查的時間範圍'
+                  }
+                }
+              }
+            }
+          }
+        ]
       }
     },
 
@@ -679,6 +1628,45 @@ const swaggerDefinition = {
           'application/json': {
             schema: {
               $ref: '#/components/schemas/ServerErrorResponse'
+            }
+          }
+        }
+      },
+
+      // 學習經歷相關標準回應
+      UnauthorizedError: {
+        description: '未授權 - Token 無效或已過期',
+        content: {
+          'application/json': {
+            schema: {
+              $ref: '#/components/schemas/UnauthorizedErrorResponse'
+            },
+            example: {
+              status: 'error',
+              message: '請先登入',
+              error: {
+                code: 'UNAUTHORIZED',
+                message: 'Token 無效或已過期'
+              }
+            }
+          }
+        }
+      },
+
+      InternalServerError: {
+        description: '系統內部錯誤',
+        content: {
+          'application/json': {
+            schema: {
+              $ref: '#/components/schemas/ServerErrorResponse'
+            },
+            example: {
+              status: 'error',
+              message: '系統錯誤，請稍後再試',
+              error: {
+                code: 'INTERNAL_SERVER_ERROR',
+                message: '系統發生未預期的錯誤'
+              }
             }
           }
         }

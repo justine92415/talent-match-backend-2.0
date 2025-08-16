@@ -1,4 +1,4 @@
-import { dataSource } from '../db/data-source'
+import { dataSource } from '@db/data-source'
 import { DataSource } from 'typeorm'
 
 // 測試資料庫連線

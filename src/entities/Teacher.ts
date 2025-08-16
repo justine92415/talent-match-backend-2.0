@@ -28,7 +28,7 @@ export class Teacher {
 
   /** 申請提交時間 */
   @Column({ type: 'timestamp', nullable: true })
-  application_submitted_at!: Date
+  application_submitted_at?: Date
 
   /** 審核完成時間 */
   @Column({ type: 'timestamp', nullable: true })

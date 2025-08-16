@@ -1,5 +1,5 @@
 import request from 'supertest'
-import app from '../app'
+import app from '@src/app'
 
 describe('Ping API', () => {
   it('GET /api/ping 應回傳 { message: "pong" }', async () => {

@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
-import { dataSource } from '../db/data-source'
-import { User } from '../entities/User'
-import { AccountStatus } from '../entities/enums'
-import { JwtTokenPayload } from '../types/auth.interface'
-import { ResponseFormatter } from '../utils/response-formatter'
+import { dataSource } from '@db/data-source'
+import { User } from '@entities/User'
+import { AccountStatus } from '@entities/enums'
+import { JwtTokenPayload } from '@models/auth.interface'
+import { Errors } from '@utils/errors'
 
 /**
  * JWT Token 認證中間件
@@ -54,15 +54,13 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     const token = authHeader && authHeader.split(' ')[1] // Bearer TOKEN
 
     if (!token) {
-      res.status(401).json(ResponseFormatter.unauthorized('Access token 為必填欄位'))
-      return
+      throw Errors.unauthorizedAccess('Access token 為必填欄位')
     }
 
     // 2. 驗證 JWT Token
     const jwtSecret = process.env.JWT_SECRET
     if (!jwtSecret) {
-      res.status(500).json(ResponseFormatter.serverError('系統配置錯誤'))
-      return
+      throw new Error('系統配置錯誤')
     }
 
     let decoded: JwtTokenPayload
@@ -70,18 +68,15 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
       decoded = jwt.verify(token, jwtSecret) as JwtTokenPayload
     } catch (error: unknown) {
       if (error instanceof Error && error.name === 'TokenExpiredError') {
-        res.status(401).json(ResponseFormatter.unauthorized('Token 已過期'))
-        return
+        throw Errors.tokenExpired('Token 已過期')
       }
 
-      res.status(401).json(ResponseFormatter.unauthorized('Token 無效'))
-      return
+      throw Errors.invalidToken('Token 無效')
     }
 
     // 3. 檢查 token 型別（必須是 access token）
     if (decoded.type !== 'access') {
-      res.status(401).json(ResponseFormatter.unauthorized('Token 型別錯誤'))
-      return
+      throw Errors.invalidToken('Token 型別錯誤')
     }
 
     // 4. 查詢使用者並檢查帳號狀態
@@ -91,14 +86,12 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     })
 
     if (!user) {
-      res.status(401).json(ResponseFormatter.unauthorized('使用者不存在'))
-      return
+      throw Errors.userNotFound('使用者不存在')
     }
 
     // 5. 檢查帳號是否為啟用狀態
     if (user.account_status !== AccountStatus.ACTIVE) {
-      res.status(401).json(ResponseFormatter.unauthorized('帳號狀態異常'))
-      return
+      throw Errors.accountSuspended('帳號狀態異常', 401)
     }
 
     // 6. 將使用者資訊附加到 request 物件
@@ -110,6 +103,6 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
 
     next()
   } catch (error) {
-    res.status(500).json(ResponseFormatter.serverError('認證過程發生錯誤'))
+    next(error) // 傳遞給 errorHandler 中間件處理
   }
 }
