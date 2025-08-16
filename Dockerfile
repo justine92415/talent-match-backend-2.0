@@ -34,4 +34,5 @@ COPY --from=builder /app/dist ./dist
 EXPOSE 8080
 
 # 啟動應用程式
-CMD ["node", "dist/src/bin/www.js"]
+# 使用 tsconfig-paths 啟動應用程式
+CMD ["node", "-r", "tsconfig-paths/register", "dist/src/bin/www.js"]
