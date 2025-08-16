@@ -15,5 +15,5 @@ COPY . .
 # 暴露埠號
 EXPOSE 8080
 
-# 使用 nodemon 來實現熱重載
-CMD ["npx", "nodemon", "--exec", "ts-node", "./src/bin/www.ts"]
+# 使用 nodemon 來實現熱重載，並註冊 tsconfig-paths 支援路徑別名
+CMD ["npx", "nodemon", "--exec", "ts-node", "-r", "tsconfig-paths/register", "./src/bin/www.ts"]
