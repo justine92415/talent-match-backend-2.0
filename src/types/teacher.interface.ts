@@ -37,6 +37,14 @@ export interface TeacherProfileData {
 }
 
 /**
+ * 教師基本資料更新請求介面
+ */
+export interface TeacherProfileUpdateRequest {
+  nationality?: string
+  introduction?: string
+}
+
+/**
  * 工作經驗資料介面
  */
 export interface WorkExperienceData {

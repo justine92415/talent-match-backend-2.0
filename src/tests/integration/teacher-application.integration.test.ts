@@ -466,4 +466,329 @@ describe('教師申請 API 整合測試', () => {
       })
     })
   })
+
+  describe('GET /api/teachers/profile', () => {
+    it('應該成功取得教師基本資料並回傳 200', async () => {
+      // Arrange - 建立已通過審核的教師
+      const approvedTeacher = await TeacherTestHelpers.createTeacherApplication(testUser.id, {
+        nationality: '台灣',
+        introduction: validIntroductions.detailed,
+        application_status: ApplicationStatus.APPROVED,
+        application_reviewed_at: new Date(),
+        reviewer_id: 1
+      })
+
+      // Act
+      const response = await request(app)
+        .get('/api/teachers/profile')
+        .set('Authorization', `Bearer ${authToken}`)
+
+      // Assert
+      expect(response.status).toBe(200)
+      expect(response.body).toMatchObject({
+        status: 'success',
+        message: '取得教師資料成功',
+        data: {
+          teacher: {
+            id: approvedTeacher.id,
+            uuid: expect.any(String),
+            user_id: testUser.id,
+            nationality: '台灣',
+            introduction: validIntroductions.detailed,
+            application_status: ApplicationStatus.APPROVED,
+            application_submitted_at: null,
+            application_reviewed_at: expect.any(String),
+            reviewer_id: 1,
+            review_notes: null,
+            total_students: expect.any(Number),
+            total_courses: expect.any(Number),
+            average_rating: expect.any(String), // Decimal 會序列化為字串
+            total_earnings: expect.any(String), // Decimal 會序列化為字串
+            created_at: expect.any(String),
+            updated_at: expect.any(String)
+          }
+        }
+      })
+    })
+
+    it('應該拒絕未通過審核的教師取得資料並回傳 404', async () => {
+      // Arrange - 建立待審核的教師申請
+      await TeacherTestHelpers.createTeacherApplication(testUser.id, {
+        nationality: '台灣',
+        introduction: validIntroductions.detailed,
+        application_status: ApplicationStatus.PENDING
+      })
+
+      // Act
+      const response = await request(app)
+        .get('/api/teachers/profile')
+        .set('Authorization', `Bearer ${authToken}`)
+
+      // Assert
+      expect(response.status).toBe(404)
+      expect(response.body).toMatchObject({
+        status: 'error',
+        message: '找不到教師資料或尚未通過審核'
+      })
+    })
+
+    it('應該在沒有教師記錄時回傳 404 錯誤', async () => {
+      // Act - 未建立任何教師記錄
+      const response = await request(app)
+        .get('/api/teachers/profile')
+        .set('Authorization', `Bearer ${authToken}`)
+
+      // Assert
+      expect(response.status).toBe(404)
+      expect(response.body).toMatchObject({
+        status: 'error',
+        message: '找不到教師資料或尚未通過審核'
+      })
+    })
+
+    it('應該拒絕未認證的請求並回傳 401 錯誤', async () => {
+      // Act
+      const response = await request(app)
+        .get('/api/teachers/profile')
+
+      // Assert
+      expect(response.status).toBe(401)
+      expect(response.body).toMatchObject({
+        status: 'error',
+        message: 'Access token 為必填欄位'
+      })
+    })
+  })
+
+  describe('PUT /api/teachers/profile', () => {
+    it('應該成功更新教師資料並觸發重新審核', async () => {
+      // Arrange - 建立已通過審核的教師
+      const approvedTeacher = await TeacherTestHelpers.createTeacherApplication(testUser.id, {
+        nationality: '台灣',
+        introduction: validIntroductions.original,
+        application_status: ApplicationStatus.APPROVED,
+        application_reviewed_at: new Date(),
+        reviewer_id: 1
+      })
+
+      const updateData = {
+        nationality: '日本',
+        introduction: validIntroductions.profileUpdate
+      }
+
+      // Act
+      const response = await request(app)
+        .put('/api/teachers/profile')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(updateData)
+
+      // Assert
+      expect(response.status).toBe(200)
+      expect(response.body).toMatchObject({
+        status: 'success',
+        message: '教師資料更新成功',
+        data: {
+          teacher: {
+            id: approvedTeacher.id,
+            nationality: '日本',
+            introduction: validIntroductions.profileUpdate,
+            application_status: ApplicationStatus.PENDING,
+            updated_at: expect.any(String)
+          },
+          notice: '由於修改了重要資料，需要重新審核'
+        }
+      })
+    })
+
+    it('應該支援部分更新教師資料', async () => {
+      // Arrange - 建立已通過審核的教師
+      const approvedTeacher = await TeacherTestHelpers.createTeacherApplication(testUser.id, {
+        nationality: '台灣',
+        introduction: validIntroductions.detailed,
+        application_status: ApplicationStatus.APPROVED,
+        application_reviewed_at: new Date(),
+        reviewer_id: 1
+      })
+
+      const updateData = {
+        nationality: '美國'
+      }
+
+      // Act
+      const response = await request(app)
+        .put('/api/teachers/profile')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(updateData)
+
+      // Assert
+      expect(response.status).toBe(200)
+      expect(response.body).toMatchObject({
+        status: 'success',
+        message: '教師資料更新成功',
+        data: {
+          teacher: {
+            id: approvedTeacher.id,
+            nationality: '美國',
+            introduction: validIntroductions.detailed, // 保持原有介紹
+            application_status: ApplicationStatus.PENDING,
+            updated_at: expect.any(String)
+          }
+        }
+      })
+    })
+
+    it('應該拒絕未通過審核的教師更新資料並回傳 404', async () => {
+      // Arrange - 建立待審核的教師申請
+      await TeacherTestHelpers.createTeacherApplication(testUser.id, {
+        nationality: '台灣',
+        introduction: validIntroductions.detailed,
+        application_status: ApplicationStatus.PENDING
+      })
+
+      const updateData = {
+        nationality: '日本'
+      }
+
+      // Act
+      const response = await request(app)
+        .put('/api/teachers/profile')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(updateData)
+
+      // Assert
+      expect(response.status).toBe(404)
+      expect(response.body).toMatchObject({
+        status: 'error',
+        message: '找不到教師資料或尚未通過審核'
+      })
+    })
+
+    it('應該在沒有教師記錄時回傳 404 錯誤', async () => {
+      // Arrange
+      const updateData = {
+        nationality: '日本'
+      }
+
+      // Act
+      const response = await request(app)
+        .put('/api/teachers/profile')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(updateData)
+
+      // Assert
+      expect(response.status).toBe(404)
+      expect(response.body).toMatchObject({
+        status: 'error',
+        message: '找不到教師資料或尚未通過審核'
+      })
+    })
+
+    it('應該拒絕無效的國籍資料並回傳 400 錯誤', async () => {
+      // Arrange - 建立已通過審核的教師
+      await TeacherTestHelpers.createTeacherApplication(testUser.id, {
+        nationality: '台灣',
+        introduction: validIntroductions.detailed,
+        application_status: ApplicationStatus.APPROVED
+      })
+
+      const invalidData = {
+        nationality: '' // 空白國籍
+      }
+
+      // Act
+      const response = await request(app)
+        .put('/api/teachers/profile')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(invalidData)
+
+      // Assert
+      expect(response.status).toBe(400)
+      expect(response.body).toMatchObject({
+        status: 'error',
+        message: '教師資料更新參數驗證失敗',
+        errors: expect.any(Object)
+      })
+    })
+
+    it('應該拒絕過短的自我介紹並回傳 400 錯誤', async () => {
+      // Arrange - 建立已通過審核的教師
+      await TeacherTestHelpers.createTeacherApplication(testUser.id, {
+        nationality: '台灣',
+        introduction: validIntroductions.detailed,
+        application_status: ApplicationStatus.APPROVED
+      })
+
+      const invalidData = {
+        introduction: '太短了' // 少於100字
+      }
+
+      // Act
+      const response = await request(app)
+        .put('/api/teachers/profile')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(invalidData)
+
+      // Assert
+      expect(response.status).toBe(400)
+      expect(response.body).toMatchObject({
+        status: 'error',
+        message: '教師資料更新參數驗證失敗',
+        errors: {
+          introduction: expect.arrayContaining([
+            "自我介紹至少需要100個字元"
+          ])
+        }
+      })
+    })
+
+    it('應該拒絕過長的自我介紹並回傳 400 錯誤', async () => {
+      // Arrange - 建立已通過審核的教師
+      await TeacherTestHelpers.createTeacherApplication(testUser.id, {
+        nationality: '台灣',
+        introduction: validIntroductions.detailed,
+        application_status: ApplicationStatus.APPROVED
+      })
+
+      const invalidData = {
+        introduction: 'A'.repeat(1001) // 超過1000字
+      }
+
+      // Act
+      const response = await request(app)
+        .put('/api/teachers/profile')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(invalidData)
+
+      // Assert
+      expect(response.status).toBe(400)
+      expect(response.body).toMatchObject({
+        status: 'error',
+        message: '教師資料更新參數驗證失敗',
+        errors: {
+          introduction: expect.arrayContaining([
+            "自我介紹長度不能超過1000個字元"
+          ])
+        }
+      })
+    })
+
+    it('應該拒絕未認證的請求並回傳 401 錯誤', async () => {
+      // Arrange
+      const updateData = {
+        nationality: '日本'
+      }
+
+      // Act
+      const response = await request(app)
+        .put('/api/teachers/profile')
+        .send(updateData)
+
+      // Assert
+      expect(response.status).toBe(401)
+      expect(response.body).toMatchObject({
+        status: 'error',
+        message: 'Access token 為必填欄位'
+      })
+    })
+  })
 })

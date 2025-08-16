@@ -4,6 +4,7 @@
  */
 
 import { UserRole, AccountStatus } from '../../entities/enums'
+import { User } from '../../entities/User'
 
 // 基本有效使用者資料
 export const validUserData = {
@@ -104,7 +105,7 @@ export const invalidUserData = {
 }
 
 // 完整使用者實體資料（用於直接建立資料庫記錄）
-export const createUserEntityData = (overrides: Partial<any> = {}) => ({
+export const createUserEntityData = (overrides: Partial<User> = {}): Partial<User> => ({
   uuid: '550e8400-e29b-41d4-a716-446655440000',
   email: 'test@example.com',
   nick_name: '測試使用者',
@@ -117,7 +118,7 @@ export const createUserEntityData = (overrides: Partial<any> = {}) => ({
 })
 
 // 教師角色使用者資料
-export const teacherUserEntityData = (overrides: Partial<any> = {}) => ({
+export const teacherUserEntityData = (overrides: Partial<User> = {}): Partial<User> => ({
   uuid: '550e8400-e29b-41d4-a716-446655440001',
   email: 'teacher@example.com',
   nick_name: '教師使用者',
@@ -129,7 +130,7 @@ export const teacherUserEntityData = (overrides: Partial<any> = {}) => ({
 })
 
 // 管理員角色使用者資料
-export const adminUserEntityData = (overrides: Partial<any> = {}) => ({
+export const adminUserEntityData = (overrides: Partial<User> = {}): Partial<User> => ({
   uuid: '550e8400-e29b-41d4-a716-446655440002',
   email: 'admin@example.com',
   nick_name: '管理員使用者',
@@ -141,7 +142,7 @@ export const adminUserEntityData = (overrides: Partial<any> = {}) => ({
 })
 
 // 停用狀態使用者資料
-export const suspendedUserEntityData = (overrides: Partial<any> = {}) => ({
+export const suspendedUserEntityData = (overrides: Partial<User> = {}): Partial<User> => ({
   uuid: '550e8400-e29b-41d4-a716-446655440003',
   email: 'suspended@example.com',
   nick_name: '停用使用者',

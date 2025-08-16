@@ -12,7 +12,11 @@ import {
   TEACHER_ERROR_MESSAGES,
   TEACHER_HTTP_STATUS
 } from '../constants/teacher'
-import { TeacherApplicationData, TeacherApplicationUpdateData } from '../types'
+import { 
+  TeacherApplicationData, 
+  TeacherApplicationUpdateData,
+  TeacherProfileUpdateRequest
+} from '../types'
 
 /**
  * 教師申請和管理相關的業務服務類別
@@ -114,13 +118,18 @@ export class TeacherService {
   }
 
   /**
-   * 取得教師申請狀態
+   * 取得教師申請狀態（使用索引最佳化）
    * @param userId 使用者 ID
    * @returns 教師申請記錄
    */
   async getApplication(userId: number): Promise<Teacher> {
     const teacher = await this.teacherRepository.findOne({ 
-      where: { user_id: userId } 
+      where: { user_id: userId },
+      select: [
+        'id', 'uuid', 'user_id', 'nationality', 'introduction',
+        'application_status', 'application_submitted_at', 'application_reviewed_at',
+        'reviewer_id', 'review_notes', 'created_at', 'updated_at'
+      ]
     })
     
     if (!teacher) {
@@ -229,14 +238,16 @@ export class TeacherService {
   }
 
   /**
-  /**
-   * 取得教師基本資料（已審核通過的教師）
+   * 取得教師基本資料（已審核通過的教師，包含統計資料）
    * @param userId 使用者 ID
    * @returns 教師資料
    */
   async getProfile(userId: number): Promise<Teacher> {
     const teacher = await this.teacherRepository.findOne({ 
-      where: { user_id: userId, application_status: ApplicationStatus.APPROVED } 
+      where: { 
+        user_id: userId, 
+        application_status: ApplicationStatus.APPROVED 
+      }
     })
     
     if (!teacher) {
@@ -251,14 +262,22 @@ export class TeacherService {
   }
 
   /**
-   * 更新教師基本資料（已審核通過的教師）
+   * 更新教師基本資料（已審核通過的教師，最佳化查詢）
    * @param userId 使用者 ID
    * @param updateData 更新資料
    * @returns 更新後的教師記錄
    */
-  async updateProfile(userId: number, updateData: { nationality?: string; introduction?: string }): Promise<Teacher> {
+  async updateProfile(userId: number, updateData: TeacherProfileUpdateRequest): Promise<Teacher> {
     const teacher = await this.teacherRepository.findOne({ 
-      where: { user_id: userId, application_status: ApplicationStatus.APPROVED } 
+      where: { 
+        user_id: userId, 
+        application_status: ApplicationStatus.APPROVED 
+      },
+      select: [
+        'id', 'uuid', 'user_id', 'nationality', 'introduction',
+        'application_status', 'application_reviewed_at', 'reviewer_id', 'review_notes',
+        'updated_at'
+      ]
     })
     
     if (!teacher) {

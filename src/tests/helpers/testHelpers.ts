@@ -237,22 +237,12 @@ class TeacherTestHelpers {
    */
   static async createTeacherApplication(userId: number, teacherData: Partial<TestTeacherCreateData> = {}) {
     const teacherRepository = dataSource.getRepository(Teacher)
-    const defaultData = createTeacherEntityData({
+    const teacherEntityData = createTeacherEntityData({
       user_id: userId,
       ...teacherData
     })
     
-    // 修正 null 值問題
-    const sanitizedData = {
-      ...defaultData,
-      application_submitted_at: defaultData.application_submitted_at || undefined,
-      application_reviewed_at: defaultData.application_reviewed_at || undefined,
-      reviewer_id: defaultData.reviewer_id || undefined,
-      review_notes: defaultData.review_notes || undefined
-    }
-    
-    const teacher = teacherRepository.create(sanitizedData)
-    return await teacherRepository.save(teacher)
+    return await teacherRepository.save(teacherEntityData)
   }
 
   /**

@@ -34,10 +34,10 @@ export interface TestTeacherCreateData {
   nationality?: string
   introduction?: string
   application_status?: ApplicationStatus
-  application_submitted_at?: Date | null
-  application_reviewed_at?: Date | null
-  reviewer_id?: number | null
-  review_notes?: string | null
+  application_submitted_at?: Date | undefined
+  application_reviewed_at?: Date | undefined
+  reviewer_id?: number | undefined
+  review_notes?: string | undefined
 }
 
 /**

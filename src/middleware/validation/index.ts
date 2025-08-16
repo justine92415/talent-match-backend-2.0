@@ -21,5 +21,6 @@ export {
 // 教師相關驗證 Schema
 export {
   teacherApplicationSchema,
-  teacherApplicationUpdateSchema
+  teacherApplicationUpdateSchema,
+  teacherProfileUpdateSchema
 } from './teacher'

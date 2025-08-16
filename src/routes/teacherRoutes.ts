@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { TeacherController } from '../controllers/TeacherController'
 import { authenticateToken } from '../middleware/auth'
-import { validateRequest, teacherApplicationSchema, teacherApplicationUpdateSchema } from '../middleware/validation'
+import { validateRequest, teacherApplicationSchema, teacherApplicationUpdateSchema, teacherProfileUpdateSchema } from '../middleware/validation'
 
 /**
  * 教師相關路由
@@ -293,5 +293,168 @@ router.put('/application',
  *         $ref: '#/components/responses/ServerError'
  */
 router.post('/resubmit', authenticateToken, teacherController.resubmitApplication)
+
+/**
+ * @swagger
+ * /teachers/profile:
+ *   get:
+ *     tags: [Teacher Features]
+ *     summary: 取得教師基本資料
+ *     description: |
+ *       取得已通過審核的教師基本資料，包含統計資訊。
+ *       
+ *       **權限要求:**
+ *       - 需要已通過審核的教師身份
+ *       - 未通過審核的申請無法存取此端點
+ *       
+ *       **回應內容包含:**
+ *       - 基本資料（國籍、自我介紹）
+ *       - 申請狀態和審核資訊
+ *       - 統計數據（學生數、課程數、評分、收入）
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 成功取得教師資料
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 message:
+ *                   type: string
+ *                   example: "取得教師資料成功"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     teacher:
+ *                       $ref: '#/components/schemas/TeacherProfileData'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       404:
+ *         description: 找不到教師資料或尚未通過審核
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "error"
+ *                 message:
+ *                   type: string
+ *                   example: "找不到教師資料或尚未通過審核"
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get('/profile', authenticateToken, teacherController.getProfile)
+
+/**
+ * @swagger
+ * /teachers/profile:
+ *   put:
+ *     tags: [Teacher Features]
+ *     summary: 更新教師基本資料
+ *     description: |
+ *       更新已通過審核的教師基本資料。修改重要資料後將觸發重新審核。
+ *       
+ *       **業務規則:**
+ *       - 只有已通過審核的教師可以使用此功能
+ *       - 修改重要資料後申請狀態會變為待審核
+ *       - 審核相關欄位會被清空
+ *       - 支援部分更新（可只更新國籍或自我介紹其中之一）
+ *       
+ *       **驗證規則:**
+ *       - 國籍：1-50字元
+ *       - 自我介紹：100-1000字元
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TeacherProfileUpdateRequest'
+ *           examples:
+ *             updateBoth:
+ *               summary: 更新國籍和自我介紹
+ *               value:
+ *                 nationality: "美國"
+ *                 introduction: "教師資料管理測試專用介紹，這段文字是用於測試教師基本資料更新功能的內容。包含了足夠的長度以通過系統驗證，同時也提供了清楚的識別用途。我是一位專業的教育工作者，致力於提供高品質的教學服務。"
+ *             updateNationalityOnly:
+ *               summary: 只更新國籍
+ *               value:
+ *                 nationality: "日本"
+ *             updateIntroductionOnly:
+ *               summary: 只更新自我介紹
+ *               value:
+ *                 introduction: "更新後的教師自我介紹，內容更加豐富和詳細。我在教育領域有多年經驗，擅長各種教學方法和技巧。希望能在這個平台上貢獻我的專業知識，為學生提供最好的學習體驗和指導。"
+ *     responses:
+ *       200:
+ *         description: 教師資料更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 message:
+ *                   type: string
+ *                   example: "教師資料更新成功"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     teacher:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                           example: 1
+ *                         nationality:
+ *                           type: string
+ *                           example: "美國"
+ *                         introduction:
+ *                           type: string
+ *                           example: "更新後的教師自我介紹..."
+ *                         application_status:
+ *                           type: string
+ *                           example: "PENDING"
+ *                         updated_at:
+ *                           type: string
+ *                           format: date-time
+ *                           example: "2024-01-15T14:30:00.000Z"
+ *                     notice:
+ *                       type: string
+ *                       example: "由於修改了重要資料，需要重新審核"
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       404:
+ *         description: 找不到教師資料或尚未通過審核
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "error"
+ *                 message:
+ *                   type: string
+ *                   example: "找不到教師資料或尚未通過審核"
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.put('/profile', 
+  authenticateToken, 
+  validateRequest(teacherProfileUpdateSchema, '教師資料更新參數驗證失敗'), 
+  teacherController.updateProfile
+)
 
 export default router
