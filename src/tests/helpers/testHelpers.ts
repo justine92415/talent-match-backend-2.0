@@ -6,35 +6,17 @@
 
 import request from 'supertest'
 import jwt from 'jsonwebtoken'
-import { dataSource } from '../../db/data-source'
-import { User } from '../../entities/User'
-import { Teacher } from '../../entities/Teacher'
-import { UserRole, AccountStatus, ApplicationStatus } from '../../entities/enums'
-import { 
-  validUserData, 
-  createUserEntityData, 
-  teacherUserEntityData, 
-  suspendedUserEntityData 
-} from '../fixtures/userFixtures'
-import {
-  createTeacherEntityData,
-  jwtTestUsers
-} from '../fixtures/teacherFixtures'
-import ConfigManager from '../../config'
-import app from '../../app'
-import { 
-  TestUserCreateData, 
-  TestTeacherCreateData,
-  TestUserWithToken,
-  TestUserVariations,
-  TestTeacherApplicationVariations,
-  TestTeacherEnvironment,
-  HttpMethod,
-  TestRequestData,
-  TestValidationStructure,
-  DatabaseQueryCondition,
-  TestFunction
-} from '../../types'
+import { dataSource } from '@db/data-source'
+import { User } from '@entities/User'
+import { Teacher } from '@entities/Teacher'
+import { TeacherWorkExperience } from '@entities/TeacherWorkExperience'
+import { UserRole, AccountStatus, ApplicationStatus } from '@entities/enums'
+import { validUserData, createUserEntityData, teacherUserEntityData, suspendedUserEntityData } from '../fixtures/userFixtures'
+import { createTeacherEntityData } from '../fixtures/teacherFixtures'
+import { validWorkExperienceData, createWorkExperienceEntityData } from '../fixtures/workExperienceFixtures'
+import ConfigManager from '@config/index'
+import app from '@src/app'
+import { TestUserCreateData, TestTeacherCreateData, TestRequestData, TestValidationStructure, DatabaseQueryCondition, TestFunction } from '@src/types'
 
 /**
  * 使用者相關測試 Helper 函式
@@ -46,9 +28,7 @@ class UserTestHelpers {
    * @returns 註冊回應
    */
   static async registerUser(userData = validUserData) {
-    return await request(app)
-      .post('/api/auth/register')
-      .send(userData)
+    return await request(app).post('/api/auth/register').send(userData)
   }
 
   /**
@@ -57,9 +37,7 @@ class UserTestHelpers {
    * @returns 登入回應（包含 access_token）
    */
   static async loginUser(loginData: { email: string; password: string }) {
-    return await request(app)
-      .post('/api/auth/login')
-      .send(loginData)
+    return await request(app).post('/api/auth/login').send(loginData)
   }
 
   /**
@@ -70,7 +48,7 @@ class UserTestHelpers {
   static async registerAndLogin(userData = validUserData) {
     // 先註冊
     await this.registerUser(userData)
-    
+
     // 再登入
     return await this.loginUser({
       email: userData.email,
@@ -121,14 +99,10 @@ class UserTestHelpers {
    * @param expiresIn 過期時間
    * @returns JWT Token
    */
-  static generateAuthToken(
-    user: { id: number; role: UserRole; uuid: string },
-    tokenType: 'access' | 'refresh' = 'access',
-    expiresIn: string = '1h'
-  ): string {
+  static generateAuthToken(user: { id: number; role: UserRole; uuid: string }, tokenType: 'access' | 'refresh' = 'access', expiresIn: string = '1h'): string {
     return jwt.sign(
-      { 
-        userId: user.id, 
+      {
+        userId: user.id,
         role: user.role,
         uuid: user.uuid,
         type: tokenType
@@ -145,8 +119,8 @@ class UserTestHelpers {
    */
   static generateExpiredToken(user: { id: number; role: UserRole; uuid: string }): string {
     return jwt.sign(
-      { 
-        userId: user.id, 
+      {
+        userId: user.id,
         role: user.role,
         uuid: user.uuid,
         type: 'access'
@@ -164,7 +138,7 @@ class UserTestHelpers {
   static async createTestUserWithToken(userData: Partial<TestUserCreateData> = {}) {
     const user = await this.createUserEntity(userData)
     const authToken = this.generateAuthToken(user)
-    
+
     return {
       user,
       authToken
@@ -213,8 +187,8 @@ class UserTestHelpers {
    * @param expiresAt 過期時間
    */
   static async setPasswordResetToken(
-    userId: number, 
-    resetToken: string, 
+    userId: number,
+    resetToken: string,
     expiresAt: Date = new Date(Date.now() + 60 * 60 * 1000) // 1小時後過期
   ) {
     const userRepository = dataSource.getRepository(User)
@@ -241,7 +215,7 @@ class TeacherTestHelpers {
       user_id: userId,
       ...teacherData
     })
-    
+
     return await teacherRepository.save(teacherEntityData)
   }
 
@@ -284,12 +258,7 @@ class TeacherTestHelpers {
    * @param reviewNotes 審核備註
    * @param reviewerId 審核者 ID
    */
-  static async updateApplicationStatus(
-    teacherId: number,
-    status: ApplicationStatus,
-    reviewNotes?: string,
-    reviewerId?: number
-  ) {
+  static async updateApplicationStatus(teacherId: number, status: ApplicationStatus, reviewNotes?: string, reviewerId?: number) {
     const teacherRepository = dataSource.getRepository(Teacher)
     await teacherRepository.update(teacherId, {
       application_status: status,
@@ -317,10 +286,7 @@ class TeacherTestHelpers {
    * @param teacherData 教師申請資料覆寫
    * @returns 使用者、教師申請記錄和認證 Token
    */
-  static async createCompleteTeacherTestEnv(
-    userData: Partial<TestUserCreateData> = {},
-    teacherData: Partial<TestTeacherCreateData> = {}
-  ) {
+  static async createCompleteTeacherTestEnv(userData: Partial<TestUserCreateData> = {}, teacherData: Partial<TestTeacherCreateData> = {}) {
     const user = await UserTestHelpers.createUserEntity(userData)
     const teacher = await this.createTeacherApplication(user.id, teacherData)
     const authToken = UserTestHelpers.generateAuthToken(user)
@@ -330,6 +296,105 @@ class TeacherTestHelpers {
       teacher,
       authToken
     }
+  }
+}
+
+/**
+ * 工作經驗相關測試 Helper 函式
+ */
+class WorkExperienceTestHelpers {
+  /**
+   * 建立工作經驗記錄
+   * @param teacherId 教師 ID
+   * @param workExperienceData 工作經驗資料覆寫
+   * @returns 建立的工作經驗記錄
+   */
+  static async createTestWorkExperience(teacherId: number, workExperienceData: Partial<TeacherWorkExperience> = {}) {
+    const workExperienceRepository = dataSource.getRepository(TeacherWorkExperience)
+    const workExperienceEntityData = createWorkExperienceEntityData(teacherId, workExperienceData)
+
+    return await workExperienceRepository.save(workExperienceEntityData)
+  }
+
+  /**
+   * 建立多個工作經驗記錄（用於列表測試）
+   * @param teacherId 教師 ID
+   * @param count 建立數量
+   * @returns 建立的工作經驗記錄陣列
+   */
+  static async createMultipleWorkExperiences(teacherId: number, count: number = 3) {
+    const experiences = []
+
+    for (let i = 0; i < count; i++) {
+      const experience = await this.createTestWorkExperience(teacherId, {
+        company_name: `測試公司${i + 1}`,
+        job_title: `測試職位${i + 1}`,
+        is_working: i === 0 // 第一個設為在職
+      })
+      experiences.push(experience)
+    }
+
+    return experiences
+  }
+
+  /**
+   * 建立不同類型的工作經驗記錄（用於複雜查詢測試）
+   * @param teacherId 教師 ID
+   * @returns 不同類型的工作經驗記錄
+   */
+  static async createWorkExperienceVariations(teacherId: number) {
+    const current = await this.createTestWorkExperience(teacherId, validWorkExperienceData.currentJob)
+    const past = await this.createTestWorkExperience(teacherId, validWorkExperienceData.pastJob)
+    const education = await this.createTestWorkExperience(teacherId, validWorkExperienceData.educationJob)
+
+    return { current, past, education }
+  }
+
+  /**
+   * 建立完整的教師工作經驗測試環境
+   * @param userData 使用者資料覆寫
+   * @param teacherData 教師申請資料覆寫
+   * @param workExperienceData 工作經驗資料覆寫
+   * @returns 使用者、教師、工作經驗記錄和認證 Token
+   */
+  static async createCompleteWorkExperienceTestEnv(
+    userData: Partial<TestUserCreateData> = {},
+    teacherData: Partial<TestTeacherCreateData> = {},
+    workExperienceData: Partial<TeacherWorkExperience> = {}
+  ) {
+    const user = await UserTestHelpers.createUserEntity(userData)
+    const teacher = await TeacherTestHelpers.createTeacherApplication(user.id, teacherData)
+    const workExperience = await this.createTestWorkExperience(teacher.id, workExperienceData)
+    const authToken = UserTestHelpers.generateAuthToken(user)
+
+    return {
+      user,
+      teacher,
+      workExperience,
+      authToken
+    }
+  }
+
+  /**
+   * 清理指定教師的所有工作經驗記錄
+   * @param teacherId 教師 ID
+   */
+  static async cleanupWorkExperiences(teacherId: number) {
+    const workExperienceRepository = dataSource.getRepository(TeacherWorkExperience)
+    await workExperienceRepository.delete({ teacher_id: teacherId })
+  }
+
+  /**
+   * 取得教師的工作經驗記錄
+   * @param teacherId 教師 ID
+   * @returns 工作經驗記錄陣列
+   */
+  static async getWorkExperiencesByTeacherId(teacherId: number) {
+    const workExperienceRepository = dataSource.getRepository(TeacherWorkExperience)
+    return await workExperienceRepository.find({
+      where: { teacher_id: teacherId },
+      order: { created_at: 'DESC' }
+    })
   }
 }
 
@@ -345,18 +410,13 @@ class RequestTestHelpers {
    * @param data 請求資料
    * @returns 請求回應
    */
-  static async sendAuthenticatedRequest(
-    method: 'get' | 'post' | 'put' | 'delete',
-    url: string,
-    authToken: string,
-    data?: TestRequestData
-  ) {
+  static async sendAuthenticatedRequest(method: 'get' | 'post' | 'put' | 'delete', url: string, authToken: string, data?: TestRequestData) {
     const req = request(app)[method](url).set('Authorization', `Bearer ${authToken}`)
-    
+
     if (data && (method === 'post' || method === 'put')) {
       req.send(data)
     }
-    
+
     return req
   }
 
@@ -367,17 +427,13 @@ class RequestTestHelpers {
    * @param data 請求資料
    * @returns 401 錯誤回應
    */
-  static async testUnauthenticatedRequest(
-    method: 'get' | 'post' | 'put' | 'delete',
-    url: string,
-    data?: TestRequestData
-  ) {
+  static async testUnauthenticatedRequest(method: 'get' | 'post' | 'put' | 'delete', url: string, data?: TestRequestData) {
     const req = request(app)[method](url)
-    
+
     if (data && (method === 'post' || method === 'put')) {
       req.send(data)
     }
-    
+
     return req.expect(401)
   }
 
@@ -388,17 +444,13 @@ class RequestTestHelpers {
    * @param data 請求資料
    * @returns 401 錯誤回應
    */
-  static async testInvalidTokenRequest(
-    method: 'get' | 'post' | 'put' | 'delete',
-    url: string,
-    data?: TestRequestData
-  ) {
+  static async testInvalidTokenRequest(method: 'get' | 'post' | 'put' | 'delete', url: string, data?: TestRequestData) {
     const req = request(app)[method](url).set('Authorization', 'Bearer invalid-token')
-    
+
     if (data && (method === 'post' || method === 'put')) {
       req.send(data)
     }
-    
+
     return req.expect(401)
   }
 }
@@ -437,7 +489,7 @@ class ValidationTestHelpers {
    * @param condition 查詢條件
    */
   static async expectNoDatabaseRecord(
-    repository: { findOne: (condition: DatabaseQueryCondition) => Promise<unknown | null> }, 
+    repository: { findOne: (condition: DatabaseQueryCondition) => Promise<unknown | null> },
     condition: DatabaseQueryCondition
   ) {
     const record = await repository.findOne(condition)
@@ -450,11 +502,7 @@ class ValidationTestHelpers {
    * @param expectedMessage 預期錯誤訊息（部分匹配）
    */
   static expectErrorMessage(errorArray: string[], expectedMessage: string) {
-    expect(errorArray).toEqual(
-      expect.arrayContaining([
-        expect.stringContaining(expectedMessage)
-      ])
-    )
+    expect(errorArray).toEqual(expect.arrayContaining([expect.stringContaining(expectedMessage)]))
   }
 }
 
@@ -467,10 +515,7 @@ class PerformanceTestHelpers {
    * @param apiCall API 呼叫函式
    * @param maxResponseTime 最大允許回應時間（毫秒）
    */
-  static async measureResponseTime(
-    apiCall: () => Promise<request.Response>,
-    maxResponseTime: number = 1000
-  ) {
+  static async measureResponseTime(apiCall: () => Promise<request.Response>, maxResponseTime: number = 1000) {
     const startTime = Date.now()
     const response = await apiCall()
     const responseTime = Date.now() - startTime
@@ -484,36 +529,34 @@ class PerformanceTestHelpers {
    * @param testFunctions 測試函式陣列
    * @param maxConcurrent 最大平行執行數
    */
-  static async runConcurrentTests(
-    testFunctions: TestFunction[],
-    maxConcurrent: number = 5
-  ) {
+  static async runConcurrentTests(testFunctions: TestFunction[], maxConcurrent: number = 5) {
     const results = []
-    
+
     for (let i = 0; i < testFunctions.length; i += maxConcurrent) {
       const batch = testFunctions.slice(i, i + maxConcurrent)
       const batchResults = await Promise.all(batch.map(fn => fn()))
       results.push(...batchResults)
     }
-    
+
     return results
   }
 }
 
 // 匯出所有 Helper 類別
-export {
-  UserTestHelpers,
-  TeacherTestHelpers,
-  RequestTestHelpers,
-  ValidationTestHelpers,
-  PerformanceTestHelpers
-}
+export { UserTestHelpers, TeacherTestHelpers, WorkExperienceTestHelpers, RequestTestHelpers, ValidationTestHelpers, PerformanceTestHelpers }
 
 // 預設匯出常用 Helper 函式
 export default {
   UserTestHelpers,
   TeacherTestHelpers,
+  WorkExperienceTestHelpers,
   RequestTestHelpers,
   ValidationTestHelpers,
   PerformanceTestHelpers
 }
+
+// 匯出常用函式別名（向下相容）
+export const createTestUser = UserTestHelpers.createUserEntity
+export const createTestTeacher = TeacherTestHelpers.createTeacherApplication
+export const createTestWorkExperience = WorkExperienceTestHelpers.createTestWorkExperience
+export const generateAuthToken = UserTestHelpers.generateAuthToken

@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { authController } from '../controllers/AuthController'
-import { authenticateToken } from '../middleware/auth'
+import { authController } from '@controllers/AuthController'
+import { authenticateToken } from '@middleware/auth'
 import { 
   validateRequest,
   registerSchema,
@@ -9,8 +9,8 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
   updateProfileSchema
-} from '../middleware/validation'
-import { ERROR_MESSAGES } from '../config/constants'
+} from '@middleware/validation'
+import { ERROR_MESSAGES } from '@config/constants'
 
 const router = Router()
 

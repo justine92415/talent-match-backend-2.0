@@ -1,9 +1,5 @@
-import { Request, Response, NextFunction } from 'express'
 import Joi from 'joi'
-import { USER_CONFIG, PASSWORD_CONFIG, VALIDATION_MESSAGES, ERROR_MESSAGES } from '../../config/constants'
-import { ValidationError } from '../../types'
-import { ResponseFormatter } from '../../utils/response-formatter'
-import { formatJoiErrors } from './common'
+import { USER_CONFIG, PASSWORD_CONFIG, VALIDATION_MESSAGES, ERROR_MESSAGES } from '@config/constants'
 
 /**
  * 登入請求驗證 Schema

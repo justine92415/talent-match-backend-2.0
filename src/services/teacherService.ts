@@ -15,7 +15,9 @@ import {
 import { 
   TeacherApplicationData, 
   TeacherApplicationUpdateData,
-  TeacherProfileUpdateRequest
+  TeacherProfileUpdateRequest,
+  CreateWorkExperienceRequest,
+  UpdateWorkExperienceRequest
 } from '@models/index'
 
 /**
@@ -303,5 +305,241 @@ export class TeacherService {
     teacher.review_notes = undefined
 
     return await this.teacherRepository.save(teacher)
+  }
+
+  /**
+   * 驗證使用者是否為教師並取得教師記錄
+   * @private
+   * @param userId 使用者 ID
+   * @returns 教師記錄
+   */
+  private async validateTeacherUser(userId: number): Promise<Teacher> {
+    // 檢查使用者是否存在且為教師角色
+    const user = await this.userRepository.findOne({ 
+      where: { 
+        id: userId, 
+        role: UserRole.TEACHER,
+        account_status: AccountStatus.ACTIVE
+      } 
+    })
+    
+    if (!user) {
+      throw new BusinessError(
+        TEACHER_ERROR_CODES.ROLE_FORBIDDEN,
+        TEACHER_ERROR_MESSAGES.ROLE_FORBIDDEN,
+        TEACHER_HTTP_STATUS.ROLE_FORBIDDEN
+      )
+    }
+
+    // 取得教師記錄
+    const teacher = await this.teacherRepository.findOne({ where: { user_id: userId } })
+    if (!teacher) {
+      throw new BusinessError(
+        TEACHER_ERROR_CODES.TEACHER_NOT_FOUND,
+        TEACHER_ERROR_MESSAGES.TEACHER_NOT_FOUND,
+        TEACHER_HTTP_STATUS.TEACHER_NOT_FOUND
+      )
+    }
+
+    return teacher
+  }
+
+  /**
+   * 取得教師的工作經驗列表
+   * @param userId 使用者 ID
+   * @returns 工作經驗列表
+   */
+  async getWorkExperiences(userId: number): Promise<TeacherWorkExperience[]> {
+    const teacher = await this.validateTeacherUser(userId)
+    
+    return await this.workExperienceRepository.find({
+      where: { teacher_id: teacher.id },
+      order: { created_at: 'DESC' }
+    })
+  }
+
+  /**
+   * 建立工作經驗記錄
+   * @param userId 使用者 ID
+   * @param workExperienceData 工作經驗資料
+   * @returns 建立的工作經驗記錄
+   */
+  async createWorkExperience(userId: number, workExperienceData: CreateWorkExperienceRequest): Promise<TeacherWorkExperience> {
+    const teacher = await this.validateTeacherUser(userId)
+    
+    // 基本資料驗證
+    this.validateWorkExperienceData(workExperienceData)
+    
+    const result = await this.workExperienceRepository.insert({
+      teacher_id: teacher.id,
+      ...workExperienceData
+    })
+    
+    const workExperienceId = result.identifiers[0].id
+    const savedWorkExperience = await this.workExperienceRepository.findOne({
+      where: { id: workExperienceId }
+    })
+    
+    if (!savedWorkExperience) {
+      throw new BusinessError(
+        TEACHER_ERROR_CODES.WORK_EXPERIENCE_NOT_FOUND,
+        '建立工作經驗失敗',
+        500
+      )
+    }
+    
+    return savedWorkExperience
+  }
+
+  /**
+   * 更新工作經驗記錄
+   * @param userId 使用者 ID
+   * @param workExperienceId 工作經驗 ID
+   * @param updateData 更新資料
+   * @returns 更新後的工作經驗記錄
+   */
+  async updateWorkExperience(userId: number, workExperienceId: number, updateData: UpdateWorkExperienceRequest): Promise<TeacherWorkExperience> {
+    const teacher = await this.validateTeacherUser(userId)
+    
+    // 先檢查工作經驗是否存在
+    const workExperience = await this.workExperienceRepository.findOne({
+      where: { id: workExperienceId }
+    })
+    
+    if (!workExperience) {
+      throw new BusinessError(
+        TEACHER_ERROR_CODES.WORK_EXPERIENCE_NOT_FOUND,
+        TEACHER_ERROR_MESSAGES.WORK_EXPERIENCE_NOT_FOUND,
+        TEACHER_HTTP_STATUS.WORK_EXPERIENCE_NOT_FOUND
+      )
+    }
+    
+    // 檢查是否屬於該教師
+    if (workExperience.teacher_id !== teacher.id) {
+      throw new BusinessError(
+        TEACHER_ERROR_CODES.ROLE_FORBIDDEN,
+        TEACHER_ERROR_MESSAGES.ROLE_FORBIDDEN,
+        TEACHER_HTTP_STATUS.ROLE_FORBIDDEN
+      )
+    }
+
+    // 合併資料並驗證
+    const mergedData = { ...workExperience, ...updateData }
+    this.validateWorkExperienceData(mergedData)
+    
+    // 更新欄位
+    Object.assign(workExperience, updateData)
+    
+    return await this.workExperienceRepository.save(workExperience)
+  }
+
+  /**
+   * 刪除工作經驗記錄
+   * @param userId 使用者 ID
+   * @param workExperienceId 工作經驗 ID
+   */
+  async deleteWorkExperience(userId: number, workExperienceId: number): Promise<void> {
+    const teacher = await this.validateTeacherUser(userId)
+    
+    // 先檢查工作經驗是否存在
+    const workExperience = await this.workExperienceRepository.findOne({
+      where: { id: workExperienceId }
+    })
+    
+    if (!workExperience) {
+      throw new BusinessError(
+        TEACHER_ERROR_CODES.WORK_EXPERIENCE_NOT_FOUND,
+        TEACHER_ERROR_MESSAGES.WORK_EXPERIENCE_NOT_FOUND,
+        TEACHER_HTTP_STATUS.WORK_EXPERIENCE_NOT_FOUND
+      )
+    }
+    
+    // 檢查是否屬於該教師
+    if (workExperience.teacher_id !== teacher.id) {
+      throw new BusinessError(
+        TEACHER_ERROR_CODES.ROLE_FORBIDDEN,
+        TEACHER_ERROR_MESSAGES.ROLE_FORBIDDEN,
+        TEACHER_HTTP_STATUS.ROLE_FORBIDDEN
+      )
+    }
+    
+    await this.workExperienceRepository.remove(workExperience)
+  }
+
+  /**
+   * 驗證工作經驗資料
+   * @private
+   * @param data 工作經驗資料
+   */
+  private validateWorkExperienceData(data: CreateWorkExperienceRequest | UpdateWorkExperienceRequest): void {
+    // 基本必填欄位檢查
+    if (!data.company_name?.trim()) {
+      throw new BusinessError('VALIDATION_ERROR', '公司名稱為必填欄位', 400)
+    }
+    if (!data.workplace?.trim()) {
+      throw new BusinessError('VALIDATION_ERROR', '工作地點為必填欄位', 400)
+    }
+    if (!data.job_category?.trim()) {
+      throw new BusinessError('VALIDATION_ERROR', '工作類別為必填欄位', 400)
+    }
+    if (!data.job_title?.trim()) {
+      throw new BusinessError('VALIDATION_ERROR', '職位名稱為必填欄位', 400)
+    }
+
+    // 字串長度檢查
+    if (data.company_name?.length > 200) {
+      throw new BusinessError('VALIDATION_ERROR', '公司名稱不得超過200字元', 400)
+    }
+    if (data.workplace?.length > 200) {
+      throw new BusinessError('VALIDATION_ERROR', '工作地點不得超過200字元', 400)
+    }
+    if (data.job_category?.length > 100) {
+      throw new BusinessError('VALIDATION_ERROR', '工作類別不得超過100字元', 400)
+    }
+    if (data.job_title?.length > 100) {
+      throw new BusinessError('VALIDATION_ERROR', '職位名稱不得超過100字元', 400)
+    }
+
+    // 日期驗證
+    const currentYear = new Date().getFullYear()
+    
+    if (data.start_year !== undefined && (data.start_year < 1900 || data.start_year > currentYear + 1)) {
+      throw new BusinessError('VALIDATION_ERROR', '開始年份必須在1900到明年之間', 400)
+    }
+    if (data.start_month !== undefined && (data.start_month < 1 || data.start_month > 12)) {
+      throw new BusinessError('VALIDATION_ERROR', '開始月份必須在1到12之間', 400)
+    }
+
+    // 業務邏輯驗證
+    if (data.is_working !== undefined) {
+      if (data.is_working) {
+        // 在職工作不能有結束日期
+        if (data.end_year || data.end_month) {
+          throw new BusinessError('VALIDATION_ERROR', '在職工作經驗不可填寫結束日期', 400)
+        }
+      } else {
+        // 離職工作必須有結束日期
+        if (!data.end_year || !data.end_month) {
+          throw new BusinessError('VALIDATION_ERROR', '離職工作經驗必須填寫結束日期', 400)
+        }
+        
+        if (data.end_year && (data.end_year < 1900 || data.end_year > currentYear + 1)) {
+          throw new BusinessError('VALIDATION_ERROR', '結束年份必須在1900到明年之間', 400)
+        }
+        if (data.end_month && (data.end_month < 1 || data.end_month > 12)) {
+          throw new BusinessError('VALIDATION_ERROR', '結束月份必須在1到12之間', 400)
+        }
+        
+        // 結束日期不得早於開始日期
+        if (data.start_year && data.start_month && data.end_year && data.end_month) {
+          const startDate = new Date(data.start_year, data.start_month - 1)
+          const endDate = new Date(data.end_year, data.end_month - 1)
+          
+          if (endDate < startDate) {
+            throw new BusinessError('VALIDATION_ERROR', '結束日期不得早於開始日期', 400)
+          }
+        }
+      }
+    }
   }
 }

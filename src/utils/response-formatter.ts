@@ -17,7 +17,11 @@ interface EnhancedApiSuccessResponse<T> {
 
 interface EnhancedApiErrorResponse {
   status: 'error'
-  message: string
+  message?: string
+  error?: {
+    code: string
+    message: string
+  }
   errors?: Record<string, string[]>
   meta?: {
     timestamp: string
@@ -109,7 +113,11 @@ export class ResponseFormatter {
   ): EnhancedApiErrorResponse {
     return {
       status: 'error',
-      message,
+      message, // 添加根層級的 message
+      error: {
+        code: 'VALIDATION_ERROR',
+        message
+      },
       errors,
       meta: this.generateMeta()
     }
@@ -121,7 +129,11 @@ export class ResponseFormatter {
   static unauthorized(message = '請先登入'): EnhancedApiErrorResponse {
     return {
       status: 'error',
-      message,
+      message, // 添加根層級的 message
+      error: {
+        code: 'UNAUTHORIZED',
+        message
+      },
       meta: this.generateMeta()
     }
   }
@@ -132,7 +144,11 @@ export class ResponseFormatter {
   static forbidden(message = '權限不足，無法執行此操作'): EnhancedApiErrorResponse {
     return {
       status: 'error',
-      message,
+      message, // 添加根層級的 message
+      error: {
+        code: 'FORBIDDEN',
+        message
+      },
       meta: this.generateMeta()
     }
   }
@@ -143,7 +159,11 @@ export class ResponseFormatter {
   static notFound(message = '找不到指定的資源'): EnhancedApiErrorResponse {
     return {
       status: 'error',
-      message,
+      message, // 添加根層級的 message
+      error: {
+        code: 'NOT_FOUND',
+        message
+      },
       meta: this.generateMeta()
     }
   }

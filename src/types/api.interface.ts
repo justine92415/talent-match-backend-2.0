@@ -26,6 +26,13 @@ export interface ApiErrorResponse {
 }
 
 /**
+ * 帶有詳細錯誤的 API 錯誤回應介面
+ */
+export interface ApiErrorResponseWithDetails extends ApiErrorResponse {
+  errors?: ErrorDetails | unknown[]
+}
+
+/**
  * API 回應聯合型別
  */
 export type ApiResponse<T = unknown> = ApiSuccessResponse<T> | ApiErrorResponse

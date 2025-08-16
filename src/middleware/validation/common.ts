@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import Joi from 'joi'
-import { ResponseFormatter } from '../../utils/response-formatter'
+import { ResponseFormatter } from '@utils/response-formatter'
 
 /**
  * 請求資料型別

@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import { BusinessError, UserError, ValidationError } from '../core/errors/BusinessError';
-import { ERROR_MESSAGES } from '../config/constants';
-import { ResponseFormatter } from '../utils/response-formatter';
-import getLogger from '../utils/logger';
+import { BusinessError, UserError, ValidationError } from '@core/errors/BusinessError';
+import { ERROR_MESSAGES } from '@config/constants';
+import { TEACHER_ERROR_MESSAGES } from '@constants/teacher';
+import { ResponseFormatter } from '@utils/response-formatter';
+import { ApiErrorResponseWithDetails } from '@models/index';
+import getLogger from '@utils/logger';
 
 const logger = getLogger('ErrorHandler');
 
@@ -15,6 +17,29 @@ interface ErrorObject {
   name?: string
   statusCode?: number
   details?: Record<string, unknown>
+}
+
+/**
+ * 將業務錯誤代碼映射到標準 HTTP 錯誤代碼
+ */
+function mapErrorCode(businessCode: string): string {
+  switch (businessCode) {
+    case 'ROLE_FORBIDDEN':
+      return 'FORBIDDEN'
+    case 'WORK_EXPERIENCE_NOT_FOUND':
+    case 'LEARNING_EXPERIENCE_NOT_FOUND':
+    case 'CERTIFICATE_NOT_FOUND':
+    case 'APPLICATION_NOT_FOUND':
+    case 'TEACHER_NOT_FOUND':
+    case 'USER_NOT_FOUND':
+      return 'NOT_FOUND'
+    case 'DUPLICATE_APPLICATION':
+      return 'CONFLICT'
+    case 'ACCOUNT_INACTIVE':
+      return 'UNAUTHORIZED'
+    default:
+      return businessCode // 保留原始代碼
+  }
 }
 
 /**
@@ -44,12 +69,25 @@ export const errorHandler = (
 
   // 處理業務邏輯錯誤
   if (error instanceof BusinessError) {
-    const errorResponse = ResponseFormatter.businessError(getErrorMessage(error));
+    const errorResponse = {
+      status: 'error' as const,
+      message: getErrorMessage(error), // 添加根層級的 message
+      error: {
+        code: mapErrorCode(error.code),
+        message: getErrorMessage(error)
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId: Math.random().toString(36).substring(2, 15),
+        version: '2.0.0'
+      }
+    };
+    
     // 添加詳細錯誤資訊
     if (error instanceof ValidationError) {
-      errorResponse.errors = error.errors;
+      (errorResponse as ApiErrorResponseWithDetails).errors = error.errors;
     } else {
-      errorResponse.errors = formatBusinessError(error);
+      (errorResponse as ApiErrorResponseWithDetails).errors = formatBusinessError(error);
     }
     
     res.status(error.statusCode).json(errorResponse);
@@ -81,6 +119,12 @@ export const errorHandler = (
  * 根據錯誤類型獲取適當的錯誤訊息
  */
 function getErrorMessage(error: BusinessError): string {
+  // 先檢查教師相關錯誤訊息
+  if (error.code in TEACHER_ERROR_MESSAGES) {
+    return TEACHER_ERROR_MESSAGES[error.code as keyof typeof TEACHER_ERROR_MESSAGES];
+  }
+  
+  // 處理使用者相關錯誤
   if (error instanceof UserError) {
     switch (error.code) {
       case 'EMAIL_EXISTS':
@@ -92,6 +136,7 @@ function getErrorMessage(error: BusinessError): string {
         return error.message; // 直接返回原始錯誤訊息
     }
   }
+  
   return error.message;
 }
 

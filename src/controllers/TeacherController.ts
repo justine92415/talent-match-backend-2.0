@@ -173,4 +173,59 @@ export class TeacherController {
       notice: '由於修改了重要資料，需要重新審核'
     }, '教師資料更新成功'))
   })
+
+  /**
+   * 取得工作經驗列表
+   */
+  getWorkExperiences = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.userId
+    
+    const workExperiences = await this.teacherService.getWorkExperiences(userId)
+    
+    res.status(200).json(ResponseFormatter.success({
+      work_experiences: workExperiences,
+      total: workExperiences.length
+    }, '取得工作經驗列表成功'))
+  })
+
+  /**
+   * 建立工作經驗
+   */
+  createWorkExperience = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.userId
+    const workExperienceData = req.body
+    
+    const workExperience = await this.teacherService.createWorkExperience(userId, workExperienceData)
+    
+    res.status(201).json(ResponseFormatter.created({
+      work_experience: workExperience
+    }, '工作經驗已新增'))
+  })
+
+  /**
+   * 更新工作經驗
+   */
+  updateWorkExperience = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.userId
+    const workExperienceId = parseInt(req.params.id)
+    const updateData = req.body
+    
+    const workExperience = await this.teacherService.updateWorkExperience(userId, workExperienceId, updateData)
+    
+    res.status(200).json(ResponseFormatter.success({
+      work_experience: workExperience
+    }, '工作經驗已更新'))
+  })
+
+  /**
+   * 刪除工作經驗
+   */
+  deleteWorkExperience = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.userId
+    const workExperienceId = parseInt(req.params.id)
+    
+    await this.teacherService.deleteWorkExperience(userId, workExperienceId)
+    
+    res.status(200).json(ResponseFormatter.success(null, '工作經驗已刪除'))
+  })
 }

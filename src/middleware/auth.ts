@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
-import { dataSource } from '../db/data-source'
-import { User } from '../entities/User'
-import { AccountStatus } from '../entities/enums'
-import { JwtTokenPayload } from '../types/auth.interface'
-import { ResponseFormatter } from '../utils/response-formatter'
+import { dataSource } from '@db/data-source'
+import { User } from '@entities/User'
+import { AccountStatus } from '@entities/enums'
+import { JwtTokenPayload } from '@models/auth.interface'
+import { ResponseFormatter } from '@utils/response-formatter'
 
 /**
  * JWT Token 認證中間件

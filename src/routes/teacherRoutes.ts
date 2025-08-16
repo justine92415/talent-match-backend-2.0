@@ -1,7 +1,7 @@
 import { Router } from 'express'
-import { TeacherController } from '../controllers/TeacherController'
-import { authenticateToken } from '../middleware/auth'
-import { validateRequest, teacherApplicationSchema, teacherApplicationUpdateSchema, teacherProfileUpdateSchema } from '../middleware/validation'
+import { TeacherController } from '@controllers/TeacherController'
+import { authenticateToken } from '@middleware/auth'
+import { validateRequest, teacherApplicationSchema, teacherApplicationUpdateSchema, teacherProfileUpdateSchema } from '@middleware/validation'
 
 /**
  * 教師相關路由
@@ -456,5 +456,194 @@ router.put('/profile',
   validateRequest(teacherProfileUpdateSchema, '教師資料更新參數驗證失敗'), 
   teacherController.updateProfile
 )
+
+/**
+ * @swagger
+ * /teachers/work-experiences:
+ *   get:
+ *     tags: [Teacher Features]
+ *     summary: 取得工作經驗列表
+ *     description: |
+ *       取得當前教師的所有工作經驗記錄列表。
+ *       
+ *       **權限要求:**
+ *       - 需要教師身份
+ *       - 只能查看自己的工作經驗
+ *       
+ *       **回應內容:**
+ *       - 按建立時間降序排列
+ *       - 包含完整的工作經驗資訊
+ *       - 提供總筆數資訊
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 成功取得工作經驗列表
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 message:
+ *                   type: string
+ *                   example: "取得工作經驗列表成功"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     work_experiences:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/WorkExperience'
+ *                     total:
+ *                       type: integer
+ *                       example: 3
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ *   post:
+ *     tags: [Teacher Features]
+ *     summary: 新增工作經驗
+ *     description: |
+ *       新增一筆工作經驗記錄。
+ *       
+ *       **業務規則:**
+ *       - 需要教師身份
+ *       - 在職工作經驗不可填寫結束日期
+ *       - 離職工作經驗必須填寫結束日期
+ *       - 結束日期不得早於開始日期
+ *       - 年份範圍：1900-當前年份+1
+ *       - 月份範圍：1-12
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/WorkExperienceCreateRequest'
+ *     responses:
+ *       201:
+ *         description: 工作經驗建立成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/WorkExperienceCreateResponse'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get('/work-experiences', authenticateToken, teacherController.getWorkExperiences)
+router.post('/work-experiences', authenticateToken, teacherController.createWorkExperience)
+
+/**
+ * @swagger
+ * /teachers/work-experiences/{id}:
+ *   put:
+ *     tags: [Teacher Features]
+ *     summary: 更新工作經驗
+ *     description: |
+ *       更新指定的工作經驗記錄。
+ *       
+ *       **權限要求:**
+ *       - 需要教師身份
+ *       - 只能更新自己的工作經驗
+ *       
+ *       **業務規則:**
+ *       - 支援部分更新（可只更新部分欄位）
+ *       - 在職工作經驗不可填寫結束日期
+ *       - 離職工作經驗必須填寫結束日期
+ *       - 結束日期不得早於開始日期
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 工作經驗記錄 ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/WorkExperienceUpdateRequest'
+ *     responses:
+ *       200:
+ *         description: 工作經驗更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/WorkExperienceUpdateResponse'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ *   delete:
+ *     tags: [Teacher Features]
+ *     summary: 刪除工作經驗
+ *     description: |
+ *       刪除指定的工作經驗記錄。
+ *       
+ *       **權限要求:**
+ *       - 需要教師身份
+ *       - 只能刪除自己的工作經驗
+ *       
+ *       **注意事項:**
+ *       - 刪除操作無法復原
+ *       - 建議在前端提供確認對話框
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 工作經驗記錄 ID
+ *     responses:
+ *       200:
+ *         description: 工作經驗刪除成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 message:
+ *                   type: string
+ *                   example: "工作經驗刪除成功"
+ *                 data:
+ *                   type: object
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.put('/work-experiences/:id', authenticateToken, teacherController.updateWorkExperience)
+router.delete('/work-experiences/:id', authenticateToken, teacherController.deleteWorkExperience)
 
 export default router
