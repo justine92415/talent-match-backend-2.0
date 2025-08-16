@@ -484,6 +484,9 @@ describe('教師時間管理 API', () => {
         console.log('🔍 DEBUG: 開始衝突檢測測試')
         console.log('  - 測試環境時區:', Intl.DateTimeFormat().resolvedOptions().timeZone)
         console.log('  - 當前時間:', new Date().toISOString())
+        console.log('  - 當前本地時間:', new Date().toString())
+        console.log('  - UTC 偏移量:', new Date().getTimezoneOffset(), '分鐘')
+        console.log('  - 環境變數 TZ:', process.env.TZ || 'undefined')
         
         // 建立時段
         const slot = teacherAvailableSlotRepo.create({
@@ -504,18 +507,25 @@ describe('教師時間管理 API', () => {
         })
 
         // 建立衝突的預約
-        // 2025-08-18 是星期一
-        // 要測試與 09:00-10:00 時段的衝突，無論在什麼時區都要確保時間真正落在 09:00-10:00 範圍內
-        // 使用明確的台北時間 2025-08-18 09:30，轉換為 UTC 時間是 2025-08-18 01:30
-        const reservationTime = new Date('2025-08-18T09:30:00+08:00')  // 明確指定台北時區
+        // 2025-08-18 是星期一，時段是 09:00-10:00
+        // 為了確保在任何時區環境都能正確檢測衝突，我們需要建立一個真正在 09:00-10:00 範圍內的預約
+        // CI 環境按 UTC 時區處理，所以我們直接使用 UTC 時間 09:30
+        const reservationTime = new Date('2025-08-18T09:30:00.000Z')  // UTC 09:30，在 09:00-10:00 範圍內
         
         console.log('🔍 DEBUG: 衝突測試詳細資訊')
         console.log('  - 教師時段: 週一 09:00-10:00')
         console.log('  - 預約時間 (UTC):', reservationTime.toISOString())
         console.log('  - 預約時間 (本地):', reservationTime.toString())
         console.log('  - 預約時間戳:', reservationTime.getTime())
-        console.log('  - 時區偏移:', reservationTime.getTimezoneOffset())
-        console.log('  - 預約時間應該對應 UTC:', new Date('2025-08-18T01:30:00.000Z').toISOString())
+        console.log('  - 預約日期資訊:')
+        console.log('    * getUTCDay():', reservationTime.getUTCDay(), '(0=週日, 1=週一, 2=週二...)')
+        console.log('    * getDay():', reservationTime.getDay(), '(本地時區)')
+        console.log('    * getUTCHours():', reservationTime.getUTCHours())
+        console.log('    * getHours():', reservationTime.getHours(), '(本地時區)')
+        console.log('    * getUTCMinutes():', reservationTime.getUTCMinutes())
+        console.log('    * getMinutes():', reservationTime.getMinutes(), '(本地時區)')
+        console.log('  - 時區偏移:', reservationTime.getTimezoneOffset(), '分鐘')
+        console.log('  - 預期結果: 應該與時段 09:00-10:00 產生衝突')
         
         const conflictReservation = await createTestReservation({
           teacher_id: teacherId,
@@ -525,7 +535,12 @@ describe('教師時間管理 API', () => {
         })
         
         console.log('  - 建立的預約 ID:', conflictReservation.id)
-        console.log('  - 預約記錄中的時間:', conflictReservation.reserve_time)
+        console.log('  - 預約記錄中的時間 (UTC):', conflictReservation.reserve_time.toISOString())
+        console.log('  - 預約記錄中的時間 (本地):', conflictReservation.reserve_time.toString())
+        console.log('  - 預約記錄時間資訊:')
+        console.log('    * reserve_time.getUTCDay():', conflictReservation.reserve_time.getUTCDay())
+        console.log('    * reserve_time.getUTCHours():', conflictReservation.reserve_time.getUTCHours())
+        console.log('    * reserve_time.getUTCMinutes():', conflictReservation.reserve_time.getUTCMinutes())
 
         const response = await request(app)
           .get('/api/teachers/schedule/conflicts')
@@ -549,20 +564,29 @@ describe('教師時間管理 API', () => {
             response.body.data.conflicts.forEach((conflict: any, index: number) => {
               console.log(`  - 衝突 ${index + 1}:`, {
                 slot_id: conflict.slot_id,
-                weekday: conflict.weekday,
-                start_time: conflict.start_time,
-                end_time: conflict.end_time,
-                reservation_time: conflict.reservation_time
+                reservation_id: conflict.reservation_id,
+                reserve_time: conflict.reserve_time,
+                student_id: conflict.student_id,
+                reason: conflict.reason
               })
             })
+          } else {
+            console.log('  ❌ 沒有檢測到衝突！這表示時區處理可能還有問題')
+            console.log('  📊 詳細分析:')
+            console.log('    * 預約時間 UTC 週幾:', reservationTime.getUTCDay())
+            console.log('    * 時段設定週幾:', savedSlot.weekday)
+            console.log('    * 預約 UTC 小時:', reservationTime.getUTCHours())
+            console.log('    * 時段開始時間:', savedSlot.start_time)
+            console.log('    * 時段結束時間:', savedSlot.end_time)
           }
         }
 
         expect(response.status).toBe(200)
+        expect(response.body.status).toBe('success')
         expect(response.body.data.has_conflicts).toBe(true)
-        expect(response.body.data.conflicts).toHaveLength(1)
         expect(response.body.data.total_conflicts).toBe(1)
-
+        expect(response.body.data.conflicts).toHaveLength(1)
+        
         const conflict = response.body.data.conflicts[0]
         expect(conflict.slot_id).toBe(savedSlot.id)
         expect(conflict.reservation_id).toBe(conflictReservation.id)

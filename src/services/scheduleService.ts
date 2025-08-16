@@ -321,9 +321,10 @@ export class ScheduleService {
 
     for (const reservation of reservations) {
       const reserveTime = new Date(reservation.reserve_time)
-      const reserveWeekday = reserveTime.getDay()
-      const reserveHour = reserveTime.getHours()
-      const reserveMinute = reserveTime.getMinutes()
+      // 使用 UTC 時間進行衝突檢測，確保時區一致性
+      const reserveWeekday = reserveTime.getUTCDay()
+      const reserveHour = reserveTime.getUTCHours()
+      const reserveMinute = reserveTime.getUTCMinutes()
       const reserveTimeStr = `${reserveHour.toString().padStart(2, '0')}:${reserveMinute.toString().padStart(2, '0')}`
 
       // 找到可能衝突的時段
