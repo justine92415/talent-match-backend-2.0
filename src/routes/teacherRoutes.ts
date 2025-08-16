@@ -299,6 +299,114 @@ router.post('/resubmit', authenticateToken, teacherController.resubmitApplicatio
 
 /**
  * @swagger
+ * /teachers/submit:
+ *   post:
+ *     tags: [Teacher Features]
+ *     summary: 最終提交教師申請
+ *     description: |
+ *       提交完整的教師申請，系統會驗證所有必填資料完整性。
+ *
+ *       **前置驗證條件:**
+ *       - 必須有教師基本申請記錄（國籍、自我介紹）
+ *       - 至少一筆工作經驗記錄
+ *       - 至少一筆學習經歷記錄（含檔案）
+ *       - 至少一張證書記錄（含檔案）
+ *       - 申請尚未提交過
+ *
+ *       **業務規則:**
+ *       - 提交後申請狀態設為待審核
+ *       - 記錄提交時間
+ *       - 已提交的申請無法重複提交
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             example: {}
+ *     responses:
+ *       200:
+ *         description: 申請提交成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 message:
+ *                   type: string
+ *                   example: "教師申請已提交，等待審核"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     teacher:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                           example: 1
+ *                         uuid:
+ *                           type: string
+ *                           format: uuid
+ *                           example: "550e8400-e29b-41d4-a716-446655440000"
+ *                         application_status:
+ *                           type: string
+ *                           example: "PENDING"
+ *                         application_submitted_at:
+ *                           type: string
+ *                           format: date-time
+ *                           example: "2025-08-17T10:00:00.000Z"
+ *                         created_at:
+ *                           type: string
+ *                           format: date-time
+ *                           example: "2025-08-16T09:00:00.000Z"
+ *                         updated_at:
+ *                           type: string
+ *                           format: date-time
+ *                           example: "2025-08-17T10:00:00.000Z"
+ *       400:
+ *         description: 申請資料不完整或已經提交
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "error"
+ *                 message:
+ *                   type: string
+ *                   examples:
+ *                     incomplete:
+ *                       value: "申請資料不完整，至少需要一筆工作經驗"
+ *                     alreadySubmitted:
+ *                       value: "申請已經提交，無法重複提交"
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       404:
+ *         description: 找不到教師申請記錄
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "error"
+ *                 message:
+ *                   type: string
+ *                   example: "找不到教師申請記錄"
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/submit', authenticateToken, teacherController.submit)
+
+/**
+ * @swagger
  * /teachers/profile:
  *   get:
  *     tags: [Teacher Features]

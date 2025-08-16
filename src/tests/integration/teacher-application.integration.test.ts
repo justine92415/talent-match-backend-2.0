@@ -5,6 +5,9 @@ import { initTestDatabase, clearDatabase } from '@tests/helpers/database'
 import { dataSource } from '@db/data-source'
 import { User } from '@entities/User'
 import { Teacher } from '@entities/Teacher'
+import { TeacherWorkExperience } from '@entities/TeacherWorkExperience'
+import { TeacherLearningExperience } from '@entities/TeacherLearningExperience'
+import { TeacherCertificate } from '@entities/TeacherCertificate'
 import { ApplicationStatus } from '@entities/enums'
 import { ERROR_MESSAGES } from '@constants/errorMessages'
 
@@ -669,6 +672,271 @@ describe('教師申請 API 整合測試', () => {
       expect(response.body).toMatchObject({
         status: 'error',
         message: 'Access token 為必填欄位'
+      })
+    })
+  })
+
+  describe('POST /api/teachers/submit', () => {
+    it('應該成功提交完整申請並回傳 200 狀態', async () => {
+      // Arrange - 建立基本申請
+      const teacher = await TeacherTestHelpers.createTeacherApplication(testUser.id, {
+        nationality: '台灣',
+        introduction: validIntroductions.basic,
+        application_status: ApplicationStatus.PENDING
+      })
+
+      // 建立完整的必填資料
+      await connection.getRepository(TeacherWorkExperience).save({
+        teacher_id: teacher.id,
+        is_working: true,
+        company_name: '測試公司',
+        workplace: '台北市',
+        job_category: '軟體開發',
+        job_title: '資深工程師',
+        start_year: 2020,
+        start_month: 1
+      })
+
+      await connection.getRepository(TeacherLearningExperience).save({
+        teacher_id: teacher.id,
+        is_in_school: false,
+        degree: '學士',
+        school_name: '台灣大學',
+        department: '資訊工程學系',
+        region: true,
+        start_year: 2016,
+        start_month: 9,
+        end_year: 2020,
+        end_month: 6,
+        file_path: '/uploads/certificates/test-file.pdf'
+      })
+
+      await connection.getRepository(TeacherCertificate).save({
+        teacher_id: teacher.id,
+        verifying_institution: '教育部',
+        license_name: '教師證',
+        holder_name: '測試教師',
+        license_number: 'TC123456',
+        category_id: 'EDUCATION',
+        subject: '資訊教學',
+        file_path: '/uploads/certificates/test-cert.pdf'
+      })
+
+      // Act
+      const response = await request(app)
+        .post('/api/teachers/submit')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({})
+
+      // Assert
+      expect(response.status).toBe(200)
+      expect(response.body).toMatchObject({
+        status: 'success',
+        message: '教師申請已提交，等待審核',
+        data: {
+          teacher: {
+            id: expect.any(Number),
+            uuid: expect.any(String),
+            application_status: ApplicationStatus.PENDING,
+            application_submitted_at: expect.any(String),
+            created_at: expect.any(String),
+            updated_at: expect.any(String)
+          }
+        }
+      })
+
+      // 驗證資料庫狀態更新
+      const updatedTeacher = await connection.getRepository(Teacher).findOne({ where: { id: teacher.id } })
+      expect(updatedTeacher?.application_submitted_at).toBeTruthy()
+    })
+
+    it('應該拒絕沒有申請記錄的提交並回傳 404 錯誤', async () => {
+      // Act
+      const response = await request(app)
+        .post('/api/teachers/submit')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({})
+
+      // Assert
+      expect(response.status).toBe(404)
+      expect(response.body).toMatchObject({
+        status: 'error',
+        message: '找不到教師申請記錄'
+      })
+    })
+
+    it('應該拒絕缺少工作經驗的提交並回傳 400 錯誤', async () => {
+      // Arrange - 只建立基本申請，沒有工作經驗
+      await TeacherTestHelpers.createTeacherApplication(testUser.id, {
+        nationality: '台灣',
+        introduction: validIntroductions.basic,
+        application_status: ApplicationStatus.PENDING
+      })
+
+      // Act
+      const response = await request(app)
+        .post('/api/teachers/submit')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({})
+
+      // Assert
+      expect(response.status).toBe(400)
+      expect(response.body).toMatchObject({
+        status: 'error',
+        message: '申請資料不完整，至少需要一筆工作經驗'
+      })
+    })
+
+    it('應該拒絕缺少學習經歷的提交並回傳 400 錯誤', async () => {
+      // Arrange - 建立申請和工作經驗，但沒有學習經歷
+      const teacher = await TeacherTestHelpers.createTeacherApplication(testUser.id, {
+        nationality: '台灣',
+        introduction: validIntroductions.basic,
+        application_status: ApplicationStatus.PENDING
+      })
+
+      await connection.getRepository(TeacherWorkExperience).save({
+        teacher_id: teacher.id,
+        is_working: true,
+        company_name: '測試公司',
+        workplace: '台北市',
+        job_category: '軟體開發',
+        job_title: '資深工程師',
+        start_year: 2020,
+        start_month: 1
+      })
+
+      // Act
+      const response = await request(app)
+        .post('/api/teachers/submit')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({})
+
+      // Assert
+      expect(response.status).toBe(400)
+      expect(response.body).toMatchObject({
+        status: 'error',
+        message: '申請資料不完整，至少需要一筆學習經歷（含檔案）'
+      })
+    })
+
+    it('應該拒絕缺少證書的提交並回傳 400 錯誤', async () => {
+      // Arrange - 建立申請、工作經驗和學習經歷，但沒有證書
+      const teacher = await TeacherTestHelpers.createTeacherApplication(testUser.id, {
+        nationality: '台灣',
+        introduction: validIntroductions.basic,
+        application_status: ApplicationStatus.PENDING
+      })
+
+      await connection.getRepository(TeacherWorkExperience).save({
+        teacher_id: teacher.id,
+        is_working: true,
+        company_name: '測試公司',
+        workplace: '台北市',
+        job_category: '軟體開發',
+        job_title: '資深工程師',
+        start_year: 2020,
+        start_month: 1
+      })
+
+      await connection.getRepository(TeacherLearningExperience).save({
+        teacher_id: teacher.id,
+        is_in_school: false,
+        degree: '學士',
+        school_name: '台灣大學',
+        department: '資訊工程學系',
+        region: true,
+        start_year: 2016,
+        start_month: 9,
+        end_year: 2020,
+        end_month: 6,
+        file_path: '/uploads/certificates/test-file.pdf'
+      })
+
+      // Act
+      const response = await request(app)
+        .post('/api/teachers/submit')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({})
+
+      // Assert
+      expect(response.status).toBe(400)
+      expect(response.body).toMatchObject({
+        status: 'error',
+        message: '申請資料不完整，至少需要一張證書（含檔案）'
+      })
+    })
+
+    it('應該拒絕未認證的請求並回傳 401 錯誤', async () => {
+      // Act
+      const response = await request(app)
+        .post('/api/teachers/submit')
+        .send({})
+
+      // Assert
+      expect(response.status).toBe(401)
+      expect(response.body).toMatchObject({
+        status: 'error',
+        message: 'Access token 為必填欄位'
+      })
+    })
+
+    it('應該拒絕已提交的申請重複提交並回傳 400 錯誤', async () => {
+      // Arrange - 建立已提交的完整申請
+      const teacher = await TeacherTestHelpers.createTeacherApplication(testUser.id, {
+        nationality: '台灣',
+        introduction: validIntroductions.basic,
+        application_status: ApplicationStatus.PENDING,
+        application_submitted_at: new Date()
+      })
+
+      await connection.getRepository(TeacherWorkExperience).save({
+        teacher_id: teacher.id,
+        is_working: true,
+        company_name: '測試公司',
+        workplace: '台北市',
+        job_category: '軟體開發',
+        job_title: '資深工程師',
+        start_year: 2020,
+        start_month: 1
+      })
+
+      await connection.getRepository(TeacherLearningExperience).save({
+        teacher_id: teacher.id,
+        is_in_school: false,
+        degree: '學士',
+        school_name: '台灣大學',
+        department: '資訊工程學系',
+        region: true,
+        start_year: 2016,
+        start_month: 9,
+        end_year: 2020,
+        end_month: 6,
+        file_path: '/uploads/certificates/test-file.pdf'
+      })
+
+      await connection.getRepository(TeacherCertificate).save({
+        teacher_id: teacher.id,
+        verifying_institution: '教育部',
+        license_name: '教師證',
+        holder_name: '測試教師',
+        license_number: 'TC123456',
+        category_id: 'EDUCATION',
+        subject: '資訊教學',
+        file_path: '/uploads/certificates/test-cert.pdf'
+      })
+
+      // Act
+      const response = await request(app)
+        .post('/api/teachers/submit')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({})
+
+      // Assert
+      expect(response.status).toBe(400)
+      expect(response.body).toMatchObject({
+        status: 'error',
+        message: '申請已經提交，無法重複提交'
       })
     })
   })

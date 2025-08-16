@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm'
+import { Repository, Not, IsNull } from 'typeorm'
 import { dataSource } from '@db/data-source'
 import { Teacher } from '@entities/Teacher'
 import { User } from '@entities/User'
@@ -463,6 +463,74 @@ export class TeacherService {
           }
         }
       }
+    }
+  }
+
+  /**
+   * 最終提交教師申請
+   * 驗證所有必填資料完整性並更新申請狀態
+   * @param userId 使用者 ID
+   * @returns 提交後的教師記錄
+   */
+  async submitApplication(userId: number): Promise<Teacher> {
+    // 檢查申請是否存在
+    const teacher = await this.teacherRepository.findOne({ 
+      where: { user_id: userId } 
+    })
+    
+    if (!teacher) {
+      throw Errors.applicationNotFound()
+    }
+
+    // 檢查是否已經提交過
+    if (teacher.application_submitted_at) {
+      throw Errors.validationFailed('申請已經提交，無法重複提交')
+    }
+
+    // 驗證資料完整性
+    await this.validateApplicationCompleteness(teacher.id)
+
+    // 更新申請狀態
+    teacher.application_status = ApplicationStatus.PENDING
+    teacher.application_submitted_at = new Date()
+
+    return await this.teacherRepository.save(teacher)
+  }
+
+  /**
+   * 驗證申請資料完整性
+   * @private
+   * @param teacherId 教師 ID
+   */
+  private async validateApplicationCompleteness(teacherId: number): Promise<void> {
+    // 檢查工作經驗
+    const workExperienceCount = await this.workExperienceRepository.count({
+      where: { teacher_id: teacherId }
+    })
+    if (workExperienceCount === 0) {
+      throw Errors.validationFailed('申請資料不完整，至少需要一筆工作經驗')
+    }
+
+    // 檢查學習經歷（含檔案）
+    const learningExperienceCount = await this.learningExperienceRepository.count({
+      where: { 
+        teacher_id: teacherId,
+        file_path: Not(IsNull())
+      }
+    })
+    if (learningExperienceCount === 0) {
+      throw Errors.validationFailed('申請資料不完整，至少需要一筆學習經歷（含檔案）')
+    }
+
+    // 檢查證書（含檔案）
+    const certificateCount = await this.certificateRepository.count({
+      where: { 
+        teacher_id: teacherId,
+        file_path: Not(IsNull())
+      }
+    })
+    if (certificateCount === 0) {
+      throw Errors.validationFailed('申請資料不完整，至少需要一張證書（含檔案）')
     }
   }
 }

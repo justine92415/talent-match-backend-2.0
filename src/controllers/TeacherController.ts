@@ -227,4 +227,24 @@ export class TeacherController {
     
     res.status(200).json(handleSuccess(null, '工作經驗已刪除'))
   })
+
+  /**
+   * 最終提交教師申請
+   */
+  submit = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.userId
+    
+    const teacher = await this.teacherService.submitApplication(userId)
+    
+    res.status(200).json(handleSuccess({
+      teacher: {
+        id: teacher.id,
+        uuid: teacher.uuid,
+        application_status: teacher.application_status,
+        application_submitted_at: teacher.application_submitted_at,
+        created_at: teacher.created_at,
+        updated_at: teacher.updated_at
+      }
+    }, '教師申請已提交，等待審核'))
+  })
 }
