@@ -22,5 +22,7 @@ export {
 export {
   teacherApplicationSchema,
   teacherApplicationUpdateSchema,
-  teacherProfileUpdateSchema
+  teacherProfileUpdateSchema,
+  learningExperienceCreateSchema,
+  learningExperienceUpdateSchema
 } from './teacher'

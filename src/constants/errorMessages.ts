@@ -60,6 +60,21 @@ export const ERROR_MESSAGES = {
     WORKING_END_DATE_NOT_ALLOWED: '在職工作經驗不可填寫結束日期',
     NON_WORKING_END_DATE_REQUIRED: '離職工作經驗必須填寫結束日期',
 
+    // 學習經歷驗證
+    INSTITUTION_REQUIRED: '教育機構為必填欄位',
+    INSTITUTION_EMPTY: '教育機構不能為空',
+    DEGREE_REQUIRED: '學位為必填欄位',
+    DEGREE_EMPTY: '學位不能為空',
+    FIELD_OF_STUDY_REQUIRED: '專業領域為必填欄位',
+    FIELD_OF_STUDY_EMPTY: '專業領域不能為空',
+    START_YEAR_REQUIRED: '開始年份為必填欄位',
+    START_YEAR_INVALID: '開始年份格式不正確',
+    END_YEAR_REQUIRED: '結束年份為必填欄位',
+    END_YEAR_INVALID: '結束年份格式不正確',
+    LEARNING_END_YEAR_BEFORE_START_YEAR: '結束年份不得早於開始年份',
+    LEARNING_YEAR_RANGE_INVALID: '學習年份範圍不合理',
+    LEARNING_GRADUATED_NO_END_DATE: '已畢業的學習經歷必須提供結束日期',
+
     // 一般驗證
     FIELD_REQUIRED: (field: string) => `${field}為必填欄位`,
     FIELD_INVALID_TYPE: (field: string, type: string) => `${field}必須為${type}格式`,
@@ -74,9 +89,13 @@ export const ERROR_MESSAGES = {
     APPLICATION_NOT_FOUND: '找不到申請記錄',
     WORK_EXPERIENCE_NOT_FOUND: '找不到工作經驗記錄',
     WORK_EXPERIENCE_RECORD_NOT_FOUND: '工作經驗記錄不存在',
+    LEARNING_EXPERIENCE_NOT_FOUND: '找不到學習經歷記錄',
+    LEARNING_EXPERIENCE_RECORD_NOT_FOUND: '學習經歷記錄不存在',
     UNAUTHORIZED_ACCESS: '您沒有權限執行此操作',
     UNAUTHORIZED_WORK_EXPERIENCE_ACCESS: '無權存取此工作經驗記錄',
     UNAUTHORIZED_WORK_EXPERIENCE_DELETE: '無權刪除此工作經驗記錄',
+    UNAUTHORIZED_LEARNING_EXPERIENCE_ACCESS: '無權存取此學習經歷記錄',
+    UNAUTHORIZED_LEARNING_EXPERIENCE_DELETE: '無權刪除此學習經歷記錄',
     TEACHER_PERMISSION_REQUIRED: '需要教師權限才能執行此操作',
     STUDENT_ONLY_APPLY_TEACHER: '只有學生可以申請成為教師',
     ACCOUNT_STATUS_INVALID: '帳號狀態異常',
@@ -113,6 +132,11 @@ export const ERROR_MESSAGES = {
     WORK_EXPERIENCE_CREATED: '工作經驗已新增',
     WORK_EXPERIENCE_UPDATED: '工作經驗已更新',
     WORK_EXPERIENCE_DELETED: '工作經驗已刪除',
+    // 學習經歷相關成功訊息
+    LEARNING_EXPERIENCE_LIST_SUCCESS: '取得學習經歷列表成功',
+    LEARNING_EXPERIENCE_CREATED: '學習經歷已新增',
+    LEARNING_EXPERIENCE_UPDATED: '學習經歷已更新',
+    LEARNING_EXPERIENCE_DELETED: '學習經歷已刪除',
   }
 } as const
 

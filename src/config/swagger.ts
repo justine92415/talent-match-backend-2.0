@@ -588,6 +588,383 @@ const swaggerDefinition = {
             }
           }
         ]
+      },
+
+      // ==================== 學習經歷管理相關 Schema ====================
+
+      // 學習經歷實體 Schema
+      LearningExperience: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '學習經歷 ID',
+            example: 1
+          },
+          teacher_id: {
+            type: 'integer',
+            description: '教師 ID',
+            example: 5
+          },
+          is_in_school: {
+            type: 'boolean',
+            description: '是否還在學',
+            example: false
+          },
+          degree: {
+            type: 'string',
+            maxLength: 50,
+            description: '學位',
+            example: '碩士'
+          },
+          school_name: {
+            type: 'string',
+            maxLength: 100,
+            description: '學校名稱',
+            example: '國立台灣大學'
+          },
+          department: {
+            type: 'string',
+            maxLength: 100,
+            description: '科系',
+            example: '資訊工程學系'
+          },
+          region: {
+            type: 'boolean',
+            description: '是否為台灣地區學校',
+            example: true
+          },
+          start_year: {
+            type: 'integer',
+            minimum: 1950,
+            description: '開始年份',
+            example: 2018
+          },
+          start_month: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 12,
+            description: '開始月份',
+            example: 9
+          },
+          end_year: {
+            type: 'integer',
+            minimum: 1950,
+            nullable: true,
+            description: '結束年份（在學中為 null）',
+            example: 2020
+          },
+          end_month: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 12,
+            nullable: true,
+            description: '結束月份（在學中為 null）',
+            example: 6
+          },
+          file_path: {
+            type: 'string',
+            nullable: true,
+            description: '證書檔案路徑（TODO: 檔案上傳功能開發中）',
+            example: null
+          },
+          created_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '建立時間'
+          },
+          updated_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '更新時間'
+          }
+        }
+      },
+
+      // 建立學習經歷請求 Schema
+      CreateLearningExperienceRequest: {
+        type: 'object',
+        required: ['is_in_school', 'degree', 'school_name', 'department', 'region', 'start_year', 'start_month'],
+        properties: {
+          is_in_school: {
+            type: 'boolean',
+            description: '是否還在學（在學中則不需填寫結束日期）',
+            example: false
+          },
+          degree: {
+            type: 'string',
+            maxLength: 50,
+            minLength: 1,
+            description: '學位（例：學士、碩士、博士、高中、國中等）',
+            example: '學士'
+          },
+          school_name: {
+            type: 'string',
+            maxLength: 100,
+            minLength: 1,
+            description: '學校名稱',
+            example: '國立台灣大學'
+          },
+          department: {
+            type: 'string',
+            maxLength: 100,
+            minLength: 1,
+            description: '科系或學院名稱',
+            example: '資訊工程學系'
+          },
+          region: {
+            type: 'boolean',
+            description: '是否為台灣地區學校（true: 台灣, false: 海外）',
+            example: true
+          },
+          start_year: {
+            type: 'integer',
+            minimum: 1950,
+            description: '開始年份',
+            example: 2018
+          },
+          start_month: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 12,
+            description: '開始月份',
+            example: 9
+          },
+          end_year: {
+            type: 'integer',
+            minimum: 1950,
+            nullable: true,
+            description: '結束年份（在學中請設為 null）',
+            example: 2022
+          },
+          end_month: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 12,
+            nullable: true,
+            description: '結束月份（在學中請設為 null）',
+            example: 6
+          }
+        }
+      },
+
+      // 更新學習經歷請求 Schema
+      UpdateLearningExperienceRequest: {
+        type: 'object',
+        properties: {
+          is_in_school: {
+            type: 'boolean',
+            description: '是否還在學',
+            example: true
+          },
+          degree: {
+            type: 'string',
+            maxLength: 50,
+            minLength: 1,
+            description: '學位',
+            example: '碩士'
+          },
+          school_name: {
+            type: 'string',
+            maxLength: 100,
+            minLength: 1,
+            description: '學校名稱',
+            example: '國立台灣大學'
+          },
+          department: {
+            type: 'string',
+            maxLength: 100,
+            minLength: 1,
+            description: '科系或學院名稱',
+            example: '資訊工程學系研究所'
+          },
+          region: {
+            type: 'boolean',
+            description: '是否為台灣地區學校',
+            example: true
+          },
+          start_year: {
+            type: 'integer',
+            minimum: 1950,
+            description: '開始年份',
+            example: 2022
+          },
+          start_month: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 12,
+            description: '開始月份',
+            example: 9
+          },
+          end_year: {
+            type: 'integer',
+            minimum: 1950,
+            nullable: true,
+            description: '結束年份（在學中請設為 null）',
+            example: null
+          },
+          end_month: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 12,
+            nullable: true,
+            description: '結束月份（在學中請設為 null）',
+            example: null
+          }
+        }
+      },
+
+      // 學習經歷清單回應 Schema
+      LearningExperienceListResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                example: '取得學習經歷列表成功'
+              },
+              data: {
+                type: 'object',
+                properties: {
+                  learning_experiences: {
+                    type: 'array',
+                    items: {
+                      $ref: '#/components/schemas/LearningExperience'
+                    },
+                    description: '學習經歷清單（依開始年份降序排列）'
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 單一學習經歷回應 Schema
+      LearningExperienceResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              data: {
+                type: 'object',
+                properties: {
+                  learning_experience: {
+                    $ref: '#/components/schemas/LearningExperience'
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 學習經歷建立成功回應 Schema
+      LearningExperienceCreateResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/CreatedResponse' },
+          {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                example: '學習經歷已建立'
+              },
+              data: {
+                type: 'object',
+                properties: {
+                  learning_experience: {
+                    $ref: '#/components/schemas/LearningExperience'
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // TODO: 檔案上傳系統完成後啟用
+      // 包含檔案的學習經歷建立請求 Schema
+      // CreateLearningExperienceWithFile: {
+      //   type: 'object',
+      //   properties: {
+      //     ...CreateLearningExperienceRequest.properties,
+      //     certificate_file: {
+      //       type: 'string',
+      //       format: 'binary',
+      //       description: '證書檔案（支援 PDF, JPG, JPEG, PNG，最大 5MB）'
+      //     }
+      //   }
+      // },
+
+      // 業務邏輯錯誤 Schema
+      BusinessError: {
+        allOf: [
+          { $ref: '#/components/schemas/ErrorResponse' },
+          {
+            type: 'object',
+            properties: {
+              error: {
+                type: 'object',
+                properties: {
+                  code: {
+                    type: 'string',
+                    description: '業務錯誤代碼',
+                    example: 'LEARNING_EXPERIENCE_NOT_FOUND'
+                  },
+                  message: {
+                    type: 'string',
+                    description: '業務錯誤訊息',
+                    example: '找不到學習經歷記錄'
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 驗證錯誤 Schema
+      ValidationError: {
+        allOf: [
+          { $ref: '#/components/schemas/ErrorResponse' },
+          {
+            type: 'object',
+            properties: {
+              error: {
+                type: 'object',
+                properties: {
+                  code: {
+                    type: 'string',
+                    enum: ['VALIDATION_ERROR'],
+                    example: 'VALIDATION_ERROR'
+                  },
+                  message: {
+                    type: 'string',
+                    example: '參數驗證失敗'
+                  },
+                  details: {
+                    type: 'object',
+                    additionalProperties: {
+                      type: 'array',
+                      items: {
+                        type: 'string'
+                      }
+                    },
+                    description: '詳細驗證錯誤資訊',
+                    example: {
+                      end_year: ['結束年份不得早於開始年份'],
+                      degree: ['學位為必填欄位']
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
       }
     },
 
@@ -679,6 +1056,45 @@ const swaggerDefinition = {
           'application/json': {
             schema: {
               $ref: '#/components/schemas/ServerErrorResponse'
+            }
+          }
+        }
+      },
+
+      // 學習經歷相關標準回應
+      UnauthorizedError: {
+        description: '未授權 - Token 無效或已過期',
+        content: {
+          'application/json': {
+            schema: {
+              $ref: '#/components/schemas/UnauthorizedErrorResponse'
+            },
+            example: {
+              status: 'error',
+              message: '請先登入',
+              error: {
+                code: 'UNAUTHORIZED',
+                message: 'Token 無效或已過期'
+              }
+            }
+          }
+        }
+      },
+
+      InternalServerError: {
+        description: '系統內部錯誤',
+        content: {
+          'application/json': {
+            schema: {
+              $ref: '#/components/schemas/ServerErrorResponse'
+            },
+            example: {
+              status: 'error',
+              message: '系統錯誤，請稍後再試',
+              error: {
+                code: 'INTERNAL_SERVER_ERROR',
+                message: '系統發生未預期的錯誤'
+              }
             }
           }
         }

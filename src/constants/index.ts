@@ -10,6 +10,9 @@ export * from './errorMessages'
 // 驗證常數
 export * from './validation'
 
+// 學習經歷常數
+export * from './learningExperience'
+
 // 便捷的預設匯出
 export { ERROR_MESSAGES as ErrorMessages } from './errorMessages'
 export { 

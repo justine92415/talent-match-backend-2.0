@@ -92,24 +92,6 @@ export interface UpdateWorkExperienceRequest {
 }
 
 /**
- * 學習經歷資料介面
- */
-export interface LearningExperienceData {
-  id?: number
-  teacher_id?: number
-  is_in_school: boolean
-  degree: string
-  school_name: string
-  department: string
-  region: boolean
-  start_year: number
-  start_month: number
-  end_year: number | null
-  end_month: number | null
-  file_path: string | null
-}
-
-/**
  * 學習經歷建立請求介面
  */
 export interface CreateLearningExperienceRequest {
@@ -120,8 +102,10 @@ export interface CreateLearningExperienceRequest {
   region: boolean
   start_year: number
   start_month: number
-  end_year?: number
-  end_month?: number
+  end_year?: number | null
+  end_month?: number | null
+  // TODO: 檔案上傳系統完成後新增
+  // certificate_file?: File | Express.Multer.File
 }
 
 /**
@@ -137,6 +121,28 @@ export interface UpdateLearningExperienceRequest {
   start_month?: number
   end_year?: number | null
   end_month?: number | null
+  // TODO: 檔案上傳系統完成後新增
+  // certificate_file?: File | Express.Multer.File
+}
+
+/**
+ * 學習經歷資料介面
+ */
+export interface LearningExperienceData {
+  id: number
+  teacher_id: number
+  is_in_school: boolean
+  degree: string
+  school_name: string
+  department: string
+  region: boolean
+  start_year: number
+  start_month: number
+  end_year: number | null
+  end_month: number | null
+  file_path: string | null // TODO: 檔案上傳系統完成後完善檔案處理
+  created_at: Date
+  updated_at: Date
 }
 
 /**
@@ -201,8 +207,25 @@ export interface ScheduleConflict {
 }
 
 /**
- * 檔案上傳回應介面
+ * 學習經歷回應介面
  */
+export interface LearningExperienceResponse {
+  id: number
+  teacher_id: number
+  is_in_school: boolean
+  degree: string
+  school_name: string
+  department: string
+  region: boolean
+  start_year: number
+  start_month: number
+  end_year: number | null
+  end_month: number | null
+  file_path: string | null // TODO: 檔案路徑處理
+  created_at: string
+  updated_at: string
+}
+
 export interface FileUploadResponse {
   file_path: string
   original_name: string

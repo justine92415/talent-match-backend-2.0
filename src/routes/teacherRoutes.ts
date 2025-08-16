@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { TeacherController } from '@controllers/TeacherController'
 import { authenticateToken } from '@middleware/auth'
 import { validateRequest, teacherApplicationSchema, teacherApplicationUpdateSchema, teacherProfileUpdateSchema } from '@middleware/validation'
+import learningExperienceRoutes from '@routes/learningExperienceRoutes'
 
 /**
  * 教師相關路由
@@ -645,5 +646,8 @@ router.post('/work-experiences', authenticateToken, teacherController.createWork
  */
 router.put('/work-experiences/:id', authenticateToken, teacherController.updateWorkExperience)
 router.delete('/work-experiences/:id', authenticateToken, teacherController.deleteWorkExperience)
+
+// 掛載學習經歷相關路由
+router.use('/learning-experiences', learningExperienceRoutes)
 
 export default router
