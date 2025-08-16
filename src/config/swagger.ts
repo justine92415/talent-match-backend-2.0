@@ -1251,6 +1251,292 @@ const swaggerDefinition = {
             }
           }
         ]
+      },
+
+      // === 教師時間管理相關 Schema ===
+
+      // 可預約時段資料 Schema
+      AvailableSlot: {
+        type: 'object',
+        required: ['id', 'teacher_id', 'weekday', 'start_time', 'end_time', 'is_active', 'created_at', 'updated_at'],
+        properties: {
+          id: {
+            type: 'integer',
+            description: '時段ID',
+            example: 1
+          },
+          teacher_id: {
+            type: 'integer',
+            description: '教師ID',
+            example: 1
+          },
+          weekday: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 6,
+            description: '星期幾（0=週日, 1=週一, ..., 6=週六）',
+            example: 1
+          },
+          start_time: {
+            type: 'string',
+            pattern: '^([01]?[0-9]|2[0-3]):([0-5][0-9])$',
+            description: '開始時間 (HH:MM 格式)',
+            example: '09:00'
+          },
+          end_time: {
+            type: 'string',
+            pattern: '^([01]?[0-9]|2[0-3]):([0-5][0-9])$',
+            description: '結束時間 (HH:MM 格式)',
+            example: '10:00'
+          },
+          is_active: {
+            type: 'boolean',
+            description: '是否啟用',
+            example: true
+          },
+          created_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '建立時間',
+            example: '2025-08-16T09:00:00Z'
+          },
+          updated_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '更新時間',
+            example: '2025-08-16T09:00:00Z'
+          }
+        }
+      },
+
+      // 時段輸入資料 Schema
+      AvailableSlotInput: {
+        type: 'object',
+        required: ['weekday', 'start_time', 'end_time'],
+        properties: {
+          weekday: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 6,
+            description: '星期幾（0=週日, 1=週一, ..., 6=週六）',
+            example: 1
+          },
+          start_time: {
+            type: 'string',
+            pattern: '^([01]?[0-9]|2[0-3]):([0-5][0-9])$',
+            description: '開始時間 (HH:MM 格式)',
+            example: '09:00'
+          },
+          end_time: {
+            type: 'string',
+            pattern: '^([01]?[0-9]|2[0-3]):([0-5][0-9])$',
+            description: '結束時間 (HH:MM 格式)',
+            example: '10:00'
+          },
+          is_active: {
+            type: 'boolean',
+            description: '是否啟用（預設為 true）',
+            default: true,
+            example: true
+          }
+        }
+      },
+
+      // 取得時段設定回應 Schema
+      GetScheduleResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                example: '取得教師時段設定成功'
+              },
+              data: {
+                type: 'object',
+                properties: {
+                  available_slots: {
+                    type: 'array',
+                    items: {
+                      $ref: '#/components/schemas/AvailableSlot'
+                    },
+                    description: '可預約時段列表'
+                  },
+                  total_slots: {
+                    type: 'integer',
+                    description: '時段總數',
+                    example: 5
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 更新時段設定請求 Schema
+      UpdateScheduleRequest: {
+        type: 'object',
+        required: ['available_slots'],
+        properties: {
+          available_slots: {
+            type: 'array',
+            minItems: 0,
+            maxItems: 50,
+            items: {
+              $ref: '#/components/schemas/AvailableSlotInput'
+            },
+            description: '要設定的可預約時段列表（會完全替換現有設定）'
+          }
+        }
+      },
+
+      // 更新時段設定回應 Schema
+      UpdateScheduleResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                example: '教師時段設定更新成功'
+              },
+              data: {
+                type: 'object',
+                properties: {
+                  available_slots: {
+                    type: 'array',
+                    items: {
+                      $ref: '#/components/schemas/AvailableSlot'
+                    },
+                    description: '更新後的時段列表'
+                  },
+                  updated_count: {
+                    type: 'integer',
+                    description: '更新的時段數量',
+                    example: 2
+                  },
+                  created_count: {
+                    type: 'integer',
+                    description: '新建立的時段數量',
+                    example: 3
+                  },
+                  deleted_count: {
+                    type: 'integer',
+                    description: '刪除的時段數量',
+                    example: 1
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 衝突資訊 Schema
+      ConflictInfo: {
+        type: 'object',
+        properties: {
+          slot_id: {
+            type: 'integer',
+            description: '衝突的時段ID',
+            example: 1
+          },
+          weekday: {
+            type: 'integer',
+            description: '衝突發生的星期',
+            example: 1
+          },
+          start_time: {
+            type: 'string',
+            description: '衝突時段開始時間',
+            example: '09:00'
+          },
+          end_time: {
+            type: 'string',
+            description: '衝突時段結束時間',
+            example: '10:00'
+          },
+          conflict_date: {
+            type: 'string',
+            format: 'date',
+            description: '衝突發生日期',
+            example: '2025-08-18'
+          },
+          reservation_id: {
+            type: 'integer',
+            description: '造成衝突的預約ID',
+            example: 5
+          },
+          student_name: {
+            type: 'string',
+            description: '預約學生姓名',
+            example: '李小華'
+          },
+          course_name: {
+            type: 'string',
+            description: '預約課程名稱',
+            example: '英文會話課程'
+          }
+        }
+      },
+
+      // 檢查衝突回應 Schema
+      CheckConflictsResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                example: '時段衝突檢查完成'
+              },
+              data: {
+                type: 'object',
+                properties: {
+                  has_conflicts: {
+                    type: 'boolean',
+                    description: '是否存在衝突',
+                    example: false
+                  },
+                  conflicts: {
+                    type: 'array',
+                    items: {
+                      $ref: '#/components/schemas/ConflictInfo'
+                    },
+                    description: '衝突詳細資訊列表'
+                  },
+                  total_conflicts: {
+                    type: 'integer',
+                    description: '衝突總數',
+                    example: 0
+                  },
+                  check_period: {
+                    type: 'object',
+                    properties: {
+                      from_date: {
+                        type: 'string',
+                        format: 'date',
+                        description: '檢查起始日期',
+                        example: '2025-08-20'
+                      },
+                      to_date: {
+                        type: 'string',
+                        format: 'date',
+                        description: '檢查結束日期',
+                        example: '2025-09-20'
+                      }
+                    },
+                    description: '檢查的時間範圍'
+                  }
+                }
+              }
+            }
+          }
+        ]
       }
     },
 

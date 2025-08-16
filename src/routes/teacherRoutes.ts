@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { TeacherController } from '@controllers/TeacherController'
+import { scheduleController } from '@controllers/ScheduleController'
 import { authenticateToken } from '@middleware/auth'
 import {
   validateRequest,
@@ -9,6 +10,7 @@ import {
   certificateCreateSchema,
   certificateUpdateSchema
 } from '@middleware/validation'
+import { scheduleUpdateSchema, conflictsQuerySchema } from '@middleware/validation/scheduleValidation'
 import learningExperienceRoutes from '@routes/learningExperienceRoutes'
 import { certificateController } from '@controllers/CertificateController'
 
@@ -1081,5 +1083,226 @@ router.post('/certificates', authenticateToken, validateRequest(certificateCreat
  */
 router.put('/certificates/:id', authenticateToken, validateRequest(certificateUpdateSchema), certificateController.updateCertificate)
 router.delete('/certificates/:id', authenticateToken, certificateController.deleteCertificate)
+
+// === 教師時間管理路由 ===
+
+/**
+ * @swagger
+ * /teachers/schedule:
+ *   get:
+ *     tags: [Teacher Features]
+ *     summary: 取得可預約時段設定
+ *     description: |
+ *       教師可以查詢自己設定的可預約時段。
+ *       
+ *       **業務規則:**
+ *       - 需要教師身份認證
+ *       - 按照星期和時間排序回傳
+ *       - 包含啟用/停用狀態
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 成功取得時段設定
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GetScheduleResponse'
+ *             example:
+ *               status: "success"
+ *               message: "取得教師時段設定成功"
+ *               data:
+ *                 available_slots:
+ *                   - id: 1
+ *                     teacher_id: 1
+ *                     weekday: 1
+ *                     start_time: "09:00"
+ *                     end_time: "10:00"
+ *                     is_active: true
+ *                     created_at: "2025-08-16T09:00:00Z"
+ *                     updated_at: "2025-08-16T09:00:00Z"
+ *                 total_slots: 1
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 權限不足（非教師角色）
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 找不到教師資料
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BusinessError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get('/schedule', authenticateToken, scheduleController.getSchedule)
+
+/**
+ * @swagger
+ * /teachers/schedule:
+ *   put:
+ *     tags: [Teacher Features]
+ *     summary: 更新可預約時段設定
+ *     description: |
+ *       教師可以設定或更新自己的可預約時段。
+ *       
+ *       **業務規則:**
+ *       - 需要教師身份認證
+ *       - 會完全替換現有時段設定
+ *       - 傳空陣列可清空所有時段
+ *       - 時間格式需為 HH:MM
+ *       - 結束時間必須晚於開始時間
+ *       - 星期範圍 0-6 (週日到週六)
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateScheduleRequest'
+ *           example:
+ *             available_slots:
+ *               - weekday: 1
+ *                 start_time: "09:00"
+ *                 end_time: "10:00"
+ *                 is_active: true
+ *               - weekday: 1
+ *                 start_time: "14:00"
+ *                 end_time: "15:00"
+ *                 is_active: true
+ *     responses:
+ *       200:
+ *         description: 成功更新時段設定
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UpdateScheduleResponse'
+ *             example:
+ *               status: "success"
+ *               message: "教師時段設定更新成功"
+ *               data:
+ *                 available_slots:
+ *                   - id: 1
+ *                     teacher_id: 1
+ *                     weekday: 1
+ *                     start_time: "09:00"
+ *                     end_time: "10:00"
+ *                     is_active: true
+ *                     created_at: "2025-08-16T09:00:00Z"
+ *                     updated_at: "2025-08-16T09:00:00Z"
+ *                 updated_count: 0
+ *                 created_count: 2
+ *                 deleted_count: 1
+ *       400:
+ *         description: 驗證錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 權限不足（非教師角色）
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 找不到教師資料
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BusinessError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.put('/schedule', authenticateToken, validateRequest(scheduleUpdateSchema), scheduleController.updateSchedule)
+
+/**
+ * @swagger
+ * /teachers/schedule/conflicts:
+ *   get:
+ *     tags: [Teacher Features]
+ *     summary: 檢查時段衝突
+ *     description: |
+ *       檢查教師的可預約時段與現有預約是否有衝突。
+ *       
+ *       **業務規則:**
+ *       - 需要教師身份認證
+ *       - 可指定檢查時間範圍和特定時段
+ *       - 預設檢查未來30天內的衝突
+ *       - 只檢查已確認的預約
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: slot_ids
+ *         in: query
+ *         description: 要檢查的時段ID列表，用逗號分隔
+ *         required: false
+ *         schema:
+ *           type: string
+ *           example: "1,2,3"
+ *       - name: from_date
+ *         in: query
+ *         description: 檢查起始日期 (YYYY-MM-DD)
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: "2025-08-20"
+ *       - name: to_date
+ *         in: query
+ *         description: 檢查結束日期 (YYYY-MM-DD)
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: "2025-09-20"
+ *     responses:
+ *       200:
+ *         description: 成功檢查衝突
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CheckConflictsResponse'
+ *             example:
+ *               status: "success"
+ *               message: "時段衝突檢查完成"
+ *               data:
+ *                 has_conflicts: false
+ *                 conflicts: []
+ *                 total_conflicts: 0
+ *                 check_period:
+ *                   from_date: "2025-08-20"
+ *                   to_date: "2025-09-20"
+ *       400:
+ *         description: 查詢參數錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 權限不足（非教師角色）
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 找不到教師資料
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BusinessError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get('/schedule/conflicts', authenticateToken, validateRequest(conflictsQuerySchema, 'query'), scheduleController.checkConflicts)
 
 export default router

@@ -13,6 +13,9 @@ export * from './validation'
 // 學習經歷常數
 export * from './learningExperience'
 
+// 時間管理常數
+export * from './schedule'
+
 // 便捷的預設匯出
 export { ERROR_MESSAGES as ErrorMessages } from './errorMessages'
 export { 
