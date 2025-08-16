@@ -481,6 +481,10 @@ describe('教師時間管理 API', () => {
       })
 
       it('應該檢測到預約衝突', async () => {
+        console.log('🔍 DEBUG: 開始衝突檢測測試')
+        console.log('  - 測試環境時區:', Intl.DateTimeFormat().resolvedOptions().timeZone)
+        console.log('  - 當前時間:', new Date().toISOString())
+        
         // 建立時段
         const slot = teacherAvailableSlotRepo.create({
           teacher_id: teacherId,
@@ -490,11 +494,26 @@ describe('教師時間管理 API', () => {
           is_active: true
         })
         const savedSlot = await teacherAvailableSlotRepo.save(slot)
+        
+        console.log('  - 建立的時段:', {
+          id: savedSlot.id,
+          weekday: savedSlot.weekday,
+          start_time: savedSlot.start_time,
+          end_time: savedSlot.end_time,
+          teacher_id: savedSlot.teacher_id
+        })
 
         // 建立衝突的預約
         // 2025-08-18 是星期一
         // 要測試與 09:00-10:00 時段的衝突，使用 UTC 01:30（台北時間 09:30）
         const reservationTime = new Date('2025-08-18T01:30:00.000Z')  // UTC 01:30 = 台北時間 09:30
+        
+        console.log('🔍 DEBUG: 衝突測試詳細資訊')
+        console.log('  - 教師時段: 週一 09:00-10:00')
+        console.log('  - 預約時間 (UTC):', reservationTime.toISOString())
+        console.log('  - 預約時間 (本地):', reservationTime.toString())
+        console.log('  - 預約時間戳:', reservationTime.getTime())
+        console.log('  - 時區偏移:', reservationTime.getTimezoneOffset())
         
         const conflictReservation = await createTestReservation({
           teacher_id: teacherId,
@@ -502,6 +521,9 @@ describe('教師時間管理 API', () => {
           teacher_status: ReservationStatus.RESERVED,
           student_status: ReservationStatus.RESERVED
         })
+        
+        console.log('  - 建立的預約 ID:', conflictReservation.id)
+        console.log('  - 預約記錄中的時間:', conflictReservation.reserve_time)
 
         const response = await request(app)
           .get('/api/teachers/schedule/conflicts')
@@ -510,6 +532,29 @@ describe('教師時間管理 API', () => {
             from_date: '2025-08-18',
             to_date: '2025-08-25'
           })
+
+        console.log('🔍 DEBUG: API 回應分析')
+        console.log('  - HTTP 狀態:', response.status)
+        console.log('  - 查詢參數:', { from_date: '2025-08-18', to_date: '2025-08-25' })
+        console.log('  - API 回應:', JSON.stringify(response.body, null, 2))
+        
+        if (response.body.data) {
+          console.log('  - has_conflicts:', response.body.data.has_conflicts)
+          console.log('  - total_conflicts:', response.body.data.total_conflicts)
+          console.log('  - conflicts 數量:', response.body.data.conflicts?.length || 0)
+          
+          if (response.body.data.conflicts && response.body.data.conflicts.length > 0) {
+            response.body.data.conflicts.forEach((conflict: any, index: number) => {
+              console.log(`  - 衝突 ${index + 1}:`, {
+                slot_id: conflict.slot_id,
+                weekday: conflict.weekday,
+                start_time: conflict.start_time,
+                end_time: conflict.end_time,
+                reservation_time: conflict.reservation_time
+              })
+            })
+          }
+        }
 
         expect(response.status).toBe(200)
         expect(response.body.data.has_conflicts).toBe(true)
