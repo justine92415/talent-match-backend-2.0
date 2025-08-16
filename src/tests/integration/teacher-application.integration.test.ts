@@ -8,6 +8,7 @@ import { Teacher } from '../../entities/Teacher'
 import { UserRole, AccountStatus, ApplicationStatus } from '../../entities/enums'
 import jwt from 'jsonwebtoken'
 import ConfigManager from '../../config'
+import { ERROR_MESSAGES } from '@constants/errorMessages'
 
 // 使用新的 fixtures 和 helper
 import {
@@ -123,9 +124,10 @@ describe('教師申請 API 整合測試', () => {
 
       // Assert
       expect(response.status).toBe(400)
-      expect(response.body).toMatchObject({
+      expect(response.body).toEqual({
         status: 'error',
-        message: '教師申請參數驗證失敗',
+        code: 'VALIDATION_ERROR',
+        message: ERROR_MESSAGES.SYSTEM.TEACHER_APPLICATION_VALIDATION_FAILED,
         errors: expect.any(Object)
       })
     })
@@ -176,22 +178,15 @@ describe('教師申請 API 整合測試', () => {
       })
     })
 
-    it('應該拒絕未認證的請求並回傳 401 錯誤', async () => {
-      // Arrange - 使用有效的申請資料
-      const applicationData = validTeacherApplicationData.basic
+    it('應該回傳 401 當未提供 token', async () => {
+      const response = await request(app)
+        .post('/api/teachers/apply')
+        .send(validTeacherApplicationData.basic)
+        .expect(401)
 
-      // Act - 使用 RequestTestHelpers 測試未認證請求
-      const response = await RequestTestHelpers.testUnauthenticatedRequest(
-        'post', 
-        '/api/teachers/apply', 
-        applicationData
+      expect(response.body.message).toEqual(
+        expect.stringContaining(ERROR_MESSAGES.AUTH.TOKEN_REQUIRED)
       )
-
-      // Assert
-      expect(response.body).toMatchObject({
-        status: 'error',
-        message: 'Access token 為必填欄位'
-      })
     })
 
     it('應該拒絕非學生角色的申請並回傳 403 錯誤', async () => {
@@ -217,7 +212,7 @@ describe('教師申請 API 整合測試', () => {
       expect(response.status).toBe(403)
       expect(response.body).toMatchObject({
         status: 'error',
-        message: '只有學生可以申請成為教師'
+        message: ERROR_MESSAGES.BUSINESS.STUDENT_ONLY_APPLY_TEACHER
       })
     })
 
@@ -239,7 +234,7 @@ describe('教師申請 API 整合測試', () => {
       expect(response.body).toMatchObject({
         status: 'error',
         code: 'ACCOUNT_SUSPENDED',
-        message: '帳號狀態異常'
+        message: ERROR_MESSAGES.BUSINESS.ACCOUNT_STATUS_INVALID
       })
     })
   })
@@ -344,7 +339,7 @@ describe('教師申請 API 整合測試', () => {
       expect(response.status).toBe(400)
       expect(response.body).toMatchObject({
         status: 'error',
-        message: '只能在待審核或已拒絕狀態下修改申請'
+        message: ERROR_MESSAGES.BUSINESS.APPLICATION_STATUS_INVALID
       })
     })
   })

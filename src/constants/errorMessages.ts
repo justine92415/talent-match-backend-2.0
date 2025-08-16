@@ -54,6 +54,12 @@ export const ERROR_MESSAGES = {
     REFRESH_TOKEN_EMPTY: 'refresh_token 不能為空',
     REFRESH_TOKEN_INVALID_TYPE: 'refresh_token 必須為字串格式',
 
+    // 工作經驗驗證
+    WORKPLACE_REQUIRED: '工作地點為必填欄位',
+    END_DATE_BEFORE_START_DATE: '結束日期不得早於開始日期',
+    WORKING_END_DATE_NOT_ALLOWED: '在職工作經驗不可填寫結束日期',
+    NON_WORKING_END_DATE_REQUIRED: '離職工作經驗必須填寫結束日期',
+
     // 一般驗證
     FIELD_REQUIRED: (field: string) => `${field}為必填欄位`,
     FIELD_INVALID_TYPE: (field: string, type: string) => `${field}必須為${type}格式`,
@@ -67,7 +73,14 @@ export const ERROR_MESSAGES = {
     APPLICATION_EXISTS: '您已提交過教師申請',
     APPLICATION_NOT_FOUND: '找不到申請記錄',
     WORK_EXPERIENCE_NOT_FOUND: '找不到工作經驗記錄',
+    WORK_EXPERIENCE_RECORD_NOT_FOUND: '工作經驗記錄不存在',
     UNAUTHORIZED_ACCESS: '您沒有權限執行此操作',
+    UNAUTHORIZED_WORK_EXPERIENCE_ACCESS: '無權存取此工作經驗記錄',
+    UNAUTHORIZED_WORK_EXPERIENCE_DELETE: '無權刪除此工作經驗記錄',
+    TEACHER_PERMISSION_REQUIRED: '需要教師權限才能執行此操作',
+    STUDENT_ONLY_APPLY_TEACHER: '只有學生可以申請成為教師',
+    ACCOUNT_STATUS_INVALID: '帳號狀態異常',
+    APPLICATION_STATUS_INVALID: '只能在待審核或已拒絕狀態下修改申請',
     REGISTRATION_FAILED: '註冊失敗',
     LOGIN_FAILED: '登入失敗',
     PROFILE_UPDATE_FAILED: '更新個人資料失敗',
@@ -81,6 +94,7 @@ export const ERROR_MESSAGES = {
     DATABASE_ERROR: '資料庫連接錯誤',
     VALIDATION_FAILED: '參數驗證失敗',
     VALIDATION_ERROR: '參數驗證失敗',
+    TEACHER_APPLICATION_VALIDATION_FAILED: '教師申請參數驗證失敗',
     UNKNOWN_ERROR: '未知錯誤',
   },
 
@@ -94,6 +108,11 @@ export const ERROR_MESSAGES = {
     PASSWORD_RESET_EMAIL_SENT: '重設密碼郵件已發送，請檢查您的信箱',
     PASSWORD_RESET_SUCCESS: '密碼重設成功',
     TOKEN_REFRESH_SUCCESS: 'Token 刷新成功',
+    // 工作經驗相關成功訊息
+    WORK_EXPERIENCE_LIST_SUCCESS: '取得工作經驗列表成功',
+    WORK_EXPERIENCE_CREATED: '工作經驗已新增',
+    WORK_EXPERIENCE_UPDATED: '工作經驗已更新',
+    WORK_EXPERIENCE_DELETED: '工作經驗已刪除',
   }
 } as const
 

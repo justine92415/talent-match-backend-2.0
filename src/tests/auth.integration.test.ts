@@ -22,6 +22,7 @@ import {
 } from './fixtures/userFixtures'
 import { UserTestHelpers, RequestTestHelpers, ValidationTestHelpers } from './helpers/testHelpers'
 import { expectErrorResponse, TestErrorMessages } from './helpers/errorTestUtils'
+import { ERROR_MESSAGES } from '@constants/errorMessages'
 
 describe('POST /api/auth/register', () => {
   beforeAll(async () => {
@@ -333,8 +334,8 @@ describe('POST /api/auth/login', () => {
         status: 'error',
         message: '登入失敗',
         errors: {
-          email: expect.arrayContaining([expect.stringContaining('必填')]),
-          password: expect.arrayContaining([expect.stringContaining('必填')])
+          email: expect.arrayContaining([expect.stringContaining(ERROR_MESSAGES.VALIDATION.EMAIL_REQUIRED)]),
+          password: expect.arrayContaining([expect.stringContaining(ERROR_MESSAGES.VALIDATION.PASSWORD_REQUIRED)])
         }
       })
     })
@@ -351,7 +352,7 @@ describe('POST /api/auth/login', () => {
         status: 'error',
         message: '登入失敗',
         errors: {
-          email: expect.arrayContaining([expect.stringContaining('格式')])
+          email: expect.arrayContaining([expect.stringContaining(ERROR_MESSAGES.VALIDATION.EMAIL_INVALID)])
         }
       })
     })
@@ -455,7 +456,7 @@ describe('POST /api/auth/login', () => {
           status: 'error',
           message: '參數驗證失敗',
           errors: {
-            refresh_token: expect.arrayContaining([expect.stringMatching(/必填|必須|required/i)])
+            refresh_token: expect.arrayContaining([expect.stringContaining(ERROR_MESSAGES.VALIDATION.REFRESH_TOKEN_REQUIRED)])
           }
         })
       })
@@ -534,7 +535,7 @@ describe('POST /api/auth/login', () => {
           status: 'error',
           message: '參數驗證失敗',
           errors: {
-            email: expect.arrayContaining([expect.stringContaining('不能為空')])
+            email: expect.arrayContaining([expect.stringContaining(ERROR_MESSAGES.VALIDATION.EMAIL_EMPTY)])
           }
         })
       })
@@ -549,7 +550,7 @@ describe('POST /api/auth/login', () => {
           status: 'error',
           message: '參數驗證失敗',
           errors: {
-            email: expect.arrayContaining([expect.stringContaining('格式')])
+            email: expect.arrayContaining([expect.stringContaining(ERROR_MESSAGES.VALIDATION.EMAIL_INVALID)])
           }
         })
       })
@@ -564,7 +565,7 @@ describe('POST /api/auth/login', () => {
           status: 'error',
           message: '參數驗證失敗',
           errors: {
-            email: expect.arrayContaining([expect.stringContaining('必填')])
+            email: expect.arrayContaining([expect.stringContaining(ERROR_MESSAGES.VALIDATION.EMAIL_REQUIRED)])
           }
         })
       })
@@ -579,7 +580,7 @@ describe('POST /api/auth/login', () => {
           status: 'error',
           message: '參數驗證失敗',
           errors: {
-            email: expect.arrayContaining([expect.stringContaining('字串')])
+            email: expect.arrayContaining([expect.stringContaining(ERROR_MESSAGES.VALIDATION.FIELD_INVALID_TYPE('email', '字串'))])
           }
         })
       })
@@ -769,7 +770,7 @@ describe('POST /api/auth/login', () => {
         expect(response.body).toHaveProperty('status', 'error')
         expect(response.body).toHaveProperty('errors')
         expect(response.body.errors).toHaveProperty('token')
-        expect(response.body.errors.token[0]).toContain('重設令牌不能為空')
+        expect(response.body.errors.token[0]).toContain(ERROR_MESSAGES.VALIDATION.RESET_TOKEN_EMPTY)
       })
 
       it('應該拒絕缺少重設令牌並回傳 400', async () => {
@@ -783,7 +784,7 @@ describe('POST /api/auth/login', () => {
         expect(response.body).toHaveProperty('status', 'error')
         expect(response.body).toHaveProperty('errors')
         expect(response.body.errors).toHaveProperty('token')
-        expect(response.body.errors.token[0]).toContain('重設令牌為必填欄位')
+        expect(response.body.errors.token[0]).toContain(ERROR_MESSAGES.VALIDATION.RESET_TOKEN_REQUIRED)
       })
     })
 
@@ -800,7 +801,7 @@ describe('POST /api/auth/login', () => {
         expect(response.body).toHaveProperty('status', 'error')
         expect(response.body).toHaveProperty('errors')
         expect(response.body.errors).toHaveProperty('new_password')
-        expect(response.body.errors.new_password[0]).toContain('密碼至少需要 8 個字元')
+        expect(response.body.errors.new_password[0]).toContain(ERROR_MESSAGES.VALIDATION.NEW_PASSWORD_TOO_SHORT)
       })
 
       it('應該拒絕空白的新密碼並回傳 400', async () => {
@@ -815,7 +816,7 @@ describe('POST /api/auth/login', () => {
         expect(response.body).toHaveProperty('status', 'error')
         expect(response.body).toHaveProperty('errors')
         expect(response.body.errors).toHaveProperty('new_password')
-        expect(response.body.errors.new_password[0]).toContain('新密碼不能為空')
+        expect(response.body.errors.new_password[0]).toContain(ERROR_MESSAGES.VALIDATION.NEW_PASSWORD_EMPTY)
       })
 
       it('應該拒絕缺少新密碼並回傳 400', async () => {
@@ -829,7 +830,7 @@ describe('POST /api/auth/login', () => {
         expect(response.body).toHaveProperty('status', 'error')
         expect(response.body).toHaveProperty('errors')
         expect(response.body.errors).toHaveProperty('new_password')
-        expect(response.body.errors.new_password[0]).toContain('新密碼為必填欄位')
+        expect(response.body.errors.new_password[0]).toContain(ERROR_MESSAGES.VALIDATION.NEW_PASSWORD_REQUIRED)
       })
 
       it('應該拒絕非字串格式的新密碼並回傳 400', async () => {
@@ -844,7 +845,7 @@ describe('POST /api/auth/login', () => {
         expect(response.body).toHaveProperty('status', 'error')
         expect(response.body).toHaveProperty('errors')
         expect(response.body.errors).toHaveProperty('new_password')
-        expect(response.body.errors.new_password[0]).toContain('新密碼必須為字串格式')
+        expect(response.body.errors.new_password[0]).toContain(ERROR_MESSAGES.VALIDATION.NEW_PASSWORD_INVALID_TYPE)
       })
     })
 

@@ -6,6 +6,7 @@ import { User } from '@entities/User'
 import { Teacher } from '@entities/Teacher'
 import { TeacherWorkExperience } from '@entities/TeacherWorkExperience'
 import { UserRole, ApplicationStatus } from '@entities/enums'
+import { ERROR_MESSAGES } from '@constants/errorMessages'
 
 import { validUserData } from '@tests/fixtures/userFixtures'
 import { validTeacherApplicationData } from '@tests/fixtures/teacherFixtures'
@@ -69,7 +70,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'success',
-        message: '取得工作經驗列表成功',
+        message: ERROR_MESSAGES.SUCCESS.WORK_EXPERIENCE_LIST_SUCCESS,
         data: {
           work_experiences: [
             {
@@ -98,7 +99,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'success',
-        message: '取得工作經驗列表成功',
+        message: ERROR_MESSAGES.SUCCESS.WORK_EXPERIENCE_LIST_SUCCESS,
         data: {
           work_experiences: []
         }
@@ -111,7 +112,7 @@ describe('工作經驗管理 API', () => {
       expect(response.body).toMatchObject({
         status: 'error',
         code: 'UNAUTHORIZED_ACCESS',
-        message: expect.any(String)
+        message: expect.stringContaining(ERROR_MESSAGES.AUTH.TOKEN_REQUIRED)
       })
     })
 
@@ -133,7 +134,7 @@ describe('工作經驗管理 API', () => {
       expect(response.body).toMatchObject({
         status: 'error',
         code: 'UNAUTHORIZED_ACCESS',
-        message: expect.any(String)
+        message: expect.stringContaining(ERROR_MESSAGES.BUSINESS.TEACHER_PERMISSION_REQUIRED)
       })
     })
   })
@@ -158,7 +159,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'success',
-        message: '工作經驗已新增',
+        message: ERROR_MESSAGES.SUCCESS.WORK_EXPERIENCE_CREATED,
         data: {
           work_experience: {
             id: expect.any(Number),
@@ -207,7 +208,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'success',
-        message: '工作經驗已新增',
+        message: ERROR_MESSAGES.SUCCESS.WORK_EXPERIENCE_CREATED,
         data: {
           work_experience: {
             id: expect.any(Number),
@@ -237,10 +238,8 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        
-          code: 'VALIDATION_ERROR',
-          message: expect.any(String)
-
+        code: 'VALIDATION_ERROR',
+        message: expect.stringContaining(ERROR_MESSAGES.VALIDATION.WORKPLACE_REQUIRED)
       })
     })
 
@@ -261,10 +260,8 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        
-          code: 'VALIDATION_ERROR',
-          message: expect.any(String)
-
+        code: 'VALIDATION_ERROR',
+        message: expect.stringContaining(ERROR_MESSAGES.VALIDATION.END_DATE_BEFORE_START_DATE)
       })
     })
 
@@ -285,10 +282,8 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        
-          code: 'VALIDATION_ERROR',
-          message: expect.any(String)
-
+        code: 'VALIDATION_ERROR',
+        message: expect.stringContaining(ERROR_MESSAGES.VALIDATION.WORKING_END_DATE_NOT_ALLOWED)
       })
     })
 
@@ -308,10 +303,8 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        
-          code: 'VALIDATION_ERROR',
-          message: expect.any(String)
-
+        code: 'VALIDATION_ERROR',
+        message: expect.stringContaining(ERROR_MESSAGES.VALIDATION.NON_WORKING_END_DATE_REQUIRED)
       })
     })
 
@@ -330,10 +323,8 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        
-          code: 'UNAUTHORIZED_ACCESS',
-          message: expect.any(String)
-
+        code: 'UNAUTHORIZED_ACCESS',
+        message: expect.stringContaining(ERROR_MESSAGES.AUTH.TOKEN_REQUIRED)
       })
     })
 
@@ -369,10 +360,8 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        
-          code: 'UNAUTHORIZED_ACCESS',
-          message: expect.any(String)
-
+        code: 'UNAUTHORIZED_ACCESS',
+        message: expect.stringContaining(ERROR_MESSAGES.BUSINESS.TEACHER_PERMISSION_REQUIRED)
       })
     })
   })
@@ -411,7 +400,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'success',
-        message: '工作經驗已更新',
+        message: ERROR_MESSAGES.SUCCESS.WORK_EXPERIENCE_UPDATED,
         data: {
           work_experience: {
             id: testWorkExperience.id,
@@ -461,10 +450,8 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        
-          code: 'APPLICATION_NOT_FOUND',
-          message: expect.any(String)
-
+        code: 'APPLICATION_NOT_FOUND',
+        message: expect.stringContaining(ERROR_MESSAGES.BUSINESS.WORK_EXPERIENCE_RECORD_NOT_FOUND)
       })
     })
 
@@ -499,10 +486,8 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        
-          code: 'UNAUTHORIZED_ACCESS',
-          message: expect.any(String)
-
+        code: 'UNAUTHORIZED_ACCESS',
+        message: expect.stringContaining(ERROR_MESSAGES.BUSINESS.UNAUTHORIZED_WORK_EXPERIENCE_ACCESS)
       })
     })
 
@@ -520,10 +505,8 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        
-          code: 'VALIDATION_ERROR',
-          message: expect.any(String)
-
+        code: 'VALIDATION_ERROR',
+        message: expect.stringContaining(ERROR_MESSAGES.VALIDATION.END_DATE_BEFORE_START_DATE)
       })
     })
 
@@ -536,10 +519,8 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        
-          code: 'UNAUTHORIZED_ACCESS',
-          message: expect.any(String)
-
+        code: 'UNAUTHORIZED_ACCESS',
+        message: expect.stringContaining(ERROR_MESSAGES.AUTH.TOKEN_REQUIRED)
       })
     })
   })
@@ -569,7 +550,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'success',
-        message: '工作經驗已刪除',
+        message: ERROR_MESSAGES.SUCCESS.WORK_EXPERIENCE_DELETED,
         data: null
       })
 
@@ -584,10 +565,8 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        
-          code: 'APPLICATION_NOT_FOUND',
-          message: expect.any(String)
-
+        code: 'APPLICATION_NOT_FOUND',
+        message: expect.stringContaining(ERROR_MESSAGES.BUSINESS.WORK_EXPERIENCE_RECORD_NOT_FOUND)
       })
     })
 
@@ -617,10 +596,8 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        
-          code: 'UNAUTHORIZED_ACCESS',
-          message: expect.any(String)
-
+        code: 'UNAUTHORIZED_ACCESS',
+        message: expect.stringContaining(ERROR_MESSAGES.BUSINESS.UNAUTHORIZED_WORK_EXPERIENCE_DELETE)
       })
     })
 
@@ -629,10 +606,8 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        
-          code: 'UNAUTHORIZED_ACCESS',
-          message: expect.any(String)
-
+        code: 'UNAUTHORIZED_ACCESS',
+        message: expect.stringContaining(ERROR_MESSAGES.AUTH.TOKEN_REQUIRED)
       })
     })
   })
