@@ -491,10 +491,14 @@ describe('教師時間管理 API', () => {
         })
         const savedSlot = await teacherAvailableSlotRepo.save(slot)
 
-        // 建立衝突的預約（週一 09:30）
+        // 建立衝突的預約
+        // 2025-08-18 是星期一
+        // 要測試與 09:00-10:00 時段的衝突，使用 UTC 01:30（台北時間 09:30）
+        const reservationTime = new Date('2025-08-18T01:30:00.000Z')  // UTC 01:30 = 台北時間 09:30
+        
         const conflictReservation = await createTestReservation({
           teacher_id: teacherId,
-          reserve_time: new Date('2025-08-18T01:30:00Z'), // UTC時間 01:30 = 台北時間 09:30
+          reserve_time: reservationTime,
           teacher_status: ReservationStatus.RESERVED,
           student_status: ReservationStatus.RESERVED
         })
