@@ -1,4 +1,4 @@
-import { User } from '../entities/User'
+import { User } from '@entities/User'
 
 /**
  * 註冊使用者資料介面

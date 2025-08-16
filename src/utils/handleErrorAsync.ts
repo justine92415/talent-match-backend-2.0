@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AsyncFunction } from '../types/handleErrorAsync.interface';
+import { AsyncFunction } from '@src/types/handleErrorAsync.interface';
 
 /**
  * 統一的異步錯誤處理包裝器

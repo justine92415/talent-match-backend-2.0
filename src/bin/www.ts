@@ -4,10 +4,10 @@
  * Module dependencies.
  */
 import * as http from 'http'
-import config from '../config'
-import app from '../app'
-import getLogger from '../utils/logger'
-import { dataSource } from '../db/data-source'
+import config from '@config/index'
+import app from '@src/app'
+import getLogger from '@utils/logger'
+import { dataSource } from '@db/data-source'
 
 const logger = getLogger('www')
 const port = config.get<number>('web.port')

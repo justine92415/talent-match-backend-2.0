@@ -1,12 +1,12 @@
 /**
- * 教師申請測試資料 fixtures
- * 遵循 TDD 指示文件：統一管理測試資料，避免重複宣告
- * 特別注意：所有 introduction 內容都保證 ≥100 字元，解決字數長度不足問題
+ * 教師相關測試資料 Fixtures
+ * 提供教師申請測試所需的標準測試資料
  */
 
-import { ApplicationStatus, UserRole, AccountStatus } from '../../entities/enums'
+import { ApplicationStatus, UserRole, AccountStatus } from '@entities/enums'
+import { Teacher } from '@entities/Teacher'
 
-// 有效的自我介紹內容（≥100字元）
+// 有效的測試資料：自我介紹
 export const validIntroductions = {
   // 基本有效介紹（剛好100+字元）
   basic: '我是一位熱愛教育的專業人士，擁有豐富的教學經驗和深厚的學術背景。我在這個領域已經工作了多年，積累了豐富的實戰經驗。我希望能在這個平台上分享我的知識，幫助更多學生成長和進步，讓他們能夠在學習的道路上走得更遠，實現自己的夢想和目標。',
@@ -30,7 +30,10 @@ export const validIntroductions = {
   japanese: '私は教育に情熱を注ぐ専門家として、豊富な教育経験と深い学術的背景を持っています。長年この分野で働き、実践的な経験を積んできました。このプラットフォームで知識を共有し、より多くの学生の成長と進歩を支援したいと思っています。学生たちが学習の道のりでより遠くまで行けるよう手助けしたいと考えています。',
 
   // 工作經驗豐富申請者介紹（140+字元）
-  experienced: '我擁有超過十五年的教育工作經驗，曾在多個知名教育機構擔任資深教師職位。在教學過程中，我不斷精進自己的教學方法，善於運用多元化的教學策略來滿足不同學習類型學生的需求。我相信每個學生都有其獨特的潜力，透過適當的引導和鼓勵，都能夠達到優秀的學習成果。希望能在這個平台上發揮我的專業能力，為更多學生提供高品質的教育服務。'
+  experienced: '我擁有超過十五年的教育工作經驗，曾在多個知名教育機構擔任資深教師職位。在教學過程中，我不斷精進自己的教學方法，善於運用多元化的教學策略來滿足不同學習類型學生的需求。我相信每個學生都有其獨特的潜力，透過適當的引導和鼓勵，都能夠達到優秀的學習成果。希望能在這個平台上發揮我的專業能力，為更多學生提供高品質的教育服務。',
+
+  // 用於教師資料管理測試的介紹（120+字元）
+  profileUpdate: '教師資料管理測試專用介紹，這段文字是用於測試教師基本資料更新功能的內容。包含了足夠的長度以通過系統驗證，同時也提供了清楚的識別用途。我是一位專業的教育工作者，致力於提供高品質的教學服務，希望能通過不斷學習和改進，為學生帶來最好的學習體驗和成果。'
 }
 
 // 無效的自我介紹內容（用於驗證測試）
@@ -100,16 +103,16 @@ export const invalidTeacherApplicationData = {
 }
 
 // 教師實體資料建立工廠函式
-export const createTeacherEntityData = (overrides: Partial<any> = {}) => ({
+export const createTeacherEntityData = (overrides: Partial<Teacher> = {}): Partial<Teacher> => ({
   uuid: '550e8400-e29b-41d4-a716-446655440001',
   user_id: 1,
   nationality: '台灣',
   introduction: validIntroductions.basic,
   application_status: ApplicationStatus.PENDING,
-  application_submitted_at: null,
-  application_reviewed_at: null,
-  reviewer_id: null,
-  review_notes: null,
+  application_submitted_at: undefined,
+  application_reviewed_at: undefined,
+  reviewer_id: undefined,
+  review_notes: undefined,
   ...overrides
 })
 
@@ -301,13 +304,14 @@ export const expectedResponseStructures = {
   // 重複申請錯誤回應結構
   duplicateApplicationResponse: {
     status: 'error',
-    message: '您已經有教師申請記錄',
-    errors: {}
+    code: 'APPLICATION_EXISTS',
+    message: '您已提交過教師申請'
   },
 
   // 驗證錯誤回應結構
   validationErrorResponse: {
     status: 'error',
+    code: 'VALIDATION_ERROR',
     message: '參數驗證失敗',
     errors: expect.any(Object)
   },

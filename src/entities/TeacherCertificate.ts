@@ -1,6 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm'
 
 @Entity('teacher_certificates')
+@Index(['teacher_id']) // 優化按教師查詢證書的效能
+@Index(['teacher_id', 'created_at']) // 優化按教師和時間排序的查詢效能
+@Index(['license_number']) // 優化證書編號唯一性檢查效能
+@Index(['category_id']) // 優化按類別篩選的效能
 export class TeacherCertificate {
   /** 證書ID（主鍵） */
   @PrimaryGeneratedColumn()
