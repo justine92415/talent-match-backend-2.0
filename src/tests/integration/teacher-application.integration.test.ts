@@ -238,10 +238,8 @@ describe('教師申請 API 整合測試', () => {
       expect(response.status).toBe(401)
       expect(response.body).toMatchObject({
         status: 'error',
-        error: {
-          code: 'ACCOUNT_SUSPENDED',
-          message: '帳號狀態異常'
-        }
+        code: 'ACCOUNT_SUSPENDED',
+        message: '帳號狀態異常'
       })
     })
   })

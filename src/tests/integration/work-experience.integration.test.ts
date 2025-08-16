@@ -110,10 +110,8 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        error: {
-          code: 'UNAUTHORIZED_ACCESS',
-          message: expect.any(String)
-        }
+        code: 'UNAUTHORIZED_ACCESS',
+        message: expect.any(String)
       })
     })
 
@@ -134,10 +132,8 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        error: {
-          code: 'UNAUTHORIZED_ACCESS',
-          message: expect.any(String)
-        }
+        code: 'UNAUTHORIZED_ACCESS',
+        message: expect.any(String)
       })
     })
   })
@@ -241,10 +237,10 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        error: {
+        
           code: 'VALIDATION_ERROR',
           message: expect.any(String)
-        }
+
       })
     })
 
@@ -265,10 +261,10 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        error: {
+        
           code: 'VALIDATION_ERROR',
           message: expect.any(String)
-        }
+
       })
     })
 
@@ -289,10 +285,10 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        error: {
+        
           code: 'VALIDATION_ERROR',
           message: expect.any(String)
-        }
+
       })
     })
 
@@ -312,10 +308,10 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        error: {
+        
           code: 'VALIDATION_ERROR',
           message: expect.any(String)
-        }
+
       })
     })
 
@@ -334,10 +330,10 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        error: {
+        
           code: 'UNAUTHORIZED_ACCESS',
           message: expect.any(String)
-        }
+
       })
     })
 
@@ -373,10 +369,10 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        error: {
+        
           code: 'UNAUTHORIZED_ACCESS',
           message: expect.any(String)
-        }
+
       })
     })
   })
@@ -465,10 +461,10 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        error: {
+        
           code: 'APPLICATION_NOT_FOUND',
           message: expect.any(String)
-        }
+
       })
     })
 
@@ -503,10 +499,10 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        error: {
+        
           code: 'UNAUTHORIZED_ACCESS',
           message: expect.any(String)
-        }
+
       })
     })
 
@@ -524,10 +520,10 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        error: {
+        
           code: 'VALIDATION_ERROR',
           message: expect.any(String)
-        }
+
       })
     })
 
@@ -540,10 +536,10 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        error: {
+        
           code: 'UNAUTHORIZED_ACCESS',
           message: expect.any(String)
-        }
+
       })
     })
   })
@@ -588,10 +584,10 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        error: {
+        
           code: 'APPLICATION_NOT_FOUND',
           message: expect.any(String)
-        }
+
       })
     })
 
@@ -621,10 +617,10 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        error: {
+        
           code: 'UNAUTHORIZED_ACCESS',
           message: expect.any(String)
-        }
+
       })
     })
 
@@ -633,10 +629,10 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        error: {
+        
           code: 'UNAUTHORIZED_ACCESS',
           message: expect.any(String)
-        }
+
       })
     })
   })

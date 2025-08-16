@@ -304,13 +304,14 @@ export const expectedResponseStructures = {
   // 重複申請錯誤回應結構
   duplicateApplicationResponse: {
     status: 'error',
-    message: '您已提交過教師申請',
-    errors: {}
+    code: 'APPLICATION_EXISTS',
+    message: '您已提交過教師申請'
   },
 
   // 驗證錯誤回應結構
   validationErrorResponse: {
     status: 'error',
+    code: 'VALIDATION_ERROR',
     message: '參數驗證失敗',
     errors: expect.any(Object)
   },

@@ -431,11 +431,12 @@ describe('POST /api/auth/login', () => {
 
         expect(response.body).toMatchObject({
           status: 'error',
-          message: 'Token 無效或已過期',
-          errors: {
-            token: ['Token 無效或已過期']
-          }
+          code: 'TOKEN_INVALID_OR_EXPIRED',
+          message: 'Token 無效或已過期'
         })
+        
+        // 認證錯誤不應有 errors 欄位
+        expect(response.body.errors).toBeUndefined()
       })
 
       it('應該拒絕過期的 refresh token 並回傳 401', async () => {
