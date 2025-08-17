@@ -1,5 +1,17 @@
+#!/usr/bin/env ts-node-esm
+
+/**
+ * 資料庫種子資料執行腳本
+ * 使用方式: npm run db:seed
+ */
+
+import * as dotenv from 'dotenv'
 import { DataSource } from 'typeorm'
-import config from '@config/index'
+import { DatabaseSeeder } from '../db/seeds/index'
+
+// 載入環境變數
+dotenv.config()
+
 import { User } from '@entities/User'
 import { City } from '@entities/City'
 import { MainCategory } from '@entities/MainCategory'
@@ -35,17 +47,15 @@ import { TeacherSettlement } from '@entities/TeacherSettlement'
 import { AdminUser } from '@entities/AdminUser'
 import { CourseApplication } from '@entities/CourseApplication'
 
-export const dataSource = new DataSource({
+// 建立專用於種子資料的資料源配置
+const seedDataSource = new DataSource({
   type: 'postgres',
-  host: config.get<string>('db.host'),
-  port: config.get<number>('db.port'),
-  username: config.get<string>('db.username'),
-  password: config.get<string>('db.password'),
-  database: config.get<string>('db.database'),
-  synchronize: config.get<boolean>('db.synchronize'),
-  // 🔧 只在真正的測試執行時使用 dropSchema 來確保乾淨狀態
-  dropSchema: process.env.NODE_ENV === 'test' && (typeof jest !== 'undefined' || process.env.JEST_WORKER_ID !== undefined),
-  poolSize: process.env.NODE_ENV === 'test' ? 5 : 10, // 測試環境使用較少連線
+  host: process.env.DB_HOST === 'postgres' ? 'localhost' : (process.env.DB_HOST || 'localhost'), // 修正 Docker 容器名稱
+  port: parseInt(process.env.DB_PORT || '5432', 10),
+  username: process.env.DB_USERNAME || 'postgres',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_DATABASE || 'postgres',
+  synchronize: process.env.DB_SYNCHRONIZE === 'true',
   entities: [
     User,
     City,
@@ -82,16 +92,53 @@ export const dataSource = new DataSource({
     AdminUser,
     CourseApplication
   ],
-  ssl: config.get<boolean>('db.ssl') ? { rejectUnauthorized: false } : false,
-  // 🔧 新增：測試環境的額外設定
-  extra:
-    process.env.NODE_ENV === 'test'
-      ? {
-          // 測試環境使用較短的連線超時
-          connectionTimeoutMillis: 5000,
-          idleTimeoutMillis: 5000,
-          // 防止連線池問題
-          max: 5
-        }
-      : {}
+  ssl: process.env.DB_ENABLE_SSL === 'true' ? { rejectUnauthorized: false } : false
 })
+
+async function main() {
+  try {
+    console.log('🌱 開始執行資料庫種子資料...')
+    
+    // 初始化資料庫連線
+    if (!seedDataSource.isInitialized) {
+      await seedDataSource.initialize()
+      console.log('✅ 資料庫連線成功')
+    }
+    
+    // 執行種子資料
+    const seeder = new DatabaseSeeder()
+    await seeder.run(seedDataSource)
+    
+    console.log('🎉 種子資料執行完成')
+  } catch (error) {
+    console.error('❌ 種子資料執行失敗:', error)
+    process.exit(1)
+  } finally {
+    // 確保資料庫連線關閉
+    if (seedDataSource.isInitialized) {
+      await seedDataSource.destroy()
+      console.log('📴 資料庫連線已關閉')
+    }
+    process.exit(0)
+  }
+}
+
+// 處理程式終止信號
+process.on('SIGINT', async () => {
+  console.log('\n收到終止信號，正在關閉...')
+  if (seedDataSource.isInitialized) {
+    await seedDataSource.destroy()
+  }
+  process.exit(0)
+})
+
+process.on('SIGTERM', async () => {
+  console.log('\n收到終止信號，正在關閉...')
+  if (seedDataSource.isInitialized) {
+    await seedDataSource.destroy()
+  }
+  process.exit(0)
+})
+
+// 執行主函式
+main().catch(console.error)

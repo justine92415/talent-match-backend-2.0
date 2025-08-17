@@ -13,6 +13,7 @@
     "build": "tsc && tsc-alias",
     "start:prod": "node dist/src/bin/www.js",
     "init:schema": "typeorm schema:sync -d ./dist/db/data-source.js",
+    "db:seed": "ts-node -r tsconfig-paths/register ./src/scripts/seed-database.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:check": "eslint . --max-warnings 0",
