@@ -9,8 +9,8 @@
     "stop": "docker compose --env-file .env stop",
     "clean": "docker compose --env-file .env down -v",
     "test": "node_modules/.bin/jest",
-    "dev": "ts-node ./src/bin/www.ts",
-    "build": "tsc",
+    "dev": "ts-node -r tsconfig-paths/register ./src/bin/www.ts",
+    "build": "tsc && tsc-alias",
     "start:prod": "node dist/src/bin/www.js",
     "init:schema": "typeorm schema:sync -d ./dist/db/data-source.js",
     "lint": "eslint .",
@@ -42,7 +42,6 @@
     "reflect-metadata": "^0.2.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
-    "tsconfig-paths": "^4.2.0",
     "typeorm": "^0.3.20",
     "uuid": "^11.1.0"
   },
@@ -79,6 +78,8 @@
     "supertest": "^7.0.0",
     "ts-jest": "^29.4.1",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.16",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.4.2"
   }
 }

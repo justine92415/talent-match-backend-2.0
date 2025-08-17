@@ -1,8 +1,5 @@
 #!/usr/bin/env node
 
-// 必須在所有路徑別名導入之前註冊 tsconfig-paths
-import 'tsconfig-paths/register'
-
 /**
  * Module dependencies.
  */
