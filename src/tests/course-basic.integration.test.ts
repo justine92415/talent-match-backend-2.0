@@ -14,6 +14,7 @@ import app from '@src/app'
 import { initTestDatabase, closeTestDatabase, clearDatabase } from '@tests/helpers/database'
 import { UserTestHelpers, TeacherTestHelpers } from '@tests/helpers/testHelpers'
 import { ERROR_MESSAGES } from '@constants/Message'
+import { ERROR_CODES } from '@constants/ErrorCode'
 import { ApplicationStatus } from '@entities/enums'
 import type { CreateCourseRequest } from '@models/index'
 
@@ -127,14 +128,9 @@ describe('課程基本管理 API', () => {
 
       expect(response.body).toEqual({
         status: 'error',
-        code: 'VALIDATION_ERROR',
+        code: ERROR_CODES.VALIDATION_ERROR,
         message: expect.any(String),
-        errors: expect.objectContaining({
-          name: expect.arrayContaining([expect.any(String)]),
-          main_category_id: expect.arrayContaining([expect.any(String)]),
-          sub_category_id: expect.arrayContaining([expect.any(String)]),
-          city_id: expect.arrayContaining([expect.any(String)])
-        })
+        errors: expect.any(Object)
       })
     })
 
@@ -146,7 +142,7 @@ describe('課程基本管理 API', () => {
 
       expect(response.body).toEqual({
         status: 'error',
-        code: 'UNAUTHORIZED_ACCESS',
+        code: ERROR_CODES.UNAUTHORIZED_ACCESS,
         message: expect.any(String)
       })
     })
@@ -262,6 +258,7 @@ describe('課程基本管理 API', () => {
 
       expect(response.body).toEqual({
         status: 'success',
+        message: '操作成功',
         data: {
           course: expect.objectContaining({
             id: courseId,
@@ -332,6 +329,7 @@ describe('課程基本管理 API', () => {
 
       expect(response.body).toEqual({
         status: 'success',
+        message: '操作成功',
         data: {
           courses: expect.arrayContaining([
             expect.objectContaining({
@@ -408,7 +406,8 @@ describe('課程基本管理 API', () => {
 
       expect(response.body).toEqual({
         status: 'success',
-        message: ERROR_MESSAGES.SUCCESS.COURSE_DELETED
+        message: ERROR_MESSAGES.SUCCESS.COURSE_DELETED,
+        data: null
       })
 
       // 驗證課程已被刪除

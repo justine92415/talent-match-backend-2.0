@@ -4,6 +4,7 @@
  */
 
 import { ApplicationStatus, UserRole, AccountStatus } from '@entities/enums'
+import { ERROR_CODES } from '@constants/ErrorCode'
 import { Teacher } from '@entities/Teacher'
 
 // 有效的測試資料：自我介紹
@@ -304,14 +305,14 @@ export const expectedResponseStructures = {
   // 重複申請錯誤回應結構
   duplicateApplicationResponse: {
     status: 'error',
-    code: 'APPLICATION_EXISTS',
+    code: ERROR_CODES.APPLICATION_EXISTS,
     message: '您已提交過教師申請'
   },
 
   // 驗證錯誤回應結構
   validationErrorResponse: {
     status: 'error',
-    code: 'VALIDATION_ERROR',
+    code: ERROR_CODES.VALIDATION_ERROR,
     message: '參數驗證失敗',
     errors: expect.any(Object)
   },

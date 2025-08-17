@@ -4,7 +4,8 @@
  */
 
 import { Response } from 'supertest'
-import { AppError, ErrorCodes, isAppError } from '@utils/errors'
+import { ERROR_CODES } from '@constants/ErrorCode'
+import { ERROR_MESSAGES } from '@constants/Message'
 
 /**
  * 預期錯誤驗證選項
