@@ -7,7 +7,7 @@
 
 import * as dotenv from 'dotenv'
 import { DataSource } from 'typeorm'
-import { DatabaseSeeder } from '../db/seeds/index'
+import { DatabaseSeeder } from '@db/seeds/index'
 
 // 載入環境變數
 dotenv.config()

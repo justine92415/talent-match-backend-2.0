@@ -78,6 +78,20 @@ export const ERROR_MESSAGES = {
     // 一般驗證
     FIELD_REQUIRED: (field: string) => `${field}為必填欄位`,
     FIELD_INVALID_TYPE: (field: string, type: string) => `${field}必須為${type}格式`,
+
+    // 課程驗證
+    COURSE_NAME_REQUIRED: '課程名稱為必填欄位',
+    COURSE_NAME_TOO_LONG: '課程名稱不能超過100個字元',
+    COURSE_CONTENT_REQUIRED: '課程內容為必填欄位', 
+    COURSE_CONTENT_TOO_LONG: '課程內容不能超過5000個字元',
+    MAIN_CATEGORY_REQUIRED: '主分類為必填欄位',
+    MAIN_CATEGORY_INVALID: '主分類格式不正確',
+    SUB_CATEGORY_REQUIRED: '子分類為必填欄位',
+    SUB_CATEGORY_INVALID: '子分類格式不正確',
+    CITY_REQUIRED: '城市為必填欄位',
+    CITY_INVALID: '城市格式不正確',
+    SURVEY_URL_INVALID: '問卷連結格式不正確',
+    PURCHASE_MESSAGE_TOO_LONG: '購買訊息不能超過500個字元',
   },
 
   // 業務邏輯錯誤訊息
@@ -105,6 +119,8 @@ export const ERROR_MESSAGES = {
     PROFILE_UPDATE_FAILED: '更新個人資料失敗',
     PASSWORD_RESET_FAILED: '密碼重設失敗',
     TOKEN_REFRESH_FAILED: 'Token 刷新失敗',
+    COURSE_PUBLISHED_CANNOT_DELETE: '已發布的課程不能直接刪除',
+    TEACHER_NOT_APPROVED: '教師申請尚未核准',
   },
 
   // 系統錯誤訊息
@@ -137,6 +153,18 @@ export const ERROR_MESSAGES = {
     LEARNING_EXPERIENCE_CREATED: '學習經歷已新增',
     LEARNING_EXPERIENCE_UPDATED: '學習經歷已更新',
     LEARNING_EXPERIENCE_DELETED: '學習經歷已刪除',
+    // 課程相關成功訊息
+    COURSE_CREATED: '課程建立成功',
+    COURSE_UPDATED: '課程更新成功',
+    COURSE_DELETED: '課程已刪除',
+    COURSE_SUBMITTED: '課程已提交審核',
+    COURSE_RESUBMITTED: '課程已重新提交審核',
+    COURSE_PUBLISHED: '課程已成功發布',
+    COURSE_ARCHIVED: '課程已封存',
+    // 價格方案相關成功訊息
+    PRICE_OPTION_CREATED: '價格方案新增成功',
+    PRICE_OPTION_UPDATED: '價格方案更新成功',
+    PRICE_OPTION_DELETED: '價格方案已刪除',
   }
 } as const
 

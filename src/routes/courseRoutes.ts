@@ -1,0 +1,556 @@
+/**
+ * 課程路由
+ * 
+ * 提供課程管理的 API 端點，包括：
+ * - POST /api/courses - 建立課程
+ * - PUT /api/courses/:id - 更新課程
+ * - GET /api/courses/:id - 取得課程詳情
+ * - GET /api/courses - 教師課程列表
+ * - DELETE /api/courses/:id - 刪除課程
+ * 
+ * 所有端點都需要教師身份認證
+ */
+
+import { Router } from 'express'
+import { authenticateToken } from '@middleware/auth'
+import { CourseController } from '@controllers/CourseController'
+import { 
+  validateCreateCourse,
+  validateUpdateCourse,
+  validateCourseId,
+  validateCourseListQuery
+} from '@middleware/validation/courseValidation'
+
+const router = Router()
+const courseController = new CourseController()
+
+/**
+ * @swagger
+ * tags:
+ *   name: Courses
+ *   description: 課程管理 API
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     CreateCourseRequest:
+ *       type: object
+ *       required:
+ *         - name
+ *         - content
+ *         - main_category_id
+ *         - sub_category_id
+ *         - city_id
+ *       properties:
+ *         name:
+ *           type: string
+ *           minLength: 1
+ *           maxLength: 100
+ *           description: 課程名稱
+ *           example: "JavaScript 基礎程式設計"
+ *         content:
+ *           type: string
+ *           minLength: 1
+ *           maxLength: 5000
+ *           description: 課程內容描述
+ *           example: "從零開始學習 JavaScript，包含基礎語法、DOM 操作等"
+ *         main_category_id:
+ *           type: integer
+ *           description: 主分類 ID
+ *           example: 1
+ *         sub_category_id:
+ *           type: integer
+ *           description: 子分類 ID
+ *           example: 1
+ *         city_id:
+ *           type: integer
+ *           description: 城市 ID
+ *           example: 1
+ *         survey_url:
+ *           type: string
+ *           format: uri
+ *           maxLength: 500
+ *           description: 問卷調查連結（選填）
+ *           example: "https://survey.example.com/course-feedback"
+ *         purchase_message:
+ *           type: string
+ *           maxLength: 500
+ *           description: 購買後訊息（選填）
+ *           example: "感謝購買本課程，請查收課程相關資訊"
+ * 
+ *     UpdateCourseRequest:
+ *       type: object
+ *       properties:
+ *         name:
+ *           type: string
+ *           minLength: 1
+ *           maxLength: 100
+ *           description: 課程名稱
+ *         content:
+ *           type: string
+ *           minLength: 1
+ *           maxLength: 5000
+ *           description: 課程內容描述
+ *         main_category_id:
+ *           type: integer
+ *           description: 主分類 ID
+ *         sub_category_id:
+ *           type: integer
+ *           description: 子分類 ID
+ *         city_id:
+ *           type: integer
+ *           description: 城市 ID
+ *         survey_url:
+ *           type: string
+ *           format: uri
+ *           maxLength: 500
+ *           description: 問卷調查連結
+ *         purchase_message:
+ *           type: string
+ *           maxLength: 500
+ *           description: 購買後訊息
+ * 
+ *     CourseResponse:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: 課程 ID
+ *         uuid:
+ *           type: string
+ *           format: uuid
+ *           description: 課程 UUID
+ *         teacher_id:
+ *           type: integer
+ *           description: 教師 ID
+ *         name:
+ *           type: string
+ *           description: 課程名稱
+ *         content:
+ *           type: string
+ *           nullable: true
+ *           description: 課程內容
+ *         main_image:
+ *           type: string
+ *           nullable: true
+ *           description: 課程主圖片
+ *         rate:
+ *           type: number
+ *           description: 課程評分
+ *         review_count:
+ *           type: integer
+ *           description: 評價數量
+ *         view_count:
+ *           type: integer
+ *           description: 觀看次數
+ *         purchase_count:
+ *           type: integer
+ *           description: 購買次數
+ *         student_count:
+ *           type: integer
+ *           description: 學生數量
+ *         main_category_id:
+ *           type: integer
+ *           nullable: true
+ *           description: 主分類 ID
+ *         sub_category_id:
+ *           type: integer
+ *           nullable: true
+ *           description: 子分類 ID
+ *         city_id:
+ *           type: integer
+ *           nullable: true
+ *           description: 城市 ID
+ *         survey_url:
+ *           type: string
+ *           nullable: true
+ *           description: 問卷調查連結
+ *         purchase_message:
+ *           type: string
+ *           nullable: true
+ *           description: 購買後訊息
+ *         status:
+ *           type: string
+ *           enum: [draft, under_review, published, archived]
+ *           description: 課程狀態
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *           description: 建立時間
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *           description: 更新時間
+ * 
+ *     CourseListResponse:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: 課程 ID
+ *         uuid:
+ *           type: string
+ *           format: uuid
+ *           description: 課程 UUID
+ *         name:
+ *           type: string
+ *           description: 課程名稱
+ *         main_image:
+ *           type: string
+ *           nullable: true
+ *           description: 課程主圖片
+ *         rate:
+ *           type: number
+ *           description: 課程評分
+ *         review_count:
+ *           type: integer
+ *           description: 評價數量
+ *         student_count:
+ *           type: integer
+ *           description: 學生數量
+ *         status:
+ *           type: string
+ *           enum: [draft, under_review, published, archived]
+ *           description: 課程狀態
+ *         created_at:
+ *           type: string
+ *           format: date-time
+ *           description: 建立時間
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *           description: 更新時間
+ */
+
+/**
+ * @swagger
+ * /api/courses:
+ *   post:
+ *     tags: [Courses]
+ *     summary: 建立新課程
+ *     description: 教師建立新的課程，需要提供課程基本資訊
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateCourseRequest'
+ *     responses:
+ *       201:
+ *         description: 課程建立成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/CourseResponse'
+ *       400:
+ *         description: 請求參數驗證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: 未認證或認證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 權限不足，需要教師權限
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post('/', authenticateToken, validateCreateCourse, courseController.createCourse)
+
+/**
+ * @swagger
+ * /api/courses/{id}:
+ *   put:
+ *     tags: [Courses]
+ *     summary: 更新課程資訊
+ *     description: 教師更新自己的課程資訊
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 課程 ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateCourseRequest'
+ *     responses:
+ *       200:
+ *         description: 課程更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/CourseResponse'
+ *       400:
+ *         description: 請求參數驗證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: 未認證或認證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 權限不足，只能更新自己的課程
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.put('/:id', authenticateToken, validateCourseId, validateUpdateCourse, courseController.updateCourse)
+
+/**
+ * @swagger
+ * /api/courses/{id}:
+ *   get:
+ *     tags: [Courses]
+ *     summary: 取得課程詳情
+ *     description: 取得指定課程的詳細資訊，包含完整的課程內容
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 課程 ID
+ *     responses:
+ *       200:
+ *         description: 成功取得課程詳情
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/CourseResponse'
+ *       401:
+ *         description: 未認證或認證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 權限不足，只能查看自己的課程
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/:id', authenticateToken, validateCourseId, courseController.getCourse)
+
+/**
+ * @swagger
+ * /api/courses:
+ *   get:
+ *     tags: [Courses]
+ *     summary: 取得教師課程列表
+ *     description: 取得當前教師的所有課程列表，支援分頁和排序
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: 頁數
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: 每頁筆數
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum: [createdAt, updatedAt, name, price]
+ *           default: createdAt
+ *         description: 排序欄位
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: DESC
+ *         description: 排序方式
+ *     responses:
+ *       200:
+ *         description: 成功取得課程列表
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     courses:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/CourseListResponse'
+ *                     total:
+ *                       type: integer
+ *                       description: 總課程數量
+ *                     page:
+ *                       type: integer
+ *                       description: 當前頁數
+ *                     limit:
+ *                       type: integer
+ *                       description: 每頁筆數
+ *       400:
+ *         description: 查詢參數驗證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: 未認證或認證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/', authenticateToken, validateCourseListQuery, courseController.getCourseList)
+
+/**
+ * @swagger
+ * /api/courses/{id}:
+ *   delete:
+ *     tags: [Courses]
+ *     summary: 刪除課程
+ *     description: 教師刪除自己的課程，只能刪除尚未有學生報名的課程
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 課程 ID
+ *     responses:
+ *       200:
+ *         description: 課程刪除成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: 課程已成功刪除
+ *       401:
+ *         description: 未認證或認證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 權限不足或課程無法刪除
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       409:
+ *         description: 課程已有學生報名，無法刪除
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.delete('/:id', authenticateToken, validateCourseId, courseController.deleteCourse)
+
+export default router
