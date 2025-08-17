@@ -32,3 +32,11 @@ export {
   certificateCreateSchema,
   certificateUpdateSchema
 } from './certificate'
+
+// 價格方案相關驗證 Schema
+export {
+  priceOptionCreateSchema,
+  priceOptionUpdateSchema,
+  priceOptionIdParamSchema,
+  courseIdParamSchema
+} from './priceOptionValidation'

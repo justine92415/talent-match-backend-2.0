@@ -54,7 +54,7 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     const token = authHeader && authHeader.split(' ')[1] // Bearer TOKEN
 
     if (!token) {
-      throw Errors.unauthorizedAccess('Access token 為必填欄位')
+      throw Errors.tokenRequired('Access token 為必填欄位')
     }
 
     // 2. 驗證 JWT Token

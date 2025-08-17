@@ -1,11 +1,14 @@
 /**
  * 課程相關型別定義
  * 
- * 包含課程建立、管理、價格方案相關的介面定義
- * 與 Course、CoursePriceOption 等實體對應
+ * 包含課程建立、管理相關的介面定義
+ * 與 Course 實體對應
+ * 
+ * 注意：價格方案相關型別已遷移至 priceOption.interface.ts
  */
 
 import { CourseStatus, ApplicationStatus } from '@entities/enums'
+import { PriceOption, PriceOptionSummary } from './priceOption.interface'
 
 // ==================== 課程相關介面 ====================
 
@@ -73,31 +76,12 @@ export interface CourseListQuery {
 }
 
 // ==================== 價格方案相關介面 ====================
+// 注意：詳細的價格方案型別已遷移至 priceOption.interface.ts
 
-/** 價格方案基本資訊 */
-export interface PriceOptionInfo {
-  id: number
-  uuid: string
-  course_id: number
+/** 價格方案驗證資料 */
+export interface PriceOptionData {
   price: number
   quantity: number
-  is_active: boolean
-  created_at: Date
-  updated_at: Date
-}
-
-/** 價格方案請求資料 */
-export interface PriceOptionRequest {
-  price: number
-  quantity: number
-}
-
-/** 價格方案統計資訊 */
-export interface PriceOptionSummary {
-  total_options: number
-  active_options: number
-  min_price: number
-  max_price: number
 }
 
 // ==================== 分類和地區相關介面 ====================
@@ -133,7 +117,7 @@ export interface CityInfo {
 /** 課程詳情回應（簡化版，不包含檔案和影片） */
 export interface CourseDetailResponse {
   course: CourseBasicInfo
-  price_options: PriceOptionInfo[]
+  price_options: PriceOption[]
   categories: {
     main_category: MainCategoryInfo | null
     sub_category: SubCategoryInfo | null
@@ -153,12 +137,6 @@ export interface CourseListResponse {
     total: number
     total_pages: number
   }
-}
-
-/** 價格方案列表回應 */
-export interface PriceOptionListResponse {
-  price_options: PriceOptionInfo[]
-  summary: PriceOptionSummary
 }
 
 // ==================== 驗證相關介面 ====================

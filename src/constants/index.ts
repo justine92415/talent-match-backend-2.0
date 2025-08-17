@@ -21,6 +21,9 @@ export * from './learningExperience'
 // 時間管理常數
 export * from './schedule'
 
+// 價格方案常數
+export * from './priceOption'
+
 // === 便捷的預設匯出 ===
 // 新系統
 export { 

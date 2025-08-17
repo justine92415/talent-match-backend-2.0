@@ -142,7 +142,7 @@ describe('課程基本管理 API', () => {
 
       expect(response.body).toEqual({
         status: 'error',
-        code: ERROR_CODES.UNAUTHORIZED_ACCESS,
+        code: ERROR_CODES.TOKEN_REQUIRED,
         message: expect.any(String)
       })
     })
@@ -163,7 +163,7 @@ describe('課程基本管理 API', () => {
 
       expect(response.body).toEqual({
         status: 'error',
-        code: 'FORBIDDEN',
+        code: ERROR_CODES.TEACHER_PERMISSION_REQUIRED,
         message: expect.any(String)
       })
     })
@@ -232,7 +232,7 @@ describe('課程基本管理 API', () => {
 
       expect(response.body).toEqual({
         status: 'error',
-        code: 'FORBIDDEN',
+        code: ERROR_CODES.UNAUTHORIZED_ACCESS,
         message: expect.any(String)
       })
     })
@@ -297,7 +297,7 @@ describe('課程基本管理 API', () => {
 
       expect(response.body).toEqual({
         status: 'error',
-        code: 'FORBIDDEN', 
+        code: ERROR_CODES.UNAUTHORIZED_ACCESS, 
         message: expect.any(String)
       })
     })
@@ -440,7 +440,7 @@ describe('課程基本管理 API', () => {
 
       expect(response.body).toEqual({
         status: 'error',
-        code: 'FORBIDDEN',
+        code: ERROR_CODES.UNAUTHORIZED_ACCESS,
         message: expect.any(String)
       })
     })

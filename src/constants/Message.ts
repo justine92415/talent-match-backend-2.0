@@ -107,6 +107,16 @@ export const MESSAGES = {
     SURVEY_URL_INVALID: '問卷連結格式不正確',
     PURCHASE_MESSAGE_TOO_LONG: '購買訊息不能超過500個字元',
 
+    // 價格方案驗證
+    PRICE_REQUIRED: '價格為必填欄位',
+    PRICE_INVALID: '價格格式不正確',
+    PRICE_TOO_LOW: '價格必須大於0',
+    PRICE_TOO_HIGH: '價格不能超過999999',
+    QUANTITY_REQUIRED: '堂數為必填欄位',
+    QUANTITY_INVALID: '堂數格式不正確',
+    QUANTITY_TOO_LOW: '堂數必須大於0',
+    QUANTITY_TOO_HIGH: '堂數不能超過999',
+
     // 一般驗證
     FIELD_REQUIRED: (field: string) => `${field}為必填欄位`,
     FIELD_INVALID_TYPE: (field: string, type: string) => `${field}必須為${type}格式`,
@@ -127,6 +137,7 @@ export const MESSAGES = {
     WORK_EXPERIENCE_RECORD_NOT_FOUND: '工作經驗記錄不存在',
     LEARNING_EXPERIENCE_NOT_FOUND: '找不到學習經歷記錄',
     LEARNING_EXPERIENCE_RECORD_NOT_FOUND: '學習經歷記錄不存在',
+    PRICE_OPTION_NOT_FOUND: '找不到價格方案',
 
     // 權限與授權
     UNAUTHORIZED_ACCESS: '您沒有權限執行此操作',
@@ -151,6 +162,12 @@ export const MESSAGES = {
     COURSE_CANNOT_PUBLISH: '課程無法發布',
     COURSE_CANNOT_ARCHIVE: '課程無法封存',
     COURSE_UNDER_REVIEW: '課程正在審核中，無法修改',
+    
+    // 價格方案業務規則
+    PRICE_OPTION_DUPLICATE: '此價格和堂數組合已存在',
+    PRICE_OPTION_LIMIT_EXCEEDED: '每個課程最多只能有3個價格方案',
+    PRICE_OPTION_LAST_ONE: '不能刪除最後一個價格方案',
+    PRICE_OPTION_HAS_PURCHASES: '此價格方案已有購買記錄，無法刪除',
   },
 
   // === 系統訊息 ===
@@ -196,6 +213,7 @@ export const MESSAGES = {
   // === 價格方案相關訊息 ===
   PRICE_OPTION: {
     // 成功訊息
+    LIST_SUCCESS: '取得價格方案列表成功',
     CREATED: '價格方案新增成功',
     UPDATED: '價格方案更新成功',
     DELETED: '價格方案已刪除',
@@ -246,6 +264,7 @@ export const SUCCESS = {
   COURSE_ARCHIVED: MESSAGES.COURSE.ARCHIVED,
   
   // 價格方案相關成功訊息
+  PRICE_OPTION_LIST_SUCCESS: MESSAGES.PRICE_OPTION.LIST_SUCCESS,
   PRICE_OPTION_CREATED: MESSAGES.PRICE_OPTION.CREATED,
   PRICE_OPTION_UPDATED: MESSAGES.PRICE_OPTION.UPDATED,
   PRICE_OPTION_DELETED: MESSAGES.PRICE_OPTION.DELETED,
