@@ -178,3 +178,31 @@ export interface CourseSubmissionValidation {
   city_id: number
   price_options: PriceOptionData[]
 }
+
+// ==================== 課程狀態管理相關介面 ====================
+
+/** 課程提交審核請求參數 */
+export interface SubmitCourseRequest {
+  submission_notes?: string
+}
+
+/** 課程重新提交審核請求參數 */
+export interface ResubmitCourseRequest {
+  submission_notes?: string
+}
+
+/** 課程封存請求參數 */
+export interface ArchiveCourseRequest {
+  archive_reason?: string
+}
+
+/** 課程狀態檢查結果 */
+export interface CourseStatusCheck {
+  canSubmit: boolean
+  canResubmit: boolean
+  canPublish: boolean
+  canArchive: boolean
+  canEdit: boolean
+  canDelete: boolean
+  reason?: string
+}

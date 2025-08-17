@@ -81,11 +81,11 @@ export class Course {
 
   /** 提交審核時的備註 */
   @Column({ type: 'text', nullable: true })
-  submission_notes!: string
+  submission_notes!: string | null
 
   /** 封存課程的原因 */
   @Column({ type: 'text', nullable: true })
-  archive_reason!: string
+  archive_reason!: string | null
 
   /** 建立時間 */
   @CreateDateColumn({ type: 'timestamp' })

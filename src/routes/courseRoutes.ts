@@ -553,4 +553,290 @@ router.get('/', authenticateToken, validateCourseListQuery, courseController.get
  */
 router.delete('/:id', authenticateToken, validateCourseId, courseController.deleteCourse)
 
+// 課程狀態管理路由
+
+/**
+ * @swagger
+ * /api/courses/{id}/submit:
+ *   post:
+ *     tags: [Courses]
+ *     summary: 提交課程審核
+ *     description: 教師將草稿狀態的課程提交審核，課程狀態會從 draft 變更為 under_review
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 課程 ID
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               note:
+ *                 type: string
+ *                 maxLength: 500
+ *                 description: 提交備註（選填）
+ *                 example: "課程內容已完成，請審核"
+ *     responses:
+ *       200:
+ *         description: 課程提交審核成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/CourseResponse'
+ *       400:
+ *         description: 課程狀態不允許提交或參數錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未認證或認證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 權限不足，只能提交自己的課程
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post('/:id/submit', authenticateToken, validateCourseId, courseController.submitCourse)
+
+/**
+ * @swagger
+ * /api/courses/{id}/resubmit:
+ *   post:
+ *     tags: [Courses]
+ *     summary: 重新提交課程審核
+ *     description: 教師重新提交被退回的課程，課程狀態會從 draft 變更為 under_review
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 課程 ID
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               note:
+ *                 type: string
+ *                 maxLength: 500
+ *                 description: 重新提交備註（選填）
+ *                 example: "已修正審核意見中的問題"
+ *     responses:
+ *       200:
+ *         description: 課程重新提交成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/CourseResponse'
+ *       400:
+ *         description: 課程狀態不允許重新提交或參數錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未認證或認證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 權限不足，只能重新提交自己的課程
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post('/:id/resubmit', authenticateToken, validateCourseId, courseController.resubmitCourse)
+
+/**
+ * @swagger
+ * /api/courses/{id}/publish:
+ *   post:
+ *     tags: [Courses]
+ *     summary: 發布課程
+ *     description: 管理員或系統將已審核通過的課程發布上線，課程狀態會從 under_review 變更為 published
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 課程 ID
+ *     responses:
+ *       200:
+ *         description: 課程發布成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/CourseResponse'
+ *       400:
+ *         description: 課程狀態不允許發布
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未認證或認證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 權限不足，只能發布自己的課程
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post('/:id/publish', authenticateToken, validateCourseId, courseController.publishCourse)
+
+/**
+ * @swagger
+ * /api/courses/{id}/archive:
+ *   post:
+ *     tags: [Courses]
+ *     summary: 封存課程
+ *     description: 教師將已發布的課程封存下架，課程狀態會從 published 變更為 archived
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 課程 ID
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reason:
+ *                 type: string
+ *                 maxLength: 500
+ *                 description: 封存原因（選填）
+ *                 example: "課程內容需要重新調整"
+ *     responses:
+ *       200:
+ *         description: 課程封存成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/CourseResponse'
+ *       400:
+ *         description: 課程狀態不允許封存或參數錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: 未認證或認證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: 權限不足，只能封存自己的課程
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post('/:id/archive', authenticateToken, validateCourseId, courseController.archiveCourse)
+
 export default router

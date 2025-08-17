@@ -12,7 +12,8 @@
 import { Request, Response, NextFunction } from 'express'
 import { courseService } from '@services/courseService'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
-import { ERROR_MESSAGES } from '@constants/Message'
+import { MESSAGES, SUCCESS } from '@constants/Message'
+import { ERROR_CODES } from '@constants/ErrorCode'
 
 export class CourseController {
   /**
@@ -24,8 +25,8 @@ export class CourseController {
     if (req.user?.role !== 'teacher') {
       res.status(403).json({
         status: 'error',
-        code: 'FORBIDDEN',
-        message: '需要教師權限才能建立課程'
+        code: ERROR_CODES.TEACHER_PERMISSION_REQUIRED,
+        message: MESSAGES.BUSINESS.TEACHER_PERMISSION_REQUIRED
       })
       return
     }
@@ -37,7 +38,7 @@ export class CourseController {
 
     res.status(201).json(handleCreated({
       course
-    }, ERROR_MESSAGES.SUCCESS.COURSE_CREATED))
+    }, SUCCESS.COURSE_CREATED))
   })
 
   /**
@@ -53,7 +54,7 @@ export class CourseController {
 
     res.status(200).json(handleSuccess({
       course
-    }, ERROR_MESSAGES.SUCCESS.COURSE_UPDATED))
+    }, SUCCESS.COURSE_UPDATED))
   })
 
   /**
@@ -77,7 +78,7 @@ export class CourseController {
    */
   getCourseList = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user!.userId
-    const { page, limit } = req.query as any
+    const { page, limit } = req.query as { page?: number; limit?: number }
 
     const result = await courseService.getCoursesByTeacherId(userId, { page, limit })
 
@@ -94,7 +95,64 @@ export class CourseController {
 
     await courseService.deleteCourse(courseId, userId)
 
-    res.status(200).json(handleSuccess(null, ERROR_MESSAGES.SUCCESS.COURSE_DELETED))
+    res.status(200).json(handleSuccess(null, SUCCESS.COURSE_DELETED))
+  })
+
+  // ==================== 課程狀態管理方法 ====================
+
+  /**
+   * 提交課程審核
+   * POST /api/courses/:id/submit
+   */
+  submitCourse = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user!.userId
+    const courseId = parseInt(req.params.id)
+    const submitData = req.body
+
+    await courseService.submitCourse(courseId, userId, submitData)
+
+    res.status(200).json(handleSuccess(null, SUCCESS.COURSE_SUBMITTED))
+  })
+
+  /**
+   * 重新提交課程審核
+   * POST /api/courses/:id/resubmit
+   */
+  resubmitCourse = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user!.userId
+    const courseId = parseInt(req.params.id)
+    const resubmitData = req.body
+
+    await courseService.resubmitCourse(courseId, userId, resubmitData)
+
+    res.status(200).json(handleSuccess(null, SUCCESS.COURSE_RESUBMITTED))
+  })
+
+  /**
+   * 發布課程
+   * POST /api/courses/:id/publish
+   */
+  publishCourse = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user!.userId
+    const courseId = parseInt(req.params.id)
+
+    await courseService.publishCourse(courseId, userId)
+
+    res.status(200).json(handleSuccess(null, SUCCESS.COURSE_PUBLISHED))
+  })
+
+  /**
+   * 封存課程
+   * POST /api/courses/:id/archive
+   */
+  archiveCourse = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user!.userId
+    const courseId = parseInt(req.params.id)
+    const archiveData = req.body
+
+    await courseService.archiveCourse(courseId, userId, archiveData)
+
+    res.status(200).json(handleSuccess(null, SUCCESS.COURSE_ARCHIVED))
   })
 }
 

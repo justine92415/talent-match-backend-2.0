@@ -143,6 +143,14 @@ export const MESSAGES = {
     APPLICATION_STATUS_INVALID: '只能在待審核或已拒絕狀態下修改申請',
     COURSE_PUBLISHED_CANNOT_DELETE: '已發布的課程不能直接刪除',
     TEACHER_NOT_APPROVED: '教師申請尚未核准',
+    COURSE_NOT_DRAFT: '只能操作草稿狀態的課程',
+    COURSE_NOT_APPROVED: '課程尚未通過審核',
+    COURSE_ALREADY_PUBLISHED: '課程已經發布',
+    COURSE_CANNOT_SUBMIT: '課程無法提交審核',
+    COURSE_CANNOT_RESUBMIT: '只有被拒絕的課程才能重新提交',
+    COURSE_CANNOT_PUBLISH: '課程無法發布',
+    COURSE_CANNOT_ARCHIVE: '課程無法封存',
+    COURSE_UNDER_REVIEW: '課程正在審核中，無法修改',
   },
 
   // === 系統訊息 ===
