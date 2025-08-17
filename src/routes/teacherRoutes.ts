@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { TeacherController } from '@controllers/TeacherController'
 import { scheduleController } from '@controllers/ScheduleController'
+import { learningExperienceController } from '@controllers/LearningExperienceController'
 import { authenticateToken } from '@middleware/auth'
 import {
   validateRequest,
@@ -8,10 +9,11 @@ import {
   teacherApplicationUpdateSchema,
   teacherProfileUpdateSchema,
   certificateCreateSchema,
-  certificateUpdateSchema
+  certificateUpdateSchema,
+  learningExperienceCreateSchema,
+  learningExperienceUpdateSchema
 } from '@middleware/validation'
 import { scheduleUpdateSchema, conflictsQuerySchema } from '@middleware/validation/scheduleValidation'
-import learningExperienceRoutes from '@routes/learningExperienceRoutes'
 import { certificateController } from '@controllers/CertificateController'
 
 /**
@@ -753,10 +755,446 @@ router.post('/work-experiences', authenticateToken, teacherController.createWork
 router.put('/work-experiences/:id', authenticateToken, teacherController.updateWorkExperience)
 router.delete('/work-experiences/:id', authenticateToken, teacherController.deleteWorkExperience)
 
-// 掛載學習經歷相關路由
-router.use('/learning-experiences', learningExperienceRoutes)
+// === 學習經歷管理路由 ===
 
-// 證書管理路由
+/**
+ * @swagger
+ * /teachers/learning-experiences:
+ *   get:
+ *     tags: [Teacher Features]
+ *     summary: 取得學習經歷清單
+ *     description: |
+ *       取得目前教師的所有學習經歷記錄，依開始年份降序排列。
+ *       
+ *       **權限要求:**
+ *       - 需要教師權限
+ *       - 帳號狀態必須為活躍
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 成功取得學習經歷清單
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 message:
+ *                   type: string
+ *                   example: "取得學習經歷列表成功"
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       teacher_id:
+ *                         type: integer
+ *                         example: 5
+ *                       is_in_school:
+ *                         type: boolean
+ *                         example: false
+ *                       degree:
+ *                         type: string
+ *                         example: "碩士"
+ *                       school_name:
+ *                         type: string
+ *                         example: "國立台灣大學"
+ *                       department:
+ *                         type: string
+ *                         example: "資訊工程學系"
+ *                       region:
+ *                         type: boolean
+ *                         example: true
+ *                       start_year:
+ *                         type: integer
+ *                         example: 2018
+ *                       start_month:
+ *                         type: integer
+ *                         example: 9
+ *                       end_year:
+ *                         type: integer
+ *                         nullable: true
+ *                         example: 2020
+ *                       end_month:
+ *                         type: integer
+ *                         nullable: true
+ *                         example: 6
+ *                       file_path:
+ *                         type: string
+ *                         nullable: true
+ *                         example: null
+ *                       created_at:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2024-01-15T10:30:00Z"
+ *                       updated_at:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2024-01-15T10:30:00Z"
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 權限不足（需要教師權限）
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 教師記錄不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BusinessError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get('/learning-experiences', authenticateToken, learningExperienceController.getLearningExperiences)
+
+/**
+ * @swagger
+ * /teachers/learning-experiences:
+ *   post:
+ *     tags: [Teacher Features]
+ *     summary: 建立學習經歷
+ *     description: |
+ *       建立新的學習經歷記錄。
+ *       
+ *       **業務規則:**
+ *       - 需要教師權限
+ *       - 結束年月不能早於開始年月
+ *       - 年份範圍必須合理（不超過20年）
+ *       - 不能設定未來年份（除了預計畢業年份）
+ *       
+ *       **檔案上傳:**
+ *       - TODO: 檔案上傳功能開發中
+ *       - 支援格式：PDF, JPG, JPEG, PNG
+ *       - 檔案大小限制：5MB
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - is_in_school
+ *               - degree
+ *               - school_name
+ *               - department
+ *               - region
+ *               - start_year
+ *               - start_month
+ *             properties:
+ *               is_in_school:
+ *                 type: boolean
+ *                 description: 是否仍在學中
+ *                 example: false
+ *               degree:
+ *                 type: string
+ *                 description: 學位類型
+ *                 example: "學士"
+ *               school_name:
+ *                 type: string
+ *                 description: 學校名稱
+ *                 example: "國立台灣大學"
+ *               department:
+ *                 type: string
+ *                 description: 系所科別
+ *                 example: "資訊工程學系"
+ *               region:
+ *                 type: boolean
+ *                 description: 是否為國內學校
+ *                 example: true
+ *               start_year:
+ *                 type: integer
+ *                 description: 開始年份
+ *                 example: 2018
+ *               start_month:
+ *                 type: integer
+ *                 description: 開始月份 (1-12)
+ *                 example: 9
+ *               end_year:
+ *                 type: integer
+ *                 nullable: true
+ *                 description: 結束年份（在學中時為空）
+ *                 example: 2022
+ *               end_month:
+ *                 type: integer
+ *                 nullable: true
+ *                 description: 結束月份（在學中時為空）
+ *                 example: 6
+ *           examples:
+ *             bachelor:
+ *               summary: 大學學歷範例
+ *               value:
+ *                 is_in_school: false
+ *                 degree: "學士"
+ *                 school_name: "國立台灣大學"
+ *                 department: "資訊工程學系"
+ *                 region: true
+ *                 start_year: 2018
+ *                 start_month: 9
+ *                 end_year: 2022
+ *                 end_month: 6
+ *             current_study:
+ *               summary: 目前在學範例
+ *               value:
+ *                 is_in_school: true
+ *                 degree: "博士"
+ *                 school_name: "Stanford University"
+ *                 department: "Computer Science"
+ *                 region: false
+ *                 start_year: 2023
+ *                 start_month: 9
+ *     responses:
+ *       201:
+ *         description: 學習經歷建立成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 message:
+ *                   type: string
+ *                   example: "學習經歷已新增"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     learning_experience:
+ *                       type: object
+ *       400:
+ *         description: 請求參數驗證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 權限不足（需要教師權限）
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 教師記錄不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BusinessError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/learning-experiences', authenticateToken, validateRequest(learningExperienceCreateSchema), learningExperienceController.createLearningExperience)
+
+/**
+ * @swagger
+ * /teachers/learning-experiences/{id}:
+ *   put:
+ *     tags: [Teacher Features]
+ *     summary: 更新學習經歷
+ *     description: |
+ *       更新指定的學習經歷記錄。只能更新屬於自己的學習經歷。
+ *       
+ *       **業務規則:**
+ *       - 需要教師權限
+ *       - 只能更新屬於自己的學習經歷
+ *       - 結束年月不能早於開始年月
+ *       - 年份範圍必須合理
+ *       
+ *       **檔案上傳:**
+ *       - TODO: 檔案上傳功能開發中
+ *       - 如果上傳新檔案，會取代原有檔案
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: 學習經歷 ID
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               is_in_school:
+ *                 type: boolean
+ *                 description: 是否仍在學中
+ *                 example: false
+ *               degree:
+ *                 type: string
+ *                 description: 學位類型
+ *                 example: "碩士"
+ *               school_name:
+ *                 type: string
+ *                 description: 學校名稱
+ *                 example: "國立台灣大學"
+ *               department:
+ *                 type: string
+ *                 description: 系所科別
+ *                 example: "資訊工程學系"
+ *               region:
+ *                 type: boolean
+ *                 description: 是否為國內學校
+ *                 example: true
+ *               start_year:
+ *                 type: integer
+ *                 description: 開始年份
+ *                 example: 2018
+ *               start_month:
+ *                 type: integer
+ *                 description: 開始月份 (1-12)
+ *                 example: 9
+ *               end_year:
+ *                 type: integer
+ *                 nullable: true
+ *                 description: 結束年份（在學中時為空）
+ *                 example: 2023
+ *               end_month:
+ *                 type: integer
+ *                 nullable: true
+ *                 description: 結束月份（在學中時為空）
+ *                 example: 12
+ *           examples:
+ *             partial_update:
+ *               summary: 部分更新範例
+ *               value:
+ *                 degree: "碩士"
+ *                 end_year: 2023
+ *                 end_month: 12
+ *     responses:
+ *       200:
+ *         description: 學習經歷更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 message:
+ *                   type: string
+ *                   example: "學習經歷已更新"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     learning_experience:
+ *                       type: object
+ *       400:
+ *         description: 請求參數驗證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 權限不足或無權更新此學習經歷
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 學習經歷不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BusinessError'
+ *             example:
+ *               status: "error"
+ *               error:
+ *                 code: "LEARNING_EXPERIENCE_NOT_FOUND"
+ *                 message: "找不到學習經歷記錄"
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.put('/learning-experiences/:id', authenticateToken, validateRequest(learningExperienceUpdateSchema), learningExperienceController.updateLearningExperience)
+
+/**
+ * @swagger
+ * /teachers/learning-experiences/{id}:
+ *   delete:
+ *     tags: [Teacher Features]
+ *     summary: 刪除學習經歷
+ *     description: |
+ *       刪除指定的學習經歷記錄。只能刪除屬於自己的學習經歷。
+ *       
+ *       **業務規則:**
+ *       - 需要教師權限
+ *       - 只能刪除屬於自己的學習經歷
+ *       - 刪除後相關檔案也會一併刪除（TODO: 檔案系統開發中）
+ *       
+ *       **注意事項:**
+ *       - 此操作無法復原
+ *       - 相關證書檔案會一併刪除
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: 學習經歷 ID
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: 學習經歷刪除成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 message:
+ *                   type: string
+ *                   example: "學習經歷已刪除"
+ *                 data:
+ *                   type: "null"
+ *                   example: null
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         description: 權限不足或無權刪除此學習經歷
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: 學習經歷不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BusinessError'
+ *             example:
+ *               status: "error"
+ *               error:
+ *                 code: "LEARNING_EXPERIENCE_NOT_FOUND"
+ *                 message: "找不到學習經歷記錄"
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.delete('/learning-experiences/:id', authenticateToken, learningExperienceController.deleteLearningExperience)
+
+// === 證書管理路由 ===
 /**
  * @swagger
  * /teachers/certificates:
