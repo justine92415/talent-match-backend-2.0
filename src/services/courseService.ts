@@ -13,7 +13,7 @@ import { dataSource } from '@db/data-source'
 import { Course } from '@entities/Course'
 import { Teacher } from '@entities/Teacher'
 import { BusinessError } from '@utils/errors'
-import { ERROR_MESSAGES } from '@constants/errorMessages'
+import { ERROR_MESSAGES } from '@constants/Message'
 import type { CreateCourseRequest, UpdateCourseRequest, CourseListQuery, CourseBasicInfo } from '@models/index'
 import { CourseStatus } from '@entities/enums'
 

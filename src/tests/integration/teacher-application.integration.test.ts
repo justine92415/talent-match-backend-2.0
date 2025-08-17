@@ -9,7 +9,7 @@ import { TeacherWorkExperience } from '@entities/TeacherWorkExperience'
 import { TeacherLearningExperience } from '@entities/TeacherLearningExperience'
 import { TeacherCertificate } from '@entities/TeacherCertificate'
 import { ApplicationStatus } from '@entities/enums'
-import { ERROR_MESSAGES } from '@constants/errorMessages'
+import { ERROR_MESSAGES } from '@constants/Message'
 
 // 使用新的 fixtures 和 helper
 import { validTeacherApplicationData, invalidTeacherApplicationData, expectedResponseStructures, validIntroductions } from '@tests/fixtures/teacherFixtures'

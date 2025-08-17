@@ -7,7 +7,7 @@
 
 import Joi from 'joi'
 import { Request, Response, NextFunction } from 'express'
-import { ValidationMessages } from '@constants/errorMessages'
+import { ValidationMessages } from '@constants/Message'
 
 // 課程建立驗證 Schema
 export const createCourseSchema = Joi.object({

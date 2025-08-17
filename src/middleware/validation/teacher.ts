@@ -1,5 +1,5 @@
 import Joi from 'joi'
-import { ValidationMessages } from '@constants/errorMessages'
+import { ValidationMessages } from '@constants/Message'
 
 /**
  * 教師申請驗證 Schema

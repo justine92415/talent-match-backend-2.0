@@ -22,7 +22,7 @@ import {
 } from './fixtures/userFixtures'
 import { UserTestHelpers, RequestTestHelpers, ValidationTestHelpers } from './helpers/testHelpers'
 import { expectErrorResponse, TestErrorMessages } from './helpers/errorTestUtils'
-import { ERROR_MESSAGES } from '@constants/errorMessages'
+import { ERROR_MESSAGES } from '@constants/Message'
 
 describe('POST /api/auth/register', () => {
   beforeAll(async () => {

@@ -12,7 +12,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { courseService } from '@services/courseService'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
-import { ERROR_MESSAGES } from '@constants/errorMessages'
+import { ERROR_MESSAGES } from '@constants/Message'
 
 export class CourseController {
   /**

@@ -6,7 +6,7 @@ import { User } from '@entities/User'
 import { Teacher } from '@entities/Teacher'
 import { TeacherWorkExperience } from '@entities/TeacherWorkExperience'
 import { UserRole, ApplicationStatus } from '@entities/enums'
-import { ERROR_MESSAGES } from '@constants/errorMessages'
+import { ERROR_MESSAGES } from '@constants/Message'
 
 import { validUserData } from '@tests/fixtures/userFixtures'
 import { validTeacherApplicationData } from '@tests/fixtures/teacherFixtures'

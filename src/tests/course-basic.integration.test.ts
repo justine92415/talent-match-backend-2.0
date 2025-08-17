@@ -13,7 +13,7 @@ import request from 'supertest'
 import app from '@src/app'
 import { initTestDatabase, closeTestDatabase, clearDatabase } from '@tests/helpers/database'
 import { UserTestHelpers, TeacherTestHelpers } from '@tests/helpers/testHelpers'
-import { ERROR_MESSAGES } from '@constants/errorMessages'
+import { ERROR_MESSAGES } from '@constants/Message'
 import { ApplicationStatus } from '@entities/enums'
 import type { CreateCourseRequest } from '@models/index'
 
