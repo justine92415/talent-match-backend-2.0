@@ -21,9 +21,10 @@ FROM node:20-alpine3.19 AS production
 
 WORKDIR /app
 
-# 複製依賴檔案和 tsconfig.json
+# 複製依賴檔案和配置文件
 COPY package*.json ./
 COPY tsconfig.json ./
+COPY tsconfig.prod.json ./
 
 # 安裝生產依賴 + tsconfig-paths（運行時需要）
 RUN npm ci --omit=dev && npm install tsconfig-paths
@@ -35,5 +36,5 @@ COPY --from=builder /app/src ./src
 # 暴露端口
 EXPOSE 8080
 
-# 使用 tsconfig-paths 啟動應用程式
-CMD ["node", "-r", "tsconfig-paths/register", "dist/src/bin/www.js"]
+# 使用生產用 tsconfig 啟動應用程式
+CMD ["sh", "-c", "TS_NODE_PROJECT=tsconfig.prod.json node -r tsconfig-paths/register dist/src/bin/www.js"]
