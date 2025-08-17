@@ -29,7 +29,7 @@ export function formatJoiErrors(joiError: Joi.ValidationError): Record<string, s
 /**
  * 通用驗證中間件工廠函式
  */
-export const validateRequest = (schema: Joi.Schema, errorMessage?: string) => {
+export function validateRequest(schema: Joi.Schema, errorMessage?: string) {
   return (req: Request, res: Response, next: NextFunction): void => {
     try {
       const { error, value } = schema.validate(req.body, {
