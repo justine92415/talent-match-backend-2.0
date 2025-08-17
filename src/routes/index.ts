@@ -3,6 +3,7 @@ import authRoutes from '@routes/authRoutes'
 import teacherRoutes from '@routes/teacherRoutes'
 import courseRoutes from '@routes/courseRoutes'
 import priceOptionRoutes from '@routes/priceOptionRoutes'
+import videoRoutes from '@routes/videoRoutes'
 
 const router = Router()
 
@@ -17,5 +18,8 @@ router.use('/courses', courseRoutes)
 
 // 掛載課程價格方案相關路由
 router.use('/courses', priceOptionRoutes)
+
+// 掛載影片管理相關路由
+router.use('/videos', videoRoutes)
 
 export default router

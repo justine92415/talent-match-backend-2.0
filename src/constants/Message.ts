@@ -117,6 +117,48 @@ export const MESSAGES = {
     QUANTITY_TOO_LOW: '堂數必須大於0',
     QUANTITY_TOO_HIGH: '堂數不能超過999',
 
+    // 影片驗證
+    VIDEO_NAME_REQUIRED: '影片名稱為必填欄位',
+    VIDEO_NAME_EMPTY: '影片名稱不能為空',
+    VIDEO_NAME_TOO_LONG: '影片名稱不能超過200個字元',
+    VIDEO_CATEGORY_REQUIRED: '影片分類為必填欄位',
+    VIDEO_CATEGORY_EMPTY: '影片分類不能為空',
+    VIDEO_CATEGORY_TOO_LONG: '影片分類不能超過100個字元',
+    VIDEO_INTRO_REQUIRED: '影片介紹為必填欄位',
+    VIDEO_INTRO_EMPTY: '影片介紹不能為空',
+    VIDEO_INTRO_TOO_LONG: '影片介紹不能超過2000個字元',
+    VIDEO_TYPE_REQUIRED: '影片類型為必填欄位',
+    VIDEO_TYPE_INVALID: '影片類型必須為 storage 或 youtube',
+    VIDEO_FILE_REQUIRED: '本地儲存影片需要上傳檔案',
+    VIDEO_FILE_TOO_LARGE: '影片檔案大小不能超過500MB',
+    VIDEO_FILE_FORMAT_INVALID: '影片格式不支援，請上傳 MP4、AVI、MOV、WMV 格式',
+    YOUTUBE_URL_REQUIRED: 'YouTube 影片需要提供網址',
+    YOUTUBE_URL_INVALID: 'YouTube 網址格式不正確',
+    YOUTUBE_URL_NOT_ALLOWED_FOR_STORAGE: '本地儲存影片不需要 YouTube 網址',
+    THUMBNAIL_FILE_TOO_LARGE: '縮圖檔案大小不能超過5MB',
+    THUMBNAIL_FILE_FORMAT_INVALID: '縮圖格式不支援，請上傳 JPG、JPEG、PNG 格式',
+    
+    // 更新相關驗證
+    UPDATE_DATA_REQUIRED: '至少需要提供一個欄位進行更新',
+    
+    // 分頁相關驗證
+    PAGE_MUST_BE_NUMBER: '頁碼必須為數字',
+    PAGE_MUST_BE_INTEGER: '頁碼必須為整數',
+    PAGE_MUST_BE_POSITIVE: '頁碼必須大於0',
+    PER_PAGE_MUST_BE_NUMBER: '每頁數量必須為數字',
+    PER_PAGE_MUST_BE_INTEGER: '每頁數量必須為整數',
+    PER_PAGE_MUST_BE_POSITIVE: '每頁數量必須大於0',
+    PER_PAGE_TOO_LARGE: '每頁數量不能超過100',
+    
+    // 搜尋相關驗證
+    SEARCH_QUERY_TOO_LONG: '搜尋關鍵字不能超過200個字元',
+    
+    // ID 參數驗證
+    VIDEO_ID_REQUIRED: '影片ID為必填欄位',
+    VIDEO_ID_MUST_BE_NUMBER: '影片ID必須為數字',
+    VIDEO_ID_MUST_BE_INTEGER: '影片ID必須為整數',
+    VIDEO_ID_MUST_BE_POSITIVE: '影片ID必須大於0',
+
     // 一般驗證
     FIELD_REQUIRED: (field: string) => `${field}為必填欄位`,
     FIELD_INVALID_TYPE: (field: string, type: string) => `${field}必須為${type}格式`,
@@ -138,6 +180,7 @@ export const MESSAGES = {
     LEARNING_EXPERIENCE_NOT_FOUND: '找不到學習經歷記錄',
     LEARNING_EXPERIENCE_RECORD_NOT_FOUND: '學習經歷記錄不存在',
     PRICE_OPTION_NOT_FOUND: '找不到價格方案',
+    VIDEO_NOT_FOUND: '找不到影片',
 
     // 權限與授權
     UNAUTHORIZED_ACCESS: '您沒有權限執行此操作',
@@ -168,6 +211,13 @@ export const MESSAGES = {
     PRICE_OPTION_LIMIT_EXCEEDED: '每個課程最多只能有3個價格方案',
     PRICE_OPTION_LAST_ONE: '不能刪除最後一個價格方案',
     PRICE_OPTION_HAS_PURCHASES: '此價格方案已有購買記錄，無法刪除',
+    
+    // 影片業務規則
+    VIDEO_PERMISSION_REQUIRED: '只能管理自己的影片',
+    VIDEO_IN_USE: '此影片正被課程使用，無法刪除',
+    VIDEO_CANNOT_DELETE: '無法刪除影片',
+    VIDEO_UPLOAD_FAILED: '影片上傳失敗',
+    VIDEO_PROCESSING_FAILED: '影片處理失敗',
   },
 
   // === 系統訊息 ===
@@ -218,6 +268,16 @@ export const MESSAGES = {
     UPDATED: '價格方案更新成功',
     DELETED: '價格方案已刪除',
   },
+
+  // === 影片相關訊息 ===
+  VIDEO: {
+    // 成功訊息
+    UPLOADED: '影片上傳成功',
+    UPDATED: '影片資訊更新成功',
+    DELETED: '影片已刪除',
+    LIST_SUCCESS: '取得影片列表成功',
+    DETAIL_SUCCESS: '取得影片詳情成功',
+  },
 } as const
 
 // === 便捷訪問器 ===
@@ -229,6 +289,7 @@ export const WorkExperienceMessages = MESSAGES.WORK_EXPERIENCE
 export const LearningExperienceMessages = MESSAGES.LEARNING_EXPERIENCE
 export const CourseMessages = MESSAGES.COURSE
 export const PriceOptionMessages = MESSAGES.PRICE_OPTION
+export const VideoMessages = MESSAGES.VIDEO
 
 // === 向後相容性：SUCCESS 物件 ===
 // 為了保持向後相容，維持原有的 SUCCESS 分組
@@ -268,6 +329,13 @@ export const SUCCESS = {
   PRICE_OPTION_CREATED: MESSAGES.PRICE_OPTION.CREATED,
   PRICE_OPTION_UPDATED: MESSAGES.PRICE_OPTION.UPDATED,
   PRICE_OPTION_DELETED: MESSAGES.PRICE_OPTION.DELETED,
+  
+  // 影片相關成功訊息
+  VIDEO_UPLOADED: MESSAGES.VIDEO.UPLOADED,
+  VIDEO_UPDATED: MESSAGES.VIDEO.UPDATED,
+  VIDEO_DELETED: MESSAGES.VIDEO.DELETED,
+  VIDEO_LIST_SUCCESS: MESSAGES.VIDEO.LIST_SUCCESS,
+  VIDEO_DETAIL_SUCCESS: MESSAGES.VIDEO.DETAIL_SUCCESS,
 } as const
 
 // 維持原有的 SuccessMessages 別名
@@ -302,6 +370,7 @@ export type WorkExperienceMessageKey = keyof typeof MESSAGES.WORK_EXPERIENCE
 export type LearningExperienceMessageKey = keyof typeof MESSAGES.LEARNING_EXPERIENCE
 export type CourseMessageKey = keyof typeof MESSAGES.COURSE
 export type PriceOptionMessageKey = keyof typeof MESSAGES.PRICE_OPTION
+export type VideoMessageKey = keyof typeof MESSAGES.VIDEO
 
 // 便捷型別 - 向後相容
 export type SuccessMessageKey = keyof typeof SUCCESS

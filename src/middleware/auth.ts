@@ -2,9 +2,12 @@ import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import { dataSource } from '@db/data-source'
 import { User } from '@entities/User'
-import { AccountStatus } from '@entities/enums'
+import { AccountStatus, UserRole } from '@entities/enums'
 import { JwtTokenPayload } from '@models/auth.interface'
 import { Errors } from '@utils/errors'
+import { BusinessError } from '@utils/errors'
+import { ERROR_CODES } from '@constants/ErrorCode'
+import { MESSAGES } from '@constants/Message'
 
 /**
  * JWT Token 認證中間件
@@ -104,5 +107,35 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     next()
   } catch (error) {
     next(error) // 傳遞給 errorHandler 中間件處理
+  }
+}
+
+/**
+ * 教師權限檢查中間件
+ * 
+ * 功能：
+ * - 檢查使用者是否為教師角色
+ * - 必須在 authenticateToken 之後使用
+ * 
+ * 使用方式：
+ * ```typescript
+ * router.post('/videos', authenticateToken, requireTeacher, controller.uploadVideo)
+ * ```
+ */
+export const requireTeacher = (req: Request, res: Response, next: NextFunction): void => {
+  try {
+    // 確保已經通過認證
+    if (!req.user) {
+      throw Errors.tokenRequired('需要先進行身份認證')
+    }
+
+    // 檢查是否為教師角色
+    if (req.user.role !== UserRole.TEACHER) {
+      throw new BusinessError(ERROR_CODES.TEACHER_PERMISSION_REQUIRED, MESSAGES.BUSINESS.TEACHER_PERMISSION_REQUIRED, 403)
+    }
+
+    next()
+  } catch (error) {
+    next(error)
   }
 }
