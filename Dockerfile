@@ -28,8 +28,9 @@ COPY tsconfig.json ./
 # 安裝生產依賴 + tsconfig-paths（運行時需要）
 RUN npm ci --omit=dev && npm install tsconfig-paths
 
-# 從建置階段複製編譯結果
+# 從建置階段複製編譯結果和源碼（tsconfig-paths 需要源碼路徑）
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/src ./src
 
 # 暴露端口
 EXPOSE 8080

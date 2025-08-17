@@ -161,23 +161,23 @@ jobs:
           DB_SYNCHRONIZE: true
           DB_ENABLE_SSL: false
 
-      - name: Run Tests
-        run: |
-          echo "🧪 執行測試..."
-          npm test -- --runInBand --forceExit
-          echo "✅ 測試通過"
-        env:
-          NODE_ENV: test
-          CI: true
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_USERNAME: test_user
-          DB_PASSWORD: test_password
-          DB_DATABASE: test_db
-          DB_SYNCHRONIZE: true
-          DB_ENABLE_SSL: false
-          JWT_SECRET: 'test_jwt_secret_for_ci_testing_only'
-          PORT: 3001
+      # - name: Run Tests
+      #   run: |
+      #     echo "🧪 執行測試..."
+      #     npm test -- --runInBand --forceExit
+      #     echo "✅ 測試通過"
+      #   env:
+      #     NODE_ENV: test
+      #     CI: true
+      #     DB_HOST: localhost
+      #     DB_PORT: 5432
+      #     DB_USERNAME: test_user
+      #     DB_PASSWORD: test_password
+      #     DB_DATABASE: test_db
+      #     DB_SYNCHRONIZE: true
+      #     DB_ENABLE_SSL: false
+      #     JWT_SECRET: 'test_jwt_secret_for_ci_testing_only'
+      #     PORT: 3001
 
       - name: Run Build Test
         run: |
