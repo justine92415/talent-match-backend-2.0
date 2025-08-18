@@ -40,3 +40,17 @@ export {
   priceOptionIdParamSchema,
   courseIdParamSchema
 } from './priceOptionValidation'
+
+// 課程影片關聯相關驗證 Schema 和中間件
+export {
+  linkVideosToCourseBodySchema,
+  updateVideoOrderBodySchema,
+  courseVideoIdParamSchema,
+  courseIdForUpdateParamSchema,
+  removeCourseVideoParamSchema,
+  courseVideoSchemas,
+  validateLinkVideosToCourse,
+  validateUpdateVideoOrder,
+  validateRemoveCourseVideo,
+  validateGetCourseVideos
+} from './courseVideoValidation'

@@ -14,12 +14,19 @@
 import { Router } from 'express'
 import { authenticateToken } from '@middleware/auth'
 import { CourseController } from '@controllers/CourseController'
+import { CourseVideoController } from '@controllers/CourseVideoController'
 import { 
   validateCreateCourse,
   validateUpdateCourse,
   validateCourseId,
   validateCourseListQuery
 } from '@middleware/validation/courseValidation'
+import {
+  validateLinkVideosToCourse,
+  validateUpdateVideoOrder,
+  validateRemoveCourseVideo,
+  validateGetCourseVideos
+} from '@middleware/validation'
 
 const router = Router()
 const courseController = new CourseController()
@@ -838,5 +845,299 @@ router.post('/:id/publish', authenticateToken, validateCourseId, courseControlle
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post('/:id/archive', authenticateToken, validateCourseId, courseController.archiveCourse)
+
+// ========================================
+// 課程影片關聯路由
+// ========================================
+
+/**
+ * @swagger
+ * /api/courses/{id}/videos:
+ *   post:
+ *     tags: [Courses]
+ *     summary: 連結影片到課程
+ *     description: 教師將多個影片連結到課程，設定顯示順序和預覽標示
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 課程 ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - video_ids
+ *               - order_info
+ *             properties:
+ *               video_ids:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 minItems: 1
+ *                 maxItems: 50
+ *                 description: 要連結的影片ID列表
+ *                 example: [1, 2, 3]
+ *               order_info:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - video_id
+ *                     - display_order
+ *                   properties:
+ *                     video_id:
+ *                       type: integer
+ *                       description: 影片ID
+ *                     display_order:
+ *                       type: integer
+ *                       minimum: 1
+ *                       maximum: 1000
+ *                       description: 顯示順序
+ *                     is_preview:
+ *                       type: boolean
+ *                       default: false
+ *                       description: 是否為預覽影片
+ *                 description: 影片順序設定資訊
+ *                 example:
+ *                   - video_id: 1
+ *                     display_order: 1
+ *                     is_preview: true
+ *                   - video_id: 2
+ *                     display_order: 2
+ *                     is_preview: false
+ *     responses:
+ *       201:
+ *         description: 影片連結成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     linked_count:
+ *                       type: integer
+ *                       description: 成功連結的影片數量
+ *                     course_videos:
+ *                       type: array
+ *                       description: 連結的課程影片列表
+ *       400:
+ *         description: 請求參數驗證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: 未認證或認證失敗
+ *       403:
+ *         description: 權限不足，只能連結到自己的課程
+ *       404:
+ *         description: 課程或影片不存在
+ *       500:
+ *         description: 伺服器內部錯誤
+ */
+router.post('/:id/videos', authenticateToken, validateLinkVideosToCourse, CourseVideoController.linkVideos)
+
+/**
+ * @swagger
+ * /api/courses/{course_id}/videos/order:
+ *   put:
+ *     tags: [Courses]
+ *     summary: 更新課程影片順序
+ *     description: 教師更新課程中影片的顯示順序
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: course_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 課程 ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - video_orders
+ *             properties:
+ *               video_orders:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - video_id
+ *                     - display_order
+ *                   properties:
+ *                     video_id:
+ *                       type: integer
+ *                       description: 影片ID
+ *                     display_order:
+ *                       type: integer
+ *                       minimum: 1
+ *                       maximum: 1000
+ *                       description: 新的顯示順序
+ *                 description: 影片順序更新資訊
+ *                 example:
+ *                   - video_id: 2
+ *                     display_order: 1
+ *                   - video_id: 1
+ *                     display_order: 2
+ *     responses:
+ *       200:
+ *         description: 順序更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     updated_count:
+ *                       type: integer
+ *                       description: 更新的影片數量
+ *       400:
+ *         description: 請求參數驗證失敗
+ *       401:
+ *         description: 未認證或認證失敗
+ *       403:
+ *         description: 權限不足，只能更新自己的課程
+ *       404:
+ *         description: 課程不存在
+ *       500:
+ *         description: 伺服器內部錯誤
+ */
+router.put('/:course_id/videos/order', authenticateToken, validateUpdateVideoOrder, CourseVideoController.updateVideoOrder)
+
+/**
+ * @swagger
+ * /api/courses/{course_id}/videos/{video_id}:
+ *   delete:
+ *     tags: [Courses]
+ *     summary: 移除課程影片關聯
+ *     description: 教師移除課程中的特定影片
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: course_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 課程 ID
+ *       - in: path
+ *         name: video_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 影片 ID
+ *     responses:
+ *       200:
+ *         description: 影片移除成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: 課程影片關聯已成功移除
+ *       401:
+ *         description: 未認證或認證失敗
+ *       403:
+ *         description: 權限不足，只能移除自己課程的影片
+ *       404:
+ *         description: 課程或影片關聯不存在
+ *       500:
+ *         description: 伺服器內部錯誤
+ */
+router.delete('/:course_id/videos/:video_id', authenticateToken, validateRemoveCourseVideo, CourseVideoController.removeCourseVideo)
+
+/**
+ * @swagger
+ * /api/courses/{id}/videos:
+ *   get:
+ *     tags: [Courses]
+ *     summary: 取得課程影片列表
+ *     description: 取得指定課程的所有影片，按照顯示順序排列
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 課程 ID
+ *     responses:
+ *       200:
+ *         description: 成功取得課程影片列表
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     course_id:
+ *                       type: integer
+ *                       description: 課程ID
+ *                     videos:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             description: 課程影片關聯ID
+ *                           video_id:
+ *                             type: integer
+ *                             description: 影片ID
+ *                           display_order:
+ *                             type: integer
+ *                             description: 顯示順序
+ *                           is_preview:
+ *                             type: boolean
+ *                             description: 是否為預覽影片
+ *                           video:
+ *                             type: object
+ *                             description: 影片詳細資訊
+ *                     total_count:
+ *                       type: integer
+ *                       description: 總影片數量
+ *       401:
+ *         description: 未認證或認證失敗
+ *       403:
+ *         description: 權限不足，只能查看自己的課程
+ *       404:
+ *         description: 課程不存在
+ *       500:
+ *         description: 伺服器內部錯誤
+ */
+router.get('/:id/videos', authenticateToken, validateGetCourseVideos, CourseVideoController.getCourseVideos)
 
 export default router

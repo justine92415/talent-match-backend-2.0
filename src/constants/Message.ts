@@ -159,6 +159,18 @@ export const MESSAGES = {
     VIDEO_ID_MUST_BE_INTEGER: '影片ID必須為整數',
     VIDEO_ID_MUST_BE_POSITIVE: '影片ID必須大於0',
 
+    // 課程影片關聯驗證
+    VIDEO_IDS_REQUIRED: '影片ID陣列為必填欄位',
+    VIDEO_IDS_EMPTY: '影片ID陣列不能為空',
+    VIDEO_IDS_INVALID: '影片ID陣列格式不正確',
+    VIDEO_ID_INVALID: '影片ID格式不正確',
+    VIDEO_ORDERS_REQUIRED: '影片順序陣列為必填欄位',
+    VIDEO_ORDERS_EMPTY: '影片順序陣列不能為空',
+    VIDEO_ORDERS_INVALID: '影片順序陣列格式不正確',
+    DISPLAY_ORDER_REQUIRED: '顯示順序為必填欄位',
+    DISPLAY_ORDER_INVALID: '顯示順序必須為正整數',
+    IS_PREVIEW_INVALID: '預覽設定必須為布林值',
+
     // 一般驗證
     FIELD_REQUIRED: (field: string) => `${field}為必填欄位`,
     FIELD_INVALID_TYPE: (field: string, type: string) => `${field}必須為${type}格式`,
@@ -181,6 +193,7 @@ export const MESSAGES = {
     LEARNING_EXPERIENCE_RECORD_NOT_FOUND: '學習經歷記錄不存在',
     PRICE_OPTION_NOT_FOUND: '找不到價格方案',
     VIDEO_NOT_FOUND: '找不到影片',
+    COURSE_VIDEO_NOT_FOUND: '找不到課程影片關聯',
 
     // 權限與授權
     UNAUTHORIZED_ACCESS: '您沒有權限執行此操作',
@@ -218,6 +231,14 @@ export const MESSAGES = {
     VIDEO_CANNOT_DELETE: '無法刪除影片',
     VIDEO_UPLOAD_FAILED: '影片上傳失敗',
     VIDEO_PROCESSING_FAILED: '影片處理失敗',
+    
+    // 課程影片關聯業務規則
+    COURSE_VIDEO_ALREADY_LINKED: '課程已關聯此影片',
+    COURSE_VIDEO_NOT_LINKED: '課程尚未關聯此影片',
+    VIDEO_NOT_OWNED_BY_TEACHER: '無法關聯其他教師的影片',
+    COURSE_VIDEO_DUPLICATE_ORDER: '影片順序重複',
+    COURSE_VIDEO_MISSING_VIDEOS: '指定的影片不存在於課程中',
+    COURSE_VIDEO_INVALID_ORDER: '影片順序設定無效',
   },
 
   // === 系統訊息 ===
@@ -278,6 +299,15 @@ export const MESSAGES = {
     LIST_SUCCESS: '取得影片列表成功',
     DETAIL_SUCCESS: '取得影片詳情成功',
   },
+
+  // === 課程影片關聯相關訊息 ===
+  COURSE_VIDEO: {
+    // 成功訊息
+    LINKED: '影片關聯成功',
+    ORDER_UPDATED: '影片順序更新成功',
+    REMOVED: '影片已從課程中移除',
+    LIST_SUCCESS: '取得課程影片列表成功',
+  },
 } as const
 
 // === 便捷訪問器 ===
@@ -290,6 +320,7 @@ export const LearningExperienceMessages = MESSAGES.LEARNING_EXPERIENCE
 export const CourseMessages = MESSAGES.COURSE
 export const PriceOptionMessages = MESSAGES.PRICE_OPTION
 export const VideoMessages = MESSAGES.VIDEO
+export const CourseVideoMessages = MESSAGES.COURSE_VIDEO
 
 // === 向後相容性：SUCCESS 物件 ===
 // 為了保持向後相容，維持原有的 SUCCESS 分組
@@ -336,6 +367,12 @@ export const SUCCESS = {
   VIDEO_DELETED: MESSAGES.VIDEO.DELETED,
   VIDEO_LIST_SUCCESS: MESSAGES.VIDEO.LIST_SUCCESS,
   VIDEO_DETAIL_SUCCESS: MESSAGES.VIDEO.DETAIL_SUCCESS,
+  
+  // 課程影片關聯相關成功訊息
+  COURSE_VIDEO_LINKED: MESSAGES.COURSE_VIDEO.LINKED,
+  COURSE_VIDEO_ORDER_UPDATED: MESSAGES.COURSE_VIDEO.ORDER_UPDATED,
+  COURSE_VIDEO_REMOVED: MESSAGES.COURSE_VIDEO.REMOVED,
+  COURSE_VIDEO_LIST_SUCCESS: MESSAGES.COURSE_VIDEO.LIST_SUCCESS,
 } as const
 
 // 維持原有的 SuccessMessages 別名
@@ -371,6 +408,7 @@ export type LearningExperienceMessageKey = keyof typeof MESSAGES.LEARNING_EXPERI
 export type CourseMessageKey = keyof typeof MESSAGES.COURSE
 export type PriceOptionMessageKey = keyof typeof MESSAGES.PRICE_OPTION
 export type VideoMessageKey = keyof typeof MESSAGES.VIDEO
+export type CourseVideoMessageKey = keyof typeof MESSAGES.COURSE_VIDEO
 
 // 便捷型別 - 向後相容
 export type SuccessMessageKey = keyof typeof SUCCESS
