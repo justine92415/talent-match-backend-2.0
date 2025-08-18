@@ -138,6 +138,16 @@ export const MESSAGES = {
     THUMBNAIL_FILE_TOO_LARGE: '縮圖檔案大小不能超過5MB',
     THUMBNAIL_FILE_FORMAT_INVALID: '縮圖格式不支援，請上傳 JPG、JPEG、PNG 格式',
     
+    // 課程檔案驗證
+    COURSE_FILES_REQUIRED: '課程檔案為必填欄位',
+    COURSE_FILES_EMPTY: '請至少上傳一個課程檔案',
+    COURSE_FILE_TOO_LARGE: '檔案大小不能超過10MB',
+    COURSE_FILE_FORMAT_INVALID: '檔案格式不支援，請上傳 PDF、DOC、DOCX、XLS、XLSX、PPT、PPTX、ZIP、RAR、JPG、JPEG、PNG 格式',
+    COURSE_FILE_COUNT_EXCEEDED: '課程檔案數量不能超過50個',
+    COURSE_FILE_UPLOAD_LIMIT_EXCEEDED: '單次上傳檔案數量不能超過5個',
+    COURSE_FILE_NAME_REQUIRED: '檔案名稱為必填欄位',
+    COURSE_FILE_NAME_TOO_LONG: '檔案名稱不能超過255個字元',
+    
     // 更新相關驗證
     UPDATE_DATA_REQUIRED: '至少需要提供一個欄位進行更新',
     
@@ -194,6 +204,7 @@ export const MESSAGES = {
     PRICE_OPTION_NOT_FOUND: '找不到價格方案',
     VIDEO_NOT_FOUND: '找不到影片',
     COURSE_VIDEO_NOT_FOUND: '找不到課程影片關聯',
+    COURSE_FILE_NOT_FOUND: '找不到課程檔案',
 
     // 權限與授權
     UNAUTHORIZED_ACCESS: '您沒有權限執行此操作',
@@ -239,6 +250,12 @@ export const MESSAGES = {
     COURSE_VIDEO_DUPLICATE_ORDER: '影片順序重複',
     COURSE_VIDEO_MISSING_VIDEOS: '指定的影片不存在於課程中',
     COURSE_VIDEO_INVALID_ORDER: '影片順序設定無效',
+    
+    // 課程檔案業務規則
+    COURSE_FILE_PERMISSION_REQUIRED: '只能管理自己課程的檔案',
+    COURSE_FILE_UPLOAD_FAILED: '檔案上傳失敗',
+    COURSE_FILE_DELETE_FAILED: '檔案刪除失敗',
+    COURSE_FILE_LIMIT_REACHED: '課程檔案數量已達上限',
   },
 
   // === 系統訊息 ===
@@ -308,6 +325,14 @@ export const MESSAGES = {
     REMOVED: '影片已從課程中移除',
     LIST_SUCCESS: '取得課程影片列表成功',
   },
+
+  // === 課程檔案相關訊息 ===
+  COURSE_FILE: {
+    // 成功訊息
+    LIST_SUCCESS: '取得課程檔案列表成功',
+    UPLOADED: '檔案上傳成功',
+    DELETED: '檔案已刪除',
+  },
 } as const
 
 // === 便捷訪問器 ===
@@ -321,6 +346,7 @@ export const CourseMessages = MESSAGES.COURSE
 export const PriceOptionMessages = MESSAGES.PRICE_OPTION
 export const VideoMessages = MESSAGES.VIDEO
 export const CourseVideoMessages = MESSAGES.COURSE_VIDEO
+export const CourseFileMessages = MESSAGES.COURSE_FILE
 
 // === 向後相容性：SUCCESS 物件 ===
 // 為了保持向後相容，維持原有的 SUCCESS 分組
@@ -373,6 +399,11 @@ export const SUCCESS = {
   COURSE_VIDEO_ORDER_UPDATED: MESSAGES.COURSE_VIDEO.ORDER_UPDATED,
   COURSE_VIDEO_REMOVED: MESSAGES.COURSE_VIDEO.REMOVED,
   COURSE_VIDEO_LIST_SUCCESS: MESSAGES.COURSE_VIDEO.LIST_SUCCESS,
+  
+  // 課程檔案相關成功訊息
+  COURSE_FILE_LIST_SUCCESS: MESSAGES.COURSE_FILE.LIST_SUCCESS,
+  COURSE_FILE_UPLOADED: MESSAGES.COURSE_FILE.UPLOADED,
+  COURSE_FILE_DELETED: MESSAGES.COURSE_FILE.DELETED,
 } as const
 
 // 維持原有的 SuccessMessages 別名

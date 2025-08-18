@@ -13,6 +13,7 @@ import { TeacherWorkExperience } from '@entities/TeacherWorkExperience'
 import { Course } from '@entities/Course'
 import { Video } from '@entities/Video'
 import { CourseVideo } from '@entities/CourseVideo'
+import { CourseFile } from '@entities/CourseFile'
 import { UserRole, AccountStatus, ApplicationStatus, CourseStatus, VideoType } from '@entities/enums'
 import { validUserData, createUserEntityData, teacherUserEntityData, suspendedUserEntityData } from '@tests/fixtures/userFixtures'
 import { createTeacherEntityData } from '@tests/fixtures/teacherFixtures'
@@ -821,6 +822,135 @@ class CourseVideoTestHelpers {
   }
 }
 
+/**
+ * 課程檔案測試 Helper 函式
+ */
+class CourseFileTestHelpers {
+  /**
+   * 建立測試用的課程檔案實體
+   * @param courseId 課程ID
+   * @param overrides 覆寫資料
+   * @returns 建立的課程檔案實體
+   */
+  static async createTestCourseFile(courseId: number, overrides: any = {}) {
+    const courseFileRepository = dataSource.getRepository(CourseFile)
+    const { v4: uuidv4 } = require('uuid')
+    
+    const courseFileData = {
+      uuid: uuidv4(),
+      course_id: courseId,
+      name: '測試檔案',
+      file_id: uuidv4(),
+      url: '/uploads/test-file.pdf',
+      size: 512000,
+      mime_type: 'application/pdf',
+      original_filename: 'test-file.pdf',
+      ...overrides
+    }
+
+    const courseFile = courseFileRepository.create(courseFileData)
+    const savedCourseFile = await courseFileRepository.save(courseFile)
+    return Array.isArray(savedCourseFile) ? savedCourseFile[0] : savedCourseFile
+  }
+
+  /**
+   * 批次建立測試用的課程檔案
+   * @param courseId 課程ID
+   * @param count 檔案數量
+   * @returns 建立的課程檔案陣列
+   */
+  static async createTestCourseFiles(courseId: number, count: number = 3): Promise<CourseFile[]> {
+    const courseFiles: CourseFile[] = []
+    const { v4: uuidv4 } = require('uuid')
+    
+    for (let i = 0; i < count; i++) {
+      const courseFile = await this.createTestCourseFile(courseId, {
+        name: `測試檔案 ${i + 1}`,
+        file_id: uuidv4(),
+        url: `/uploads/test-file-${i}.pdf`,
+        original_filename: `test-file-${i}.pdf`
+      })
+      courseFiles.push(courseFile)
+    }
+    return courseFiles
+  }
+
+  /**
+   * 建立完整的測試環境（教師、課程、檔案）
+   * @param fileCount 檔案數量
+   * @returns 完整的測試環境資料
+   */
+  static async createTestEnvironment(fileCount: number = 0) {
+    // 建立教師用戶
+    const { user: teacher, authToken } = await UserTestHelpers.createTestUserWithToken({
+      role: UserRole.TEACHER
+    })
+
+    // 建立教師記錄
+    const teacherRecord = await TeacherTestHelpers.createTeacherApplication(teacher.id, {})
+
+    // 建立課程
+    const course = await CourseTestHelpers.createTestCourseForTeacher(teacher.id)
+
+    // 建立課程檔案（如果需要）
+    let courseFiles: CourseFile[] = []
+    if (fileCount > 0) {
+      courseFiles = await this.createTestCourseFiles(course.id, fileCount)
+    }
+
+    return {
+      teacher,
+      teacherRecord,
+      authToken,
+      course,
+      courseFiles
+    }
+  }
+
+  /**
+   * 檢查課程檔案是否存在
+   * @param courseId 課程ID
+   * @param fileId 檔案ID
+   * @returns 是否存在檔案
+   */
+  static async courseFileExists(courseId: number, fileId: number): Promise<boolean> {
+    const courseFileRepository = dataSource.getRepository(CourseFile)
+    const count = await courseFileRepository.count({
+      where: { course_id: courseId, id: fileId }
+    })
+    return count > 0
+  }
+
+  /**
+   * 取得課程的檔案列表
+   * @param courseId 課程ID
+   * @returns 課程檔案陣列
+   */
+  static async getCourseFileList(courseId: number) {
+    const courseFileRepository = dataSource.getRepository(CourseFile)
+    return await courseFileRepository.find({
+      where: { course_id: courseId },
+      order: { created_at: 'DESC' }
+    })
+  }
+
+  /**
+   * 清理測試課程檔案資料
+   */
+  static async cleanupTestCourseFiles() {
+    const courseFileRepository = dataSource.getRepository(CourseFile)
+    await courseFileRepository.delete({})
+  }
+
+  /**
+   * 清理完整測試環境
+   */
+  static async cleanupTestEnvironment() {
+    await this.cleanupTestCourseFiles()
+    await CourseTestHelpers.cleanupTestCourses()
+  }
+}
+
 // 匯出所有 Helper 類別
 export { 
   UserTestHelpers, 
@@ -831,7 +961,8 @@ export {
   PerformanceTestHelpers,
   CourseTestHelpers,
   VideoTestHelpers,
-  CourseVideoTestHelpers 
+  CourseVideoTestHelpers,
+  CourseFileTestHelpers
 }
 
 // 預設匯出常用 Helper 函式

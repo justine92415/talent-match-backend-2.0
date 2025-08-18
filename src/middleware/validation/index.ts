@@ -54,3 +54,16 @@ export {
   validateRemoveCourseVideo,
   validateGetCourseVideos
 } from './courseVideoValidation'
+
+// 課程檔案相關驗證 Schema 和中間件
+export {
+  getCourseFilesParamSchema,
+  getCourseFilesQuerySchema,
+  uploadCourseFilesParamSchema,
+  uploadCourseFilesBodySchema,
+  deleteCourseFileParamSchema,
+  courseFileSchemas,
+  validateGetCourseFiles,
+  validateUploadCourseFiles,
+  validateDeleteCourseFile
+} from './courseFileValidation'

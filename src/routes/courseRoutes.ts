@@ -15,6 +15,7 @@ import { Router } from 'express'
 import { authenticateToken } from '@middleware/auth'
 import { CourseController } from '@controllers/CourseController'
 import { CourseVideoController } from '@controllers/CourseVideoController'
+import { CourseFileController } from '@controllers/CourseFileController'
 import { 
   validateCreateCourse,
   validateUpdateCourse,
@@ -27,6 +28,11 @@ import {
   validateRemoveCourseVideo,
   validateGetCourseVideos
 } from '@middleware/validation'
+import {
+  validateGetCourseFiles,
+  validateUploadCourseFiles,
+  validateDeleteCourseFile
+} from '@middleware/validation/courseFileValidation'
 
 const router = Router()
 const courseController = new CourseController()
@@ -1139,5 +1145,240 @@ router.delete('/:course_id/videos/:video_id', authenticateToken, validateRemoveC
  *         description: 伺服器內部錯誤
  */
 router.get('/:id/videos', authenticateToken, validateGetCourseVideos, CourseVideoController.getCourseVideos)
+
+// ==================== 課程檔案管理路由 ====================
+
+/**
+ * @swagger
+ * /api/courses/{id}/files:
+ *   get:
+ *     tags: [Courses]
+ *     summary: 取得課程檔案列表
+ *     description: 取得指定課程的檔案列表，支援分頁查詢。只能查看自己課程的檔案。
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 課程 ID
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: 頁碼
+ *       - in: query
+ *         name: per_page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: 每頁數量
+ *     responses:
+ *       200:
+ *         description: 成功取得課程檔案列表
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     files:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             description: 檔案ID
+ *                           uuid:
+ *                             type: string
+ *                             format: uuid
+ *                             description: 檔案唯一識別碼
+ *                           course_id:
+ *                             type: integer
+ *                             description: 課程ID
+ *                           name:
+ *                             type: string
+ *                             description: 檔案名稱
+ *                           file_id:
+ *                             type: string
+ *                             format: uuid
+ *                             description: 檔案系統ID
+ *                           url:
+ *                             type: string
+ *                             description: 檔案存取網址
+ *                           created_at:
+ *                             type: string
+ *                             format: date-time
+ *                             description: 建立時間
+ *                           updated_at:
+ *                             type: string
+ *                             format: date-time
+ *                             description: 更新時間
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         current_page:
+ *                           type: integer
+ *                         per_page:
+ *                           type: integer
+ *                         total:
+ *                           type: integer
+ *                         total_pages:
+ *                           type: integer
+ *                         has_next_page:
+ *                           type: boolean
+ *                         has_prev_page:
+ *                           type: boolean
+ *                     summary:
+ *                       type: object
+ *                       properties:
+ *                         total_files:
+ *                           type: integer
+ *                           description: 總檔案數量
+ *       401:
+ *         description: 未認證或認證失敗
+ *       403:
+ *         description: 權限不足，只能查看自己的課程檔案
+ *       404:
+ *         description: 課程不存在
+ *       500:
+ *         description: 伺服器內部錯誤
+ */
+router.get('/:id/files', authenticateToken, validateGetCourseFiles, CourseFileController.getCourseFiles)
+
+/**
+ * @swagger
+ * /api/courses/{id}/files:
+ *   post:
+ *     tags: [Courses]
+ *     summary: 上傳課程檔案
+ *     description: 上傳檔案到指定課程。支援多檔案上傳，檔案格式和大小限制請參考文件。
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 課程 ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               files:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: 要上傳的檔案（最多10個檔案）
+ *               descriptions:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   maxLength: 500
+ *                 description: 檔案描述（可選）
+ *     responses:
+ *       201:
+ *         description: 檔案上傳成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       success:
+ *                         type: boolean
+ *                         description: 上傳是否成功
+ *                       file:
+ *                         type: object
+ *                         description: 上傳成功的檔案資訊
+ *                       error:
+ *                         type: string
+ *                         description: 錯誤訊息（如果上傳失敗）
+ *                       originalName:
+ *                         type: string
+ *                         description: 原始檔案名稱
+ *       400:
+ *         description: 請求參數錯誤或檔案驗證失敗
+ *       401:
+ *         description: 未認證或認證失敗
+ *       403:
+ *         description: 權限不足，只能管理自己的課程檔案
+ *       404:
+ *         description: 課程不存在
+ *       500:
+ *         description: 伺服器內部錯誤
+ */
+router.post('/:id/files', authenticateToken, validateUploadCourseFiles, CourseFileController.uploadCourseFiles)
+
+/**
+ * @swagger
+ * /api/courses/{course_id}/files/{file_id}:
+ *   delete:
+ *     tags: [Courses]
+ *     summary: 刪除課程檔案
+ *     description: 刪除指定課程的指定檔案。只能刪除自己課程的檔案。
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: course_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 課程 ID
+ *       - in: path
+ *         name: file_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 檔案 ID
+ *     responses:
+ *       200:
+ *         description: 檔案刪除成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: 檔案已刪除
+ *       401:
+ *         description: 未認證或認證失敗
+ *       403:
+ *         description: 權限不足，只能刪除自己課程的檔案
+ *       404:
+ *         description: 課程或檔案不存在
+ *       500:
+ *         description: 伺服器內部錯誤
+ */
+router.delete('/:course_id/files/:file_id', authenticateToken, validateDeleteCourseFile, CourseFileController.deleteCourseFile)
 
 export default router
