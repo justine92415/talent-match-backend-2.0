@@ -207,7 +207,7 @@ describe('課程狀態管理 API', () => {
 
       expect(response.body).toEqual({
         status: 'error',
-        code: 'UNAUTHORIZED_ACCESS',
+        code: 'TOKEN_REQUIRED',
         message: 'Access token 為必填欄位'
       })
     })

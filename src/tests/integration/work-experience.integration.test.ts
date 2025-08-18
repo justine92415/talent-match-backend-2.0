@@ -112,7 +112,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        code: ERROR_CODES.UNAUTHORIZED_ACCESS,
+        code: ERROR_CODES.TOKEN_REQUIRED,
         message: expect.stringContaining(ERROR_MESSAGES.AUTH.TOKEN_REQUIRED)
       })
     })
@@ -324,7 +324,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        code: ERROR_CODES.UNAUTHORIZED_ACCESS,
+        code: ERROR_CODES.TOKEN_REQUIRED,
         message: expect.stringContaining(ERROR_MESSAGES.AUTH.TOKEN_REQUIRED)
       })
     })
@@ -520,7 +520,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        code: ERROR_CODES.UNAUTHORIZED_ACCESS,
+        code: ERROR_CODES.TOKEN_REQUIRED,
         message: expect.stringContaining(ERROR_MESSAGES.AUTH.TOKEN_REQUIRED)
       })
     })
@@ -607,7 +607,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        code: ERROR_CODES.UNAUTHORIZED_ACCESS,
+        code: ERROR_CODES.TOKEN_REQUIRED,
         message: expect.stringContaining(ERROR_MESSAGES.AUTH.TOKEN_REQUIRED)
       })
     })

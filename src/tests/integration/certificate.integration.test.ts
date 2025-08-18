@@ -107,7 +107,7 @@ describe('證書管理 API', () => {
 
         expect(response.body).toMatchObject({
           status: 'error',
-          code: ERROR_CODES.UNAUTHORIZED_ACCESS,
+          code: ERROR_CODES.TOKEN_REQUIRED,
           message: expect.stringContaining('token')
         })
       })
@@ -249,7 +249,7 @@ describe('證書管理 API', () => {
 
         expect(response.body).toMatchObject({
           status: 'error',
-          code: ERROR_CODES.UNAUTHORIZED_ACCESS
+          code: ERROR_CODES.TOKEN_REQUIRED
         })
       })
     })
