@@ -1,6 +1,6 @@
 import Joi from 'joi'
 import { PASSWORD_CONFIG } from '@config/secret'
-import { ValidationMessages } from '@constants/errorMessages'
+import { ValidationMessages } from '@constants/Message'
 
 // 使用者設定常數
 const USER_CONFIG = {

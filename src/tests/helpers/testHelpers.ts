@@ -10,7 +10,11 @@ import { dataSource } from '@db/data-source'
 import { User } from '@entities/User'
 import { Teacher } from '@entities/Teacher'
 import { TeacherWorkExperience } from '@entities/TeacherWorkExperience'
-import { UserRole, AccountStatus, ApplicationStatus } from '@entities/enums'
+import { Course } from '@entities/Course'
+import { Video } from '@entities/Video'
+import { CourseVideo } from '@entities/CourseVideo'
+import { CourseFile } from '@entities/CourseFile'
+import { UserRole, AccountStatus, ApplicationStatus, CourseStatus, VideoType } from '@entities/enums'
 import { validUserData, createUserEntityData, teacherUserEntityData, suspendedUserEntityData } from '@tests/fixtures/userFixtures'
 import { createTeacherEntityData } from '@tests/fixtures/teacherFixtures'
 import { validWorkExperienceData, createWorkExperienceEntityData } from '@tests/fixtures/workExperienceFixtures'
@@ -542,8 +546,424 @@ class PerformanceTestHelpers {
   }
 }
 
+/**
+ * 課程測試 Helper 函式
+ */
+class CourseTestHelpers {
+  /**
+   * 建立測試用的課程實體
+   * @param overrides 覆寫資料
+   * @returns 建立的課程實體
+   */
+  static async createTestCourse(overrides: any = {}) {
+    const courseRepository = dataSource.getRepository(Course)
+    
+    const courseData = {
+      uuid: require('uuid').v4(),
+      teacher_id: 1,
+      name: '測試課程',
+      content: '測試課程描述',
+      main_image: '/uploads/test-course.jpg',
+      main_category_id: 1,
+      sub_category_id: 1,
+      city_id: 1,
+      status: CourseStatus.DRAFT,
+      application_status: null,
+      ...overrides
+    }
+
+    const course = courseRepository.create(courseData)
+    const savedCourse = await courseRepository.save(course)
+    return Array.isArray(savedCourse) ? savedCourse[0] : savedCourse
+  }
+
+  /**
+   * 建立指定教師的測試課程
+   * @param teacherId 教師ID
+   * @param overrides 覆寫資料
+   * @returns 建立的課程實體
+   */
+  static async createTestCourseForTeacher(teacherId: number, overrides: any = {}) {
+    return await this.createTestCourse({
+      teacher_id: teacherId,
+      ...overrides
+    })
+  }
+
+  /**
+   * 建立多個測試課程
+   * @param count 建立數量
+   * @param teacherId 教師ID
+   * @param overrides 覆寫資料
+   * @returns 建立的課程陣列
+   */
+  static async createMultipleTestCourses(count: number, teacherId: number = 1, overrides: any = {}) {
+    const courses = []
+    for (let i = 0; i < count; i++) {
+      const course = await this.createTestCourse({
+        teacher_id: teacherId,
+        name: `測試課程 ${i + 1}`,
+        ...overrides
+      })
+      courses.push(course)
+    }
+    return courses
+  }
+
+  /**
+   * 清理測試課程資料
+   */
+  static async cleanupTestCourses() {
+    const courseRepository = dataSource.getRepository(Course)
+    await courseRepository.delete({})
+  }
+}
+
+/**
+ * 影片測試 Helper 函式  
+ */
+class VideoTestHelpers {
+  /**
+   * 建立測試用的影片實體
+   * @param overrides 覆寫資料
+   * @returns 建立的影片實體
+   */
+  static async createTestVideo(overrides: any = {}) {
+    const videoRepository = dataSource.getRepository(Video)
+    
+    const videoData = {
+      uuid: require('uuid').v4(),
+      teacher_id: 1,
+      name: '測試影片',
+      category: '測試分類',
+      intro: '測試影片介紹',
+      url: 'https://www.youtube.com/watch?v=test',
+      video_type: VideoType.YOUTUBE,
+      deleted_at: null,
+      ...overrides
+    }
+
+    const video = videoRepository.create(videoData)
+    return await videoRepository.save(video)
+  }
+
+  /**
+   * 建立指定教師的測試影片
+   * @param teacherId 教師ID
+   * @param overrides 覆寫資料
+   * @returns 建立的影片實體
+   */
+  static async createTestVideoForTeacher(teacherId: number, overrides: any = {}) {
+    return await this.createTestVideo({
+      teacher_id: teacherId,
+      ...overrides
+    })
+  }
+
+  /**
+   * 建立多個測試影片
+   * @param count 建立數量
+   * @param teacherId 教師ID
+   * @param overrides 覆寫資料
+   * @returns 建立的影片陣列
+   */
+  static async createMultipleTestVideos(count: number, teacherId: number = 1, overrides: any = {}) {
+    const videos = []
+    for (let i = 0; i < count; i++) {
+      const video = await this.createTestVideo({
+        teacher_id: teacherId,
+        name: `測試影片 ${i + 1}`,
+        ...overrides
+      })
+      videos.push(video)
+    }
+    return videos
+  }
+
+  /**
+   * 清理測試影片資料
+   */
+  static async cleanupTestVideos() {
+    const videoRepository = dataSource.getRepository(Video)
+    await videoRepository.delete({})
+  }
+}
+
+/**
+ * 課程影片關聯測試 Helper 函式
+ */
+class CourseVideoTestHelpers {
+  /**
+   * 建立測試用的課程影片關聯
+   * @param courseId 課程ID
+   * @param videoId 影片ID
+   * @param overrides 覆寫資料
+   * @returns 建立的課程影片關聯實體
+   */
+  static async createTestCourseVideo(courseId: number, videoId: number, overrides: any = {}) {
+    const courseVideoRepository = dataSource.getRepository(CourseVideo)
+    
+    const courseVideoData = {
+      course_id: courseId,
+      video_id: videoId,
+      display_order: 1,
+      is_preview: false,
+      ...overrides
+    }
+
+    const courseVideo = courseVideoRepository.create(courseVideoData)
+    return await courseVideoRepository.save(courseVideo)
+  }
+
+  /**
+   * 批次建立課程影片關聯
+   * @param courseId 課程ID
+   * @param videoIds 影片ID陣列
+   * @param options 額外選項
+   * @returns 建立的課程影片關聯陣列
+   */
+  static async createTestCourseVideos(
+    courseId: number, 
+    videoIds: number[], 
+    options: { is_preview?: boolean[], start_order?: number } = {}
+  ) {
+    const { is_preview = [], start_order = 1 } = options
+    const courseVideos = []
+
+    for (let i = 0; i < videoIds.length; i++) {
+      const courseVideo = await this.createTestCourseVideo(courseId, videoIds[i], {
+        display_order: start_order + i,
+        is_preview: is_preview[i] || false
+      })
+      courseVideos.push(courseVideo)
+    }
+
+    return courseVideos
+  }
+
+  /**
+   * 建立完整的測試環境（教師、課程、影片、關聯）
+   * @param videoCount 影片數量
+   * @returns 完整的測試環境資料
+   */
+  static async createTestEnvironment(videoCount: number = 3) {
+    // 建立教師用戶
+    const { user: teacher, authToken } = await UserTestHelpers.createTestUserWithToken({
+      role: UserRole.TEACHER
+    })
+
+    // 建立教師記錄
+    const teacherRecord = await TeacherTestHelpers.createTeacherApplication(teacher.id, {})
+
+    // 建立課程
+    const course = await CourseTestHelpers.createTestCourseForTeacher(teacher.id)
+
+    // 建立影片
+    const videos = await VideoTestHelpers.createMultipleTestVideos(videoCount, teacher.id)
+
+    // 建立課程影片關聯
+    const videoIds = videos.map((v: any) => v.id)
+    const courseVideos = await CourseVideoTestHelpers.createTestCourseVideos(course.id, videoIds, {
+      is_preview: [true, false, false] // 第一個影片設為預覽
+    })
+
+    return {
+      teacher,
+      teacherRecord,
+      authToken,
+      course,
+      videos,
+      courseVideos
+    }
+  }
+
+  /**
+   * 檢查課程影片關聯是否存在
+   * @param courseId 課程ID
+   * @param videoId 影片ID
+   * @returns 是否存在關聯
+   */
+  static async courseVideoExists(courseId: number, videoId: number): Promise<boolean> {
+    const courseVideoRepository = dataSource.getRepository(CourseVideo)
+    const count = await courseVideoRepository.count({
+      where: { course_id: courseId, video_id: videoId }
+    })
+    return count > 0
+  }
+
+  /**
+   * 取得課程的影片關聯列表
+   * @param courseId 課程ID
+   * @returns 課程影片關聯陣列（按順序排列）
+   */
+  static async getCourseVideoList(courseId: number) {
+    const courseVideoRepository = dataSource.getRepository(CourseVideo)
+    return await courseVideoRepository.find({
+      where: { course_id: courseId },
+      order: { display_order: 'ASC' }
+    })
+  }
+
+  /**
+   * 清理測試課程影片關聯資料
+   */
+  static async cleanupTestCourseVideos() {
+    const courseVideoRepository = dataSource.getRepository(CourseVideo)
+    await courseVideoRepository.delete({})
+  }
+
+  /**
+   * 清理完整測試環境
+   */
+  static async cleanupTestEnvironment() {
+    await this.cleanupTestCourseVideos()
+    await VideoTestHelpers.cleanupTestVideos()
+    await CourseTestHelpers.cleanupTestCourses()
+  }
+}
+
+/**
+ * 課程檔案測試 Helper 函式
+ */
+class CourseFileTestHelpers {
+  /**
+   * 建立測試用的課程檔案實體
+   * @param courseId 課程ID
+   * @param overrides 覆寫資料
+   * @returns 建立的課程檔案實體
+   */
+  static async createTestCourseFile(courseId: number, overrides: any = {}) {
+    const courseFileRepository = dataSource.getRepository(CourseFile)
+    const { v4: uuidv4 } = require('uuid')
+    
+    const courseFileData = {
+      uuid: uuidv4(),
+      course_id: courseId,
+      name: '測試檔案',
+      file_id: uuidv4(),
+      url: '/uploads/test-file.pdf',
+      size: 512000,
+      mime_type: 'application/pdf',
+      original_filename: 'test-file.pdf',
+      ...overrides
+    }
+
+    const courseFile = courseFileRepository.create(courseFileData)
+    const savedCourseFile = await courseFileRepository.save(courseFile)
+    return Array.isArray(savedCourseFile) ? savedCourseFile[0] : savedCourseFile
+  }
+
+  /**
+   * 批次建立測試用的課程檔案
+   * @param courseId 課程ID
+   * @param count 檔案數量
+   * @returns 建立的課程檔案陣列
+   */
+  static async createTestCourseFiles(courseId: number, count: number = 3): Promise<CourseFile[]> {
+    const courseFiles: CourseFile[] = []
+    const { v4: uuidv4 } = require('uuid')
+    
+    for (let i = 0; i < count; i++) {
+      const courseFile = await this.createTestCourseFile(courseId, {
+        name: `測試檔案 ${i + 1}`,
+        file_id: uuidv4(),
+        url: `/uploads/test-file-${i}.pdf`,
+        original_filename: `test-file-${i}.pdf`
+      })
+      courseFiles.push(courseFile)
+    }
+    return courseFiles
+  }
+
+  /**
+   * 建立完整的測試環境（教師、課程、檔案）
+   * @param fileCount 檔案數量
+   * @returns 完整的測試環境資料
+   */
+  static async createTestEnvironment(fileCount: number = 0) {
+    // 建立教師用戶
+    const { user: teacher, authToken } = await UserTestHelpers.createTestUserWithToken({
+      role: UserRole.TEACHER
+    })
+
+    // 建立教師記錄
+    const teacherRecord = await TeacherTestHelpers.createTeacherApplication(teacher.id, {})
+
+    // 建立課程
+    const course = await CourseTestHelpers.createTestCourseForTeacher(teacher.id)
+
+    // 建立課程檔案（如果需要）
+    let courseFiles: CourseFile[] = []
+    if (fileCount > 0) {
+      courseFiles = await this.createTestCourseFiles(course.id, fileCount)
+    }
+
+    return {
+      teacher,
+      teacherRecord,
+      authToken,
+      course,
+      courseFiles
+    }
+  }
+
+  /**
+   * 檢查課程檔案是否存在
+   * @param courseId 課程ID
+   * @param fileId 檔案ID
+   * @returns 是否存在檔案
+   */
+  static async courseFileExists(courseId: number, fileId: number): Promise<boolean> {
+    const courseFileRepository = dataSource.getRepository(CourseFile)
+    const count = await courseFileRepository.count({
+      where: { course_id: courseId, id: fileId }
+    })
+    return count > 0
+  }
+
+  /**
+   * 取得課程的檔案列表
+   * @param courseId 課程ID
+   * @returns 課程檔案陣列
+   */
+  static async getCourseFileList(courseId: number) {
+    const courseFileRepository = dataSource.getRepository(CourseFile)
+    return await courseFileRepository.find({
+      where: { course_id: courseId },
+      order: { created_at: 'DESC' }
+    })
+  }
+
+  /**
+   * 清理測試課程檔案資料
+   */
+  static async cleanupTestCourseFiles() {
+    const courseFileRepository = dataSource.getRepository(CourseFile)
+    await courseFileRepository.delete({})
+  }
+
+  /**
+   * 清理完整測試環境
+   */
+  static async cleanupTestEnvironment() {
+    await this.cleanupTestCourseFiles()
+    await CourseTestHelpers.cleanupTestCourses()
+  }
+}
+
 // 匯出所有 Helper 類別
-export { UserTestHelpers, TeacherTestHelpers, WorkExperienceTestHelpers, RequestTestHelpers, ValidationTestHelpers, PerformanceTestHelpers }
+export { 
+  UserTestHelpers, 
+  TeacherTestHelpers, 
+  WorkExperienceTestHelpers, 
+  RequestTestHelpers, 
+  ValidationTestHelpers, 
+  PerformanceTestHelpers,
+  CourseTestHelpers,
+  VideoTestHelpers,
+  CourseVideoTestHelpers,
+  CourseFileTestHelpers
+}
 
 // 預設匯出常用 Helper 函式
 export default {

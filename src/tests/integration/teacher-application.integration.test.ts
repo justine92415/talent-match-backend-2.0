@@ -9,7 +9,8 @@ import { TeacherWorkExperience } from '@entities/TeacherWorkExperience'
 import { TeacherLearningExperience } from '@entities/TeacherLearningExperience'
 import { TeacherCertificate } from '@entities/TeacherCertificate'
 import { ApplicationStatus } from '@entities/enums'
-import { ERROR_MESSAGES } from '@constants/errorMessages'
+import { ERROR_CODES } from '@constants/ErrorCode'
+import { ERROR_MESSAGES } from '@constants/Message'
 
 // 使用新的 fixtures 和 helper
 import { validTeacherApplicationData, invalidTeacherApplicationData, expectedResponseStructures, validIntroductions } from '@tests/fixtures/teacherFixtures'
@@ -97,7 +98,7 @@ describe('教師申請 API 整合測試', () => {
       expect(response.status).toBe(400)
       expect(response.body).toEqual({
         status: 'error',
-        code: 'VALIDATION_ERROR',
+        code: ERROR_CODES.VALIDATION_ERROR,
         message: ERROR_MESSAGES.SYSTEM.TEACHER_APPLICATION_VALIDATION_FAILED,
         errors: expect.any(Object)
       })

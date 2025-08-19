@@ -2,7 +2,7 @@ import { dataSource } from '@db/data-source'
 import { Teacher } from '@entities/Teacher'
 import { TeacherCertificate } from '@entities/TeacherCertificate'
 import { BusinessError } from '@utils/errors'
-import { BusinessMessages } from '@constants/errorMessages'
+import { BusinessMessages } from '@constants/Message'
 import getLogger from '@utils/logger'
 
 const logger = getLogger('CertificateService')

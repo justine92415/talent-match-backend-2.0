@@ -22,7 +22,7 @@ import {
 } from './fixtures/userFixtures'
 import { UserTestHelpers, RequestTestHelpers, ValidationTestHelpers } from './helpers/testHelpers'
 import { expectErrorResponse, TestErrorMessages } from './helpers/errorTestUtils'
-import { ERROR_MESSAGES } from '@constants/errorMessages'
+import { ERROR_MESSAGES } from '@constants/Message'
 
 describe('POST /api/auth/register', () => {
   beforeAll(async () => {
@@ -41,7 +41,7 @@ describe('POST /api/auth/register', () => {
       // Assert
       expect(response.body).toMatchObject({
         status: 'success',
-        message: '註冊成功',
+        message: ERROR_MESSAGES.AUTH.REGISTRATION_SUCCESS,
         data: {
           user: {
             id: expect.any(Number),
@@ -201,7 +201,7 @@ describe('POST /api/auth/login', () => {
       // Assert
       expect(response.body).toMatchObject({
         status: 'success',
-        message: '登入成功',
+        message: ERROR_MESSAGES.AUTH.LOGIN_SUCCESS,
         data: {
           user: {
             id: expect.any(Number),
@@ -967,7 +967,7 @@ describe('POST /api/auth/login', () => {
             .expect(401)
 
           expect(response.body).toHaveProperty('status', 'error')
-          expect(response.body).toHaveProperty('message', 'Token 已過期')
+          expect(response.body).toHaveProperty('message', ERROR_MESSAGES.AUTH.TOKEN_EXPIRED)
         })
       })
     })

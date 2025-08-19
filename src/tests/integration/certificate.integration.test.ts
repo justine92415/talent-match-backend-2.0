@@ -5,6 +5,7 @@ import { User } from '@entities/User'
 import { Teacher } from '@entities/Teacher'
 import { TeacherCertificate } from '@entities/TeacherCertificate'
 import { UserRole, ApplicationStatus } from '@entities/enums'
+import { ERROR_CODES } from '@constants/ErrorCode'
 import { createUserEntityData, teacherUserEntityData } from '@tests/fixtures/userFixtures'
 import { createTeacherEntityData } from '@tests/fixtures/teacherFixtures'
 import { validCertificateData, invalidCertificateData } from '@tests/fixtures/certificateFixtures'
@@ -106,7 +107,7 @@ describe('證書管理 API', () => {
 
         expect(response.body).toMatchObject({
           status: 'error',
-          code: 'UNAUTHORIZED_ACCESS',
+          code: ERROR_CODES.TOKEN_REQUIRED,
           message: expect.stringContaining('token')
         })
       })
@@ -197,7 +198,7 @@ describe('證書管理 API', () => {
 
         expect(response.body).toMatchObject({
           status: 'error',
-          code: 'VALIDATION_ERROR',
+          code: ERROR_CODES.VALIDATION_ERROR,
           message: expect.stringContaining('驗證失敗')
         })
       })
@@ -211,7 +212,7 @@ describe('證書管理 API', () => {
 
         expect(response.body).toMatchObject({
           status: 'error',
-          code: 'VALIDATION_ERROR'
+          code: ERROR_CODES.VALIDATION_ERROR
         })
       })
 
@@ -227,7 +228,7 @@ describe('證書管理 API', () => {
 
         expect(response.body).toMatchObject({
           status: 'error',
-          code: 'VALIDATION_ERROR'
+          code: ERROR_CODES.VALIDATION_ERROR
         })
       })
 
@@ -248,7 +249,7 @@ describe('證書管理 API', () => {
 
         expect(response.body).toMatchObject({
           status: 'error',
-          code: 'UNAUTHORIZED_ACCESS'
+          code: ERROR_CODES.TOKEN_REQUIRED
         })
       })
     })
@@ -373,7 +374,7 @@ describe('證書管理 API', () => {
 
         expect(response.body).toMatchObject({
           status: 'error',
-          code: 'VALIDATION_ERROR'
+          code: ERROR_CODES.VALIDATION_ERROR
         })
       })
     })

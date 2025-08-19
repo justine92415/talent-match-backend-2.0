@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { CertificateService } from '@services/certificateService'
-import { handleErrorAsync } from '@utils/index'
+import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 
 /**
  * 證書管理控制器
@@ -20,13 +20,9 @@ export class CertificateController {
 
     const certificates = await this.certificateService.getCertificatesByUserId(userId)
 
-    res.status(200).json({
-      status: 'success',
-      message: '取得證書列表成功',
-      data: {
-        certificates
-      }
-    })
+    res.status(200).json(handleSuccess({
+      certificates
+    }, '取得證書列表成功'))
   })
 
   /**
@@ -43,13 +39,9 @@ export class CertificateController {
 
     const newCertificate = await this.certificateService.createCertificate(userId, certificateData)
 
-    res.status(201).json({
-      status: 'success',
-      message: '證書已新增',
-      data: {
-        certificate: newCertificate
-      }
-    })
+    res.status(201).json(handleCreated({
+      certificate: newCertificate
+    }, '證書已新增'))
   })
 
   /**
@@ -67,13 +59,9 @@ export class CertificateController {
 
     const updatedCertificate = await this.certificateService.updateCertificate(userId, certificateId, updateData)
 
-    res.status(200).json({
-      status: 'success',
-      message: '證書已更新',
-      data: {
-        certificate: updatedCertificate
-      }
-    })
+    res.status(200).json(handleSuccess({
+      certificate: updatedCertificate
+    }, '證書已更新'))
   })
 
   /**
@@ -86,11 +74,7 @@ export class CertificateController {
 
     await this.certificateService.deleteCertificate(userId, certificateId)
 
-    res.status(200).json({
-      status: 'success',
-      message: '證書已刪除',
-      data: null
-    })
+    res.status(200).json(handleSuccess(null, '證書已刪除'))
   })
 }
 

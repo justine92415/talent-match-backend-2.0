@@ -4,7 +4,7 @@
  */
 
 import { Response } from 'supertest'
-import { ERROR_MESSAGES } from '@constants/errorMessages'
+import { ERROR_MESSAGES } from '@constants/Message'
 
 /**
  * 驗證錯誤回應的基本結構和訊息

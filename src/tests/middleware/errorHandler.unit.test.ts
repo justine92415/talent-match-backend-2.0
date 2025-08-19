@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
 import { errorHandler } from '@middleware/errorHandler'
 import { BusinessError, ValidationError, AuthError, SystemError } from '@utils/errors'
+import { ERROR_CODES } from '@constants/ErrorCode'
+import { ERROR_MESSAGES } from '@constants/Message'
 
 describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
   let mockReq: Partial<Request>
@@ -38,7 +40,7 @@ describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
   describe('🎯 新格式驗證 - 業務錯誤', () => {
     it('BusinessError 應該回傳簡潔格式（無 error 物件，無 errors 欄位）', () => {
       // Arrange
-      const error = new BusinessError('INVALID_CREDENTIALS', '帳號或密碼錯誤')
+      const error = new BusinessError(ERROR_CODES.INVALID_CREDENTIALS, ERROR_MESSAGES.AUTH.INVALID_CREDENTIALS)
 
       // Act
       errorHandler(error, mockReq as Request, mockRes as Response, mockNext)
@@ -47,8 +49,8 @@ describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
       expect(statusMock).toHaveBeenCalledWith(400)
       expect(jsonMock).toHaveBeenCalledWith({
         status: 'error',
-        code: 'INVALID_CREDENTIALS',
-        message: '帳號或密碼錯誤'
+        code: ERROR_CODES.INVALID_CREDENTIALS,
+        message: ERROR_MESSAGES.AUTH.INVALID_CREDENTIALS
         // 不應該包含 error 物件或 errors 欄位
       })
 
@@ -60,7 +62,7 @@ describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
 
     it('BusinessError EMAIL_EXISTS 應該回傳正確狀態碼和格式', () => {
       // Arrange
-      const error = new BusinessError('EMAIL_EXISTS', '該電子郵件已被註冊')
+      const error = new BusinessError(ERROR_CODES.EMAIL_EXISTS, ERROR_MESSAGES.AUTH.EMAIL_EXISTS)
 
       // Act
       errorHandler(error, mockReq as Request, mockRes as Response, mockNext)
@@ -69,8 +71,8 @@ describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
       expect(statusMock).toHaveBeenCalledWith(400)
       expect(jsonMock).toHaveBeenCalledWith({
         status: 'error',
-        code: 'EMAIL_EXISTS',
-        message: '該電子郵件已被註冊'
+        code: ERROR_CODES.EMAIL_EXISTS,
+        message: ERROR_MESSAGES.AUTH.EMAIL_EXISTS
       })
     })
   })
@@ -78,7 +80,7 @@ describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
   describe('🔐 新格式驗證 - 認證錯誤', () => {
     it('AuthError 應該回傳簡潔格式（無 error 物件，無 errors 欄位）', () => {
       // Arrange
-      const error = new AuthError('TOKEN_EXPIRED', 'Token 已過期')
+      const error = new AuthError(ERROR_CODES.TOKEN_EXPIRED, ERROR_MESSAGES.AUTH.TOKEN_EXPIRED)
 
       // Act
       errorHandler(error, mockReq as Request, mockRes as Response, mockNext)
@@ -87,8 +89,8 @@ describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
       expect(statusMock).toHaveBeenCalledWith(401)
       expect(jsonMock).toHaveBeenCalledWith({
         status: 'error',
-        code: 'TOKEN_EXPIRED',
-        message: 'Token 已過期'
+        code: ERROR_CODES.TOKEN_EXPIRED,
+        message: ERROR_MESSAGES.AUTH.TOKEN_EXPIRED
       })
 
       // 確認沒有多餘欄位
@@ -99,7 +101,7 @@ describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
 
     it('AuthError UNAUTHORIZED_ACCESS 應該回傳 401 狀態碼', () => {
       // Arrange
-      const error = new AuthError('UNAUTHORIZED_ACCESS', '未經授權的存取', 401)
+      const error = new AuthError(ERROR_CODES.UNAUTHORIZED_ACCESS, ERROR_MESSAGES.BUSINESS.UNAUTHORIZED_ACCESS, 401)
 
       // Act
       errorHandler(error, mockReq as Request, mockRes as Response, mockNext)
@@ -108,8 +110,8 @@ describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
       expect(statusMock).toHaveBeenCalledWith(401)
       expect(jsonMock).toHaveBeenCalledWith({
         status: 'error',
-        code: 'UNAUTHORIZED_ACCESS',
-        message: '未經授權的存取'
+        code: ERROR_CODES.UNAUTHORIZED_ACCESS,
+        message: ERROR_MESSAGES.BUSINESS.UNAUTHORIZED_ACCESS
       })
     })
   })
@@ -117,7 +119,7 @@ describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
   describe('✅ 新格式驗證 - 驗證錯誤（包含 errors）', () => {
     it('ValidationError 有 details 時應該包含 errors 欄位', () => {
       // Arrange
-      const error = new ValidationError('VALIDATION_ERROR', '參數驗證失敗', {
+      const error = new ValidationError(ERROR_CODES.VALIDATION_ERROR, '參數驗證失敗', {
         username: ['帳號格式不正確'],
         password: ['密碼長度不足']
       })
@@ -129,7 +131,7 @@ describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
       expect(statusMock).toHaveBeenCalledWith(400)
       expect(jsonMock).toHaveBeenCalledWith({
         status: 'error',
-        code: 'VALIDATION_ERROR',
+        code: ERROR_CODES.VALIDATION_ERROR,
         message: '參數驗證失敗',
         errors: {
           username: ['帳號格式不正確'],
@@ -144,7 +146,7 @@ describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
 
     it('ValidationError 無 details 時不應該包含 errors 欄位', () => {
       // Arrange
-      const error = new ValidationError('VALIDATION_ERROR', '驗證失敗')
+      const error = new ValidationError(ERROR_CODES.VALIDATION_ERROR, '驗證失敗')
 
       // Act
       errorHandler(error, mockReq as Request, mockRes as Response, mockNext)
@@ -153,7 +155,7 @@ describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
       expect(statusMock).toHaveBeenCalledWith(400)
       expect(jsonMock).toHaveBeenCalledWith({
         status: 'error',
-        code: 'VALIDATION_ERROR',
+        code: ERROR_CODES.VALIDATION_ERROR,
         message: '驗證失敗'
       })
 
@@ -165,7 +167,7 @@ describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
 
     it('ValidationError 複雜驗證錯誤應該正確處理', () => {
       // Arrange
-      const error = new ValidationError('VALIDATION_ERROR', '多個欄位驗證失敗', {
+      const error = new ValidationError(ERROR_CODES.VALIDATION_ERROR, '多個欄位驗證失敗', {
         email: ['電子郵件格式不正確', '電子郵件長度超過限制'],
         nick_name: ['暱稱不能為空'],
         password: ['密碼至少需要 8 個字元', '密碼必須包含數字和字母']
@@ -178,7 +180,7 @@ describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
       expect(statusMock).toHaveBeenCalledWith(400)
       expect(jsonMock).toHaveBeenCalledWith({
         status: 'error',
-        code: 'VALIDATION_ERROR',
+        code: ERROR_CODES.VALIDATION_ERROR,
         message: '多個欄位驗證失敗',
         errors: {
           email: ['電子郵件格式不正確', '電子郵件長度超過限制'],
@@ -192,7 +194,7 @@ describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
   describe('🖥️ 新格式驗證 - 系統錯誤', () => {
     it('SystemError 應該回傳簡潔格式', () => {
       // Arrange
-      const error = new SystemError('INTERNAL_ERROR', '系統內部錯誤')
+      const error = new SystemError(ERROR_CODES.INTERNAL_ERROR, ERROR_MESSAGES.SYSTEM.INTERNAL_ERROR)
 
       // Act
       errorHandler(error, mockReq as Request, mockRes as Response, mockNext)
@@ -201,8 +203,8 @@ describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
       expect(statusMock).toHaveBeenCalledWith(500)
       expect(jsonMock).toHaveBeenCalledWith({
         status: 'error',
-        code: 'INTERNAL_ERROR',
-        message: '系統內部錯誤'
+        code: ERROR_CODES.INTERNAL_ERROR,
+        message: ERROR_MESSAGES.SYSTEM.INTERNAL_ERROR
       })
 
       // 確認沒有多餘欄位
@@ -240,7 +242,7 @@ describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
       expect(statusMock).toHaveBeenCalledWith(500)
       expect(jsonMock).toHaveBeenCalledWith({
         status: 'error',
-        code: 'INTERNAL_ERROR',
+        code: ERROR_CODES.INTERNAL_ERROR,
         message: process.env.NODE_ENV === 'development' ? '未預期的錯誤' : '系統發生內部錯誤'
       })
 
@@ -261,7 +263,7 @@ describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
       expect(statusMock).toHaveBeenCalledWith(500)
       const callArgs = jsonMock.mock.calls[0][0]
       expect(callArgs.status).toBe('error')
-      expect(callArgs.code).toBe('INTERNAL_ERROR')
+      expect(callArgs.code).toBe(ERROR_CODES.INTERNAL_ERROR)
       expect(callArgs.message).toBeDefined()
       expect(callArgs.error).toBeUndefined()
       expect(callArgs.errors).toBeUndefined()
@@ -274,9 +276,9 @@ describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
         { error: new BusinessError('BUSINESS_ERROR', '業務錯誤'), expectErrors: false },
         { error: new AuthError('AUTH_ERROR', '認證錯誤'), expectErrors: false },
         { error: new SystemError('SYSTEM_ERROR', '系統錯誤'), expectErrors: false },
-        { error: new ValidationError('VALIDATION_ERROR', '驗證錯誤'), expectErrors: false },
+        { error: new ValidationError(ERROR_CODES.VALIDATION_ERROR, '驗證錯誤'), expectErrors: false },
         { 
-          error: new ValidationError('VALIDATION_ERROR', '驗證錯誤', { field: ['錯誤'] }), 
+          error: new ValidationError(ERROR_CODES.VALIDATION_ERROR, '驗證錯誤', { field: ['錯誤'] }), 
           expectErrors: true 
         }
       ]

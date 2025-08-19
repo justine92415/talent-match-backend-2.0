@@ -6,7 +6,8 @@ import { User } from '@entities/User'
 import { Teacher } from '@entities/Teacher'
 import { TeacherWorkExperience } from '@entities/TeacherWorkExperience'
 import { UserRole, ApplicationStatus } from '@entities/enums'
-import { ERROR_MESSAGES } from '@constants/errorMessages'
+import { ERROR_CODES } from '@constants/ErrorCode'
+import { ERROR_MESSAGES } from '@constants/Message'
 
 import { validUserData } from '@tests/fixtures/userFixtures'
 import { validTeacherApplicationData } from '@tests/fixtures/teacherFixtures'
@@ -111,7 +112,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        code: 'UNAUTHORIZED_ACCESS',
+        code: ERROR_CODES.TOKEN_REQUIRED,
         message: expect.stringContaining(ERROR_MESSAGES.AUTH.TOKEN_REQUIRED)
       })
     })
@@ -133,7 +134,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        code: 'UNAUTHORIZED_ACCESS',
+        code: ERROR_CODES.UNAUTHORIZED_ACCESS,
         message: expect.stringContaining(ERROR_MESSAGES.BUSINESS.TEACHER_PERMISSION_REQUIRED)
       })
     })
@@ -238,7 +239,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        code: 'VALIDATION_ERROR',
+        code: ERROR_CODES.VALIDATION_ERROR,
         message: expect.stringContaining(ERROR_MESSAGES.VALIDATION.WORKPLACE_REQUIRED)
       })
     })
@@ -260,7 +261,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        code: 'VALIDATION_ERROR',
+        code: ERROR_CODES.VALIDATION_ERROR,
         message: expect.stringContaining(ERROR_MESSAGES.VALIDATION.END_DATE_BEFORE_START_DATE)
       })
     })
@@ -282,7 +283,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        code: 'VALIDATION_ERROR',
+        code: ERROR_CODES.VALIDATION_ERROR,
         message: expect.stringContaining(ERROR_MESSAGES.VALIDATION.WORKING_END_DATE_NOT_ALLOWED)
       })
     })
@@ -303,7 +304,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        code: 'VALIDATION_ERROR',
+        code: ERROR_CODES.VALIDATION_ERROR,
         message: expect.stringContaining(ERROR_MESSAGES.VALIDATION.NON_WORKING_END_DATE_REQUIRED)
       })
     })
@@ -323,7 +324,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        code: 'UNAUTHORIZED_ACCESS',
+        code: ERROR_CODES.TOKEN_REQUIRED,
         message: expect.stringContaining(ERROR_MESSAGES.AUTH.TOKEN_REQUIRED)
       })
     })
@@ -360,7 +361,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        code: 'UNAUTHORIZED_ACCESS',
+        code: ERROR_CODES.UNAUTHORIZED_ACCESS,
         message: expect.stringContaining(ERROR_MESSAGES.BUSINESS.TEACHER_PERMISSION_REQUIRED)
       })
     })
@@ -486,7 +487,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        code: 'UNAUTHORIZED_ACCESS',
+        code: ERROR_CODES.UNAUTHORIZED_ACCESS,
         message: expect.stringContaining(ERROR_MESSAGES.BUSINESS.UNAUTHORIZED_WORK_EXPERIENCE_ACCESS)
       })
     })
@@ -505,7 +506,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        code: 'VALIDATION_ERROR',
+        code: ERROR_CODES.VALIDATION_ERROR,
         message: expect.stringContaining(ERROR_MESSAGES.VALIDATION.END_DATE_BEFORE_START_DATE)
       })
     })
@@ -519,7 +520,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        code: 'UNAUTHORIZED_ACCESS',
+        code: ERROR_CODES.TOKEN_REQUIRED,
         message: expect.stringContaining(ERROR_MESSAGES.AUTH.TOKEN_REQUIRED)
       })
     })
@@ -596,7 +597,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        code: 'UNAUTHORIZED_ACCESS',
+        code: ERROR_CODES.UNAUTHORIZED_ACCESS,
         message: expect.stringContaining(ERROR_MESSAGES.BUSINESS.UNAUTHORIZED_WORK_EXPERIENCE_DELETE)
       })
     })
@@ -606,7 +607,7 @@ describe('工作經驗管理 API', () => {
 
       expect(response.body).toMatchObject({
         status: 'error',
-        code: 'UNAUTHORIZED_ACCESS',
+        code: ERROR_CODES.TOKEN_REQUIRED,
         message: expect.stringContaining(ERROR_MESSAGES.AUTH.TOKEN_REQUIRED)
       })
     })
