@@ -1537,6 +1537,224 @@ const swaggerDefinition = {
             }
           }
         ]
+      },
+
+      // ========================================
+      // 影片管理相關 Schemas
+      // ========================================
+      
+      VideoUploadRequest: {
+        type: 'object',
+        required: ['name', 'category', 'intro', 'video_type'],
+        properties: {
+          name: {
+            type: 'string',
+            maxLength: 100,
+            description: '影片名稱',
+            example: 'JavaScript 基礎教學第一課'
+          },
+          category: {
+            type: 'string',
+            maxLength: 50,
+            description: '影片分類',
+            example: '程式設計'
+          },
+          intro: {
+            type: 'string',
+            maxLength: 1000,
+            description: '影片介紹',
+            example: '這堂課將教授 JavaScript 的基本語法和概念，適合初學者學習。'
+          },
+          video_type: {
+            type: 'string',
+            enum: ['youtube', 'storage'],
+            description: '影片類型：youtube 為 YouTube 連結，storage 為檔案上傳',
+            example: 'youtube'
+          },
+          youtube_url: {
+            type: 'string',
+            format: 'uri',
+            description: '當 video_type 為 youtube 時的 YouTube 連結',
+            example: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+          }
+        }
+      },
+
+      VideoUpdateRequest: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            maxLength: 100,
+            description: '影片名稱',
+            example: 'JavaScript 基礎教學第一課 - 更新版'
+          },
+          category: {
+            type: 'string',
+            maxLength: 50,
+            description: '影片分類',
+            example: '前端開發'
+          },
+          intro: {
+            type: 'string',
+            maxLength: 1000,
+            description: '影片介紹',
+            example: '這堂課將教授 JavaScript 的基本語法和概念，已更新最新內容。'
+          }
+        }
+      },
+
+      VideoBase: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '影片ID',
+            example: 1
+          },
+          uuid: {
+            type: 'string',
+            format: 'uuid',
+            description: '影片唯一識別碼',
+            example: '550e8400-e29b-41d4-a716-446655440001'
+          },
+          teacher_id: {
+            type: 'integer',
+            description: '教師ID',
+            example: 1
+          },
+          name: {
+            type: 'string',
+            description: '影片名稱',
+            example: 'JavaScript 基礎教學第一課'
+          },
+          category: {
+            type: 'string',
+            description: '影片分類',
+            example: '程式設計'
+          },
+          intro: {
+            type: 'string',
+            description: '影片介紹',
+            example: '這堂課將教授 JavaScript 的基本語法和概念，適合初學者學習。'
+          },
+          url: {
+            type: 'string',
+            nullable: true,
+            description: '影片連結或檔案路徑',
+            example: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+          },
+          video_type: {
+            type: 'string',
+            enum: ['youtube', 'storage'],
+            description: '影片類型',
+            example: 'youtube'
+          },
+          created_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '建立時間',
+            example: '2024-01-15T10:30:00.000Z'
+          },
+          updated_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '更新時間',
+            example: '2024-01-15T10:30:00.000Z'
+          },
+          deleted_at: {
+            type: 'string',
+            format: 'date-time',
+            nullable: true,
+            description: '刪除時間',
+            example: null
+          }
+        }
+      },
+
+      VideoUploadResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/ApiResponse' },
+          {
+            type: 'object',
+            properties: {
+              data: {
+                $ref: '#/components/schemas/VideoBase'
+              }
+            }
+          }
+        ]
+      },
+
+      VideoUpdateResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/ApiResponse' },
+          {
+            type: 'object',
+            properties: {
+              data: {
+                $ref: '#/components/schemas/VideoBase'
+              }
+            }
+          }
+        ]
+      },
+
+      VideoDetailResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/ApiResponse' },
+          {
+            type: 'object',
+            properties: {
+              data: {
+                $ref: '#/components/schemas/VideoBase'
+              }
+            }
+          }
+        ]
+      },
+
+      VideoListResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/ApiResponse' },
+          {
+            type: 'object',
+            properties: {
+              data: {
+                type: 'object',
+                properties: {
+                  videos: {
+                    type: 'array',
+                    items: {
+                      $ref: '#/components/schemas/VideoBase'
+                    }
+                  },
+                  pagination: {
+                    type: 'object',
+                    properties: {
+                      page: {
+                        type: 'integer',
+                        example: 1
+                      },
+                      per_page: {
+                        type: 'integer',
+                        example: 10
+                      },
+                      total: {
+                        type: 'integer',
+                        example: 25
+                      },
+                      total_pages: {
+                        type: 'integer',
+                        example: 3
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
       }
     },
 

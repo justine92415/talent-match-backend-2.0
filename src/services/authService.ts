@@ -5,7 +5,7 @@ import { dataSource } from '@db/data-source'
 import { User } from '@entities/User'
 import { UserRole, AccountStatus } from '@entities/enums'
 import { Errors, BusinessError } from '@utils/errors'
-import { AuthMessages } from '@constants/errorMessages'
+import { AuthMessages } from '@constants/Message'
 import { JWT_CONFIG, PASSWORD_CONFIG } from '@config/secret'
 import {
   RegisterUserData,

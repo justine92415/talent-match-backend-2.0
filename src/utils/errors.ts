@@ -9,7 +9,7 @@ import {
   ValidationMessages, 
   BusinessMessages, 
   SystemMessages 
-} from '@constants/errorMessages'
+} from '@constants/Message'
 
 // 錯誤類型枚舉
 export enum ErrorType {

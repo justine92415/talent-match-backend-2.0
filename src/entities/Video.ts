@@ -1,14 +1,18 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm'
 import { VideoType } from './enums'
 
 @Entity('videos')
+@Index('idx_video_teacher_id', ['teacher_id'])
+@Index('idx_video_category', ['category'])
+@Index('idx_video_deleted_at', ['deleted_at'])
+@Index('idx_video_teacher_category', ['teacher_id', 'category'])
 export class Video {
   /** 影片ID（主鍵） */
   @PrimaryGeneratedColumn()
   id!: number
 
   /** 影片唯一識別碼 */
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', unique: true })
   uuid!: string
 
   /** 上傳影片的教師ID */

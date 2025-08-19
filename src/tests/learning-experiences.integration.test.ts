@@ -19,7 +19,7 @@ import {
 } from '@tests/fixtures/learningExperienceFixtures'
 import { teacherEntityVariations, jwtTestUsers } from '@tests/fixtures/teacherFixtures'
 import { UserTestHelpers, TeacherTestHelpers } from '@tests/helpers/testHelpers'
-import { ERROR_MESSAGES } from '@constants/errorMessages'
+import { ERROR_MESSAGES } from '@constants/Message'
 
 describe('Learning Experience Management Integration Tests', () => {
   let teacherRepository: ReturnType<typeof dataSource.getRepository<Teacher>>

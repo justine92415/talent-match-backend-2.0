@@ -7,15 +7,15 @@ export class City {
   id!: number
 
   /** 城市代碼 */
-  @Column({ length: 10 })
+  @Column({ type: 'varchar', length: 10, unique: true })
   city_code!: string
 
   /** 城市名稱 */
-  @Column({ length: 50 })
+  @Column({ type: 'varchar', length: 50 })
   city_name!: string
 
   /** 是否啟用 */
-  @Column({ default: true })
+  @Column({ type: 'boolean', default: true })
   is_active!: boolean
 
   /** 建立時間 */

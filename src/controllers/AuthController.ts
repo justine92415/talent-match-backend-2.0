@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { authService } from '@services/authService'
 import type { RegisterUserData, LoginUserData, RefreshTokenData, ForgotPasswordData } from '@models/index'
-import { SuccessMessages } from '@constants/errorMessages'
+import { SuccessMessages } from '@constants/Message'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 
 export class AuthController {

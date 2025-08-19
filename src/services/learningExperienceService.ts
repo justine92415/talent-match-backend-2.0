@@ -5,7 +5,7 @@ import { Teacher } from '@entities/Teacher'
 import { User } from '@entities/User'
 import { UserRole, AccountStatus } from '@entities/enums'
 import { BusinessError, Errors } from '@utils/errors'
-import { BusinessMessages, ValidationMessages } from '@constants/errorMessages'
+import { BusinessMessages, ValidationMessages } from '@constants/Message'
 import { LEARNING_EXPERIENCE_BUSINESS } from '@constants/learningExperience'
 import type { 
   CreateLearningExperienceRequest,

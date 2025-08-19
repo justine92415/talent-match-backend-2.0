@@ -10,7 +10,7 @@ import {
   resetPasswordSchema,
   updateProfileSchema
 } from '@middleware/validation'
-import { ERROR_MESSAGES } from '@constants/errorMessages'
+import { ERROR_MESSAGES } from '@constants/Message'
 
 const router = Router()
 

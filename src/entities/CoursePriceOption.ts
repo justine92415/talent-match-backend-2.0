@@ -22,6 +22,10 @@ export class CoursePriceOption {
   @Column({ type: 'integer' })
   quantity!: number
 
+  /** 是否啟用（軟刪除） */
+  @Column({ type: 'boolean', default: true })
+  is_active!: boolean
+
   /** 建立時間 */
   @CreateDateColumn({ type: 'timestamp' })
   created_at!: Date

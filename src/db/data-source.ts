@@ -2,6 +2,8 @@ import { DataSource } from 'typeorm'
 import config from '@config/index'
 import { User } from '@entities/User'
 import { City } from '@entities/City'
+import { MainCategory } from '@entities/MainCategory'
+import { SubCategory } from '@entities/SubCategory'
 import { AuditLog } from '@entities/AuditLog'
 import { Teacher } from '@entities/Teacher'
 import { TeacherWorkExperience } from '@entities/TeacherWorkExperience'
@@ -47,6 +49,8 @@ export const dataSource = new DataSource({
   entities: [
     User,
     City,
+    MainCategory,
+    SubCategory,
     AuditLog,
     Teacher,
     TeacherWorkExperience,
