@@ -4,8 +4,8 @@ import path from 'path'
 import pinoHttp from 'pino-http'
 import swaggerUi from 'swagger-ui-express'
 
-import getLogger from './utils/logger'
-import { swaggerSpec } from './config/swagger'
+import getLogger from '@utils/logger'
+import { swaggerSpec } from '@config/swagger'
 
 const logger = getLogger('App')
 
@@ -96,11 +96,11 @@ app.use(
 )
 
 // API 路由
-import routes from './routes'
+import routes from '@routes/index'
 app.use('/api', routes)
 
 // 全域錯誤處理中間件 (必須放在最後)
-import { errorHandler } from './middleware/errorHandler'
+import { errorHandler } from '@middleware/errorHandler'
 app.use(errorHandler)
 
 export default app

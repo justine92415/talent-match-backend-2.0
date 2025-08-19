@@ -138,6 +138,9 @@ export const Errors = {
   validation: (details: Record<string, string[]>, customMessage?: string) => 
     new ValidationError('VALIDATION_ERROR', customMessage || SystemMessages.VALIDATION_FAILED, details),
   
+  validationWithCode: (code: string, details: Record<string, string[]>, customMessage?: string) => 
+    new ValidationError(code, customMessage || SystemMessages.VALIDATION_FAILED, details),
+  
   passwordTooShort: (customMessage?: string) => 
     new ValidationError('PASSWORD_TOO_SHORT', customMessage || ValidationMessages.PASSWORD_TOO_SHORT),
   
