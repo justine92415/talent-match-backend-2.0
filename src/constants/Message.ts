@@ -162,6 +162,17 @@ export const MESSAGES = {
     
     // 搜尋相關驗證
     SEARCH_QUERY_TOO_LONG: '搜尋關鍵字不能超過200個字元',
+    SEARCH_METHODS_EXCLUSIVE: '關鍵字搜尋和分類搜尋不能同時使用',
+    CATEGORY_SEARCH_INCOMPLETE: '使用分類搜尋時主分類和次分類都必填',
+    SORT_OPTION_INVALID: '排序方式只能是 newest, popular, price_low, price_high',
+    
+    // 評價相關驗證
+    REVIEW_RATING_INVALID: '評分必須在1-5之間',
+    REVIEW_SORT_INVALID: '排序方式只能是 newest, oldest, rating_high, rating_low',
+    
+    // 收藏相關驗證
+    COURSE_ID_REQUIRED: '課程ID為必填欄位',
+    COURSE_ID_INVALID: '課程ID格式不正確',
     
     // ID 參數驗證
     VIDEO_ID_REQUIRED: '影片ID為必填欄位',
@@ -256,6 +267,15 @@ export const MESSAGES = {
     COURSE_FILE_UPLOAD_FAILED: '檔案上傳失敗',
     COURSE_FILE_DELETE_FAILED: '檔案刪除失敗',
     COURSE_FILE_LIMIT_REACHED: '課程檔案數量已達上限',
+    
+    // 課程瀏覽相關
+    COURSE_NOT_PUBLISHED: '課程未發布或不存在',
+    COURSE_TEACHER_INACTIVE: '課程教師帳號已停用',
+    
+    // 收藏功能相關
+    FAVORITE_ALREADY_EXISTS: '課程已在收藏清單中',
+    FAVORITE_NOT_FOUND: '收藏記錄不存在',
+    CANNOT_FAVORITE_OWN_COURSE: '不能收藏自己的課程',
   },
 
   // === 系統訊息 ===
@@ -333,6 +353,39 @@ export const MESSAGES = {
     UPLOADED: '檔案上傳成功',
     DELETED: '檔案已刪除',
   },
+
+  // === 公開課程相關訊息 ===
+  PUBLIC_COURSE: {
+    // 成功訊息
+    LIST_SUCCESS: '取得課程列表成功',
+    DETAIL_SUCCESS: '取得課程詳情成功',
+    REVIEWS_SUCCESS: '取得課程評價成功',
+    NO_COURSES_FOUND: '沒有找到符合條件的課程',
+  },
+
+  // === 收藏功能相關訊息 ===
+  FAVORITE: {
+    // 成功訊息
+    ADDED: '課程已加入收藏',
+    REMOVED: '已移除課程收藏',
+    LIST_SUCCESS: '取得收藏清單成功',
+    STATUS_CHECK_SUCCESS: '收藏狀態查詢成功',
+  },
+
+  // === 教師公開資料相關訊息 ===
+  PUBLIC_TEACHER: {
+    // 成功訊息
+    PROFILE_SUCCESS: '取得教師資料成功',
+    COURSES_SUCCESS: '取得教師課程列表成功',
+  },
+
+  // === 時段管理相關訊息 ===
+  SCHEDULE: {
+    // 成功訊息
+    SETTINGS_GET_SUCCESS: '取得教師時段設定成功',
+    SETTINGS_UPDATE_SUCCESS: '教師時段設定更新成功',
+    CONFLICT_CHECK_SUCCESS: '時段衝突檢查完成',
+  },
 } as const
 
 // === 便捷訪問器 ===
@@ -347,6 +400,9 @@ export const PriceOptionMessages = MESSAGES.PRICE_OPTION
 export const VideoMessages = MESSAGES.VIDEO
 export const CourseVideoMessages = MESSAGES.COURSE_VIDEO
 export const CourseFileMessages = MESSAGES.COURSE_FILE
+export const PublicCourseMessages = MESSAGES.PUBLIC_COURSE
+export const FavoriteMessages = MESSAGES.FAVORITE
+export const PublicTeacherMessages = MESSAGES.PUBLIC_TEACHER
 
 // === 向後相容性：SUCCESS 物件 ===
 // 為了保持向後相容，維持原有的 SUCCESS 分組
@@ -404,6 +460,27 @@ export const SUCCESS = {
   COURSE_FILE_LIST_SUCCESS: MESSAGES.COURSE_FILE.LIST_SUCCESS,
   COURSE_FILE_UPLOADED: MESSAGES.COURSE_FILE.UPLOADED,
   COURSE_FILE_DELETED: MESSAGES.COURSE_FILE.DELETED,
+  
+  // 公開課程相關成功訊息
+  PUBLIC_COURSE_LIST_SUCCESS: MESSAGES.PUBLIC_COURSE.LIST_SUCCESS,
+  PUBLIC_COURSE_DETAIL_SUCCESS: MESSAGES.PUBLIC_COURSE.DETAIL_SUCCESS,
+  PUBLIC_COURSE_REVIEWS_SUCCESS: MESSAGES.PUBLIC_COURSE.REVIEWS_SUCCESS,
+  PUBLIC_COURSE_NO_COURSES_FOUND: MESSAGES.PUBLIC_COURSE.NO_COURSES_FOUND,
+  
+  // 收藏功能相關成功訊息
+  FAVORITE_ADDED: MESSAGES.FAVORITE.ADDED,
+  FAVORITE_REMOVED: MESSAGES.FAVORITE.REMOVED,
+  FAVORITE_LIST_SUCCESS: MESSAGES.FAVORITE.LIST_SUCCESS,
+  FAVORITE_STATUS_CHECK_SUCCESS: MESSAGES.FAVORITE.STATUS_CHECK_SUCCESS,
+  
+  // 教師公開資料相關成功訊息
+  PUBLIC_TEACHER_PROFILE_SUCCESS: MESSAGES.PUBLIC_TEACHER.PROFILE_SUCCESS,
+  PUBLIC_TEACHER_COURSES_SUCCESS: MESSAGES.PUBLIC_TEACHER.COURSES_SUCCESS,
+
+  // 時段管理相關成功訊息
+  SCHEDULE_SETTINGS_GET_SUCCESS: MESSAGES.SCHEDULE.SETTINGS_GET_SUCCESS,
+  SCHEDULE_SETTINGS_UPDATE_SUCCESS: MESSAGES.SCHEDULE.SETTINGS_UPDATE_SUCCESS,
+  SCHEDULE_CONFLICT_CHECK_SUCCESS: MESSAGES.SCHEDULE.CONFLICT_CHECK_SUCCESS,
 } as const
 
 // 維持原有的 SuccessMessages 別名

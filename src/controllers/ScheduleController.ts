@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express'
 import { scheduleService } from '@services/scheduleService'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
+import { SUCCESS } from '@constants/Message'
 import type {
   UpdateScheduleRequest,
   CheckConflictsRequest
@@ -16,7 +17,7 @@ export class ScheduleController {
 
     const result = await scheduleService.getScheduleByUserId(userId)
 
-    res.json(handleSuccess(result, '取得教師時段設定成功'))
+    res.json(handleSuccess(result, SUCCESS.SCHEDULE_SETTINGS_GET_SUCCESS))
   })
 
   /**
@@ -29,7 +30,7 @@ export class ScheduleController {
 
     const result = await scheduleService.updateScheduleByUserId(userId, requestData)
 
-    res.json(handleSuccess(result, '教師時段設定更新成功'))
+    res.json(handleSuccess(result, SUCCESS.SCHEDULE_SETTINGS_UPDATE_SUCCESS))
   })
 
   /**
@@ -90,7 +91,7 @@ export class ScheduleController {
 
     const result = await scheduleService.checkConflictsByUserId(userId, queryParams)
 
-    res.json(handleSuccess(result, '時段衝突檢查完成'))
+    res.json(handleSuccess(result, SUCCESS.SCHEDULE_CONFLICT_CHECK_SUCCESS))
   })
 }
 

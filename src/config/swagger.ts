@@ -31,8 +31,581 @@ const swaggerDefinition = {
       }
     },
     schemas: {
-      // 標準化回應格式
-      ApiResponse: {
+      // === 公開課程瀏覽相關 Schema ===
+
+      // 課程列表項目 Schema
+      CourseListItem: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'integer',
+          description: '課程ID',
+          example: 41
+        },
+        uuid: {
+          type: 'string',
+          format: 'uuid',
+          description: '課程UUID',
+          example: 'c5b71a6b-7d27-4e4a-8e9f-123456789abc'
+        },
+        name: {
+          type: 'string',
+          description: '課程名稱',
+          example: 'Python 程式設計基礎'
+        },
+        main_image: {
+          type: 'string',
+          nullable: true,
+          description: '課程主圖片',
+          example: '/images/courses/python-basics.jpg'
+        },
+        rate: {
+          type: 'number',
+          format: 'float',
+          description: '平均評分',
+          example: 4.5
+        },
+        review_count: {
+          type: 'integer',
+          description: '評價數量',
+          example: 25
+        },
+        student_count: {
+          type: 'integer',
+          description: '學生數量',
+          example: 150
+        },
+        view_count: {
+          type: 'integer',
+          description: '瀏覽次數',
+          example: 1250
+        },
+        teacher: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'integer',
+              example: 5
+            },
+            user: {
+              type: 'object',
+              properties: {
+                name: {
+                  type: 'string',
+                  example: '王老師'
+                },
+                avatar_image: {
+                  type: 'string',
+                  nullable: true,
+                  example: '/avatars/teacher_5.jpg'
+                }
+              }
+            },
+            nationality: {
+              type: 'string',
+              example: '台灣'
+            }
+          }
+        },
+        main_category: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'integer',
+              example: 1
+            },
+            name: {
+              type: 'string',
+              example: '程式設計'
+            }
+          }
+        },
+        sub_category: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'integer',
+              example: 2
+            },
+            name: {
+              type: 'string',
+              example: 'Python'
+            }
+          }
+        }
+      }
+    },
+
+    // 分頁資訊 Schema
+    PaginationInfo: {
+      type: 'object',
+      properties: {
+        current_page: {
+          type: 'integer',
+          description: '目前頁碼',
+          example: 1
+        },
+        per_page: {
+          type: 'integer',
+          description: '每頁筆數',
+          example: 12
+        },
+        total: {
+          type: 'integer',
+          description: '總筆數',
+          example: 25
+        },
+        total_pages: {
+          type: 'integer',
+          description: '總頁數',
+          example: 3
+        }
+      }
+    },
+
+    // 課程篩選條件 Schema
+    CourseFilters: {
+      type: 'object',
+      properties: {
+        keyword: {
+          type: 'string',
+          nullable: true,
+          description: '關鍵字',
+          example: 'Python'
+        },
+        main_category_id: {
+          type: 'integer',
+          nullable: true,
+          description: '主分類ID',
+          example: 1
+        },
+        sub_category_id: {
+          type: 'integer',
+          nullable: true,
+          description: '次分類ID',
+          example: 2
+        },
+        city_id: {
+          type: 'integer',
+          nullable: true,
+          description: '城市ID',
+          example: 1
+        },
+        sort: {
+          type: 'string',
+          description: '排序方式',
+          example: 'newest'
+        }
+      }
+    },
+
+    // 課程詳情 Schema
+    CourseDetail: {
+      type: 'object',
+      properties: {
+        course: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'integer',
+              description: '課程ID',
+              example: 41
+            },
+            uuid: {
+              type: 'string',
+              format: 'uuid',
+              description: '課程UUID',
+              example: 'c5b71a6b-7d27-4e4a-8e9f-123456789abc'
+            },
+            name: {
+              type: 'string',
+              description: '課程名稱',
+              example: 'Python 程式設計基礎'
+            },
+            content: {
+              type: 'string',
+              description: '課程內容',
+              example: '完整的Python程式設計入門課程，從基礎語法開始教學...'
+            },
+            main_image: {
+              type: 'string',
+              nullable: true,
+              description: '課程主圖片',
+              example: '/images/courses/python-basics.jpg'
+            },
+            rate: {
+              type: 'number',
+              format: 'float',
+              description: '平均評分',
+              example: 4.5
+            },
+            review_count: {
+              type: 'integer',
+              description: '評價數量',
+              example: 25
+            },
+            student_count: {
+              type: 'integer',
+              description: '學生數量',
+              example: 150
+            },
+            view_count: {
+              type: 'integer',
+              description: '瀏覽次數（已加1）',
+              example: 1251
+            },
+            main_category: {
+              $ref: '#/components/schemas/CategoryInfo'
+            },
+            sub_category: {
+              $ref: '#/components/schemas/CategoryInfo'
+            },
+            city: {
+              $ref: '#/components/schemas/CityInfo'
+            },
+            created_at: {
+              type: 'string',
+              format: 'date-time',
+              description: '建立時間',
+              example: '2024-01-15T10:30:00.000Z'
+            },
+            updated_at: {
+              type: 'string',
+              format: 'date-time',
+              description: '更新時間',
+              example: '2024-01-15T10:30:00.000Z'
+            }
+          }
+        },
+        teacher: {
+          $ref: '#/components/schemas/CourseTeacherInfo'
+        },
+        price_options: {
+          type: 'array',
+          items: {
+            type: 'object'
+          },
+          description: '價格選項（TODO）'
+        },
+        videos: {
+          type: 'array',
+          items: {
+            type: 'object'
+          },
+          description: '課程影片（TODO）'
+        },
+        files: {
+          type: 'array',
+          items: {
+            type: 'object'
+          },
+          description: '課程檔案（TODO）'
+        }
+      }
+    },
+
+    // 分類資訊 Schema
+    CategoryInfo: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'integer',
+          example: 1
+        },
+        name: {
+          type: 'string',
+          example: '程式設計'
+        }
+      }
+    },
+
+    // 城市資訊 Schema
+    CityInfo: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'integer',
+          example: 1
+        },
+        name: {
+          type: 'string',
+          example: '台北市'
+        }
+      }
+    },
+
+    // 課程教師資訊 Schema
+    CourseTeacherInfo: {
+      type: 'object',
+      nullable: true,
+      properties: {
+        id: {
+          type: 'integer',
+          example: 5
+        },
+        user: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              example: '王老師'
+            },
+            nick_name: {
+              type: 'string',
+              nullable: true,
+              example: 'Python王'
+            },
+            avatar_image: {
+              type: 'string',
+              nullable: true,
+              example: '/avatars/teacher_5.jpg'
+            }
+          }
+        },
+        nationality: {
+          type: 'string',
+          example: '台灣'
+        },
+        introduction: {
+          type: 'string',
+          nullable: true,
+          example: '專業Python講師，具有5年以上教學經驗...'
+        },
+        total_students: {
+          type: 'integer',
+          description: '總學生數（TODO）',
+          example: 0
+        },
+        total_courses: {
+          type: 'integer',
+          description: '總課程數（TODO）',
+          example: 0
+        },
+        average_rating: {
+          type: 'number',
+          format: 'float',
+          description: '平均評分（TODO）',
+          example: 0
+        }
+      }
+    },
+
+    // 課程評價 Schema
+    CourseReview: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'integer',
+          description: '評價ID',
+          example: 1
+        },
+        rate: {
+          type: 'integer',
+          minimum: 1,
+          maximum: 5,
+          description: '評分',
+          example: 5
+        },
+        comment: {
+          type: 'string',
+          nullable: true,
+          description: '評價內容',
+          example: '很棒的課程，老師教學認真！'
+        },
+        created_at: {
+          type: 'string',
+          format: 'date-time',
+          description: '評價時間',
+          example: '2024-01-15T10:30:00.000Z'
+        },
+        user: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              description: '評價者姓名',
+              example: '學生A'
+            },
+            avatar_image: {
+              type: 'string',
+              nullable: true,
+              description: '頭像',
+              example: '/avatars/student_1.jpg'
+            }
+          }
+        }
+      }
+    },
+
+    // 公開教師資料 Schema
+    PublicTeacherProfile: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'integer',
+          description: '教師ID',
+          example: 41
+        },
+        user: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              description: '教師姓名',
+              example: '王老師'
+            },
+            nick_name: {
+              type: 'string',
+              nullable: true,
+              description: '暱稱',
+              example: 'Python王'
+            },
+            avatar_image: {
+              type: 'string',
+              nullable: true,
+              description: '頭像',
+              example: '/avatars/teacher_41.jpg'
+            }
+          }
+        },
+        nationality: {
+          type: 'string',
+          description: '國籍',
+          example: '台灣'
+        },
+        introduction: {
+          type: 'string',
+          nullable: true,
+          description: '自我介紹',
+          example: '專業Python講師，具有豐富的教學經驗...'
+        },
+        total_students: {
+          type: 'integer',
+          description: '總學生數（TODO）',
+          example: 0
+        },
+        total_courses: {
+          type: 'integer',
+          description: '總課程數（TODO）',
+          example: 0
+        },
+        average_rating: {
+          type: 'number',
+          format: 'float',
+          description: '平均評分（TODO）',
+          example: 0
+        },
+        rating_data: {
+          type: 'object',
+          nullable: true,
+          description: '評分統計資料（TODO）',
+          example: null
+        }
+      }
+    },
+
+    // 教師課程 Schema  
+    TeacherCourse: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'integer',
+          description: '課程ID',
+          example: 45
+        },
+        uuid: {
+          type: 'string',
+          format: 'uuid',
+          description: '課程UUID',
+          example: 'c5b71a6b-7d27-4e4a-8e9f-123456789abc'
+        },
+        name: {
+          type: 'string',
+          description: '課程名稱',
+          example: 'JavaScript 進階開發'
+        },
+        content: {
+          type: 'string',
+          description: '課程內容',
+          example: 'JavaScript 進階概念與實戰應用...'
+        },
+        main_image: {
+          type: 'string',
+          nullable: true,
+          description: '課程主圖片',
+          example: '/images/courses/js-advanced.jpg'
+        },
+        rate: {
+          type: 'number',
+          format: 'float',
+          description: '平均評分',
+          example: 4.8
+        },
+        review_count: {
+          type: 'integer',
+          description: '評價數量',
+          example: 32
+        },
+        student_count: {
+          type: 'integer',
+          description: '學生數量',
+          example: 85
+        },
+        view_count: {
+          type: 'integer',
+          description: '瀏覽次數',
+          example: 892
+        },
+        main_category: {
+          $ref: '#/components/schemas/CategoryInfo'
+        },
+        sub_category: {
+          $ref: '#/components/schemas/CategoryInfo'
+        }
+      }
+    },
+
+    // 教師基本資訊 Schema
+    TeacherBasicInfo: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'integer',
+          description: '教師ID',
+          example: 45
+        },
+        user: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              description: '教師姓名',
+              example: '李老師'
+            },
+            nick_name: {
+              type: 'string',
+              nullable: true,
+              description: '暱稱',
+              example: 'JS專家'
+            },
+            avatar_image: {
+              type: 'string',
+              nullable: true,
+              description: '頭像',
+              example: '/avatars/teacher_45.jpg'
+            }
+          }
+        },
+        nationality: {
+          type: 'string',
+          description: '國籍',
+          example: '台灣'
+        }
+      }
+    },
+
+    // 標準化回應格式
+    ApiResponse: {
         type: 'object',
         required: ['status', 'message'],
         properties: {
