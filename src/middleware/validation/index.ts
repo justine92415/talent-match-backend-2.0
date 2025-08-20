@@ -113,3 +113,12 @@ export {
   reservationIdParamSchema,
   calendarViewQuerySchema
 } from './reservationValidation'
+
+// 評價相關驗證 Schema
+export {
+  reviewCreateSchema,
+  courseReviewsQuerySchema,
+  myReviewsQuerySchema,
+  receivedReviewsQuerySchema,
+  courseUuidParamSchema
+} from './review'
