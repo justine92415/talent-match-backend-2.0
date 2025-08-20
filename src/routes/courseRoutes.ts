@@ -16,6 +16,7 @@ import { authenticateToken } from '@middleware/auth'
 import { CourseController } from '@controllers/CourseController'
 import { CourseVideoController } from '@controllers/CourseVideoController'
 import { CourseFileController } from '@controllers/CourseFileController'
+import { reviewController } from '@controllers/ReviewController'
 import { 
   validateCreateCourse,
   validateUpdateCourse,
@@ -33,6 +34,11 @@ import {
   validateUploadCourseFiles,
   validateDeleteCourseFile
 } from '@middleware/validation/courseFileValidation'
+import {
+  validateQuery,
+  courseReviewsQuerySchema,
+  courseUuidParamsSchema
+} from '@/validation/index'
 
 const router = Router()
 const courseController = new CourseController()
@@ -1380,5 +1386,80 @@ router.post('/:id/files', authenticateToken, validateUploadCourseFiles, CourseFi
  *         description: 伺服器內部錯誤
  */
 router.delete('/:course_id/files/:file_id', authenticateToken, validateDeleteCourseFile, CourseFileController.deleteCourseFile)
+
+/**
+ * @swagger
+ * /api/courses/{uuid}/reviews:
+ *   get:
+ *     tags: [Reviews]
+ *     summary: 取得課程評價列表
+ *     description: 取得指定課程的所有評價，支援分頁、篩選和排序
+ *     parameters:
+ *       - in: path
+ *         name: uuid
+ *         required: true
+ *         description: 課程 UUID
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           example: "550e8400-e29b-41d4-a716-446655440000"
+ *       - in: query
+ *         name: page
+ *         description: 頁碼
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *           example: 1
+ *       - in: query
+ *         name: limit
+ *         description: 每頁筆數
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *           example: 10
+ *       - in: query
+ *         name: rating
+ *         description: 評分篩選
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 5
+ *           example: 5
+ *       - in: query
+ *         name: sort
+ *         description: 排序方式
+ *         schema:
+ *           type: string
+ *           enum: [newest, oldest, rating_high, rating_low]
+ *           default: newest
+ *           example: newest
+ *     responses:
+ *       200:
+ *         description: 評價列表取得成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CourseReviewsResponse'
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       400:
+ *         description: 查詢參數驗證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get(
+  '/:uuid/reviews',
+  validateQuery(courseReviewsQuerySchema),
+  reviewController.getCourseReviews
+)
 
 export default router

@@ -7,6 +7,7 @@
 export { cartService } from './cartService'
 export { orderService } from './orderService'
 export { purchaseService } from './purchaseService'
+export { ReviewService } from './reviewService'
 
 // 類型也一併匯出以供 Controller 使用
 export type { CartService } from './cartService'
