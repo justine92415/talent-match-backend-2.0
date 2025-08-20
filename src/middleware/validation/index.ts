@@ -104,3 +104,12 @@ export {
   validateCourseId as validatePurchaseCourseId,
   validateGetPurchaseList
 } from './purchaseValidation'
+
+// 預約管理相關驗證 Schema
+export {
+  createReservationSchema,
+  reservationListQuerySchema,
+  updateReservationStatusSchema,
+  reservationIdParamSchema,
+  calendarViewQuerySchema
+} from './reservationValidation'

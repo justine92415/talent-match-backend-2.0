@@ -11,6 +11,7 @@ import videoRoutes from '@routes/videoRoutes'
 import cartRoutes from '@routes/cartRoutes'
 import orderRoutes from '@routes/orderRoutes'
 import purchaseRoutes from '@routes/purchaseRoutes'
+import reservationRoutes from '@routes/reservationRoutes'
 
 const router = Router()
 
@@ -49,5 +50,8 @@ router.use('/orders', orderRoutes)
 
 // 掛載購買記錄相關路由
 router.use('/purchases', purchaseRoutes)
+
+// 掛載預約管理相關路由
+router.use('/reservations', reservationRoutes)
 
 export default router

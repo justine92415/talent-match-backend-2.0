@@ -1,7 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm'
 import { ReservationStatus } from './enums'
 
 @Entity('reservations')
+// 新增複合索引以優化查詢效能
+@Index('idx_reservation_student_time', ['student_id', 'reserve_time'])
+@Index('idx_reservation_teacher_time', ['teacher_id', 'reserve_time'])
+@Index('idx_reservation_teacher_date_status', ['teacher_id', 'reserve_time', 'teacher_status'])
+@Index('idx_reservation_student_date_status', ['student_id', 'reserve_time', 'student_status'])
 export class Reservation {
   /** 預約ID（主鍵） */
   @PrimaryGeneratedColumn()
