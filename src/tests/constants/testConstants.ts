@@ -154,9 +154,67 @@ export const EXPECTED_PROPERTIES = {
 
 // ==================== API 路徑常數 ====================
 export const API_PATHS = {
+  // === 管理員 APIs ===
+  ADMIN_ORDERS: '/api/admin/orders',
+  ADMIN_USERS: '/api/admin/users',
+  ADMIN_REPORTS: '/api/admin/reports',
+  
+  // === 認證 APIs ===
+  REGISTER: '/api/auth/register',
+  LOGIN: '/api/auth/login',
+  REFRESH_TOKEN: '/api/auth/refresh-token',
+  FORGOT_PASSWORD: '/api/auth/forgot-password',
+  RESET_PASSWORD: '/api/auth/reset-password',
+  VERIFY_EMAIL: '/api/auth/verify-email',
+  
+  // === 使用者管理 APIs ===
+  USER_PROFILE: '/api/users/profile',
+  TEACHER_PROFILE: '/api/teachers/profile',
+  
+  // === 課程管理 APIs ===
+  COURSES: '/api/courses',
+  COURSE_BY_ID: (id: number) => `/api/courses/${id}`,
+  COURSE_BY_UUID: (uuid: string) => `/api/courses/${uuid}`,
   PUBLIC_COURSES: '/api/courses/public',
+  PUBLIC_COURSE_BY_UUID: (uuid: string) => `/api/courses/public/${uuid}`,
   PUBLIC_COURSE_DETAIL: (id: number) => `/api/courses/public/${id}`,
-  COURSE_REVIEWS: (id: number) => `/api/reviews/courses/${id}`,
+  TEACHER_MANAGE_COURSES: (id: number) => `/api/teachers/${id}/courses`,
+  
+  // === 工作經驗 APIs ===
+  WORK_EXPERIENCES: '/api/teachers/work-experiences',
+  WORK_EXPERIENCE_BY_ID: (id: number) => `/api/teachers/work-experiences/${id}`,
+  
+  // === 學習經歷 APIs ===
+  LEARNING_EXPERIENCES: '/api/teachers/learning-experiences',
+  LEARNING_EXPERIENCE_BY_ID: (id: number) => `/api/teachers/learning-experiences/${id}`,
+  
+  // === 訂單 APIs ===
+  ORDERS: '/api/orders',
+  ORDER_BY_ID: (id: number) => `/api/orders/${id}`,
+  
+  // === 購物車 APIs ===
+  CART: '/api/cart',
+  CART_ITEMS: '/api/cart/items',
+  CART_ITEM_BY_ID: (id: number) => `/api/cart/items/${id}`,
+  
+  // === 預約 APIs ===
+  RESERVATIONS: '/api/reservations',
+  RESERVATION_BY_ID: (id: number) => `/api/reservations/${id}`,
+  
+  // === 評價 APIs ===
+  REVIEWS: '/api/reviews',
+  REVIEW_BY_ID: (id: number) => `/api/reviews/${id}`,
+  MY_REVIEWS: '/api/reviews/my',
+  RECEIVED_REVIEWS: '/api/reviews/received',
+  COURSE_REVIEWS: (uuid: string) => `/api/courses/${uuid}/reviews`,
+  
+  // === 公開資訊 APIs ===
+  PUBLIC_TEACHERS: '/api/teachers/public',
   PUBLIC_TEACHER: (id: number) => `/api/teachers/public/${id}`,
-  TEACHER_COURSES: (id: number) => `/api/teachers/public/${id}/courses`
+  PUBLIC_TEACHER_BY_UUID: (uuid: string) => `/api/teachers/public/${uuid}`,
+  PUBLIC_TEACHER_COURSES: (id: number) => `/api/teachers/public/${id}/courses`,
+  
+  // === 其他 APIs ===
+  PING: '/api/ping',
+  UPLOAD: '/api/upload',
 } as const

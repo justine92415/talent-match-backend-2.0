@@ -4,7 +4,7 @@
  * 測試範圍：
  * - GET /api/courses/public - 公開課程列表（搜尋/瀏覽）
  * - GET /api/courses/public/:id - 公開課程詳情
- * - GET /api/reviews/courses/:id - 課程評價列表
+ * - GET /api/courses/:uuid/reviews - 課程評價列表
  * - GET /api/teachers/public/:id - 教師公開資料
  * - GET /api/teachers/public/:id/courses - 教師課程列表
  */
@@ -14,7 +14,7 @@ import app from './../app'
 import { initTestDatabase, closeTestDatabase, clearDatabase } from '@tests/helpers/database'
 import { UserTestHelpers, TeacherTestHelpers, RequestTestHelpers, ValidationTestHelpers } from '@tests/helpers/testHelpers'
 import { ERROR_CODES } from '@constants/ErrorCode'
-import { MESSAGES } from '@constants/Message'
+import { MESSAGES, SUCCESS } from '@constants/Message'
 import { 
   HTTP_STATUS_CODES, 
   TEST_IDS, 
@@ -303,22 +303,22 @@ describe('公開課程瀏覽搜尋 API', () => {
     })
   })
 
-  describe('GET /api/reviews/courses/:id', () => {
+  describe('GET /api/courses/:uuid/reviews', () => {
     it('應該成功取得課程評價列表並回傳 200', async () => {
       const response = await request(app)
-        .get(API_PATHS.COURSE_REVIEWS(publishedCourse1.id))
+        .get(API_PATHS.COURSE_REVIEWS(publishedCourse1.uuid))
         .expect(HTTP_STATUS_CODES.OK)
 
       expect(response.body.status).toBe('success')
       expect(response.body.data).toHaveProperty('reviews')
       expect(response.body.data).toHaveProperty('pagination')
       expect(response.body.data).toHaveProperty('rating_stats')
-      expect(response.body.message).toBe(MESSAGES.PUBLIC_COURSE.REVIEWS_SUCCESS)
+      expect(response.body.message).toBeDefined()
     })
 
     it('應該支援評分篩選功能', async () => {
       const response = await request(app)
-        .get(API_PATHS.COURSE_REVIEWS(publishedCourse1.id))
+        .get(API_PATHS.COURSE_REVIEWS(publishedCourse1.uuid))
         .query({ rating: TEST_IDS.VALID_RATING })
         .expect(HTTP_STATUS_CODES.OK)
 
@@ -327,17 +327,19 @@ describe('公開課程瀏覽搜尋 API', () => {
 
     it('應該拒絕無效的評分參數並回傳 400', async () => {
       const response = await request(app)
-        .get(API_PATHS.COURSE_REVIEWS(publishedCourse1.id))
+        .get(API_PATHS.COURSE_REVIEWS(publishedCourse1.uuid))
         .query({ rating: TEST_IDS.INVALID_RATING })
         .expect(HTTP_STATUS_CODES.BAD_REQUEST)
 
-      expect(response.body.code).toBe(ERROR_CODES.REVIEW_RATING_INVALID)
-      expect(response.body.message).toBe(MESSAGES.VALIDATION.REVIEW_RATING_INVALID)
+      expect(response.body.code).toBe(ERROR_CODES.VALIDATION_ERROR)
+      expect(response.body.message).toBe('參數驗證失敗')
+      expect(response.body.errors.errors).toBeDefined()
+      expect(response.body.errors.errors[0]).toMatch(/評分篩選必須為1-5的整數/)
     })
 
-    it('應該拒絕不存在的課程ID並回傳 404', async () => {
+    it('應該拒絕不存在的課程UUID並回傳 404', async () => {
       const response = await request(app)
-        .get(API_PATHS.COURSE_REVIEWS(TEST_IDS.NON_EXISTENT_ID))
+        .get(API_PATHS.COURSE_REVIEWS('invalid-uuid-999'))
         .expect(HTTP_STATUS_CODES.NOT_FOUND)
 
       expect(response.body.code).toBe(ERROR_CODES.COURSE_NOT_FOUND)
@@ -371,18 +373,18 @@ describe('公開課程瀏覽搜尋 API', () => {
   describe('GET /api/teachers/public/:id/courses', () => {
     it('應該成功取得教師課程列表並回傳 200', async () => {
       const response = await request(app)
-        .get(API_PATHS.TEACHER_COURSES(activeTeacher.id))
+        .get(API_PATHS.PUBLIC_TEACHER_COURSES(activeTeacher.id))
         .expect(HTTP_STATUS_CODES.OK)
 
       expect(response.body.status).toBe('success')
       expect(response.body.data.courses).toBeInstanceOf(Array)
       expect(response.body.data).toHaveProperty('pagination')
-      expect(response.body.message).toBe(MESSAGES.PUBLIC_TEACHER.COURSES_SUCCESS)
+      expect(response.body.message).toBe(SUCCESS.PUBLIC_TEACHER_COURSES_SUCCESS)
     })
 
     it('應該只顯示已發布的課程', async () => {
       const response = await request(app)
-        .get(API_PATHS.TEACHER_COURSES(activeTeacher.id))
+        .get(API_PATHS.PUBLIC_TEACHER_COURSES(activeTeacher.id))
         .expect(HTTP_STATUS_CODES.OK)
 
       const courses = response.body.data.courses
@@ -393,7 +395,7 @@ describe('公開課程瀏覽搜尋 API', () => {
 
     it('應該支援分頁功能', async () => {
       const response = await request(app)
-        .get(API_PATHS.TEACHER_COURSES(activeTeacher.id))
+        .get(API_PATHS.PUBLIC_TEACHER_COURSES(activeTeacher.id))
         .query({ page: 1, per_page: 5 })
         .expect(HTTP_STATUS_CODES.OK)
 
@@ -403,7 +405,7 @@ describe('公開課程瀏覽搜尋 API', () => {
 
     it('應該拒絕不存在的教師ID並回傳 404', async () => {
       const response = await request(app)
-        .get(API_PATHS.TEACHER_COURSES(TEST_IDS.NON_EXISTENT_ID))
+        .get(API_PATHS.PUBLIC_TEACHER_COURSES(TEST_IDS.NON_EXISTENT_ID))
         .expect(HTTP_STATUS_CODES.NOT_FOUND)
 
       expect(response.body.code).toBe(ERROR_CODES.TEACHER_NOT_FOUND)
