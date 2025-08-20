@@ -10,8 +10,8 @@
 
 import { Request, Response, NextFunction } from 'express'
 import { PriceOptionService } from '@services/PriceOptionService'
-import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
-import { MESSAGES, SUCCESS } from '@constants/Message'
+import { handleErrorAsync, handleSuccess, handleCreated, handleMessageOnly } from '@utils/index'
+import { SUCCESS } from '@constants/Message'
 import { ERROR_CODES } from '@constants/ErrorCode'
 
 export class PriceOptionController {
@@ -26,16 +26,7 @@ export class PriceOptionController {
    * GET /api/courses/:courseId/price-options
    */
   getPriceOptions = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // 檢查教師角色
-    if (req.user?.role !== 'teacher') {
-      res.status(403).json({
-        status: 'error',
-        code: ERROR_CODES.TEACHER_PERMISSION_REQUIRED,
-        message: MESSAGES.BUSINESS.TEACHER_PERMISSION_REQUIRED
-      })
-      return
-    }
-
+    // 角色檢查由中間件處理
     const teacherId = req.user!.userId
     const courseId = parseInt(req.params.courseId)
 
@@ -45,20 +36,11 @@ export class PriceOptionController {
   })
 
   /**
-   * 建立新價格方案
+   * 建立價格方案
    * POST /api/courses/:courseId/price-options
    */
   createPriceOption = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // 檢查教師角色
-    if (req.user?.role !== 'teacher') {
-      res.status(403).json({
-        status: 'error',
-        code: ERROR_CODES.TEACHER_PERMISSION_REQUIRED,
-        message: MESSAGES.BUSINESS.TEACHER_PERMISSION_REQUIRED
-      })
-      return
-    }
-
+    // 角色檢查由中間件處理
     const teacherId = req.user!.userId
     const courseId = parseInt(req.params.courseId)
     const priceOptionData = req.body
@@ -77,16 +59,7 @@ export class PriceOptionController {
    * PUT /api/courses/:courseId/price-options/:id
    */
   updatePriceOption = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // 檢查教師角色
-    if (req.user?.role !== 'teacher') {
-      res.status(403).json({
-        status: 'error',
-        code: ERROR_CODES.TEACHER_PERMISSION_REQUIRED,
-        message: MESSAGES.BUSINESS.TEACHER_PERMISSION_REQUIRED
-      })
-      return
-    }
-
+    // 角色檢查由中間件處理
     const teacherId = req.user!.userId
     const courseId = parseInt(req.params.courseId)
     const priceOptionId = parseInt(req.params.id)
@@ -107,26 +80,14 @@ export class PriceOptionController {
    * DELETE /api/courses/:courseId/price-options/:id
    */
   deletePriceOption = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // 檢查教師角色
-    if (req.user?.role !== 'teacher') {
-      res.status(403).json({
-        status: 'error',
-        code: ERROR_CODES.TEACHER_PERMISSION_REQUIRED,
-        message: MESSAGES.BUSINESS.TEACHER_PERMISSION_REQUIRED
-      })
-      return
-    }
-
+    // 角色檢查由中間件處理
     const teacherId = req.user!.userId
     const courseId = parseInt(req.params.courseId)
     const priceOptionId = parseInt(req.params.id)
 
     await this.priceOptionService.deletePriceOption(courseId, priceOptionId, teacherId)
 
-    res.status(200).json({
-      status: 'success',
-      message: SUCCESS.PRICE_OPTION_DELETED
-    })
+    res.status(200).json(handleMessageOnly(SUCCESS.PRICE_OPTION_DELETED))
   })
 }
 

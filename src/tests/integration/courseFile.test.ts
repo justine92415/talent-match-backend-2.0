@@ -1,6 +1,6 @@
 import { dataSource } from '@db/data-source'
 import request from 'supertest'
-import app from '@src/app'
+import app from '../../app'
 import { UserTestHelpers, CourseTestHelpers, CourseFileTestHelpers } from '@tests/helpers/testHelpers'
 import { UserRole } from '@entities/enums'
 import { ERROR_CODES } from '@constants/ErrorCode'

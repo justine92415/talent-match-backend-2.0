@@ -43,7 +43,7 @@ import {
 } from '@tests/fixtures/videoFixtures'
 import { ERROR_CODES } from '@constants/ErrorCode'
 import { MESSAGES } from '@constants/Message'
-import app from '@src/app'
+import app from './../app'
 
 describe('影片管理 API 整合測試', () => {
   let teacherUser: any

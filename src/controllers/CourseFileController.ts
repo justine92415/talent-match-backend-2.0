@@ -103,7 +103,7 @@ export class CourseFileController {
     const exists = await courseFileService.courseFileExists(userId, courseId, fileId)
 
     // 使用統一回應格式
-    res.status(200).json(handleSuccess({ exists }, '檔案存在性檢查完成'))
+    res.status(200).json(handleSuccess({ exists }, SUCCESS.COURSE_FILE_EXISTS_CHECK_SUCCESS))
   })
 }
 

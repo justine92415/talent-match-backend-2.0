@@ -4,7 +4,7 @@
  */
 
 import request from 'supertest'
-import app from '@src/app'
+import app from './../app'
 import { clearDatabase, initTestDatabase } from '@tests/helpers/database'
 import { dataSource } from '@db/data-source'
 import { Teacher } from '@entities/Teacher'

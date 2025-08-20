@@ -10,7 +10,7 @@ import getLogger from '@utils/logger'
 const logger = getLogger('ErrorHandler')
 
 /**
- * 簡潔的錯誤回應介面
+ * 錯誤回應介面
  * 
  * @interface ErrorResponse
  * @property {string} status - 固定為 'error'
@@ -26,10 +26,10 @@ interface ErrorResponse {
 }
 
 /**
- * 建立簡潔的錯誤回應物件
+ * 建立錯誤回應物件
  * 
  * @param error - AppError 實例
- * @param includeErrors - 是否包含 errors 欄位（只用於 ValidationError）
+ * @param errors - 驗證錯誤詳情（可選）
  * @returns 錯誤回應物件
  */
 function createErrorResponse(error: AppError, errors?: Record<string, string[]>): ErrorResponse {
@@ -49,14 +49,15 @@ function createErrorResponse(error: AppError, errors?: Record<string, string[]>)
 /**
  * 全域錯誤處理中間件
  * 
- * 統一處理所有錯誤並回傳簡潔格式：
- * - 一般錯誤：{ status, code, message }
- * - 驗證錯誤：{ status, code, message, errors? }
+ * 統一處理所有錯誤並回傳格式：
+ * - 一般錯誤：{ status: 'error', code, message }
+ * - 驗證錯誤：{ status: 'error', code, message, errors? }
  * 
  * 格式特點：
- * - 移除了冗餘的 error 物件
+ * - 使用 status: 'error' 標記錯誤回應
+ * - 使用 code 欄位作為錯誤代碼
  * - errors 欄位只在驗證錯誤且有 details 時存在
- * - 回應結構簡潔統一
+ * - 回應結構符合 API 規範
  */
 export const errorHandler = (
   error: any,

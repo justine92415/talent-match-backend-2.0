@@ -10,7 +10,7 @@
  */
 
 import Joi from 'joi'
-import { MESSAGES } from '@constants/Message'
+import { MESSAGES, SystemMessages } from '@constants/Message'
 
 // ========================================
 // 基礎驗證規則
@@ -232,7 +232,7 @@ export const validateLinkVideosToCourse = (req: Request, res: Response, next: Ne
       }
       formattedErrors[key].push(detail.message)
     })
-    return next(Errors.validation(formattedErrors, '參數驗證失敗'))
+    return next(Errors.validation(formattedErrors, SystemMessages.VALIDATION_FAILED))
   }
 
   // 驗證請求體
@@ -246,7 +246,7 @@ export const validateLinkVideosToCourse = (req: Request, res: Response, next: Ne
       }
       formattedErrors[key].push(detail.message)
     })
-    return next(Errors.validation(formattedErrors, '參數驗證失敗'))
+    return next(Errors.validation(formattedErrors, SystemMessages.VALIDATION_FAILED))
   }
   
   next()
@@ -267,7 +267,7 @@ export const validateUpdateVideoOrder = (req: Request, res: Response, next: Next
       }
       formattedErrors[key].push(detail.message)
     })
-    return next(Errors.validation(formattedErrors, '參數驗證失敗'))
+    return next(Errors.validation(formattedErrors, SystemMessages.VALIDATION_FAILED))
   }
 
   // 驗證請求體
@@ -281,7 +281,7 @@ export const validateUpdateVideoOrder = (req: Request, res: Response, next: Next
       }
       formattedErrors[key].push(detail.message)
     })
-    return next(Errors.validation(formattedErrors, '參數驗證失敗'))
+    return next(Errors.validation(formattedErrors, SystemMessages.VALIDATION_FAILED))
   }
   
   next()
@@ -305,7 +305,7 @@ export const validateRemoveCourseVideo = (req: Request, res: Response, next: Nex
       }
       formattedErrors[key].push(detail.message)
     })
-    return next(Errors.validation(formattedErrors, '參數驗證失敗'))
+    return next(Errors.validation(formattedErrors, SystemMessages.VALIDATION_FAILED))
   }
   
   next()
@@ -326,7 +326,7 @@ export const validateGetCourseVideos = (req: Request, res: Response, next: NextF
       }
       formattedErrors[key].push(detail.message)
     })
-    return next(Errors.validation(formattedErrors, '參數驗證失敗'))
+    return next(Errors.validation(formattedErrors, SystemMessages.VALIDATION_FAILED))
   }
   
   next()

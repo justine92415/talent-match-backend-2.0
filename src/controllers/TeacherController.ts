@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { TeacherService } from '@services/teacherService'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
+import { SUCCESS, MESSAGES } from '@constants/Message'
 import { Teacher } from '@entities/Teacher'
 
 /**
@@ -38,7 +39,7 @@ export class TeacherController {
         created_at: teacher.created_at,
         updated_at: teacher.updated_at
       }
-    }, '教師申請已建立'))
+    }, SUCCESS.TEACHER_APPLICATION_CREATED))
   })
 
   /**
@@ -64,7 +65,7 @@ export class TeacherController {
         created_at: teacher.created_at,
         updated_at: teacher.updated_at
       }
-    }, '取得申請狀態成功'))
+    }, SUCCESS.TEACHER_APPLICATION_GET_SUCCESS))
   })
 
   /**
@@ -94,7 +95,7 @@ export class TeacherController {
         created_at: teacher.created_at,
         updated_at: teacher.updated_at
       }
-    }, '申請資料更新成功'))
+    }, SUCCESS.TEACHER_APPLICATION_UPDATED))
   })
 
   /**
@@ -116,7 +117,7 @@ export class TeacherController {
         review_notes: teacher.review_notes,
         updated_at: teacher.updated_at
       }
-    }, '申請已重新提交'))
+    }, SUCCESS.TEACHER_APPLICATION_RESUBMITTED))
   })
 
   /**
@@ -146,7 +147,7 @@ export class TeacherController {
         created_at: teacher.created_at,
         updated_at: teacher.updated_at
       }
-    }, '取得教師資料成功'))
+    }, SUCCESS.TEACHER_PROFILE_GET_SUCCESS))
   })
 
   /**
@@ -169,8 +170,8 @@ export class TeacherController {
         application_status: teacher.application_status,
         updated_at: teacher.updated_at
       },
-      notice: '由於修改了重要資料，需要重新審核'
-    }, '教師資料更新成功'))
+      notice: MESSAGES.TEACHER.PROFILE_UPDATE_NOTICE
+    }, SUCCESS.TEACHER_PROFILE_UPDATED))
   })
 
   /**
@@ -184,7 +185,7 @@ export class TeacherController {
     res.status(200).json(handleSuccess({
       work_experiences: workExperiences,
       total: workExperiences.length
-    }, '取得工作經驗列表成功'))
+    }, SUCCESS.TEACHER_WORK_EXPERIENCE_LIST_SUCCESS))
   })
 
   /**
@@ -198,7 +199,7 @@ export class TeacherController {
     
     res.status(201).json(handleCreated({
       work_experience: workExperience
-    }, '工作經驗已新增'))
+    }, SUCCESS.TEACHER_WORK_EXPERIENCE_CREATED))
   })
 
   /**
@@ -213,7 +214,7 @@ export class TeacherController {
     
     res.status(200).json(handleSuccess({
       work_experience: workExperience
-    }, '工作經驗已更新'))
+    }, SUCCESS.TEACHER_WORK_EXPERIENCE_UPDATED))
   })
 
   /**
@@ -225,7 +226,7 @@ export class TeacherController {
     
     await this.teacherService.deleteWorkExperience(userId, workExperienceId)
     
-    res.status(200).json(handleSuccess(null, '工作經驗已刪除'))
+    res.status(200).json(handleSuccess(null, SUCCESS.WORK_EXPERIENCE_DELETED))
   })
 
   /**
@@ -245,6 +246,6 @@ export class TeacherController {
         created_at: teacher.created_at,
         updated_at: teacher.updated_at
       }
-    }, '教師申請已提交，等待審核'))
+    }, SUCCESS.TEACHER_APPLICATION_SUBMITTED))
   })
 }

@@ -1,6 +1,6 @@
 import request from 'supertest'
 import jwt from 'jsonwebtoken'
-import app from '@src/app'
+import app from './../app'
 import { clearDatabase, initTestDatabase } from '@tests/helpers/database'
 import { dataSource } from '@db/data-source'
 import { User } from '@entities/User'

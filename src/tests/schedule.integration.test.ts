@@ -1,5 +1,5 @@
 import request from 'supertest'
-import app from '@src/app'
+import app from './../app'
 import { initTestDatabase, closeTestDatabase, clearDatabase } from '@tests/helpers/database'
 import { UserTestHelpers, TeacherTestHelpers } from '@tests/helpers/testHelpers'
 import { validUserData } from '@tests/fixtures/userFixtures'
@@ -11,6 +11,7 @@ import { Reservation } from '@entities/Reservation'
 import { Teacher } from '@entities/Teacher'
 import { User } from '@entities/User'
 import { ApplicationStatus, UserRole, ReservationStatus } from '@entities/enums'
+import { MESSAGES, SUCCESS } from '@constants/Message'
 import type { AvailableSlotData } from '@models/index'
 
 describe('教師時間管理 API', () => {
@@ -116,7 +117,7 @@ describe('教師時間管理 API', () => {
 
         expect(response.status).toBe(200)
         expect(response.body.status).toBe('success')
-        expect(response.body.message).toBe('取得教師時段設定成功')
+        expect(response.body.message).toBe(SUCCESS.SCHEDULE_SETTINGS_GET_SUCCESS)
         expect(response.body.data.available_slots).toHaveLength(1)
         expect(response.body.data.total_slots).toBe(1)
         
@@ -241,7 +242,7 @@ describe('教師時間管理 API', () => {
 
         expect(response.status).toBe(200)
         expect(response.body.status).toBe('success')
-        expect(response.body.message).toBe('教師時段設定更新成功')
+        expect(response.body.message).toBe(SUCCESS.SCHEDULE_SETTINGS_UPDATE_SUCCESS)
         expect(response.body.data.available_slots).toHaveLength(4)
         expect(response.body.data.created_count).toBe(4)
         expect(response.body.data.updated_count).toBe(0)
@@ -433,7 +434,7 @@ describe('教師時間管理 API', () => {
 
         expect(response.status).toBe(200)
         expect(response.body.status).toBe('success')
-        expect(response.body.message).toBe('時段衝突檢查完成')
+        expect(response.body.message).toBe(SUCCESS.SCHEDULE_CONFLICT_CHECK_SUCCESS)
         expect(response.body.data.has_conflicts).toBe(false)
         expect(response.body.data.conflicts).toHaveLength(0)
         expect(response.body.data.total_conflicts).toBe(0)

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import { CertificateService } from '@services/certificateService'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
+import { SUCCESS } from '@constants/Message'
 
 /**
  * 證書管理控制器
@@ -74,7 +75,7 @@ export class CertificateController {
 
     await this.certificateService.deleteCertificate(userId, certificateId)
 
-    res.status(200).json(handleSuccess(null, '證書已刪除'))
+    res.status(200).json(handleSuccess(null, SUCCESS.CERTIFICATE_DELETED))
   })
 }
 
