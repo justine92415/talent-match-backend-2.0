@@ -19,8 +19,8 @@ import { validUserData, createUserEntityData, teacherUserEntityData, suspendedUs
 import { createTeacherEntityData } from '@tests/fixtures/teacherFixtures'
 import { validWorkExperienceData, createWorkExperienceEntityData } from '@tests/fixtures/workExperienceFixtures'
 import ConfigManager from '@config/index'
-import app from '@src/app'
-import { TestUserCreateData, TestTeacherCreateData, TestRequestData, TestValidationStructure, DatabaseQueryCondition, TestFunction } from '@src/types'
+import app from '../../app'
+import { TestUserCreateData, TestTeacherCreateData, TestRequestData, TestValidationStructure, DatabaseQueryCondition, TestFunction } from '../../types'
 
 /**
  * 使用者相關測試 Helper 函式

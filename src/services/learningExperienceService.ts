@@ -197,7 +197,7 @@ export class LearningExperienceService {
       const user = await this.userRepository.findOne({ where: { id: userId } })
       
       if (!user || user.role !== UserRole.TEACHER || user.account_status !== AccountStatus.ACTIVE) {
-        throw Errors.unauthorizedAccess('需要教師權限才能執行此操作', 403)
+        throw Errors.unauthorizedAccess(BusinessMessages.TEACHER_PERMISSION_REQUIRED, 403)
       } else {
         throw new BusinessError('TEACHER_NOT_FOUND', BusinessMessages.TEACHER_NOT_FOUND, 404)
       }
@@ -262,7 +262,7 @@ export class LearningExperienceService {
         throw new BusinessError('LEARNING_EXPERIENCE_NOT_FOUND', BusinessMessages.LEARNING_EXPERIENCE_NOT_FOUND, 404)
       } else {
         // 記錄存在但不屬於該教師
-        throw Errors.unauthorizedAccess('您沒有權限存取此學習經歷記錄', 403)
+        throw Errors.unauthorizedAccess(BusinessMessages.UNAUTHORIZED_LEARNING_EXPERIENCE_ACCESS, 403)
       }
     }
 

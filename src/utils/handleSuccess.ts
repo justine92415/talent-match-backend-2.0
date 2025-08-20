@@ -8,6 +8,11 @@ interface ApiSuccessResponse<T> {
   data: T
 }
 
+interface ApiSuccessMessageOnlyResponse {
+  status: 'success'
+  message: string
+}
+
 interface PaginationMeta {
   page: number
   limit: number
@@ -28,6 +33,16 @@ export function handleSuccess<T>(data: T, message = '操作成功'): ApiSuccessR
     status: 'success',
     message,
     data
+  }
+}
+
+/**
+ * 處理僅訊息的成功回應（適用於刪除等不回傳資料的操作）
+ */
+export function handleMessageOnly(message: string): ApiSuccessMessageOnlyResponse {
+  return {
+    status: 'success',
+    message
   }
 }
 

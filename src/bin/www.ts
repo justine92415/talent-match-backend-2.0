@@ -5,7 +5,7 @@
  */
 import * as http from 'http'
 import config from '@config/index'
-import app from '@src/app'
+import app from '../app'
 import getLogger from '@utils/logger'
 import { dataSource } from '@db/data-source'
 

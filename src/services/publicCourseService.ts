@@ -15,7 +15,7 @@
  *    - course_price_options: (course_id, is_active, price)
  */
 
-import { Repository } from 'typeorm'
+import { Repository, SelectQueryBuilder } from 'typeorm'
 import { dataSource } from '@db/data-source'
 import { Course } from '@entities/Course'
 import { Teacher } from '@entities/Teacher'
@@ -29,7 +29,7 @@ import { BusinessError } from '@utils/errors'
 import { ERROR_CODES } from '@constants/ErrorCode'
 import { MESSAGES } from '@constants/Message'
 import { CourseStatus } from '@entities/enums'
-import { PublicCourseListResponse, PublicCourseDetailResponse, CourseReviewListResponse } from '../types/publicCourse.interface'
+import { PublicCourseListResponse, PublicCourseDetailResponse, CourseReviewListResponse, PublicCourseItem } from '../types/publicCourse.interface'
 
 // 簡化的查詢介面
 export interface SimpleCourseQuery {
@@ -140,7 +140,7 @@ export class PublicCourseService {
     const { keyword, main_category_id, sub_category_id, city_id } = query
     
     // 建立基本查詢條件
-    const whereConditions: any = { status: CourseStatus.PUBLISHED }
+    const whereConditions: Record<string, any> = { status: CourseStatus.PUBLISHED }
 
     // 分類篩選
     if (main_category_id) whereConditions.main_category_id = main_category_id
@@ -165,7 +165,7 @@ export class PublicCourseService {
   /**
    * 私有方法：應用排序規則
    */
-  private applySortOrder(queryBuilder: any, sort: string) {
+  private applySortOrder(queryBuilder: SelectQueryBuilder<Course>, sort: string) {
     switch (sort) {
       case SORT_OPTIONS.NEWEST:
         return queryBuilder.orderBy('course.created_at', 'DESC')
@@ -375,7 +375,7 @@ export class PublicCourseService {
     }
 
     // 建立查詢條件
-    const whereConditions: any = { course_id: courseId }
+    const whereConditions: Record<string, any> = { course_id: courseId }
     if (rating) whereConditions.rate = rating
 
     // 建立查詢建構器
