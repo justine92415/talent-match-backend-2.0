@@ -21,19 +21,10 @@ export class CourseController {
    * POST /api/courses
    */
   createCourse = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // 檢查教師角色
-    if (req.user?.role !== 'teacher') {
-      res.status(403).json({
-        status: 'error',
-        code: ERROR_CODES.TEACHER_PERMISSION_REQUIRED,
-        message: MESSAGES.BUSINESS.TEACHER_PERMISSION_REQUIRED
-      })
-      return
-    }
-
     const userId = req.user!.userId
     const courseData = req.body
 
+    // 角色檢查由中間件或服務層處理
     const course = await courseService.createCourse(userId, courseData)
 
     res.status(201).json(handleCreated({

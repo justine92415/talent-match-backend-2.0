@@ -1,6 +1,6 @@
 import request from 'supertest'
 import { DataSource } from 'typeorm'
-import app from '@src/app'
+import app from '../../app'
 import { initTestDatabase, clearDatabase } from '@tests/helpers/database'
 import { dataSource } from '@db/data-source'
 import { User } from '@entities/User'

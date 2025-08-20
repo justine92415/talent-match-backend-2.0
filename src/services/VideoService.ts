@@ -153,7 +153,11 @@ export class VideoService {
         videoUrl = videoData.youtube_url || ''
       } else if (videoData.video_type === VideoType.STORAGE) {
         if (!fileUrl) {
-          throw this.createUploadFailedError('本地儲存影片需要提供檔案路徑')
+          throw new BusinessError(
+            ERROR_CODES.VIDEO_FILE_REQUIRED,
+            MESSAGES.VALIDATION.VIDEO_FILE_REQUIRED,
+            400
+          )
         }
         videoUrl = fileUrl
       }

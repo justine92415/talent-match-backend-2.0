@@ -67,3 +67,40 @@ export {
   validateUploadCourseFiles,
   validateDeleteCourseFile
 } from './courseFileValidation'
+
+// 訂單相關驗證 Schema 和中間件
+export {
+  createOrderBodySchema,
+  getOrderListQuerySchema,
+  orderIdParamSchema,
+  processPaymentBodySchema,
+  orderSchemas,
+  validateCreateOrder,
+  validateGetOrderList,
+  validateOrderId,
+  validateProcessPayment
+} from './orderValidation'
+
+// 購物車相關驗證 Schema 和中間件
+export {
+  addCartItemBodySchema,
+  updateCartItemBodySchema,
+  cartItemIdParamSchema,
+  cartSchemas,
+  validateAddCartItem,
+  validateUpdateCartItem,
+  validateCartItemId
+} from './cartValidation'
+
+// 購買記錄相關驗證 Schema 和中間件
+export {
+  usePurchaseBodySchema,
+  purchaseIdParamSchema,
+  courseIdParamSchema as purchaseCourseIdParamSchema,
+  getPurchaseListQuerySchema,
+  purchaseSchemas,
+  validateUsePurchase,
+  validatePurchaseId,
+  validateCourseId as validatePurchaseCourseId,
+  validateGetPurchaseList
+} from './purchaseValidation'

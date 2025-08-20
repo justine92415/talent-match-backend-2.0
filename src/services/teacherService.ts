@@ -7,6 +7,7 @@ import { TeacherLearningExperience } from '@entities/TeacherLearningExperience'
 import { TeacherCertificate } from '@entities/TeacherCertificate'
 import { UserRole, AccountStatus, ApplicationStatus } from '@entities/enums'
 import { Errors, ValidationError } from '@utils/errors'
+import { BusinessMessages, ValidationMessages } from '@constants/Message'
 import { 
   TeacherApplicationData, 
   TeacherApplicationUpdateData,
@@ -48,7 +49,7 @@ export class TeacherService {
 
     // 檢查使用者角色是否為學生
     if (user.role !== UserRole.STUDENT) {
-      throw Errors.unauthorizedAccess('只有學生可以申請成為教師', 403)
+      throw Errors.unauthorizedAccess(BusinessMessages.STUDENT_ONLY_APPLY_TEACHER, 403)
     }
 
     // 檢查帳號狀態是否為活躍
@@ -128,7 +129,7 @@ export class TeacherService {
   private validateApplicationEditable(teacher: Teacher): void {
     // 檢查是否可以修改（只能在待審核或已拒絕狀態下修改）
     if (teacher.application_status === ApplicationStatus.APPROVED) {
-      throw Errors.invalidApplicationStatus('只能在待審核或已拒絕狀態下修改申請')
+      throw Errors.invalidApplicationStatus(BusinessMessages.APPLICATION_STATUS_INVALID)
     }
   }
 
@@ -275,7 +276,7 @@ export class TeacherService {
     })
     
     if (!user) {
-      throw Errors.unauthorizedAccess('需要教師權限才能執行此操作', 403)
+      throw Errors.unauthorizedAccess(BusinessMessages.TEACHER_PERMISSION_REQUIRED, 403)
     }
 
     // 取得教師記錄
@@ -346,12 +347,12 @@ export class TeacherService {
     })
     
     if (!workExperience) {
-      throw Errors.applicationNotFound('工作經驗記錄不存在')
+      throw Errors.applicationNotFound(BusinessMessages.WORK_EXPERIENCE_RECORD_NOT_FOUND)
     }
     
     // 檢查是否屬於該教師
     if (workExperience.teacher_id !== teacher.id) {
-      throw Errors.unauthorizedAccess('無權存取此工作經驗記錄', 403)
+      throw Errors.unauthorizedAccess(BusinessMessages.UNAUTHORIZED_WORK_EXPERIENCE_ACCESS, 403)
     }
 
     // 合併資料並驗證
@@ -378,12 +379,12 @@ export class TeacherService {
     })
     
     if (!workExperience) {
-      throw Errors.applicationNotFound('工作經驗記錄不存在')
+      throw Errors.applicationNotFound(BusinessMessages.WORK_EXPERIENCE_RECORD_NOT_FOUND)
     }
     
     // 檢查是否屬於該教師
     if (workExperience.teacher_id !== teacher.id) {
-      throw Errors.unauthorizedAccess('無權刪除此工作經驗記錄', 403)
+      throw Errors.unauthorizedAccess(BusinessMessages.UNAUTHORIZED_WORK_EXPERIENCE_DELETE, 403)
     }
     
     await this.workExperienceRepository.remove(workExperience)
@@ -400,7 +401,7 @@ export class TeacherService {
       throw Errors.validationFailed('公司名稱為必填欄位')
     }
     if (!data.workplace?.trim()) {
-      throw Errors.validationFailed('工作地點為必填欄位')
+      throw Errors.validationFailed(ValidationMessages.WORKPLACE_REQUIRED)
     }
     if (!data.job_category?.trim()) {
       throw Errors.validationFailed('工作類別為必填欄位')

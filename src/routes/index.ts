@@ -8,6 +8,9 @@ import reviewRoutes from '@routes/reviewRoutes'
 import favoriteRoutes from '@routes/favoriteRoutes'
 import priceOptionRoutes from '@routes/priceOptionRoutes'
 import videoRoutes from '@routes/videoRoutes'
+import cartRoutes from '@routes/cartRoutes'
+import orderRoutes from '@routes/orderRoutes'
+import purchaseRoutes from '@routes/purchaseRoutes'
 
 const router = Router()
 
@@ -37,5 +40,14 @@ router.use('/courses', priceOptionRoutes)
 
 // 掛載影片管理相關路由
 router.use('/videos', videoRoutes)
+
+// 掛載購物車相關路由
+router.use('/cart', cartRoutes)
+
+// 掛載訂單相關路由
+router.use('/orders', orderRoutes)
+
+// 掛載購買記錄相關路由
+router.use('/purchases', purchaseRoutes)
 
 export default router

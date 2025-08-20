@@ -135,17 +135,11 @@ export class CourseService {
    * @returns 建立的課程
    */
   async createCourse(userId: number, courseData: CreateCourseRequest): Promise<CourseBasicInfo> {
-    // 驗證教師是否存在且已核准
-    const teacher = await this.teacherRepository.findOne({
-      where: { user_id: userId }
-    })
+    // 驗證教師權限（使用統一的私有方法）
+    const teacher = await this.validateTeacher(userId)
 
-    if (!teacher) {
-      throw new BusinessError(ERROR_CODES.TEACHER_NOT_FOUND, MESSAGES.BUSINESS.TEACHER_NOT_FOUND)
-    }
-
-    if (teacher.application_status !== 'approved') {
-      throw new BusinessError(ERROR_CODES.TEACHER_NOT_APPROVED, MESSAGES.BUSINESS.TEACHER_NOT_APPROVED)
+    if (teacher.application_status !== ApplicationStatus.APPROVED) {
+      throw new BusinessError(ERROR_CODES.TEACHER_NOT_APPROVED, MESSAGES.BUSINESS.TEACHER_NOT_APPROVED, COURSE_PERMISSIONS.TEACHER_REQUIRED)
     }
 
     // 建立課程

@@ -10,7 +10,7 @@
  */
 
 import request from 'supertest'
-import app from '@src/app'
+import app from './../app'
 import { initTestDatabase, closeTestDatabase, clearDatabase } from '@tests/helpers/database'
 import { UserTestHelpers, TeacherTestHelpers } from '@tests/helpers/testHelpers'
 import { ERROR_MESSAGES } from '@constants/Message'
