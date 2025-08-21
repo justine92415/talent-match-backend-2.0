@@ -22,6 +22,19 @@ import type {
   PurchasePaginatedResponse
 } from '../types'
 
+/**
+ * 購買統計資料介面
+ */
+interface PurchaseSummary {
+  total_courses: number
+  total_amount_spent: number
+  active_purchases: number
+  total_sessions_remaining: number
+  total_quantity_purchased: number
+  total_quantity_used: number
+  total_quantity_remaining: number
+}
+
 export class PurchaseService {
   private purchaseRepository: Repository<UserCoursePurchase>
   private orderRepository: Repository<Order>
@@ -59,7 +72,22 @@ export class PurchaseService {
       )
     }
 
-    // 3. 建立購買記錄
+    // 3. 批次查詢已存在的購買記錄以避免 N+1 問題
+    const courseIds = orderItems.map(item => item.course_id)
+    const existingPurchases = await this.purchaseRepository.find({
+      where: {
+        user_id: order.buyer_id,
+        course_id: In(courseIds),
+        order_id: orderId
+      }
+    })
+
+    // 建構已存在購買記錄的快速查找 Map
+    const existingPurchaseMap = new Set(
+      existingPurchases.map(p => `${p.course_id}`)
+    )
+
+    // 4. 建立購買記錄
     const purchases: PurchaseRecord[] = []
     const queryRunner = dataSource.createQueryRunner()
     await queryRunner.connect()
@@ -67,16 +95,8 @@ export class PurchaseService {
 
     try {
       for (const orderItem of orderItems) {
-        // 檢查是否已存在購買記錄
-        const existingPurchase = await this.purchaseRepository.findOne({
-          where: {
-            user_id: order.buyer_id,
-            course_id: orderItem.course_id,
-            order_id: orderId
-          }
-        })
-
-        if (!existingPurchase) {
+        // 使用 Map 快速檢查是否已存在購買記錄
+        if (!existingPurchaseMap.has(`${orderItem.course_id}`)) {
           const purchase = queryRunner.manager.create(UserCoursePurchase, {
             uuid: uuidv4(),
             user_id: order.buyer_id,
@@ -112,11 +132,11 @@ export class PurchaseService {
   }
 
   /**
-   * 取得用戶購買記錄列表
+   * 取得用戶購買記錄列表（已優化，避免 N+1 查詢）
    */
   async getUserPurchases(
-    userId: number,
-    page: number = 1,
+    userId: number, 
+    page: number = 1, 
     per_page: number = 10
   ): Promise<PurchasePaginatedResponse> {
     const queryBuilder = this.purchaseRepository
@@ -128,11 +148,92 @@ export class PurchaseService {
 
     const [purchases, total] = await queryBuilder.getManyAndCount()
 
-    const purchasesWithDetails: PurchaseRecordWithDetails[] = []
-    for (const purchase of purchases) {
-      const purchaseWithDetails = await this.getPurchaseRecordWithDetails(purchase)
-      purchasesWithDetails.push(purchaseWithDetails)
+    if (purchases.length === 0) {
+      return {
+        purchases: [],
+        pagination: {
+          current_page: page,
+          per_page,
+          total: 0,
+          total_pages: 0
+        }
+      }
     }
+
+    // 批次查詢相關數據以避免 N+1 問題
+    const courseIds = purchases.map(p => p.course_id)
+    const orderIds = purchases.map(p => p.order_id)
+
+    const [courses, orders] = await Promise.all([
+      this.courseRepository.find({
+        where: { id: In(courseIds) }
+      }),
+      this.orderRepository.find({
+        where: { id: In(orderIds) }
+      })
+    ])
+
+    // 查詢教師資訊
+    const teacherIds = courses.map(c => c.teacher_id).filter(Boolean)
+    const teachers = teacherIds.length > 0 ? await this.teacherRepository.find({
+      where: { id: In(teacherIds) },
+      relations: ['user']
+    }) : []
+
+    // 建構快速查找對應表
+    const courseMap = new Map(courses.map(c => [c.id, c]))
+    const orderMap = new Map(orders.map(o => [o.id, o]))
+    const teacherMap = new Map(teachers.map(t => [t.id, t]))
+
+    // 組合資料
+    const purchasesWithDetails: PurchaseRecordWithDetails[] = purchases.map(purchase => {
+      const course = courseMap.get(purchase.course_id)
+      const teacher = course ? teacherMap.get(course.teacher_id) : null
+      const order = orderMap.get(purchase.order_id)
+
+      return {
+        id: purchase.id,
+        uuid: purchase.uuid,
+        user_id: purchase.user_id,
+        course_id: purchase.course_id,
+        order_id: purchase.order_id,
+        quantity_total: purchase.quantity_total,
+        quantity_used: purchase.quantity_used,
+        quantity_remaining: purchase.quantity_total - purchase.quantity_used,
+        created_at: purchase.created_at,
+        course: course && teacher ? {
+          id: course.id,
+          uuid: course.uuid,
+          name: course.name,
+          main_image: course.main_image || '',
+          teacher: {
+            id: teacher.id,
+            user: {
+              name: teacher.user?.name || '',
+              nick_name: teacher.user?.nick_name || ''
+            }
+          }
+        } : {
+          id: 0,
+          uuid: '',
+          name: '課程不存在',
+          main_image: '',
+          teacher: {
+            id: 0,
+            user: {
+              name: '',
+              nick_name: ''
+            }
+          }
+        },
+        order: order ? {
+          id: order.id,
+          uuid: order.uuid,
+          total_amount: order.total_amount,
+          paid_at: order.paid_at || new Date()
+        } : null
+      }
+    })
 
     return {
       purchases: purchasesWithDetails,
@@ -503,7 +604,7 @@ export class PurchaseService {
   /**
    * 取得購買統計資料
    */
-  async getPurchaseSummary(userId: number): Promise<any> {
+  async getPurchaseSummary(userId: number): Promise<PurchaseSummary> {
     const purchases = await this.purchaseRepository.find({
       where: { user_id: userId }
     })

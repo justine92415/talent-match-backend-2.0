@@ -122,3 +122,9 @@ export {
   receivedReviewsQuerySchema,
   courseUuidParamSchema
 } from './review'
+
+// 教師後台管理驗證中間件
+export {
+  teacherDashboardValidation,
+  teacherDashboardSchemas
+} from './teacherDashboard'

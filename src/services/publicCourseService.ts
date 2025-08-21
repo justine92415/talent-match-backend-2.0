@@ -127,10 +127,7 @@ export class PublicCourseService {
     // 執行查詢
     const [courses, total] = await queryBuilder.getManyAndCount()
 
-    // 分離查詢相關資料以避免型別問題
-    const courseList = await this.buildCourseListItems(courses)
-
-    return this.buildCoursesResponse(courseList, total, page, per_page, query)
+    return this.buildCoursesResponse(courses, total, page, per_page, query)
   }
 
   /**
@@ -140,7 +137,7 @@ export class PublicCourseService {
     const { keyword, main_category_id, sub_category_id, city_id } = query
     
     // 建立基本查詢條件
-    const whereConditions: Record<string, any> = { status: CourseStatus.PUBLISHED }
+    const whereConditions: Record<string, string | number> = { status: CourseStatus.PUBLISHED }
 
     // 分類篩選
     if (main_category_id) whereConditions.main_category_id = main_category_id
@@ -189,21 +186,23 @@ export class PublicCourseService {
   /**
    * 私有方法：建構課程列表回應
    */
-  private buildCoursesResponse(courseList: any[], total: number, page: number, per_page: number, query: SimpleCourseQuery): PublicCourseListResponse {
+  private async buildCoursesResponse(courseList: Course[], total: number, page: number, per_page: number, query: SimpleCourseQuery): Promise<PublicCourseListResponse> {
+    const courses = await this.buildCourseListItems(courseList)
+    
     return {
-      courses: courseList,
+      courses,
       pagination: {
         current_page: page,
-        per_page: per_page,
-        total: total,
+        per_page,
+        total,
         total_pages: Math.ceil(total / per_page)
       },
       filters: {
-        keyword: query.keyword,
+        sort: query.sort || 'newest',
         main_category_id: query.main_category_id,
         sub_category_id: query.sub_category_id,
         city_id: query.city_id,
-        sort: query.sort || SORT_OPTIONS.NEWEST
+        keyword: query.keyword
       }
     }
   }
@@ -221,8 +220,8 @@ export class PublicCourseService {
     // 並行查詢相關資訊和價格選項
     const [teacher, mainCategory, subCategory, city, priceOptions] = await Promise.all([
       this.getTeacherByCourseId(course.teacher_id),
-      this.getCategoryById(this.mainCategoryRepository, course.main_category_id),
-      this.getCategoryById(this.subCategoryRepository, course.sub_category_id),
+      this.getMainCategoryById(course.main_category_id),
+      this.getSubCategoryById(course.sub_category_id),
       this.getCityById(course.city_id),
       this.coursePriceOptionRepository.find({
         where: { course_id: courseId, is_active: true },
@@ -264,9 +263,27 @@ export class PublicCourseService {
   }
 
   /**
+   * 私有方法：取得主分類資訊
+   */
+  private async getMainCategoryById(categoryId: number | null): Promise<MainCategory | null> {
+    return categoryId
+      ? await this.mainCategoryRepository.findOne({ where: { id: categoryId } })
+      : null
+  }
+
+  /**
+   * 私有方法：取得子分類資訊
+   */
+  private async getSubCategoryById(categoryId: number | null): Promise<SubCategory | null> {
+    return categoryId
+      ? await this.subCategoryRepository.findOne({ where: { id: categoryId } })
+      : null
+  }
+
+  /**
    * 私有方法：取得分類資訊
    */
-  private async getCategoryById(repository: any, categoryId: number | null) {
+  private async getCategoryById(repository: Repository<MainCategory | SubCategory>, categoryId: number | null) {
     return categoryId 
       ? await repository.findOne({ where: { id: categoryId } })
       : null
@@ -284,7 +301,14 @@ export class PublicCourseService {
   /**
    * 私有方法：建構課程詳情回應
    */
-  private buildCourseDetailResponse(course: any, teacher: any, mainCategory: any, subCategory: any, city: any, priceOptions: CoursePriceOption[] = []): PublicCourseDetailResponse {
+  private buildCourseDetailResponse(
+    course: Course, 
+    teacher: Teacher & { user?: User } | null, 
+    mainCategory: MainCategory | null, 
+    subCategory: SubCategory | null, 
+    city: City | null, 
+    priceOptions: CoursePriceOption[] = []
+  ): PublicCourseDetailResponse {
     return {
       course: {
         id: course.id,
@@ -301,38 +325,38 @@ export class PublicCourseService {
         main_category: mainCategory ? {
           id: mainCategory.id,
           name: mainCategory.name
-        } : { id: 0, name: DEFAULT_CATEGORY },
+        } : { id: 0, name: DEFAULT_CATEGORY.NAME },
         sub_category: subCategory ? {
           id: subCategory.id,
           name: subCategory.name
-        } : { id: 0, name: DEFAULT_CATEGORY },
+        } : { id: 0, name: DEFAULT_CATEGORY.NAME },
         city: city ? {
           id: city.id,
           city_name: city.city_name
-        } : { id: 0, city_name: DEFAULT_CITY },
+        } : { id: 0, city_name: DEFAULT_CITY.NAME },
         created_at: course.created_at.toISOString()
       },
       teacher: teacher && teacher.user ? {
         id: teacher.id,
         user: {
-          name: teacher.user.name,
+          name: teacher.user.name || '',
           nick_name: teacher.user.nick_name,
-          avatar_image: teacher.user.avatar_image
+          avatar_image: teacher.user.avatar_image || ''
         },
-        nationality: teacher.nationality,
-        introduction: teacher.introduction,
+        nationality: teacher.nationality || '',
+        introduction: teacher.introduction || '',
         total_students: 0, // TODO: 實際計算
         total_courses: 0,  // TODO: 實際計算
         average_rating: 0  // TODO: 實際計算
       } : {
         id: 0,
         user: {
-          name: DEFAULT_TEACHER,
-          nick_name: DEFAULT_TEACHER,
-          avatar_image: null
+          name: DEFAULT_TEACHER.NICKNAME,
+          nick_name: DEFAULT_TEACHER.NICKNAME,
+          avatar_image: ''
         },
-        nationality: null,
-        introduction: null,
+        nationality: '',
+        introduction: '',
         total_students: 0,
         total_courses: 0,
         average_rating: 0
@@ -375,7 +399,7 @@ export class PublicCourseService {
     }
 
     // 建立查詢條件
-    const whereConditions: Record<string, any> = { course_id: courseId }
+    const whereConditions: Record<string, string | number> = { course_id: courseId }
     if (rating) whereConditions.rate = rating
 
     // 建立查詢建構器
@@ -451,7 +475,7 @@ export class PublicCourseService {
   /**
    * 私有方法：建構課程列表項目
    */
-  private async buildCourseListItems(courses: Course[]): Promise<any[]> {
+  private async buildCourseListItems(courses: Course[]): Promise<PublicCourseItem[]> {
     if (courses.length === 0) return []
 
     // 收集所有需要的 ID
@@ -487,8 +511,8 @@ export class PublicCourseService {
     ])
 
     // 建構價格對應表
-    const priceMap = new Map()
-    priceOptions.forEach((price: any) => {
+    const priceMap = new Map<number, { min_price: number; max_price: number }>()
+    priceOptions.forEach((price: { course_id: number; min_price: string; max_price: string }) => {
       priceMap.set(price.course_id, {
         min_price: parseFloat(price.min_price) || 0,
         max_price: parseFloat(price.max_price) || 0
@@ -516,27 +540,29 @@ export class PublicCourseService {
         main_category: mainCategory ? {
           id: mainCategory.id,
           name: mainCategory.name
-        } : { id: 0, name: DEFAULT_CATEGORY },
+        } : { id: 0, name: DEFAULT_CATEGORY.NAME },
         sub_category: subCategory ? {
           id: subCategory.id,
           name: subCategory.name
-        } : { id: 0, name: DEFAULT_CATEGORY },
+        } : { id: 0, name: DEFAULT_CATEGORY.NAME },
         city: city ? {
           id: city.id,
-          name: city.city_name
-        } : { id: 0, name: DEFAULT_CITY },
+          city_name: city.city_name
+        } : { id: 0, city_name: DEFAULT_CITY.NAME },
         teacher: teacher && teacher.user ? {
           id: teacher.id,
-          nickname: teacher.user.nick_name,
-          avatar: teacher.user.avatar_image,
-          teaching_years: 0, // TODO: 從 Teacher 實體取得
-          speciality: teacher.introduction || ''
+          user: {
+            name: teacher.user.name || '',
+            nick_name: teacher.user.nick_name,
+            avatar_image: teacher.user.avatar_image || ''
+          }
         } : {
           id: 0,
-          nickname: DEFAULT_TEACHER,
-          avatar: null,
-          teaching_years: 0,
-          speciality: ''
+          user: {
+            name: DEFAULT_TEACHER.NICKNAME,
+            nick_name: DEFAULT_TEACHER.NICKNAME,
+            avatar_image: ''
+          }
         },
         created_at: course.created_at.toISOString(),
         updated_at: course.updated_at.toISOString()
