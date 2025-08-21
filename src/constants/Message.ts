@@ -23,6 +23,10 @@ export const MESSAGES = {
     PROFILE_UPDATED: '成功更新個人資料',
     ACCOUNT_DELETED: '帳號已成功刪除',
 
+    // 管理員成功訊息
+    ADMIN_LOGIN_SUCCESS: '管理員登入成功',
+    ADMIN_LOGOUT_SUCCESS: '管理員登出成功',
+
     // 錯誤訊息
     EMAIL_EXISTS: '此電子郵件已被註冊',
     NICKNAME_EXISTS: '該暱稱已被使用',
@@ -40,6 +44,14 @@ export const MESSAGES = {
     PROFILE_UPDATE_FAILED: '更新個人資料失敗',
     PASSWORD_RESET_FAILED: '密碼重設失敗',
     TOKEN_REFRESH_FAILED: 'Token 刷新失敗',
+
+    // 管理員錯誤訊息
+    ADMIN_INVALID_CREDENTIALS: '管理員帳號或密碼錯誤',
+    ADMIN_ACCOUNT_INACTIVE: '管理員帳號已停用，請聯絡系統管理員',
+    ADMIN_LOGIN_FAILED: '管理員登入失敗，請重試',
+    ADMIN_TOKEN_REQUIRED: '管理員 token 為必填欄位',
+    ADMIN_TOKEN_INVALID: '管理員 token 無效',
+    ADMIN_PERMISSION_DENIED: '沒有管理員權限',
   },
 
   // === 驗證相關訊息 ===
@@ -71,6 +83,14 @@ export const MESSAGES = {
     REFRESH_TOKEN_REQUIRED: 'refresh_token 為必填欄位',
     REFRESH_TOKEN_EMPTY: 'refresh_token 不能為空',
     REFRESH_TOKEN_INVALID_TYPE: 'refresh_token 必須為字串格式',
+
+    // 管理員驗證
+    ADMIN_USERNAME_REQUIRED: '管理員帳號為必填欄位',
+    ADMIN_USERNAME_EMPTY: '管理員帳號不能為空',
+    ADMIN_PASSWORD_REQUIRED: '管理員密碼為必填欄位',
+    ADMIN_PASSWORD_EMPTY: '管理員密碼不能為空',
+    REJECTION_REASON_REQUIRED: '拒絕原因為必填欄位',
+    REJECTION_REASON_EMPTY: '拒絕原因不能為空',
 
     // 工作經驗驗證
     WORKPLACE_REQUIRED: '工作地點為必填欄位',
@@ -262,10 +282,13 @@ export const MESSAGES = {
 
     // 資源不存在
     USER_NOT_FOUND: '使用者不存在',
+    ADMIN_USER_NOT_FOUND: '管理員帳號不存在',
     TEACHER_NOT_FOUND: '找不到教師記錄',
     STUDENT_NOT_FOUND: '找不到學生記錄',
     COURSE_NOT_FOUND: '課程不存在',
     APPLICATION_NOT_FOUND: '找不到申請記錄',
+    TEACHER_APPLICATION_NOT_FOUND: '找不到教師申請記錄',
+    COURSE_APPLICATION_NOT_FOUND: '找不到課程申請記錄',
     WORK_EXPERIENCE_NOT_FOUND: '找不到工作經驗記錄',
     WORK_EXPERIENCE_RECORD_NOT_FOUND: '工作經驗記錄不存在',
     LEARNING_EXPERIENCE_NOT_FOUND: '找不到學習經歷記錄',
@@ -287,6 +310,8 @@ export const MESSAGES = {
 
     // 業務規則
     APPLICATION_EXISTS: '您已提交過教師申請',
+    APPLICATION_ALREADY_REVIEWED: '申請已被審核，無法重複操作',
+    APPLICATION_STATUS_NOT_PENDING: '只能審核待審核狀態的申請',
     STUDENT_ONLY_APPLY_TEACHER: '只有學生可以申請成為教師',
     ACCOUNT_STATUS_INVALID: '帳號狀態異常',
     APPLICATION_STATUS_INVALID: '只能在待審核或已拒絕狀態下修改申請',
@@ -392,6 +417,19 @@ export const MESSAGES = {
     STATISTICS_QUERY_FAILED: '統計數據查詢失敗',
     DATE_RANGE_INVALID: '日期範圍無效',
     DASHBOARD_DATA_UNAVAILABLE: '儀表板資料暫時無法取得',
+  },
+
+  // === 管理員訊息 ===
+  ADMIN: {
+    // 成功訊息
+    TEACHER_APPLICATION_APPROVED: '教師申請已核准',
+    TEACHER_APPLICATION_REJECTED: '教師申請已拒絕',
+    COURSE_APPLICATION_APPROVED: '課程申請已核准',
+    COURSE_APPLICATION_REJECTED: '課程申請已拒絕',
+
+    // 錯誤訊息
+    APPROVAL_FAILED: '核准操作失敗',
+    REJECTION_FAILED: '拒絕操作失敗',
   },
 
   // === 系統訊息 ===

@@ -13,6 +13,12 @@ export {
   resetPasswordSchema
 } from './auth'
 
+// 管理員相關驗證 Schema
+export {
+  adminLoginSchema,
+  rejectionRequestSchema
+} from './admin'
+
 // 使用者相關驗證 Schema
 export {
   updateProfileSchema
