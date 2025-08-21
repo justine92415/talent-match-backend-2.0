@@ -11,11 +11,8 @@
 
 import { Router } from 'express'
 import { publicCourseController } from '@controllers/PublicCourseController'
-import {
-  validatePublicCourseQuery,
-  validateCourseId,
-  validateCourseReviewQuery
-} from '@middleware/validation/publicCourseValidation'
+import { validateQuery, validateParams } from '@middleware/schemas/core'
+import { publicCourseQuerySchema, courseReviewQuerySchema, teacherCourseQuerySchema, courseIdParamSchema, teacherIdParamSchema } from '@middleware/schemas/course/publicCourseSchemas'
 
 const router = Router()
 
@@ -254,9 +251,9 @@ const router = Router()
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  */
-router.get('/public', validatePublicCourseQuery, publicCourseController.getPublicCourses)
+router.get('/public', validateQuery(publicCourseQuerySchema), publicCourseController.getPublicCourses)
 
 /**
  * @swagger
@@ -302,9 +299,9 @@ router.get('/public', validatePublicCourseQuery, publicCourseController.getPubli
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  */
-router.get('/public/:id', publicCourseController.getPublicCourseDetail)
+router.get('/public/:id', validateParams(courseIdParamSchema), publicCourseController.getPublicCourseDetail)
 
 /**
  * @swagger
@@ -383,6 +380,6 @@ router.get('/public/:id', publicCourseController.getPublicCourseDetail)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  */
 export default router

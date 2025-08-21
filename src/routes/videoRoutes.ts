@@ -1,12 +1,12 @@
 import { Router } from 'express'
 import { videoController } from '@controllers/VideoController'
 import { authenticateToken, requireTeacher } from '@middleware/auth'
-import { validateRequest } from '@middleware/validation'
+import { validateRequest } from '@middleware/schemas'
 import { 
   uploadVideoSchema,
   updateVideoSchema,
   videoListQuerySchema
-} from '@middleware/validation/videoSchemas'
+} from '@middleware/schemas/course'
 
 /**
  * 影片管理相關路由

@@ -1,27 +1,9 @@
 /**
- * 訂單驗證中間件
+ * 訂單驗證 Schemas
  * 提供訂單相關的請求驗證邏輯
  */
 
 import Joi from 'joi'
-import { Request, Response, NextFunction } from 'express'
-import { Errors } from '@utils/errors'
-import { SystemMessages } from '@constants/Message'
-
-// === 輔助函式 ===
-function formatJoiErrors(joiError: Joi.ValidationError): Record<string, string[]> {
-  const errors: Record<string, string[]> = {}
-  
-  joiError.details.forEach((detail) => {
-    const key = detail.path.join('.')
-    if (!errors[key]) {
-      errors[key] = []
-    }
-    errors[key].push(detail.message)
-  })
-  
-  return errors
-}
 
 // === 訂單建立驗證 ===
 export const createOrderBodySchema = Joi.object({
@@ -133,69 +115,3 @@ export const processPaymentBodySchema = Joi.object({
       'any.required': '付款金額為必填欄位'
     })
 })
-
-// === 驗證中間件函式 ===
-export const validateCreateOrder = (req: Request, res: Response, next: NextFunction) => {
-  const { error } = createOrderBodySchema.validate(req.body)
-  
-  if (error) {
-    const formattedErrors = formatJoiErrors(error)
-    return next(Errors.validation(formattedErrors, SystemMessages.VALIDATION_FAILED))
-  }
-  
-  next()
-}
-
-export const validateGetOrderList = (req: Request, res: Response, next: NextFunction) => {
-  const { error, value } = getOrderListQuerySchema.validate(req.query)
-  
-  if (error) {
-    const formattedErrors = formatJoiErrors(error)
-    return next(Errors.validation(formattedErrors, SystemMessages.VALIDATION_FAILED))
-  }
-  
-  // 設定處理後的值
-  req.query = value
-  next()
-}
-
-export const validateOrderId = (req: Request, res: Response, next: NextFunction) => {
-  const { error } = orderIdParamSchema.validate({ 
-    orderId: parseInt(req.params.orderId) 
-  })
-  
-  if (error) {
-    const formattedErrors = formatJoiErrors(error)
-    return next(Errors.validation(formattedErrors, SystemMessages.VALIDATION_FAILED))
-  }
-  
-  next()
-}
-
-export const validateProcessPayment = (req: Request, res: Response, next: NextFunction) => {
-  // 驗證路徑參數
-  const { error: paramError } = orderIdParamSchema.validate({ 
-    orderId: parseInt(req.params.orderId) 
-  })
-  if (paramError) {
-    const formattedErrors = formatJoiErrors(paramError)
-    return next(Errors.validation(formattedErrors, SystemMessages.VALIDATION_FAILED))
-  }
-
-  // 驗證請求體
-  const { error: bodyError } = processPaymentBodySchema.validate(req.body)
-  if (bodyError) {
-    const formattedErrors = formatJoiErrors(bodyError)
-    return next(Errors.validation(formattedErrors, SystemMessages.VALIDATION_FAILED))
-  }
-  
-  next()
-}
-
-// 統一匯出所有 Schema
-export const orderSchemas = {
-  createOrderBody: createOrderBodySchema,
-  getOrderListQuery: getOrderListQuerySchema,
-  orderIdParam: orderIdParamSchema,
-  processPaymentBody: processPaymentBodySchema
-}

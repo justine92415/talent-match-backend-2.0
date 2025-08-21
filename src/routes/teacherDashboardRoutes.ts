@@ -3,7 +3,7 @@ import { TeacherDashboardController } from '@controllers/TeacherDashboardControl
 
 const teacherDashboardController = new TeacherDashboardController()
 import { authenticateToken, requireTeacher } from '@middleware/auth'
-import { teacherDashboardValidation } from '@middleware/validation/teacherDashboard'
+import { teacherDashboardValidation as teacherDashboardSchemas } from '@middleware/schemas/system'
 
 const router = Router()
 
@@ -295,7 +295,7 @@ router.get(
   '/:teacherId/overview',
   authenticateToken,
   requireTeacher,
-  teacherDashboardValidation.validateDashboardOverviewQuery,
+  teacherDashboardSchemas.validateDashboardOverviewQuery,
   teacherDashboardController.getDashboardOverview
 )
 
@@ -372,7 +372,7 @@ router.get(
   '/:teacherId/statistics',
   authenticateToken,
   requireTeacher,
-  teacherDashboardValidation.validateStatisticsQuery,
+  teacherDashboardSchemas.validateStatisticsQuery,
   teacherDashboardController.getStatistics
 )
 
@@ -457,7 +457,7 @@ router.get(
   '/:teacherId/students',
   authenticateToken,
   requireTeacher,
-  teacherDashboardValidation.validateStudentListQuery,
+  teacherDashboardSchemas.validateStudentListQuery,
   teacherDashboardController.getStudentList
 )
 
@@ -520,7 +520,7 @@ router.get(
   '/:teacherId/students/:studentId',
   authenticateToken,
   requireTeacher,
-  teacherDashboardValidation.validateStudentIdParams,
+  teacherDashboardSchemas.validateStudentIdParams,
   teacherDashboardController.getStudentDetail
 )
 
@@ -604,7 +604,7 @@ router.get(
   '/:teacherId/reservations',
   authenticateToken,
   requireTeacher,
-  teacherDashboardValidation.validateReservationListQuery,
+  teacherDashboardSchemas.validateReservationListQuery,
   teacherDashboardController.getReservationList
 )
 
@@ -698,7 +698,7 @@ router.put(
   '/:teacherId/reservations/:reservationId/status',
   authenticateToken,
   requireTeacher,
-  teacherDashboardValidation.validateUpdateReservationStatus,
+  teacherDashboardSchemas.validateUpdateReservationStatus,
   teacherDashboardController.updateReservationStatus
 )
 
@@ -761,7 +761,7 @@ router.get(
   '/:teacherId/earnings',
   authenticateToken,
   requireTeacher,
-  teacherDashboardValidation.validateEarningsListQuery,
+  teacherDashboardSchemas.validateEarningsListQuery,
   teacherDashboardController.getEarnings
 )
 
@@ -818,7 +818,7 @@ router.get(
   '/:teacherId/settlements',
   authenticateToken,
   requireTeacher,
-  teacherDashboardValidation.validateSettlementListQuery,
+  teacherDashboardSchemas.validateSettlementListQuery,
   teacherDashboardController.getSettlementList
 )
 
@@ -881,7 +881,7 @@ router.get(
   '/:teacherId/settlements/:settlementId',
   authenticateToken,
   requireTeacher,
-  teacherDashboardValidation.validateSettlementIdParams,
+  teacherDashboardSchemas.validateSettlementIdParams,
   teacherDashboardController.getSettlementDetail
 )
 
@@ -923,7 +923,7 @@ router.get(
   '/:teacherId/earnings-stats',
   authenticateToken,
   requireTeacher,
-  teacherDashboardValidation.validateEarningsSummaryQuery,
+  teacherDashboardSchemas.validateEarningsSummaryQuery,
   teacherDashboardController.getEarningsStats
 )
 

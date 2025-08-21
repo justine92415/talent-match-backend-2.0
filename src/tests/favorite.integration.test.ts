@@ -152,8 +152,8 @@ describe('收藏功能 API', () => {
       )
 
       expect(response.status).toBe(400)
-      expect(response.body.code).toBe(ERROR_CODES.COURSE_ID_INVALID)
-      expect(response.body.message).toBe(MESSAGES.VALIDATION.COURSE_ID_INVALID)
+      expect(response.body.code).toBe(ERROR_CODES.VALIDATION_ERROR)
+      expect(response.body.message).toBe(MESSAGES.SYSTEM.VALIDATION_ERROR)
     })
 
     it('應該拒絕不存在的課程ID並回傳 404', async () => {

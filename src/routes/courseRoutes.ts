@@ -12,33 +12,35 @@
  */
 
 import { Router } from 'express'
-import { authenticateToken } from '@middleware/auth'
 import { CourseController } from '@controllers/CourseController'
 import { CourseVideoController } from '@controllers/CourseVideoController'
 import { CourseFileController } from '@controllers/CourseFileController'
 import { reviewController } from '@controllers/ReviewController'
+import { createSchemasMiddleware } from '@middleware/schemas/core'
 import { 
-  validateCreateCourse,
-  validateUpdateCourse,
-  validateCourseId,
-  validateCourseListQuery
-} from '@middleware/validation/courseValidation'
+  createCourseSchema,
+  updateCourseSchema,
+  courseIdSchema,
+  courseListQuerySchema
+} from '@middleware/schemas/course/courseSchemas'
 import {
-  validateLinkVideosToCourse,
-  validateUpdateVideoOrder,
-  validateRemoveCourseVideo,
-  validateGetCourseVideos
-} from '@middleware/validation'
+  linkVideosToCourseBodySchema,
+  updateVideoOrderBodySchema,
+  removeCourseVideoParamSchema,
+  courseVideoIdParamSchema,
+  courseIdForUpdateParamSchema
+} from '@middleware/schemas/course/videoValidationSchemas'
 import {
-  validateGetCourseFiles,
-  validateUploadCourseFiles,
-  validateDeleteCourseFile
-} from '@middleware/validation/courseFileValidation'
+  getCourseFilesParamSchema,
+  getCourseFilesQuerySchema,
+  uploadCourseFilesParamSchema,
+  uploadCourseFilesBodySchema,
+  deleteCourseFileParamSchema
+} from '@middleware/schemas/course/fileSchemas'
 import {
-  validateQuery,
-  courseReviewsQuerySchema,
-  courseUuidParamsSchema
-} from '@/validation/index'
+  courseReviewQuerySchema
+} from '@middleware/schemas/course/publicCourseSchemas'
+import { authenticateToken } from '@middleware/auth/userAuth'
 
 const router = Router()
 const courseController = new CourseController()
@@ -276,7 +278,7 @@ const courseController = new CourseController()
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *       401:
  *         description: 未認證或認證失敗
  *         content:
@@ -296,7 +298,7 @@ const courseController = new CourseController()
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/', authenticateToken, validateCreateCourse, courseController.createCourse)
+router.post('/', authenticateToken, createSchemasMiddleware({ body: createCourseSchema }), courseController.createCourse)
 
 /**
  * @swagger
@@ -338,7 +340,7 @@ router.post('/', authenticateToken, validateCreateCourse, courseController.creat
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *       401:
  *         description: 未認證或認證失敗
  *         content:
@@ -364,7 +366,7 @@ router.post('/', authenticateToken, validateCreateCourse, courseController.creat
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put('/:id', authenticateToken, validateCourseId, validateUpdateCourse, courseController.updateCourse)
+router.put('/:id', authenticateToken, createSchemasMiddleware({ params: courseIdSchema, body: updateCourseSchema }), courseController.updateCourse)
 
 /**
  * @swagger
@@ -420,7 +422,7 @@ router.put('/:id', authenticateToken, validateCourseId, validateUpdateCourse, co
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/:id', authenticateToken, validateCourseId, courseController.getCourse)
+router.get('/:id', authenticateToken, createSchemasMiddleware({ params: courseIdSchema }), courseController.getCourse)
 
 /**
  * @swagger
@@ -493,7 +495,7 @@ router.get('/:id', authenticateToken, validateCourseId, courseController.getCour
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *       401:
  *         description: 未認證或認證失敗
  *         content:
@@ -507,7 +509,7 @@ router.get('/:id', authenticateToken, validateCourseId, courseController.getCour
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/', authenticateToken, validateCourseListQuery, courseController.getCourseList)
+router.get('/', authenticateToken, createSchemasMiddleware({ query: courseListQuerySchema }), courseController.getCourseList)
 
 /**
  * @swagger
@@ -570,7 +572,7 @@ router.get('/', authenticateToken, validateCourseListQuery, courseController.get
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.delete('/:id', authenticateToken, validateCourseId, courseController.deleteCourse)
+router.delete('/:id', authenticateToken, createSchemasMiddleware({ params: courseIdSchema }), courseController.deleteCourse)
 
 // 課程狀態管理路由
 
@@ -646,7 +648,7 @@ router.delete('/:id', authenticateToken, validateCourseId, courseController.dele
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/:id/submit', authenticateToken, validateCourseId, courseController.submitCourse)
+router.post('/:id/submit', authenticateToken, createSchemasMiddleware({ params: courseIdSchema }), courseController.submitCourse)
 
 /**
  * @swagger
@@ -720,7 +722,7 @@ router.post('/:id/submit', authenticateToken, validateCourseId, courseController
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/:id/resubmit', authenticateToken, validateCourseId, courseController.resubmitCourse)
+router.post('/:id/resubmit', authenticateToken, createSchemasMiddleware({ params: courseIdSchema }), courseController.resubmitCourse)
 
 /**
  * @swagger
@@ -782,7 +784,7 @@ router.post('/:id/resubmit', authenticateToken, validateCourseId, courseControll
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/:id/publish', authenticateToken, validateCourseId, courseController.publishCourse)
+router.post('/:id/publish', authenticateToken, createSchemasMiddleware({ params: courseIdSchema }), courseController.publishCourse)
 
 /**
  * @swagger
@@ -856,7 +858,7 @@ router.post('/:id/publish', authenticateToken, validateCourseId, courseControlle
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/:id/archive', authenticateToken, validateCourseId, courseController.archiveCourse)
+router.post('/:id/archive', authenticateToken, createSchemasMiddleware({ params: courseIdSchema }), courseController.archiveCourse)
 
 // ========================================
 // 課程影片關聯路由
@@ -949,7 +951,7 @@ router.post('/:id/archive', authenticateToken, validateCourseId, courseControlle
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *       401:
  *         description: 未認證或認證失敗
  *       403:
@@ -959,7 +961,7 @@ router.post('/:id/archive', authenticateToken, validateCourseId, courseControlle
  *       500:
  *         description: 伺服器內部錯誤
  */
-router.post('/:id/videos', authenticateToken, validateLinkVideosToCourse, CourseVideoController.linkVideos)
+router.post('/:id/videos', authenticateToken, createSchemasMiddleware({ body: linkVideosToCourseBodySchema }), CourseVideoController.linkVideos)
 
 /**
  * @swagger
@@ -1036,7 +1038,7 @@ router.post('/:id/videos', authenticateToken, validateLinkVideosToCourse, Course
  *       500:
  *         description: 伺服器內部錯誤
  */
-router.put('/:course_id/videos/order', authenticateToken, validateUpdateVideoOrder, CourseVideoController.updateVideoOrder)
+router.put('/:course_id/videos/order', authenticateToken, createSchemasMiddleware({ params: courseIdForUpdateParamSchema, body: updateVideoOrderBodySchema }), CourseVideoController.updateVideoOrder)
 
 /**
  * @swagger
@@ -1083,7 +1085,7 @@ router.put('/:course_id/videos/order', authenticateToken, validateUpdateVideoOrd
  *       500:
  *         description: 伺服器內部錯誤
  */
-router.delete('/:course_id/videos/:video_id', authenticateToken, validateRemoveCourseVideo, CourseVideoController.removeCourseVideo)
+router.delete('/:course_id/videos/:video_id', authenticateToken, createSchemasMiddleware({ params: removeCourseVideoParamSchema }), CourseVideoController.removeCourseVideo)
 
 /**
  * @swagger
@@ -1150,7 +1152,7 @@ router.delete('/:course_id/videos/:video_id', authenticateToken, validateRemoveC
  *       500:
  *         description: 伺服器內部錯誤
  */
-router.get('/:id/videos', authenticateToken, validateGetCourseVideos, CourseVideoController.getCourseVideos)
+router.get('/:id/videos', authenticateToken, createSchemasMiddleware({ params: courseIdSchema }), CourseVideoController.getCourseVideos)
 
 // ==================== 課程檔案管理路由 ====================
 
@@ -1262,7 +1264,7 @@ router.get('/:id/videos', authenticateToken, validateGetCourseVideos, CourseVide
  *       500:
  *         description: 伺服器內部錯誤
  */
-router.get('/:id/files', authenticateToken, validateGetCourseFiles, CourseFileController.getCourseFiles)
+router.get('/:id/files', authenticateToken, createSchemasMiddleware({ params: getCourseFilesParamSchema, query: getCourseFilesQuerySchema }), CourseFileController.getCourseFiles)
 
 /**
  * @swagger
@@ -1338,7 +1340,7 @@ router.get('/:id/files', authenticateToken, validateGetCourseFiles, CourseFileCo
  *       500:
  *         description: 伺服器內部錯誤
  */
-router.post('/:id/files', authenticateToken, validateUploadCourseFiles, CourseFileController.uploadCourseFiles)
+router.post('/:id/files', authenticateToken, createSchemasMiddleware({ params: uploadCourseFilesParamSchema, body: uploadCourseFilesBodySchema }), CourseFileController.uploadCourseFiles)
 
 /**
  * @swagger
@@ -1385,7 +1387,7 @@ router.post('/:id/files', authenticateToken, validateUploadCourseFiles, CourseFi
  *       500:
  *         description: 伺服器內部錯誤
  */
-router.delete('/:course_id/files/:file_id', authenticateToken, validateDeleteCourseFile, CourseFileController.deleteCourseFile)
+router.delete('/:course_id/files/:file_id', authenticateToken, createSchemasMiddleware({ params: deleteCourseFileParamSchema }), CourseFileController.deleteCourseFile)
 
 /**
  * @swagger
@@ -1458,7 +1460,7 @@ router.delete('/:course_id/files/:file_id', authenticateToken, validateDeleteCou
  */
 router.get(
   '/:uuid/reviews',
-  validateQuery(courseReviewsQuerySchema),
+  createSchemasMiddleware({ query: courseReviewQuerySchema }),
   reviewController.getCourseReviews
 )
 

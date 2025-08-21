@@ -21,7 +21,7 @@ export const reviewCreateSchema = Joi.object({
       'any.required': MESSAGES.VALIDATION.REVIEW.RESERVATION_UUID_REQUIRED
     }),
 
-  rating: Joi.number()
+  rate: Joi.number()
     .integer()
     .min(REVIEW_VALIDATION.RATING.MIN_VALUE)
     .max(REVIEW_VALIDATION.RATING.MAX_VALUE)
@@ -34,7 +34,7 @@ export const reviewCreateSchema = Joi.object({
       'any.required': MESSAGES.VALIDATION.REVIEW.RATING_REQUIRED
     }),
 
-  content: Joi.string()
+  comment: Joi.string()
     .trim()
     .min(REVIEW_VALIDATION.CONTENT.MIN_LENGTH)
     .max(REVIEW_VALIDATION.CONTENT.MAX_LENGTH)
@@ -81,8 +81,8 @@ export const courseReviewsQuerySchema = Joi.object({
     .messages({
       'number.base': MESSAGES.VALIDATION.REVIEW.RATING_FILTER_INVALID,
       'number.integer': MESSAGES.VALIDATION.REVIEW.RATING_FILTER_INVALID,
-      'number.min': `評分篩選必須在 ${REVIEW_VALIDATION.RATING.MIN_VALUE} 到 ${REVIEW_VALIDATION.RATING.MAX_VALUE} 之間`,
-      'number.max': `評分篩選必須在 ${REVIEW_VALIDATION.RATING.MIN_VALUE} 到 ${REVIEW_VALIDATION.RATING.MAX_VALUE} 之間`
+      'number.min': MESSAGES.VALIDATION.REVIEW.RATING_FILTER_INVALID,
+      'number.max': MESSAGES.VALIDATION.REVIEW.RATING_FILTER_INVALID
     }),
 
   sort_by: Joi.string()

@@ -16,13 +16,14 @@
 import { Router } from 'express'
 import { authenticateToken } from '@middleware/auth'
 import { reviewController } from '@controllers/ReviewController'
+import { createSchemasMiddleware } from '@middleware/schemas/core'
 import { 
-  validateBody, 
-  validateQuery, 
-  submitReviewSchema,
+  reviewCreateSchema,
+  courseReviewsQuerySchema,
   myReviewsQuerySchema,
-  receivedReviewsQuerySchema
-} from '@/validation/index'
+  receivedReviewsQuerySchema,
+  courseUuidParamSchema
+} from '@middleware/schemas/system/reviewSchemas'
 
 const router = Router()
 
@@ -218,7 +219,7 @@ const router = Router()
 router.post(
   '/',
   authenticateToken,
-  validateBody(submitReviewSchema),
+  createSchemasMiddleware({ body: reviewCreateSchema }),
   reviewController.submitReview
 )
 
@@ -396,7 +397,7 @@ router.post(
 router.get(
   '/my',
   authenticateToken,
-  validateQuery(myReviewsQuerySchema),
+  createSchemasMiddleware({ query: myReviewsQuerySchema }),
   reviewController.getMyReviews
 )
 
@@ -503,7 +504,7 @@ router.get(
 router.get(
   '/received',
   authenticateToken,
-  validateQuery(receivedReviewsQuerySchema),
+  createSchemasMiddleware({ query: receivedReviewsQuerySchema }),
   reviewController.getReceivedReviews
 )
 

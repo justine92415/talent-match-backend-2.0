@@ -13,12 +13,13 @@
 import { Router } from 'express'
 import { authenticateToken } from '@middleware/auth'
 import { OrderController } from '@controllers/OrderController'
+import { createSchemasMiddleware } from '@middleware/schemas/core'
 import { 
-  validateCreateOrder,
-  validateGetOrderList,
-  validateOrderId,
-  validateProcessPayment 
-} from '@middleware/validation'
+  createOrderBodySchema,
+  getOrderListQuerySchema,
+  orderIdParamSchema,
+  processPaymentBodySchema 
+} from '@middleware/schemas/commerce/orderSchemas'
 
 const router = Router()
 const orderController = new OrderController()
@@ -214,7 +215,7 @@ const orderController = new OrderController()
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *       401:
  *         description: 未認證或認證失敗
  *         content:
@@ -234,7 +235,7 @@ const orderController = new OrderController()
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/', authenticateToken, validateCreateOrder, orderController.createOrderFromCart)
+router.post('/', authenticateToken, createSchemasMiddleware({ body: createOrderBodySchema }), orderController.createOrderFromCart)
 
 /**
  * @swagger
@@ -284,7 +285,7 @@ router.post('/', authenticateToken, validateCreateOrder, orderController.createO
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/:orderId', authenticateToken, validateOrderId, orderController.getOrderDetails)
+router.get('/:orderId', authenticateToken, createSchemasMiddleware({ params: orderIdParamSchema }), orderController.getOrderDetails)
 
 /**
  * @swagger
@@ -366,7 +367,7 @@ router.get('/:orderId', authenticateToken, validateOrderId, orderController.getO
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *       401:
  *         description: 未認證或認證失敗
  *         content:
@@ -380,7 +381,7 @@ router.get('/:orderId', authenticateToken, validateOrderId, orderController.getO
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/', authenticateToken, validateGetOrderList, orderController.getOrderList)
+router.get('/', authenticateToken, createSchemasMiddleware({ query: getOrderListQuerySchema }), orderController.getOrderList)
 
 /**
  * @swagger
@@ -448,7 +449,7 @@ router.get('/', authenticateToken, validateGetOrderList, orderController.getOrde
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put('/:orderId/cancel', authenticateToken, validateOrderId, orderController.cancelOrder)
+router.put('/:orderId/cancel', authenticateToken, createSchemasMiddleware({ params: orderIdParamSchema }), orderController.cancelOrder)
 
 /**
  * @swagger
@@ -516,7 +517,7 @@ router.put('/:orderId/cancel', authenticateToken, validateOrderId, orderControll
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/:orderId/cancel', authenticateToken, validateOrderId, orderController.cancelOrder)
+router.post('/:orderId/cancel', authenticateToken, createSchemasMiddleware({ params: orderIdParamSchema }), orderController.cancelOrder)
 
 /**
  * @swagger
@@ -600,6 +601,9 @@ router.post('/:orderId/cancel', authenticateToken, validateOrderId, orderControl
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/:orderId/payment', authenticateToken, validateProcessPayment, orderController.processPayment)
+router.post('/:orderId/payment', authenticateToken, createSchemasMiddleware({ 
+  params: orderIdParamSchema, 
+  body: processPaymentBodySchema 
+}), orderController.processPayment)
 
 export default router

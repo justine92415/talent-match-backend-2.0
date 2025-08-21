@@ -23,17 +23,6 @@ import { AdminTokenPayload } from '@/types'
  */
 
 /**
- * 擴展 Request 介面以包含管理員資訊
- */
-declare global {
-  namespace Express {
-    interface Request {
-      admin?: AdminTokenPayload
-    }
-  }
-}
-
-/**
  * 管理員 JWT Token 認證中間件
  * 
  * @param req Express Request 物件

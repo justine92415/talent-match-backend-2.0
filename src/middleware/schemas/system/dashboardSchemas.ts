@@ -6,7 +6,7 @@
 
 import Joi from 'joi'
 import { Request, Response, NextFunction } from 'express'
-import { validateRequest } from './common'
+import { validateRequest } from '../core'
 import { ReservationStatus, EarningStatus } from '@entities/enums'
 
 // === 通用驗證 Schema ===

@@ -13,11 +13,12 @@
 import { Router } from 'express'
 import { authenticateToken } from '@middleware/auth'
 import { favoriteController } from '@controllers/FavoriteController'
-import {
-  validateAddFavorite,
-  validateFavoriteListQuery,
-  validateFavoriteCourseId
-} from '@middleware/validation/favoriteValidation'
+import { createSchemasMiddleware, validateParams, validateQuery } from '@middleware/schemas/core'
+import { 
+  addFavoriteSchema,
+  favoriteListQuerySchema,
+  favoriteCourseIdParamSchema
+} from '@middleware/schemas/system/favoriteSchemas'
 
 const router = Router()
 
@@ -162,7 +163,7 @@ router.use(authenticateToken)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *       409:
  *         description: 課程已在收藏清單中
  *         content:
@@ -182,7 +183,7 @@ router.use(authenticateToken)
  *             schema:
  *               $ref: '#/components/schemas/AuthErrorResponse'
  */
-router.post('/', validateAddFavorite, favoriteController.addToFavorites)
+router.post('/', createSchemasMiddleware({ body: addFavoriteSchema }), favoriteController.addToFavorites)
 
 /**
  * @swagger
@@ -229,7 +230,7 @@ router.post('/', validateAddFavorite, favoriteController.addToFavorites)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *       401:
  *         description: 未認證
  *         content:
@@ -237,7 +238,7 @@ router.post('/', validateAddFavorite, favoriteController.addToFavorites)
  *             schema:
  *               $ref: '#/components/schemas/AuthErrorResponse'
  */
-router.delete('/:course_id', validateFavoriteCourseId, favoriteController.removeFromFavorites)
+router.delete('/:course_id', validateParams(favoriteCourseIdParamSchema), favoriteController.removeFromFavorites)
 
 /**
  * @swagger
@@ -287,7 +288,7 @@ router.delete('/:course_id', validateFavoriteCourseId, favoriteController.remove
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *       401:
  *         description: 未認證
  *         content:
@@ -295,7 +296,7 @@ router.delete('/:course_id', validateFavoriteCourseId, favoriteController.remove
  *             schema:
  *               $ref: '#/components/schemas/AuthErrorResponse'
  */
-router.get('/', validateFavoriteListQuery, favoriteController.getUserFavorites)
+router.get('/', validateQuery(favoriteListQuerySchema), favoriteController.getUserFavorites)
 
 /**
  * @swagger
@@ -341,7 +342,7 @@ router.get('/', validateFavoriteListQuery, favoriteController.getUserFavorites)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *       401:
  *         description: 未認證
  *         content:
@@ -349,6 +350,6 @@ router.get('/', validateFavoriteListQuery, favoriteController.getUserFavorites)
  *             schema:
  *               $ref: '#/components/schemas/AuthErrorResponse'
  */
-router.get('/status/:course_id', validateFavoriteCourseId, favoriteController.getFavoriteStatus)
+router.get('/status/:course_id', validateParams(favoriteCourseIdParamSchema), favoriteController.getFavoriteStatus)
 
 export default router

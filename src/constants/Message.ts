@@ -187,7 +187,7 @@ export const MESSAGES = {
     SORT_OPTION_INVALID: '排序方式只能是 newest, popular, price_low, price_high',
     
     // 評價相關驗證
-    REVIEW_RATING_INVALID: '評分必須在1-5之間',
+    REVIEW_RATING_INVALID: '評分篩選必須為1-5的整數',
     REVIEW_SORT_INVALID: '排序方式只能是 newest, oldest, rating_high, rating_low',
     REVIEW_RESERVATION_ID_REQUIRED: '預約ID為必填欄位',
     REVIEW_RESERVATION_ID_INVALID: '預約ID格式不正確',

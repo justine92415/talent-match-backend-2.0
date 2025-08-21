@@ -14,11 +14,12 @@
 import { Router } from 'express'
 import { authenticateToken } from '@middleware/auth'
 import { CartController } from '@controllers/CartController'
+import { createSchemasMiddleware } from '@middleware/schemas/core'
 import { 
-  validateAddCartItem,
-  validateUpdateCartItem,
-  validateCartItemId 
-} from '@middleware/validation'
+  addCartItemBodySchema,
+  updateCartItemBodySchema,
+  cartItemIdParamSchema 
+} from '@middleware/schemas/commerce/cartSchemas'
 
 const router = Router()
 const cartController = new CartController()
@@ -179,7 +180,7 @@ const cartController = new CartController()
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *       401:
  *         description: 未認證或認證失敗
  *         content:
@@ -205,7 +206,7 @@ const cartController = new CartController()
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/items', authenticateToken, validateAddCartItem, cartController.addItem)
+router.post('/items', authenticateToken, createSchemasMiddleware({ body: addCartItemBodySchema }), cartController.addItem)
 
 /**
  * @swagger
@@ -284,7 +285,7 @@ router.get('/', authenticateToken, cartController.getCart)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *       401:
  *         description: 未認證或認證失敗
  *         content:
@@ -304,7 +305,10 @@ router.get('/', authenticateToken, cartController.getCart)
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put('/items/:itemId', authenticateToken, validateUpdateCartItem, cartController.updateItem)
+router.put('/items/:itemId', authenticateToken, createSchemasMiddleware({ 
+  params: cartItemIdParamSchema, 
+  body: updateCartItemBodySchema 
+}), cartController.updateItem)
 
 /**
  * @swagger
@@ -355,7 +359,7 @@ router.put('/items/:itemId', authenticateToken, validateUpdateCartItem, cartCont
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.delete('/items/:itemId', authenticateToken, validateCartItemId, cartController.removeItem)
+router.delete('/items/:itemId', authenticateToken, createSchemasMiddleware({ params: cartItemIdParamSchema }), cartController.removeItem)
 
 /**
  * @swagger

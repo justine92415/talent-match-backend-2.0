@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { errorHandler } from '@middleware/errorHandler'
+import { errorHandler } from '@middleware/error'
 import { BusinessError, ValidationError, AuthError, SystemError } from '@utils/errors'
 import { ERROR_CODES } from '@constants/ErrorCode'
 import { ERROR_MESSAGES } from '@constants/Message'
