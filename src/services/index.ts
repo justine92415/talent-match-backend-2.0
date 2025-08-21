@@ -10,7 +10,7 @@
  * 4. 提升記憶體效率和管理便利性
  */
 
-// === 服務實例匯出 (推薦使用) ===
+// === 服務實例匯出 ===
 export { adminService } from './AdminService'
 export { authService } from './AuthService'
 export { cartService } from './CartService'
@@ -32,7 +32,7 @@ export { teacherService } from './TeacherService'
 export { teacherDashboardService } from './TeacherDashboardService'
 export { videoService } from './VideoService'
 
-// === 服務類別匯出 (供特殊用途使用) ===
+// === 服務類別匯出 ===
 export { AdminService } from './AdminService'
 export { AuthService } from './AuthService'
 export { CartService } from './CartService'
