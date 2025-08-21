@@ -17,7 +17,6 @@ import { Reservation } from '@entities/Reservation'
 import { UserCoursePurchase } from '@entities/UserCoursePurchase'
 import { TeacherAvailableSlot } from '@entities/TeacherAvailableSlot'
 import { ReservationStatus } from '@entities/enums'
-import { ScheduleService } from './ScheduleService'
 import { BusinessError, ValidationError } from '@utils/errors'
 import { ERROR_CODES } from '@constants/ErrorCode'
 import { MESSAGES } from '@constants/Message'
@@ -40,13 +39,11 @@ export class ReservationService {
   private reservationRepository: Repository<Reservation>
   private purchaseRepository: Repository<UserCoursePurchase>
   private availableSlotRepository: Repository<TeacherAvailableSlot>
-  private scheduleService: ScheduleService
 
   constructor() {
     this.reservationRepository = dataSource.getRepository(Reservation)
     this.purchaseRepository = dataSource.getRepository(UserCoursePurchase)
     this.availableSlotRepository = dataSource.getRepository(TeacherAvailableSlot)
-    this.scheduleService = new ScheduleService()
   }
 
   /**
