@@ -4,6 +4,7 @@ import { dataSource } from '@db/data-source'
 import { User } from '@entities/User'
 import { AccountStatus, UserRole } from '@entities/enums'
 import { JwtTokenPayload } from '@models/auth.interface'
+import { AuthenticatedUser } from '@/types/middleware'
 import { Errors } from '@utils/errors'
 import { BusinessError } from '@utils/errors'
 import { ERROR_CODES } from '@constants/ErrorCode'
@@ -22,21 +23,6 @@ import { MESSAGES } from '@constants/Message'
  * router.get('/profile', authenticateToken, controller.getProfile)
  * ```
  */
-
-/**
- * 擴展 Request 介面以包含使用者資訊
- */
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        userId: number
-        role: string
-        type: string
-      }
-    }
-  }
-}
 
 /**
  * JWT Token 認證中間件
@@ -102,7 +88,7 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
       userId: decoded.userId,
       role: decoded.role,
       type: decoded.type
-    }
+    } as AuthenticatedUser
 
     next()
   } catch (error) {

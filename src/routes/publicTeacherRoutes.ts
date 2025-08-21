@@ -7,7 +7,8 @@
  */
 
 import { Router } from 'express'
-import { validateTeacherCourseQuery } from '@middleware/validation/publicCourseValidation'
+import { createSchemasMiddleware } from '@middleware/schemas/core'
+import { teacherCourseQuerySchema } from '@middleware/schemas/course/publicCourseSchemas'
 import { publicTeacherController } from '@controllers/PublicTeacherController'
 
 const router = Router()
@@ -194,7 +195,7 @@ const router = Router()
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  */
 router.get('/public/:id', publicTeacherController.getPublicTeacher)
 
@@ -267,8 +268,8 @@ router.get('/public/:id', publicTeacherController.getPublicTeacher)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  */
-router.get('/public/:id/courses', validateTeacherCourseQuery, publicTeacherController.getTeacherCourses)
+router.get('/public/:id/courses', createSchemasMiddleware({ query: teacherCourseQuerySchema }), publicTeacherController.getTeacherCourses)
 
 export default router

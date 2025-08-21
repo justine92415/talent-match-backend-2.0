@@ -3,17 +3,19 @@ import { TeacherController } from '@controllers/TeacherController'
 import { scheduleController } from '@controllers/ScheduleController'
 import { learningExperienceController } from '@controllers/LearningExperienceController'
 import { authenticateToken } from '@middleware/auth'
+import { validateRequest } from '@middleware/schemas/core'
 import {
-  validateRequest,
   teacherApplicationSchema,
   teacherApplicationUpdateSchema,
   teacherProfileUpdateSchema,
-  certificateCreateSchema,
-  certificateUpdateSchema,
   learningExperienceCreateSchema,
   learningExperienceUpdateSchema
-} from '@middleware/validation'
-import { scheduleUpdateSchema, conflictsQuerySchema } from '@middleware/validation/scheduleValidation'
+} from '@middleware/schemas/user/teacherSchemas'
+import {
+  certificateCreateSchema,
+  certificateUpdateSchema
+} from '@middleware/schemas/user/certificateSchemas'
+import { scheduleUpdateSchema, conflictsQuerySchema } from '@middleware/schemas/system/scheduleSchemas'
 import { certificateController } from '@controllers/CertificateController'
 
 /**
@@ -80,7 +82,7 @@ const teacherController = new TeacherController()
  *                   application_submitted_at: "2024-01-15T10:30:00.000Z"
  *                   created_at: "2024-01-15T10:30:00.000Z"
  *       400:
- *         $ref: '#/components/responses/ValidationError'
+ *         $ref: '#/components/responses/SchemasError'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
@@ -190,7 +192,7 @@ router.get('/application', authenticateToken, teacherController.getApplication)
  *                   introduction: "更新後的申請介紹內容..."
  *                   updated_at: "2024-01-15T11:00:00.000Z"
  *       400:
- *         $ref: '#/components/responses/ValidationError'
+ *         $ref: '#/components/responses/SchemasError'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       404:
@@ -545,7 +547,7 @@ router.get('/profile', authenticateToken, teacherController.getProfile)
  *                       type: string
  *                       example: "由於修改了重要資料，需要重新審核"
  *       400:
- *         $ref: '#/components/responses/ValidationError'
+ *         $ref: '#/components/responses/SchemasError'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       404:
@@ -644,7 +646,7 @@ router.put('/profile', authenticateToken, validateRequest(teacherProfileUpdateSc
  *             schema:
  *               $ref: '#/components/schemas/WorkExperienceCreateResponse'
  *       400:
- *         $ref: '#/components/responses/ValidationError'
+ *         $ref: '#/components/responses/SchemasError'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
@@ -696,7 +698,7 @@ router.post('/work-experiences', authenticateToken, teacherController.createWork
  *             schema:
  *               $ref: '#/components/schemas/WorkExperienceUpdateResponse'
  *       400:
- *         $ref: '#/components/responses/ValidationError'
+ *         $ref: '#/components/responses/SchemasError'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
@@ -977,7 +979,7 @@ router.get('/learning-experiences', authenticateToken, learningExperienceControl
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationError'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
@@ -1101,7 +1103,7 @@ router.post('/learning-experiences', authenticateToken, validateRequest(learning
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationError'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
@@ -1355,7 +1357,7 @@ router.delete('/learning-experiences/:id', authenticateToken, learningExperience
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationError'
+ *               $ref: '#/components/schemas/SchemasError'
  *             examples:
  *               missingFields:
  *                 summary: 缺少必填欄位
@@ -1501,7 +1503,7 @@ router.post('/certificates', authenticateToken, validateRequest(certificateCreat
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationError'
+ *               $ref: '#/components/schemas/SchemasError'
  *             examples:
  *               invalidFields:
  *                 summary: 欄位驗證失敗
@@ -1749,7 +1751,7 @@ router.get('/schedule', authenticateToken, scheduleController.getSchedule)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationError'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
@@ -1831,7 +1833,7 @@ router.put('/schedule', authenticateToken, validateRequest(scheduleUpdateSchema)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationError'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:

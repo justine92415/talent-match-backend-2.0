@@ -13,11 +13,11 @@
 import { Router } from 'express'
 import { authenticateToken } from '@middleware/auth'
 import { priceOptionController } from '@controllers/PriceOptionController'
-import { validateRequest } from '@middleware/validation/common'
+import { validateRequest } from '@middleware/schemas/core'
 import {
   priceOptionCreateSchema,
   priceOptionUpdateSchema
-} from '@middleware/validation/index'
+} from '@middleware/schemas/index'
 
 const router = Router()
 

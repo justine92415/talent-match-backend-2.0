@@ -1,15 +1,15 @@
 import { Router } from 'express'
 import { authController } from '@controllers/AuthController'
 import { authenticateToken } from '@middleware/auth'
+import { validateRequest } from '@middleware/schemas/core'
 import { 
-  validateRequest,
   registerSchema,
   loginSchema,
   refreshTokenSchema,
   forgotPasswordSchema,
-  resetPasswordSchema,
-  updateProfileSchema
-} from '@middleware/validation'
+  resetPasswordSchema
+} from '@middleware/schemas/auth/loginSchemas'
+import { updateProfileSchema } from '@middleware/schemas/user/profileSchemas'
 import { ERROR_MESSAGES } from '@constants/Message'
 
 const router = Router()
@@ -120,7 +120,7 @@ const router = Router()
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *             examples:
  *               validation_error:
  *                 summary: 參數驗證錯誤
@@ -364,7 +364,7 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *             examples:
  *               missing_token:
  *                 summary: 缺少 refresh token
@@ -469,7 +469,7 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *             examples:
  *               validation_error:
  *                 summary: 參數驗證錯誤
@@ -551,7 +551,7 @@ router.post(
  *           application/json:
  *             schema:
  *               oneOf:
- *                 - $ref: '#/components/schemas/ValidationErrorResponse'
+ *                 - $ref: '#/components/schemas/SchemasErrorResponse'
  *                 - $ref: '#/components/schemas/BusinessErrorResponse'
  *             examples:
  *               validationError:
