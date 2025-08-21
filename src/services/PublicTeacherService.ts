@@ -166,3 +166,6 @@ export class PublicTeacherService {
     }
   }
 }
+
+// 匯出服務實例
+export const publicTeacherService = new PublicTeacherService()

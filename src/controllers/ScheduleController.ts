@@ -1,5 +1,5 @@
-import type { Request, Response, NextFunction } from 'express'
-import { scheduleService } from '@services/scheduleService'
+import { Request, Response, NextFunction } from 'express'
+import { scheduleService } from '@services/ScheduleService'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 import { SUCCESS, MESSAGES } from '@constants/Message'
 import { ValidationError } from '@utils/errors'

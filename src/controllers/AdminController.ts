@@ -15,7 +15,7 @@
  */
 
 import { Request, Response } from 'express'
-import { AdminService } from '@services/AdminService'
+import { adminService } from '@services/index'
 import { handleErrorAsync, handleSuccess } from '@utils/index'
 import { MESSAGES } from '@constants/Message'
 import { BusinessError } from '@utils/errors'
@@ -32,7 +32,7 @@ interface AuthenticatedRequest extends Request {
 }
 
 export class AdminController {
-  private adminService = new AdminService()
+  private adminService = adminService
 
   /**
    * 從認證的請求中獲取管理員 ID

@@ -407,3 +407,6 @@ export class AdminService {
     }
   }
 }
+
+// 匯出服務實例
+export const adminService = new AdminService()
