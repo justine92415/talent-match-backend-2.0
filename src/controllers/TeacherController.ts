@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { TeacherService } from '@services/teacherService'
+import { teacherService } from '@services/index'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 import { SUCCESS, MESSAGES } from '@constants/Message'
 import { Teacher } from '@entities/Teacher'
@@ -9,11 +9,7 @@ import { Teacher } from '@entities/Teacher'
  * 負責處理教師申請相關的 HTTP 請求和回應
  */
 export class TeacherController {
-  private readonly teacherService: TeacherService
-
-  constructor() {
-    this.teacherService = new TeacherService()
-  }
+  private readonly teacherService = teacherService
 
   /**
    * 申請成為教師

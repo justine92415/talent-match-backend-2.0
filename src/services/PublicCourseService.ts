@@ -570,3 +570,6 @@ export class PublicCourseService {
     })
   }
 }
+
+// 匯出服務實例
+export const publicCourseService = new PublicCourseService()

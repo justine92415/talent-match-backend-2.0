@@ -297,3 +297,6 @@ export class PriceOptionService {
     }
   }
 }
+
+// 匯出服務實例
+export const priceOptionService = new PriceOptionService()

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { TeacherDashboardService } from '@services/TeacherDashboardService'
+import { teacherDashboardService } from '@services/index'
 import { TeacherDashboardMessages } from '@constants/Message'
 import { handleErrorAsync, handleSuccess } from '@utils/index'
 
@@ -14,11 +14,7 @@ import { handleErrorAsync, handleSuccess } from '@utils/index'
  * 5. 抽取重複的參數轉換邏輯，提升程式碼品質
  */
 export class TeacherDashboardController {
-  private teacherDashboardService: TeacherDashboardService
-
-  constructor() {
-    this.teacherDashboardService = new TeacherDashboardService()
-  }
+  private teacherDashboardService = teacherDashboardService
 
   /**
    * 抽取通用的參數轉換邏輯

@@ -4,7 +4,7 @@
  */
 
 import { Request, Response } from 'express'
-import { purchaseService } from '@/services/purchaseService'
+import { purchaseService } from '@services/PurchaseService'
 import handleErrorAsync from '@/utils/handleErrorAsync'
 import { SUCCESS } from '@/constants/Message'
 import { handleSuccess, handleCreated } from '@/utils/handleSuccess'

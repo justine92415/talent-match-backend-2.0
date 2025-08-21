@@ -452,6 +452,5 @@ export class CourseVideoService {
   }
 }
 
-// 建立服務實例
-const courseVideoService = new CourseVideoService()
-export { courseVideoService }
+// 匯出服務實例
+export const courseVideoService = new CourseVideoService()

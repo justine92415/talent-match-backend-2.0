@@ -16,7 +16,7 @@
 
 import { Request, Response } from 'express'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
-import { courseFileService } from '@services/courseFileService'
+import { courseFileService } from '@services/CourseFileService'
 import { SUCCESS } from '@constants/Message'
 import type {
   CourseFileQueryParams,
