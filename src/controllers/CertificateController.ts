@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { CertificateService } from '@services/certificateService'
+import { CertificateService } from '@services/CertificateService'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 import { SUCCESS } from '@constants/Message'
 

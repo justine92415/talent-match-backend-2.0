@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { TeacherService } from '@services/teacherService'
+import { TeacherService } from '@services/TeacherService'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 import { SUCCESS, MESSAGES } from '@constants/Message'
 import { Teacher } from '@entities/Teacher'

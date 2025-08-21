@@ -8,7 +8,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express'
-import { PublicCourseService } from '@services/publicCourseService'
+import { PublicCourseService } from '@services/PublicCourseService'
 import { handleErrorAsync, handleSuccess } from '@utils/index'
 import { SUCCESS } from '@constants/Message'
 

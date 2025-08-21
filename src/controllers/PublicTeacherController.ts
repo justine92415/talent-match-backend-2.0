@@ -9,7 +9,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { handleErrorAsync, handleSuccess } from '@utils/index'
 import { SUCCESS } from '@constants/Message'
-import { PublicTeacherService } from '@services/publicTeacherService'
+import { PublicTeacherService } from '@services/PublicTeacherService'
 
 const publicTeacherService = new PublicTeacherService()
 

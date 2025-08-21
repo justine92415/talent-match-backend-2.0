@@ -8,7 +8,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express'
-import { FavoriteService } from '@services/favoriteService'
+import { FavoriteService } from '@services/FavoriteService'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 import { SUCCESS } from '@constants/Message'
 

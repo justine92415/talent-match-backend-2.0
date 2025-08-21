@@ -9,7 +9,7 @@
  */
 
 import { Request, Response } from 'express'
-import { ReviewService } from '@services/reviewService'
+import { ReviewService } from '@services/ReviewService'
 import { MESSAGES } from '@constants/Message'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 

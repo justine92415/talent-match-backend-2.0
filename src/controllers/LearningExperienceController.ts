@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { learningExperienceService } from '@services/learningExperienceService'
+import { learningExperienceService } from '@services/LearningExperienceService'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 import { SuccessMessages } from '@constants/Message'
 import type { CreateLearningExperienceRequest, UpdateLearningExperienceRequest } from '@models/teacher.interface';

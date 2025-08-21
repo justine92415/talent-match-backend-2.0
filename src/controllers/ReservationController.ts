@@ -11,7 +11,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express'
-import { ReservationService } from '@services/reservationService'
+import { ReservationService } from '@services/ReservationService'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 import { BusinessError } from '@utils/errors'
 import { ERROR_CODES } from '@constants/ErrorCode'
