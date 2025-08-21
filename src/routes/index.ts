@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import authRoutes from '@routes/authRoutes'
+import adminRoutes from '@routes/adminRoutes'
 import teacherRoutes from '@routes/teacherRoutes'
 import teacherDashboardRoutes from '@routes/teacherDashboardRoutes'
 import courseRoutes from '@routes/courseRoutes'
@@ -18,6 +19,9 @@ const router = Router()
 
 // 掛載認證相關路由
 router.use('/auth', authRoutes)
+
+// 掛載管理員相關路由
+router.use('/admin', adminRoutes)
 
 // 掛載教師相關路由
 router.use('/teachers', teacherRoutes)
