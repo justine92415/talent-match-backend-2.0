@@ -21,3 +21,6 @@ export { VideoController } from './VideoController'
 export { CartController } from './CartController'
 export { OrderController } from './OrderController'
 export { PurchaseController } from './PurchaseController'
+
+// 教師後台管理控制器
+export { TeacherDashboardController } from './TeacherDashboardController'

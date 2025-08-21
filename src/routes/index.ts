@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import authRoutes from '@routes/authRoutes'
 import teacherRoutes from '@routes/teacherRoutes'
+import teacherDashboardRoutes from '@routes/teacherDashboardRoutes'
 import courseRoutes from '@routes/courseRoutes'
 import publicCourseRoutes from '@routes/publicCourseRoutes'
 import publicTeacherRoutes from '@routes/publicTeacherRoutes'
@@ -20,6 +21,9 @@ router.use('/auth', authRoutes)
 
 // 掛載教師相關路由
 router.use('/teachers', teacherRoutes)
+
+// 掛載教師後台管理路由
+router.use('/teacher-dashboard', teacherDashboardRoutes)
 
 // 掛載公開教師路由（必須在 teacherRoutes 之前避免衝突）
 router.use('/teachers', publicTeacherRoutes)
