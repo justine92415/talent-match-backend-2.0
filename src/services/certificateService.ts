@@ -155,3 +155,6 @@ export class CertificateService {
     await this.certificateRepository.remove(certificate)
   }
 }
+
+// 匯出服務實例
+export const certificateService = new CertificateService()

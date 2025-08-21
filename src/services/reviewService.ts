@@ -506,3 +506,6 @@ export class ReviewService {
     })
   }
 }
+
+// 匯出服務實例
+export const reviewService = new ReviewService()

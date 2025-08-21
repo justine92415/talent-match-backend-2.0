@@ -9,16 +9,12 @@
  */
 
 import { Request, Response } from 'express'
-import { ReviewService } from '@services/ReviewService'
+import { reviewService } from '@services/index'
 import { MESSAGES } from '@constants/Message'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 
 export class ReviewController {
-  private reviewService: ReviewService
-
-  constructor() {
-    this.reviewService = new ReviewService()
-  }
+  private reviewService = reviewService
 
   /**
    * POST /reviews - 提交評價

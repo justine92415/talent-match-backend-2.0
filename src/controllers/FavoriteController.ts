@@ -8,11 +8,9 @@
  */
 
 import { Request, Response, NextFunction } from 'express'
-import { FavoriteService } from '@services/FavoriteService'
+import { favoriteService } from '@services/index'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 import { SUCCESS } from '@constants/Message'
-
-const favoriteService = new FavoriteService()
 
 export class FavoriteController {
   /**

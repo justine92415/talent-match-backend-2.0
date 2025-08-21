@@ -440,4 +440,7 @@ export class TeacherDashboardService {
   }
 }
 
+// 匯出服務實例
+export const teacherDashboardService = new TeacherDashboardService()
+
 export default TeacherDashboardService

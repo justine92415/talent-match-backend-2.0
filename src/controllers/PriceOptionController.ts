@@ -9,17 +9,13 @@
  */
 
 import { Request, Response, NextFunction } from 'express'
-import { PriceOptionService } from '@services/PriceOptionService'
+import { priceOptionService } from '@services/index'
 import { handleErrorAsync, handleSuccess, handleCreated, handleMessageOnly } from '@utils/index'
 import { SUCCESS } from '@constants/Message'
 import { ERROR_CODES } from '@constants/ErrorCode'
 
 export class PriceOptionController {
-  private priceOptionService: PriceOptionService
-
-  constructor() {
-    this.priceOptionService = new PriceOptionService()
-  }
+  private priceOptionService = priceOptionService
 
   /**
    * 查詢課程價格方案列表

@@ -535,3 +535,6 @@ export class TeacherService {
     }
   }
 }
+
+// 匯出服務實例
+export const teacherService = new TeacherService()

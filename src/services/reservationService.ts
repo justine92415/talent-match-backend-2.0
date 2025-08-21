@@ -17,7 +17,7 @@ import { Reservation } from '@entities/Reservation'
 import { UserCoursePurchase } from '@entities/UserCoursePurchase'
 import { TeacherAvailableSlot } from '@entities/TeacherAvailableSlot'
 import { ReservationStatus } from '@entities/enums'
-import { ScheduleService } from '@services/ScheduleService'
+import { ScheduleService } from './ScheduleService'
 import { BusinessError, ValidationError } from '@utils/errors'
 import { ERROR_CODES } from '@constants/ErrorCode'
 import { MESSAGES } from '@constants/Message'
@@ -708,3 +708,6 @@ export class ReservationService {
     return weekdays[weekday]
   }
 }
+
+// 匯出服務實例
+export const reservationService = new ReservationService()

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { CertificateService } from '@services/CertificateService'
+import { certificateService } from '@services/index'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 import { SUCCESS } from '@constants/Message'
 
@@ -10,7 +10,7 @@ import { SUCCESS } from '@constants/Message'
  * 注意：驗證邏輯已移至 middleware 層級，使用 Joi Schema 進行統一驗證
  */
 export class CertificateController {
-  private certificateService = new CertificateService()
+  private certificateService = certificateService
 
   /**
    * 取得教師證書列表

@@ -233,3 +233,6 @@ export class FavoriteService {
     return favoriteMap
   }
 }
+
+// 匯出服務實例
+export const favoriteService = new FavoriteService()

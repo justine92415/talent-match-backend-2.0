@@ -11,7 +11,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express'
-import { ReservationService } from '@services/ReservationService'
+import { reservationService } from '@services/index'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 import { BusinessError } from '@utils/errors'
 import { ERROR_CODES } from '@constants/ErrorCode'
@@ -24,11 +24,7 @@ import type {
 } from '@models/reservation.interface'
 
 export class ReservationController {
-  private reservationService: ReservationService
-
-  constructor() {
-    this.reservationService = new ReservationService()
-  }
+  private reservationService = reservationService
 
   /**
    * 建立預約
