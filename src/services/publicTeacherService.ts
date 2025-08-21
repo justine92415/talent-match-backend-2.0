@@ -16,6 +16,17 @@ import { BusinessError } from '@utils/errors'
 import { ERROR_CODES } from '@constants/ErrorCode'
 import { MESSAGES } from '@constants/Message'
 
+/**
+ * 教師課程查詢參數介面
+ */
+interface TeacherCoursesQuery {
+  page?: number
+  per_page?: number
+  limit?: number  // 向後相容
+  status?: string
+  keyword?: string
+}
+
 export class PublicTeacherService {
   private teacherRepository: Repository<Teacher>
   private courseRepository: Repository<Course>
@@ -65,7 +76,7 @@ export class PublicTeacherService {
   /**
    * 取得教師課程列表
    */
-  async getTeacherCourses(teacherId: number, query: any) {
+  async getTeacherCourses(teacherId: number, query: TeacherCoursesQuery) {
     // 驗證教師是否存在
     const teacher = await this.teacherRepository.findOne({
       where: { id: teacherId }
@@ -83,7 +94,7 @@ export class PublicTeacherService {
     // 建立查詢條件
     const whereCondition = {
       teacher_id: teacherId,
-      status
+      status: status as any  // 暫時使用 any 直到導入正確的 CourseStatus 枚舉
     }
 
     const [courses, total] = await this.courseRepository.findAndCount({
