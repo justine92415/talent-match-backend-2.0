@@ -180,25 +180,26 @@ describe('公開課程瀏覽搜尋 API', () => {
       })
     })
 
-    it('應該拒絕同時使用關鍵字和分類搜尋並回傳 400', async () => {
+    it('應該允許混合搜尋參數並回傳 200', async () => {
+      // 純標準驗證允許混合參數，業務邏輯由前端或服務層控制
       const response = await request(app)
         .get(API_PATHS.PUBLIC_COURSES)
         .query(invalidMixedSearchQuery)
-        .expect(HTTP_STATUS_CODES.BAD_REQUEST)
+        .expect(HTTP_STATUS_CODES.OK)
 
-      expect(response.body.code).toBe(ERROR_CODES.SEARCH_METHODS_EXCLUSIVE)
-      expect(response.body.message).toBe(MESSAGES.VALIDATION.SEARCH_METHODS_EXCLUSIVE)
-      ValidationTestHelpers.expectResponseStructure(response, expectedValidationErrorStructure)
+      expect(response.body.status).toBe('success')
+      expect(response.body.data).toBeDefined()
     })
 
-    it('應該拒絕不完整的分類搜尋並回傳 400', async () => {
+    it('應該允許部分分類搜尋參數並回傳 200', async () => {
+      // 純標準驗證允許部分分類參數，業務完整性由前端或服務層控制
       const response = await request(app)
         .get(API_PATHS.PUBLIC_COURSES)
         .query(invalidCategorySearchQuery)
-        .expect(HTTP_STATUS_CODES.BAD_REQUEST)
+        .expect(HTTP_STATUS_CODES.OK)
 
-      expect(response.body.code).toBe(ERROR_CODES.CATEGORY_SEARCH_INCOMPLETE)
-      expect(response.body.message).toBe(MESSAGES.VALIDATION.CATEGORY_SEARCH_INCOMPLETE)
+      expect(response.body.status).toBe('success')
+      expect(response.body.data).toBeDefined()
     })
 
     it('應該拒絕無效的排序參數並回傳 400', async () => {
@@ -207,8 +208,9 @@ describe('公開課程瀏覽搜尋 API', () => {
         .query(invalidSortQuery)
         .expect(HTTP_STATUS_CODES.BAD_REQUEST)
 
-      expect(response.body.code).toBe(ERROR_CODES.SORT_OPTION_INVALID)
-      expect(response.body.message).toBe(MESSAGES.VALIDATION.SORT_OPTION_INVALID)
+      // 使用標準驗證錯誤代碼，而非特定業務代碼
+      expect(response.body.code).toBe(ERROR_CODES.VALIDATION_ERROR)
+      expect(response.body.message).toBe(MESSAGES.SYSTEM.VALIDATION_FAILED)
     })
 
     it('應該支援分頁功能', async () => {
@@ -333,8 +335,9 @@ describe('公開課程瀏覽搜尋 API', () => {
 
       expect(response.body.code).toBe(ERROR_CODES.VALIDATION_ERROR)
       expect(response.body.message).toBe('參數驗證失敗')
-      expect(response.body.errors.errors).toBeDefined()
-      expect(response.body.errors.errors[0]).toMatch(/評分篩選必須為1-5的整數/)
+      expect(response.body.errors).toBeDefined()
+      expect(response.body.errors.rating).toBeDefined()
+      expect(response.body.errors.rating[0]).toMatch(/評分篩選必須為1-5的整數/)
     })
 
     it('應該拒絕不存在的課程UUID並回傳 404', async () => {

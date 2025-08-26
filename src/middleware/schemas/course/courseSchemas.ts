@@ -1,12 +1,11 @@
 /**
- * 課程資料驗證中間件
+ * 課程資料驗證 Schemas
  * 
  * 使用 Joi 驗證庫進行課程建立和更新的資料驗證
  * 遵循專案統一錯誤回應格式
  */
 
 import Joi from 'joi'
-import { Request, Response, NextFunction } from 'express'
 import { ValidationMessages } from '@constants/Message'
 
 // 課程建立驗證 Schema
@@ -192,97 +191,3 @@ export const courseListQuerySchema = Joi.object({
       'number.max': '每頁數量不能超過 100'
     })
 })
-
-/**
- * 建立課程驗證中間件
- */
-export const validateCreateCourse = (req: Request, res: Response, next: NextFunction) => {
-  const { error, value } = createCourseSchema.validate(req.body, { abortEarly: false })
-  
-  if (error) {
-    const errors: Record<string, string[]> = {}
-    
-    error.details.forEach(detail => {
-      const field = detail.path.join('.')
-      if (!errors[field]) {
-        errors[field] = []
-      }
-      errors[field].push(detail.message)
-    })
-    
-    return res.status(400).json({
-      status: 'error',
-      code: 'VALIDATION_ERROR',
-      message: '資料驗證失敗',
-      errors
-    })
-  }
-  
-  req.body = value
-  next()
-}
-
-/**
- * 更新課程驗證中間件
- */
-export const validateUpdateCourse = (req: Request, res: Response, next: NextFunction) => {
-  const { error, value } = updateCourseSchema.validate(req.body, { abortEarly: false })
-  
-  if (error) {
-    const errors: Record<string, string[]> = {}
-    
-    error.details.forEach(detail => {
-      const field = detail.path.join('.')
-      if (!errors[field]) {
-        errors[field] = []
-      }
-      errors[field].push(detail.message)
-    })
-    
-    return res.status(400).json({
-      status: 'error',
-      code: 'VALIDATION_ERROR',
-      message: '資料驗證失敗',
-      errors
-    })
-  }
-  
-  req.body = value
-  next()
-}
-
-/**
- * 課程 ID 驗證中間件
- */
-export const validateCourseId = (req: Request, res: Response, next: NextFunction) => {
-  const { error, value } = courseIdSchema.validate({ id: parseInt(req.params.id) })
-  
-  if (error) {
-    return res.status(400).json({
-      status: 'error',
-      code: 'VALIDATION_ERROR',
-      message: error.details[0].message
-    })
-  }
-  
-  req.params.id = value.id.toString()
-  next()
-}
-
-/**
- * 課程列表查詢驗證中間件
- */
-export const validateCourseListQuery = (req: Request, res: Response, next: NextFunction) => {
-  const { error, value } = courseListQuerySchema.validate(req.query)
-  
-  if (error) {
-    return res.status(400).json({
-      status: 'error',
-      code: 'VALIDATION_ERROR',
-      message: error.details[0].message
-    })
-  }
-  
-  req.query = value
-  next()
-}
