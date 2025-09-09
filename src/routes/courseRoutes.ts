@@ -278,7 +278,7 @@ const courseController = new CourseController()
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         description: 未認證或認證失敗
  *         content:
@@ -340,7 +340,7 @@ router.post('/', authenticateToken, createSchemasMiddleware({ body: createCourse
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         description: 未認證或認證失敗
  *         content:
@@ -495,7 +495,7 @@ router.get('/:id', authenticateToken, createSchemasMiddleware({ params: courseId
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         description: 未認證或認證失敗
  *         content:
@@ -966,7 +966,7 @@ router.post('/:id/archive', authenticateToken, createSchemasMiddleware({ params:
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         description: 未認證或認證失敗
  *       403:

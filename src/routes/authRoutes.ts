@@ -120,7 +120,7 @@ const router = Router()
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *             examples:
  *               validation_error:
  *                 summary: 參數驗證錯誤
@@ -196,7 +196,7 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *             examples:
  *               validation_error:
  *                 summary: 參數驗證錯誤
@@ -210,7 +210,7 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *             examples:
  *               invalid_credentials:
  *                 summary: 電子郵件或密碼錯誤
@@ -224,7 +224,7 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *             examples:
  *               account_suspended:
  *                 summary: 帳號已停用
@@ -279,7 +279,7 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *             examples:
  *               missing_token:
  *                 summary: 缺少 refresh token
@@ -377,7 +377,7 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *             examples:
  *               validation_error:
  *                 summary: 參數驗證錯誤
@@ -459,7 +459,7 @@ router.post(
  *           application/json:
  *             schema:
  *               oneOf:
- *                 - $ref: '#/components/schemas/SchemasErrorResponse'
+ *                 - $ref: '#/components/schemas/SchemasError'
  *                 - $ref: '#/components/schemas/BusinessErrorResponse'
  *             examples:
  *               validationError:
@@ -571,7 +571,7 @@ router.get('/profile', authenticateToken, authController.getProfile)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *             examples:
  *               nickname_exists:
  *                 summary: 暱稱已被使用

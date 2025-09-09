@@ -1313,7 +1313,8 @@ const swaggerDefinition = {
             example: '重設密碼郵件已發送，請檢查您的信箱'
           },
           data: {
-            type: 'null',
+            type: 'object',
+            nullable: true,
             example: null
           }
         }
@@ -1333,7 +1334,8 @@ const swaggerDefinition = {
             example: '帳號已成功刪除'
           },
           data: {
-            type: 'null',
+            type: 'object',
+            nullable: true,
             example: null
           }
         }
@@ -1390,8 +1392,8 @@ const swaggerDefinition = {
         ]
       },
 
-      // 通用錯誤回應 Schema (用於取代 SchemasErrorResponse)
-      SchemasErrorResponse: {
+      // Schema錯誤 Schema (統一的參數驗證錯誤 schema)
+      SchemasError: {
         allOf: [
           { $ref: '#/components/schemas/ErrorResponse' },
           {
@@ -1414,37 +1416,6 @@ const swaggerDefinition = {
                 example: {
                   email: ['請輸入有效的電子郵件格式'],
                   password: ['密碼必須至少8字元']
-                }
-              }
-            }
-          }
-        ]
-      },
-
-      // Schema錯誤 Schema (用於路由中引用的 schemas/SchemasError)
-      SchemasError: {
-        allOf: [
-          { $ref: '#/components/schemas/ErrorResponse' },
-          {
-            type: 'object',
-            properties: {
-              message: {
-                type: 'string',
-                description: '錯誤訊息',
-                example: '參數驗證失敗'
-              },
-              errors: {
-                type: 'object',
-                additionalProperties: {
-                  type: 'array',
-                  items: {
-                    type: 'string'
-                  }
-                },
-                description: '詳細錯誤資訊',
-                example: {
-                  nationality: ['國籍為必填欄位'],
-                  introduction: ['自我介紹必須至少100字元']
                 }
               }
             }
@@ -2633,8 +2604,10 @@ const swaggerDefinition = {
             type: 'object',
             properties: {
               data: {
-                type: 'null',
-                description: '刪除成功時無回傳資料'
+                type: 'object',
+                nullable: true,
+                description: '刪除成功時無回傳資料',
+                example: null
               }
             }
           }
@@ -3174,16 +3147,6 @@ const swaggerDefinition = {
           'application/json': {
             schema: {
               $ref: '#/components/schemas/ValidationErrorResponse'
-            }
-          }
-        }
-      },
-      SchemasError: {
-        description: '參數驗證錯誤',
-        content: {
-          'application/json': {
-            schema: {
-              $ref: '#/components/schemas/SchemasError'
             }
           }
         }

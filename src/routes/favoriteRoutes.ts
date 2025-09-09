@@ -163,7 +163,7 @@ router.use(authenticateToken)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *       409:
  *         description: 課程已在收藏清單中
  *         content:
@@ -218,7 +218,9 @@ router.post('/', createSchemasMiddleware({ body: addFavoriteSchema }), favoriteC
  *                   type: string
  *                   example: "已移除課程收藏"
  *                 data:
- *                   type: "null"
+ *                   type: object
+ *                   nullable: true
+ *                   example: null
  *       404:
  *         description: 收藏記錄不存在
  *         content:
@@ -230,7 +232,7 @@ router.post('/', createSchemasMiddleware({ body: addFavoriteSchema }), favoriteC
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         description: 未認證
  *         content:
@@ -288,7 +290,7 @@ router.delete('/:course_id', validateParams(favoriteCourseIdParamSchema), favori
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         description: 未認證
  *         content:
@@ -342,7 +344,7 @@ router.get('/', validateQuery(favoriteListQuerySchema), favoriteController.getUs
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         description: 未認證
  *         content:
