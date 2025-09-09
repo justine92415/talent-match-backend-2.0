@@ -945,6 +945,21 @@ router.post('/:id/archive', authenticateToken, createSchemasMiddleware({ params:
  *                       description: 成功連結的影片數量
  *                     course_videos:
  *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             description: 課程影片關聯ID
+ *                           video_id:
+ *                             type: integer
+ *                             description: 影片ID
+ *                           display_order:
+ *                             type: integer
+ *                             description: 顯示順序
+ *                           is_preview:
+ *                             type: boolean
+ *                             description: 是否為預覽影片
  *                       description: 連結的課程影片列表
  *       400:
  *         description: 請求參數驗證失敗

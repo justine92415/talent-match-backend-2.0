@@ -142,21 +142,29 @@ const swaggerDefinition = {
       properties: {
         current_page: {
           type: 'integer',
+          minimum: 1,
+          maximum: 999999,
           description: '目前頁碼',
           example: 1
         },
         per_page: {
           type: 'integer',
+          minimum: 1,
+          maximum: 100,
           description: '每頁筆數',
           example: 12
         },
         total: {
           type: 'integer',
+          minimum: 0,
+          maximum: 999999999,
           description: '總筆數',
           example: 25
         },
         total_pages: {
           type: 'integer',
+          minimum: 0,
+          maximum: 999999,
           description: '總頁數',
           example: 3
         }
@@ -911,6 +919,23 @@ const swaggerDefinition = {
           }
         }
       },
+
+      // 認證錯誤回應 Schema (補充缺少的 AuthErrorResponse)
+      AuthErrorResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/ErrorResponse' },
+          {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                description: '認證錯誤訊息',
+                example: '請先登入'
+              }
+            }
+          }
+        ]
+      },
       ResetPasswordRequest: {
         type: 'object',
         required: ['token', 'new_password'],
@@ -1007,44 +1032,13 @@ const swaggerDefinition = {
             description: '詳細錯誤資訊',
             nullable: true
           },
-          pagination: {
-            $ref: '#/components/schemas/Pagination'
-          },
           meta: {
             type: 'object',
             description: '額外 metadata',
             nullable: true
           }
         }
-      },      // 分頁資訊
-      Pagination: {
-        type: 'object',
-        properties: {
-          page: {
-            type: 'integer',
-            minimum: 1,
-            description: '當前頁碼'
-          },
-          limit: {
-            type: 'integer',
-            minimum: 1,
-            maximum: 100,
-            description: '每頁資料筆數'
-          },
-          total: {
-            type: 'integer',
-            minimum: 0,
-            description: '總資料筆數'
-          },
-          totalPages: {
-            type: 'integer',
-            minimum: 0,
-            description: '總頁數'
-          }
-        }
-      },
-
-      // 成功回應
+      },      // 成功回應
       SuccessResponse: {
         allOf: [
           { $ref: '#/components/schemas/ApiResponse' },

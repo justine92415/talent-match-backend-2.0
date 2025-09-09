@@ -84,6 +84,12 @@ app.get('/api/ping', (req: Request, res: Response) => {
   res.status(200).json({ message: 'pong' })
 })
 
+// OpenAPI JSON endpoint for Orval and other tools
+app.get('/api-docs.json', (_req: Request, res: Response) => {
+  res.setHeader('Content-Type', 'application/json')
+  res.send(swaggerSpec)
+})
+
 // Swagger UI 設定
 app.use(
   '/api-docs',

@@ -113,14 +113,8 @@ export interface PurchaseQueryParams {
 }
 
 /**
- * 購買記錄分頁回應型別
+ * 購買記錄回應型別
  */
-export interface PurchasePaginatedResponse {
+export interface PurchaseResponse {
   purchases: PurchaseRecordWithDetails[]
-  pagination: {
-    current_page: number
-    per_page: number
-    total: number
-    total_pages: number
-  }
 }
