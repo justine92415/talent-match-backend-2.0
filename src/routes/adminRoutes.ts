@@ -1,11 +1,13 @@
 import { Router } from 'express'
 import { adminController } from '@controllers/AdminController'
-import { authenticateAdmin, requireAdminPermission } from '@middleware/adminAuth'
+import { authenticateAdmin, requireAdminPermission } from '@middleware/auth'
 import { 
-  validateRequest,
+  validateRequest
+} from '@middleware/schemas'
+import { 
   adminLoginSchema,
   rejectionRequestSchema
-} from '@middleware/validation'
+} from '@middleware/schemas/auth'
 import { MESSAGES } from '@constants/Message'
 
 const router = Router()

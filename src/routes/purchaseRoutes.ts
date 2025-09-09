@@ -14,7 +14,11 @@
 import { Router } from 'express'
 import { authenticateToken } from '@middleware/auth'
 import { PurchaseController } from '@controllers/PurchaseController'
-import { validateUsePurchase } from '@middleware/validation'
+import { createSchemasMiddleware } from '@middleware/schemas/core'
+import { 
+  purchaseIdParamSchema,
+  usePurchaseBodySchema 
+} from '@middleware/schemas/commerce/purchaseSchemas'
 
 const router = Router()
 const purchaseController = new PurchaseController()
@@ -199,7 +203,7 @@ const purchaseController = new PurchaseController()
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *       401:
  *         description: 未認證或認證失敗
  *         content:
@@ -312,7 +316,7 @@ router.post('/from-order', authenticateToken, purchaseController.createPurchaseF
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *       401:
  *         description: 未認證或認證失敗
  *         content:
@@ -569,7 +573,10 @@ router.get('/courses/:courseId/check', authenticateToken, purchaseController.che
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/:id/use', authenticateToken, validateUsePurchase, purchaseController.usePurchase)
+router.post('/:id/use', authenticateToken, createSchemasMiddleware({ 
+  params: purchaseIdParamSchema, 
+  body: usePurchaseBodySchema 
+}), purchaseController.usePurchase)
 
 /**
  * @swagger

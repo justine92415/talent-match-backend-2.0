@@ -1,12 +1,13 @@
 import { Router } from 'express'
 import { authenticateToken } from '@middleware/auth'
+import { createSchemasMiddleware } from '@middleware/schemas/core'
 import { 
-  validateCreateReservation, 
-  validateReservationListQuery, 
-  validateUpdateReservationStatus, 
-  validateReservationIdParam, 
-  validateCalendarViewQuery 
-} from '@middleware/validation/reservationValidation'
+  createReservationSchema, 
+  reservationListQuerySchema, 
+  updateReservationStatusSchema, 
+  reservationIdParamSchema, 
+  calendarViewQuerySchema 
+} from '@middleware/schemas/system/reservationSchemas'
 import { reservationController } from '@controllers/ReservationController'
 
 const router = Router()
@@ -253,7 +254,7 @@ const router = Router()
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *             examples:
  *               missing_fields:
  *                 summary: 缺少必填欄位
@@ -309,7 +310,7 @@ const router = Router()
  */
 router.post('/', 
   authenticateToken,
-  validateCreateReservation,
+  createSchemasMiddleware({ body: createReservationSchema }),
   reservationController.createReservation
 )
 
@@ -386,7 +387,7 @@ router.post('/',
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *       401:
  *         description: 未授權
  *         content:
@@ -396,7 +397,7 @@ router.post('/',
  */
 router.get('/', 
   authenticateToken,
-  validateReservationListQuery,
+  createSchemasMiddleware({ query: reservationListQuerySchema }),
   reservationController.getReservationList
 )
 
@@ -446,7 +447,7 @@ router.get('/',
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *       401:
  *         description: 未授權
  *         content:
@@ -468,8 +469,7 @@ router.get('/',
  */
 router.put('/:id/status', 
   authenticateToken,
-  validateReservationIdParam,
-  validateUpdateReservationStatus,
+  createSchemasMiddleware({ params: reservationIdParamSchema, body: updateReservationStatusSchema }),
   reservationController.updateReservationStatus
 )
 
@@ -548,7 +548,7 @@ router.put('/:id/status',
  */
 router.delete('/:id', 
   authenticateToken,
-  validateReservationIdParam,
+  createSchemasMiddleware({ params: reservationIdParamSchema }),
   reservationController.cancelReservation
 )
 
@@ -599,7 +599,7 @@ router.delete('/:id',
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
  *       401:
  *         description: 未授權
  *         content:
@@ -609,7 +609,7 @@ router.delete('/:id',
  */
 router.get('/calendar', 
   authenticateToken,
-  validateCalendarViewQuery,
+  createSchemasMiddleware({ query: calendarViewQuerySchema }),
   reservationController.getCalendarView
 )
 
