@@ -1,0 +1,61 @@
+{
+  "id": "talent-match-dev-environment",
+  "name": "Talent Match Development",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "api_prefix",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "teacher_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "course_uuid",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "order_uuid",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

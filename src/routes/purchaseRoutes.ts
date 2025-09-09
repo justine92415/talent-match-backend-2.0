@@ -203,7 +203,7 @@ const purchaseController = new PurchaseController()
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         description: 未認證或認證失敗
  *         content:
@@ -316,7 +316,7 @@ router.post('/from-order', authenticateToken, purchaseController.createPurchaseF
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         description: 未認證或認證失敗
  *         content:

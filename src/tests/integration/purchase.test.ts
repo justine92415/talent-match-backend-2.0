@@ -70,19 +70,17 @@ describe('購買記錄 API 整合測試', () => {
       expect(response.body.status).toBe('success')
       expect(response.body.message).toBe(MESSAGES.PURCHASE.LIST_SUCCESS)
       expect(response.body.data.purchases).toHaveLength(3) // 原本1個 + 新增2個
-      expect(response.body.data).toHaveProperty('pagination')
     })
 
-    it('支援分頁參數', async () => {
+    it('即使有分頁參數也會返回所有記錄', async () => {
       const response = await request(app)
         .get('/api/purchases?page=1&limit=2')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200)
 
       expect(response.body.status).toBe('success')
-      expect(response.body.data.purchases.length).toBeLessThanOrEqual(2)
-      expect(response.body.data.pagination.current_page).toBe(1)
-      expect(response.body.data.pagination.per_page).toBe(2)
+      // 由於我們移除了分頁功能，應該返回所有3個記錄，不受limit參數影響
+      expect(response.body.data.purchases.length).toBe(3)
     })
 
     it('支援課程篩選', async () => {
@@ -108,7 +106,6 @@ describe('購買記錄 API 整合測試', () => {
 
       expect(response.body.status).toBe('success')
       expect(response.body.data.purchases).toHaveLength(0)
-      expect(response.body.data.pagination.total).toBe(0)
     })
 
     it('未登入應該返回認證錯誤', async () => {

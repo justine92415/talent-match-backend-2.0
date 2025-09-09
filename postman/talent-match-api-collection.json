@@ -1,0 +1,1734 @@
+{
+  "info": {
+    "name": "Talent Match API 2.0",
+    "description": "Talent Match 後端 API 完整集合 - 包含所有認證、課程、教師、購物車、訂單等功能的 API 端點",
+    "version": "2.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// 設定常用變數",
+          "if (!pm.globals.get('base_url')) {",
+          "  pm.globals.set('base_url', 'http://localhost:8080');",
+          "}",
+          "",
+          "// 不修改 URL，保持原始配置"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// 自動儲存 access_token",
+          "if (pm.response.json() && pm.response.json().data && pm.response.json().data.access_token) {",
+          "  pm.globals.set('access_token', pm.response.json().data.access_token);",
+          "  console.log('已儲存 access_token:', pm.response.json().data.access_token);",
+          "}",
+          "",
+          "// 檢查回應狀態",
+          "pm.test('Status code is successful', function () {",
+          "  pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+          "});",
+          "",
+          "pm.test('Response has correct format', function () {",
+          "  const jsonData = pm.response.json();",
+          "  pm.expect(jsonData).to.have.property('status');",
+          "  pm.expect(jsonData).to.have.property('message');",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "api_prefix",
+      "value": "/api",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "認證管理 (Auth)",
+      "item": [
+        {
+          "name": "使用者註冊",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"nick_name\": \"測試使用者\",\n  \"name\": \"王小明\",\n  \"birthday\": \"1990-01-01\",\n  \"contact_phone\": \"0912345678\",\n  \"role\": \"student\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "auth", "register"]
+            },
+            "description": "使用者註冊 API，支援學生和教師角色註冊"
+          }
+        },
+        {
+          "name": "使用者登入",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/auth/login",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "auth", "login"]
+            },
+            "description": "使用者登入，返回 JWT Token"
+          }
+        },
+        {
+          "name": "刷新 Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "auth", "refresh"]
+            },
+            "description": "使用 Refresh Token 刷新 Access Token"
+          }
+        },
+        {
+          "name": "取得個人資料",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/profile",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "auth", "profile"]
+            },
+            "description": "取得目前登入使用者的個人資料"
+          }
+        },
+        {
+          "name": "更新個人資料",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"王小明\",\n  \"nick_name\": \"小明\",\n  \"birthday\": \"1990-01-01\",\n  \"contact_phone\": \"0912345678\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/profile",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "auth", "profile"]
+            },
+            "description": "更新個人資料"
+          }
+        },
+        {
+          "name": "忘記密碼",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/forgot-password",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "auth", "forgot-password"]
+            },
+            "description": "發送重設密碼郵件"
+          }
+        },
+        {
+          "name": "重設密碼",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"reset_token_here\",\n  \"new_password\": \"newPassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/reset-password",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "auth", "reset-password"]
+            },
+            "description": "使用重設令牌重設密碼"
+          }
+        },
+        {
+          "name": "刪除帳號",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/profile",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "auth", "profile"]
+            },
+            "description": "刪除使用者帳號（軟刪除）"
+          }
+        }
+      ],
+      "description": "使用者認證相關 API，包含註冊、登入、Token 管理等功能"
+    },
+    {
+      "name": "教師管理 (Teachers)",
+      "item": [
+        {
+          "name": "教師申請",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nationality\": \"台灣\",\n  \"introduction\": \"我是一位熱愛教育的專業人士，擁有豐富的教學經驗和深厚的學術背景。我在這個領域已經工作了多年，積累了豐富的實戰經驗。我希望能在這個平台上分享我的知識，幫助更多學生成長和進步，讓他們能夠在學習的道路上走得更遠。\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teachers/application",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "teachers", "application"]
+            },
+            "description": "申請成為教師"
+          }
+        },
+        {
+          "name": "查詢申請狀態",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/application/status",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "teachers", "application", "status"]
+            },
+            "description": "查詢教師申請狀態"
+          }
+        },
+        {
+          "name": "更新申請資料",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nationality\": \"日本\",\n  \"introduction\": \"更新後的申請介紹內容，需要長度超過100字元以符合系統驗證規則。這是教師申請的更新版本，包含了申請人更詳細的教學背景和經驗介紹。\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teachers/application",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "teachers", "application"]
+            },
+            "description": "更新教師申請資料"
+          }
+        },
+        {
+          "name": "學習經歷列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/learning-experiences",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "teachers", "learning-experiences"]
+            },
+            "description": "取得教師學習經歷列表"
+          }
+        },
+        {
+          "name": "新增學習經歷",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_in_school\": false,\n  \"degree\": \"學士\",\n  \"school_name\": \"國立台灣大學\",\n  \"department\": \"資訊工程學系\",\n  \"region\": true,\n  \"start_year\": 2018,\n  \"start_month\": 9,\n  \"end_year\": 2022,\n  \"end_month\": 6\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teachers/learning-experiences",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "teachers", "learning-experiences"]
+            },
+            "description": "新增學習經歷"
+          }
+        },
+        {
+          "name": "更新學習經歷",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_in_school\": true,\n  \"degree\": \"碩士\",\n  \"school_name\": \"國立台灣大學\",\n  \"department\": \"資訊工程學系研究所\",\n  \"region\": true,\n  \"start_year\": 2022,\n  \"start_month\": 9,\n  \"end_year\": null,\n  \"end_month\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teachers/learning-experiences/:id",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "teachers", "learning-experiences", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "更新學習經歷"
+          }
+        },
+        {
+          "name": "刪除學習經歷",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/learning-experiences/:id",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "teachers", "learning-experiences", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "刪除學習經歷"
+          }
+        },
+        {
+          "name": "證書列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/certificates",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "teachers", "certificates"]
+            },
+            "description": "取得教師證書列表"
+          }
+        },
+        {
+          "name": "新增證書",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"verifying_institution\": \"教育部\",\n  \"license_name\": \"中等學校教師證書\",\n  \"holder_name\": \"王小明\",\n  \"license_number\": \"TC2024001234\",\n  \"category_id\": \"teaching_license\",\n  \"subject\": \"數學科教學\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teachers/certificates",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "teachers", "certificates"]
+            },
+            "description": "新增教師證書"
+          }
+        },
+        {
+          "name": "更新證書",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"verifying_institution\": \"教育部\",\n  \"license_name\": \"高等學校教師證書\",\n  \"holder_name\": \"王小明\",\n  \"license_number\": \"TC2024001235\",\n  \"category_id\": \"university_license\",\n  \"subject\": \"高等數學教學\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teachers/certificates/:id",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "teachers", "certificates", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "更新教師證書"
+          }
+        },
+        {
+          "name": "刪除證書",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/certificates/:id",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "teachers", "certificates", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "刪除教師證書"
+          }
+        }
+      ],
+      "description": "教師管理相關 API，包含申請審核、學習經歷、證書管理等功能"
+    },
+    {
+      "name": "課程管理 (Courses)",
+      "item": [
+        {
+          "name": "課程列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/courses",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "courses"]
+            },
+            "description": "取得課程列表"
+          }
+        },
+        {
+          "name": "課程詳情",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/courses/:uuid",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "courses", ":uuid"],
+              "variable": [
+                {
+                  "key": "uuid",
+                  "value": "course-uuid-here"
+                }
+              ]
+            },
+            "description": "取得課程詳細資訊"
+          }
+        },
+        {
+          "name": "課程搜索",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/courses?keyword=Python&main_category_id=1&sub_category_id=2&city_id=1&sort=newest&page=1&limit=12",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "courses"],
+              "query": [
+                {
+                  "key": "keyword",
+                  "value": "Python"
+                },
+                {
+                  "key": "main_category_id",
+                  "value": "1"
+                },
+                {
+                  "key": "sub_category_id",
+                  "value": "2"
+                },
+                {
+                  "key": "city_id",
+                  "value": "1"
+                },
+                {
+                  "key": "sort",
+                  "value": "newest"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "12"
+                }
+              ]
+            },
+            "description": "搜索和篩選課程"
+          }
+        },
+        {
+          "name": "課程評價",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/courses/:uuid/reviews?page=1&limit=10",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "courses", ":uuid", "reviews"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "uuid",
+                  "value": "course-uuid-here"
+                }
+              ]
+            },
+            "description": "取得課程評價列表"
+          }
+        },
+        {
+          "name": "新增課程",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Python 程式設計基礎\",\n  \"content\": \"完整的Python程式設計入門課程，從基礎語法開始教學\",\n  \"main_category_id\": 1,\n  \"sub_category_id\": 2,\n  \"city_id\": 1,\n  \"status\": \"draft\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/courses",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "courses"]
+            },
+            "description": "建立新課程"
+          }
+        },
+        {
+          "name": "更新課程",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Python 程式設計進階\",\n  \"content\": \"進階Python程式設計課程，涵蓋物件導向、資料結構等\",\n  \"main_category_id\": 1,\n  \"sub_category_id\": 2,\n  \"city_id\": 1,\n  \"status\": \"published\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/courses/:uuid",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "courses", ":uuid"],
+              "variable": [
+                {
+                  "key": "uuid",
+                  "value": "course-uuid-here"
+                }
+              ]
+            },
+            "description": "更新課程資訊"
+          }
+        },
+        {
+          "name": "刪除課程",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/courses/:uuid",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "courses", ":uuid"],
+              "variable": [
+                {
+                  "key": "uuid",
+                  "value": "course-uuid-here"
+                }
+              ]
+            },
+            "description": "刪除課程"
+          }
+        },
+        {
+          "name": "課程價格方案",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/courses/:uuid/price-options",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "courses", ":uuid", "price-options"],
+              "variable": [
+                {
+                  "key": "uuid",
+                  "value": "course-uuid-here"
+                }
+              ]
+            },
+            "description": "取得課程價格方案"
+          }
+        },
+        {
+          "name": "新增價格方案",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"單堂課程\",\n  \"price\": 1500,\n  \"duration_minutes\": 60,\n  \"max_students\": 1,\n  \"description\": \"一對一個人指導課程\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/courses/:uuid/price-options",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "courses", ":uuid", "price-options"],
+              "variable": [
+                {
+                  "key": "uuid",
+                  "value": "course-uuid-here"
+                }
+              ]
+            },
+            "description": "新增課程價格方案"
+          }
+        }
+      ],
+      "description": "課程管理相關 API，包含課程 CRUD、搜索、價格方案等功能"
+    },
+    {
+      "name": "公開課程瀏覽 (Public Courses)",
+      "item": [
+        {
+          "name": "公開課程列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/courses?page=1&limit=12",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "courses"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "12"
+                }
+              ]
+            },
+            "description": "瀏覽公開課程列表（無需認證）"
+          }
+        },
+        {
+          "name": "公開課程詳情",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/courses/:uuid/public",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "courses", ":uuid", "public"],
+              "variable": [
+                {
+                  "key": "uuid",
+                  "value": "course-uuid-here"
+                }
+              ]
+            },
+            "description": "瀏覽公開課程詳情（無需認證，會增加瀏覽次數）"
+          }
+        }
+      ],
+      "description": "公開課程瀏覽相關 API，無需認證即可存取"
+    },
+    {
+      "name": "公開教師資料 (Public Teachers)",
+      "item": [
+        {
+          "name": "教師個人檔案",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/:id/profile",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "teachers", ":id", "profile"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "41"
+                }
+              ]
+            },
+            "description": "瀏覽教師公開個人檔案"
+          }
+        },
+        {
+          "name": "教師課程列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/:id/courses?page=1&limit=12",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "teachers", ":id", "courses"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "12"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "41"
+                }
+              ]
+            },
+            "description": "瀏覽特定教師的課程列表"
+          }
+        }
+      ],
+      "description": "公開教師資料相關 API，無需認證即可存取"
+    },
+    {
+      "name": "評價管理 (Reviews)",
+      "item": [
+        {
+          "name": "新增課程評價",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"course_uuid\": \"course-uuid-here\",\n  \"rate\": 5,\n  \"comment\": \"很棒的課程，老師教學認真！\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/reviews",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "reviews"]
+            },
+            "description": "為課程新增評價"
+          }
+        },
+        {
+          "name": "更新評價",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rate\": 4,\n  \"comment\": \"課程內容豐富，但進度稍快\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/reviews/:id",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "reviews", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "更新評價內容"
+          }
+        },
+        {
+          "name": "刪除評價",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reviews/:id",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "reviews", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "刪除評價"
+          }
+        }
+      ],
+      "description": "評價管理相關 API，包含新增、更新、刪除評價等功能"
+    },
+    {
+      "name": "收藏功能 (Favorites)",
+      "item": [
+        {
+          "name": "收藏列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/favorites?page=1&limit=12",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "favorites"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "12"
+                }
+              ]
+            },
+            "description": "取得使用者收藏課程列表"
+          }
+        },
+        {
+          "name": "新增收藏",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"course_uuid\": \"course-uuid-here\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/favorites",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "favorites"]
+            },
+            "description": "收藏課程"
+          }
+        },
+        {
+          "name": "取消收藏",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/favorites/:course_uuid",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "favorites", ":course_uuid"],
+              "variable": [
+                {
+                  "key": "course_uuid",
+                  "value": "course-uuid-here"
+                }
+              ]
+            },
+            "description": "取消收藏課程"
+          }
+        }
+      ],
+      "description": "課程收藏功能相關 API"
+    },
+    {
+      "name": "影片管理 (Videos)",
+      "item": [
+        {
+          "name": "課程影片列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/videos/course/:course_uuid",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "videos", "course", ":course_uuid"],
+              "variable": [
+                {
+                  "key": "course_uuid",
+                  "value": "course-uuid-here"
+                }
+              ]
+            },
+            "description": "取得課程影片列表"
+          }
+        },
+        {
+          "name": "上傳影片",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "video",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "course_uuid",
+                  "value": "course-uuid-here",
+                  "type": "text"
+                },
+                {
+                  "key": "title",
+                  "value": "第一章：Python 簡介",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Python 程式語言的基礎介紹",
+                  "type": "text"
+                },
+                {
+                  "key": "order_index",
+                  "value": "1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/videos",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "videos"]
+            },
+            "description": "上傳課程影片"
+          }
+        },
+        {
+          "name": "更新影片資訊",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"第一章：Python 進階介紹\",\n  \"description\": \"深入介紹 Python 程式語言的特性\",\n  \"order_index\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/videos/:id",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "videos", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "更新影片資訊"
+          }
+        },
+        {
+          "name": "刪除影片",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/videos/:id",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "videos", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "刪除影片"
+          }
+        }
+      ],
+      "description": "課程影片管理相關 API"
+    },
+    {
+      "name": "購物車管理 (Cart)",
+      "item": [
+        {
+          "name": "購物車內容",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/cart",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "cart"]
+            },
+            "description": "取得購物車內容"
+          }
+        },
+        {
+          "name": "加入購物車",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price_option_id\": 1,\n  \"quantity\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/cart/items",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "cart", "items"]
+            },
+            "description": "將課程價格方案加入購物車"
+          }
+        },
+        {
+          "name": "更新購物車項目",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/cart/items/:id",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "cart", "items", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "更新購物車項目數量"
+          }
+        },
+        {
+          "name": "移除購物車項目",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/cart/items/:id",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "cart", "items", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "移除購物車項目"
+          }
+        },
+        {
+          "name": "清空購物車",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/cart",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "cart"]
+            },
+            "description": "清空購物車所有項目"
+          }
+        }
+      ],
+      "description": "購物車管理相關 API"
+    },
+    {
+      "name": "訂單管理 (Orders)",
+      "item": [
+        {
+          "name": "訂單列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/orders?page=1&limit=10&status=pending",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "orders"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "pending"
+                }
+              ]
+            },
+            "description": "取得使用者訂單列表"
+          }
+        },
+        {
+          "name": "建立訂單",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cart_item_ids\": [1, 2, 3],\n  \"payment_method\": \"credit_card\",\n  \"shipping_address\": \"台北市信義區信義路五段7號\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "orders"]
+            },
+            "description": "從購物車建立訂單"
+          }
+        },
+        {
+          "name": "訂單詳情",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/orders/:uuid",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "orders", ":uuid"],
+              "variable": [
+                {
+                  "key": "uuid",
+                  "value": "order-uuid-here"
+                }
+              ]
+            },
+            "description": "取得訂單詳細資訊"
+          }
+        },
+        {
+          "name": "取消訂單",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"cancelled\",\n  \"cancel_reason\": \"課程時間不符合需求\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders/:uuid/cancel",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "orders", ":uuid", "cancel"],
+              "variable": [
+                {
+                  "key": "uuid",
+                  "value": "order-uuid-here"
+                }
+              ]
+            },
+            "description": "取消訂單"
+          }
+        }
+      ],
+      "description": "訂單管理相關 API"
+    },
+    {
+      "name": "購買記錄 (Purchases)",
+      "item": [
+        {
+          "name": "購買記錄列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/purchases?page=1&limit=10",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "purchases"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "取得使用者購買記錄列表"
+          }
+        },
+        {
+          "name": "購買記錄詳情",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/purchases/:id",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "purchases", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "取得購買記錄詳細資訊"
+          }
+        }
+      ],
+      "description": "購買記錄管理相關 API"
+    },
+    {
+      "name": "預約管理 (Reservations)",
+      "item": [
+        {
+          "name": "預約列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reservations?page=1&limit=10&status=pending",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "reservations"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "pending"
+                }
+              ]
+            },
+            "description": "取得使用者預約列表"
+          }
+        },
+        {
+          "name": "建立預約",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"course_uuid\": \"course-uuid-here\",\n  \"price_option_id\": 1,\n  \"scheduled_at\": \"2024-01-20T14:00:00.000Z\",\n  \"notes\": \"希望能加強基礎概念的說明\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/reservations",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "reservations"]
+            },
+            "description": "建立課程預約"
+          }
+        },
+        {
+          "name": "預約詳情",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reservations/:id",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "reservations", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "取得預約詳細資訊"
+          }
+        },
+        {
+          "name": "更新預約",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scheduled_at\": \"2024-01-21T14:00:00.000Z\",\n  \"notes\": \"時間調整為明天同一時間\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/reservations/:id",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "reservations", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "更新預約資訊"
+          }
+        },
+        {
+          "name": "取消預約",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reservations/:id",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "reservations", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "取消預約"
+          }
+        }
+      ],
+      "description": "課程預約管理相關 API"
+    },
+    {
+      "name": "教師後台管理 (Teacher Dashboard)",
+      "item": [
+        {
+          "name": "教師儀表板統計",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teacher-dashboard/stats",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "teacher-dashboard", "stats"]
+            },
+            "description": "取得教師儀表板統計資料"
+          }
+        },
+        {
+          "name": "教師課程管理",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teacher-dashboard/courses?page=1&limit=10",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "teacher-dashboard", "courses"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "取得教師的課程列表"
+          }
+        },
+        {
+          "name": "教師收入統計",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teacher-dashboard/earnings?start_date=2024-01-01&end_date=2024-12-31",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "teacher-dashboard", "earnings"],
+              "query": [
+                {
+                  "key": "start_date",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2024-12-31"
+                }
+              ]
+            },
+            "description": "取得教師收入統計"
+          }
+        },
+        {
+          "name": "學生管理",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teacher-dashboard/students?page=1&limit=10",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "teacher-dashboard", "students"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "取得教師的學生列表"
+          }
+        }
+      ],
+      "description": "教師後台管理相關 API"
+    },
+    {
+      "name": "管理員功能 (Admin)",
+      "item": [
+        {
+          "name": "管理員登入",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/login",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "admin", "login"]
+            },
+            "description": "管理員登入"
+          }
+        },
+        {
+          "name": "使用者管理",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/users?page=1&limit=20&role=all",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "admin", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "role",
+                  "value": "all"
+                }
+              ]
+            },
+            "description": "取得使用者列表"
+          }
+        },
+        {
+          "name": "教師申請審核",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/teacher-applications?status=pending&page=1&limit=20",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "admin", "teacher-applications"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "pending"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "取得待審核的教師申請列表"
+          }
+        },
+        {
+          "name": "核准教師申請",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\",\n  \"review_notes\": \"申請資料完整，核准通過\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/teacher-applications/:id/review",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "admin", "teacher-applications", ":id", "review"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "審核教師申請"
+          }
+        },
+        {
+          "name": "課程管理",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/courses?page=1&limit=20&status=all",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "admin", "courses"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "status",
+                  "value": "all"
+                }
+              ]
+            },
+            "description": "取得所有課程列表"
+          }
+        },
+        {
+          "name": "系統統計",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/stats",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "admin", "stats"]
+            },
+            "description": "取得系統統計資料"
+          }
+        }
+      ],
+      "description": "管理員功能相關 API，需要管理員權限"
+    }
+  ]
+}

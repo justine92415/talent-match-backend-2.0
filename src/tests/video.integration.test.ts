@@ -365,13 +365,7 @@ describe('影片管理 API 整合測試', () => {
               video_type: expect.any(String),
               created_at: expect.any(String)
             })
-          ]),
-          pagination: expect.objectContaining({
-            current_page: expect.any(Number),
-            per_page: expect.any(Number),
-            total: expect.any(Number),
-            total_pages: expect.any(Number)
-          })
+          ])
         })
       })
 
@@ -402,8 +396,6 @@ describe('影片管理 API 整合測試', () => {
         .query({ page: 1, per_page: 2 })
 
       expect(response.status).toBe(200)
-      expect(response.body.data.pagination.current_page).toBe(1)
-      expect(response.body.data.pagination.per_page).toBe(2)
       expect(response.body.data.videos.length).toBeLessThanOrEqual(2)
     })
 

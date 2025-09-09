@@ -31,18 +31,16 @@ export class PurchaseController {
    */
   getUserPurchases = handleErrorAsync(async (req: Request, res: Response) => {
     const userId = req.user!.userId
-    const { page = 1, limit: per_page = 10 } = req.query // 已由中間件驗證
+    const { course_id } = req.query // 只保留課程篩選參數
 
     // 呼叫服務層
-    const purchaseList = await purchaseService.getUserPurchases(
+    const purchases = await purchaseService.getUserPurchases(
       userId, 
-      Number(page), 
-      Number(per_page)
+      course_id ? Number(course_id) : undefined
     )
 
     res.status(200).json(handleSuccess({
-      purchases: purchaseList.purchases,
-      pagination: purchaseList.pagination
+      purchases
     }, SUCCESS.PURCHASE_LIST_SUCCESS))
   })
 

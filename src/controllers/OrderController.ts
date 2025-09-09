@@ -73,8 +73,7 @@ export class OrderController {
     )
 
     res.status(200).json(handleSuccess({
-      orders: orderList.orders,
-      pagination: orderList.pagination
+      orders: orderList.orders
     }, MESSAGES.ORDER.LIST_SUCCESS))
   })
 
