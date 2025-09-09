@@ -195,7 +195,7 @@ const router = Router()
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  */
 router.get('/public/:id', publicTeacherController.getPublicTeacher)
 
@@ -268,7 +268,7 @@ router.get('/public/:id', publicTeacherController.getPublicTeacher)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  */
 router.get('/public/:id/courses', createSchemasMiddleware({ query: teacherCourseQuerySchema }), publicTeacherController.getTeacherCourses)
 

@@ -215,7 +215,7 @@ const orderController = new OrderController()
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         description: 未認證或認證失敗
  *         content:
@@ -367,7 +367,7 @@ router.get('/:orderId', authenticateToken, createSchemasMiddleware({ params: ord
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         description: 未認證或認證失敗
  *         content:

@@ -167,7 +167,6 @@ describe('訂單 API 整合測試', () => {
       expect(response.body.status).toBe('success')
       expect(response.body.message).toBe(MESSAGES.ORDER.LIST_SUCCESS)
       expect(response.body.data.orders).toHaveLength(3)
-      expect(response.body.data).toHaveProperty('pagination')
     })
 
     it('支援分頁參數', async () => {
@@ -178,8 +177,6 @@ describe('訂單 API 整合測試', () => {
 
       expect(response.body.status).toBe('success')
       expect(response.body.data.orders.length).toBeLessThanOrEqual(2)
-      expect(response.body.data.pagination.current_page).toBe(1)
-      expect(response.body.data.pagination.per_page).toBe(2)
     })
 
     it('支援狀態篩選', async () => {

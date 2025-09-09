@@ -19,7 +19,7 @@ import type {
   PurchaseRecord,
   PurchaseRecordWithDetails,
   CoursePurchaseDetail,
-  PurchasePaginatedResponse
+  PurchaseResponse
 } from '../types'
 
 /**
@@ -136,28 +136,22 @@ export class PurchaseService {
    */
   async getUserPurchases(
     userId: number, 
-    page: number = 1, 
-    per_page: number = 10
-  ): Promise<PurchasePaginatedResponse> {
+    courseId?: number
+  ): Promise<PurchaseRecordWithDetails[]> {
     const queryBuilder = this.purchaseRepository
       .createQueryBuilder('purchase')
       .where('purchase.user_id = :userId', { userId })
       .orderBy('purchase.created_at', 'DESC')
-      .skip((page - 1) * per_page)
-      .take(per_page)
 
-    const [purchases, total] = await queryBuilder.getManyAndCount()
+    // 如果指定了課程ID，則增加過濾條件
+    if (courseId) {
+      queryBuilder.andWhere('purchase.course_id = :courseId', { courseId })
+    }
+
+    const purchases = await queryBuilder.getMany()
 
     if (purchases.length === 0) {
-      return {
-        purchases: [],
-        pagination: {
-          current_page: page,
-          per_page,
-          total: 0,
-          total_pages: 0
-        }
-      }
+      return []
     }
 
     // 批次查詢相關數據以避免 N+1 問題
@@ -235,15 +229,7 @@ export class PurchaseService {
       }
     })
 
-    return {
-      purchases: purchasesWithDetails,
-      pagination: {
-        current_page: page,
-        per_page,
-        total,
-        total_pages: Math.ceil(total / per_page)
-      }
-    }
+    return purchasesWithDetails
   }
 
   /**

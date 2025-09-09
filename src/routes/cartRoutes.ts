@@ -180,7 +180,7 @@ const cartController = new CartController()
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         description: 未認證或認證失敗
  *         content:
@@ -285,7 +285,7 @@ router.get('/', authenticateToken, cartController.getCart)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         description: 未認證或認證失敗
  *         content:

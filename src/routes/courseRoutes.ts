@@ -278,7 +278,7 @@ const courseController = new CourseController()
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         description: 未認證或認證失敗
  *         content:
@@ -340,7 +340,7 @@ router.post('/', authenticateToken, createSchemasMiddleware({ body: createCourse
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         description: 未認證或認證失敗
  *         content:
@@ -495,7 +495,7 @@ router.get('/:id', authenticateToken, createSchemasMiddleware({ params: courseId
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         description: 未認證或認證失敗
  *         content:
@@ -945,13 +945,28 @@ router.post('/:id/archive', authenticateToken, createSchemasMiddleware({ params:
  *                       description: 成功連結的影片數量
  *                     course_videos:
  *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             description: 課程影片關聯ID
+ *                           video_id:
+ *                             type: integer
+ *                             description: 影片ID
+ *                           display_order:
+ *                             type: integer
+ *                             description: 顯示順序
+ *                           is_preview:
+ *                             type: boolean
+ *                             description: 是否為預覽影片
  *                       description: 連結的課程影片列表
  *       400:
  *         description: 請求參數驗證失敗
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  *       401:
  *         description: 未認證或認證失敗
  *       403:

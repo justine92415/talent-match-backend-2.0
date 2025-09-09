@@ -384,11 +384,7 @@ router.post('/resubmit', authenticateToken, teacherController.resubmitApplicatio
  *                   example: "error"
  *                 message:
  *                   type: string
- *                   examples:
- *                     incomplete:
- *                       value: "申請資料不完整，至少需要一筆工作經驗"
- *                     alreadySubmitted:
- *                       value: "申請已經提交，無法重複提交"
+ *                   example: "申請資料不完整，至少需要一筆工作經驗"
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       404:
@@ -1170,7 +1166,8 @@ router.put('/learning-experiences/:id', authenticateToken, validateRequest(learn
  *                   type: string
  *                   example: "學習經歷已刪除"
  *                 data:
- *                   type: "null"
+ *                   type: object
+ *                   nullable: true
  *                   example: null
  *       401:
  *         $ref: '#/components/responses/Unauthorized'

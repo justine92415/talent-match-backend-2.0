@@ -79,8 +79,7 @@ export class VideoController {
     const result = await videoService.getVideoList(userId, query)
 
     res.status(200).json(handleSuccess({
-      videos: result.items,
-      pagination: result.pagination
+      videos: result.items
     }, SUCCESS.VIDEO_LIST_SUCCESS))
   })
 

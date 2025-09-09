@@ -142,21 +142,29 @@ const swaggerDefinition = {
       properties: {
         current_page: {
           type: 'integer',
+          minimum: 1,
+          maximum: 999999,
           description: '目前頁碼',
           example: 1
         },
         per_page: {
           type: 'integer',
+          minimum: 1,
+          maximum: 100,
           description: '每頁筆數',
           example: 12
         },
         total: {
           type: 'integer',
+          minimum: 0,
+          maximum: 999999999,
           description: '總筆數',
           example: 25
         },
         total_pages: {
           type: 'integer',
+          minimum: 0,
+          maximum: 999999,
           description: '總頁數',
           example: 3
         }
@@ -565,47 +573,858 @@ const swaggerDefinition = {
       }
     },
 
-    // 教師基本資訊 Schema
-    TeacherBasicInfo: {
-      type: 'object',
-      properties: {
-        id: {
-          type: 'integer',
-          description: '教師ID',
-          example: 45
-        },
-        user: {
-          type: 'object',
-          properties: {
-            name: {
-              type: 'string',
-              description: '教師姓名',
-              example: '李老師'
-            },
-            nick_name: {
-              type: 'string',
-              nullable: true,
-              description: '暱稱',
-              example: 'JS專家'
-            },
-            avatar_image: {
-              type: 'string',
-              nullable: true,
-              description: '頭像',
-              example: '/avatars/teacher_45.jpg'
+      // 教師基本資訊 Schema
+      TeacherBasicInfo: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '教師ID',
+            example: 45
+          },
+          user: {
+            type: 'object',
+            properties: {
+              name: {
+                type: 'string',
+                description: '教師姓名',
+                example: '李老師'
+              },
+              nick_name: {
+                type: 'string',
+                nullable: true,
+                description: '暱稱',
+                example: 'JS專家'
+              },
+              avatar_image: {
+                type: 'string',
+                nullable: true,
+                description: '頭像',
+                example: '/avatars/teacher_45.jpg'
+              }
             }
+          },
+          nationality: {
+            type: 'string',
+            description: '國籍',
+            example: '台灣'
+          }
+        }
+      },
+
+      // 教師個人檔案資料 Schema (已通過審核的教師使用)
+      TeacherProfileData: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '教師ID',
+            example: 1
+          },
+          uuid: {
+            type: 'string',
+            format: 'uuid',
+            description: '教師UUID',
+            example: '550e8400-e29b-41d4-a716-446655440000'
+          },
+          user_id: {
+            type: 'integer',
+            description: '關聯的使用者ID',
+            example: 1
+          },
+          nationality: {
+            type: 'string',
+            maxLength: 50,
+            description: '國籍',
+            example: '台灣'
+          },
+          introduction: {
+            type: 'string',
+            description: '自我介紹',
+            example: '我是一位熱愛教育的專業人士，擁有豐富的教學經驗和深厚的學術背景...'
+          },
+          application_status: {
+            type: 'string',
+            enum: ['PENDING', 'APPROVED', 'REJECTED'],
+            description: '申請狀態',
+            example: 'APPROVED'
+          },
+          application_submitted_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '申請提交時間',
+            nullable: true,
+            example: '2024-01-15T10:30:00.000Z'
+          },
+          application_reviewed_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '申請審核時間',
+            nullable: true,
+            example: '2024-01-16T14:20:00.000Z'
+          },
+          reviewer_id: {
+            type: 'integer',
+            description: '審核者ID',
+            nullable: true,
+            example: 2
+          },
+          review_notes: {
+            type: 'string',
+            description: '審核備註',
+            nullable: true,
+            example: '教學資歷豐富，核准通過'
+          },
+          total_students: {
+            type: 'integer',
+            description: '總學生數',
+            example: 150
+          },
+          total_courses: {
+            type: 'integer',
+            description: '總課程數',
+            example: 8
+          },
+          average_rating: {
+            type: 'number',
+            format: 'float',
+            description: '平均評分',
+            example: 4.5
+          },
+          total_earnings: {
+            type: 'number',
+            format: 'float',
+            description: '總收入',
+            example: 125000.50
+          },
+          created_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '建立時間',
+            example: '2024-01-15T10:30:00.000Z'
+          },
+          updated_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '更新時間',
+            example: '2024-01-15T10:30:00.000Z'
           }
         },
-        nationality: {
-          type: 'string',
-          description: '國籍',
-          example: '台灣'
-        }
-      }
-    },
+        required: [
+          'id',
+          'uuid',
+          'user_id',
+          'nationality',
+          'introduction',
+          'application_status',
+          'total_students',
+          'total_courses',
+          'average_rating',
+          'total_earnings',
+          'created_at',
+          'updated_at'
+        ]
+      },
 
-    // 標準化回應格式
-    ApiResponse: {
+      // 教師基本資料更新請求 Schema
+      TeacherProfileUpdateRequest: {
+        type: 'object',
+        properties: {
+          nationality: {
+            type: 'string',
+            maxLength: 50,
+            minLength: 1,
+            description: '國籍',
+            example: '美國'
+          },
+          introduction: {
+            type: 'string',
+            minLength: 100,
+            maxLength: 1000,
+            description: '自我介紹（至少100字元）',
+            example: '教師資料管理測試專用介紹，這段文字是用於測試教師基本資料更新功能的內容。包含了足夠的長度以通過系統驗證，同時也提供了清楚的識別用途。我是一位專業的教育工作者，致力於提供高品質的教學服務。'
+          }
+        }
+      },
+
+      // 工作經驗資料 Schema
+      WorkExperience: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '工作經驗ID',
+            example: 1
+          },
+          teacher_id: {
+            type: 'integer',
+            description: '教師ID',
+            example: 1
+          },
+          is_working: {
+            type: 'boolean',
+            description: '是否仍在職',
+            example: false
+          },
+          company_name: {
+            type: 'string',
+            maxLength: 100,
+            description: '公司名稱',
+            example: 'ABC科技股份有限公司'
+          },
+          workplace: {
+            type: 'string',
+            maxLength: 100,
+            description: '工作地點',
+            example: '台北市信義區'
+          },
+          job_category: {
+            type: 'string',
+            maxLength: 50,
+            description: '職業類別',
+            example: '軟體開發'
+          },
+          job_title: {
+            type: 'string',
+            maxLength: 100,
+            description: '職位名稱',
+            example: '資深軟體工程師'
+          },
+          start_year: {
+            type: 'integer',
+            minimum: 1900,
+            description: '開始年份',
+            example: 2020
+          },
+          start_month: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 12,
+            description: '開始月份',
+            example: 3
+          },
+          end_year: {
+            type: 'integer',
+            minimum: 1900,
+            nullable: true,
+            description: '結束年份（在職中為null）',
+            example: 2023
+          },
+          end_month: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 12,
+            nullable: true,
+            description: '結束月份（在職中為null）',
+            example: 8
+          },
+          created_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '建立時間',
+            example: '2024-01-15T10:30:00.000Z'
+          },
+          updated_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '更新時間',
+            example: '2024-01-15T10:30:00.000Z'
+          }
+        },
+        required: [
+          'id',
+          'teacher_id',
+          'is_working',
+          'company_name',
+          'workplace',
+          'job_category',
+          'job_title',
+          'start_year',
+          'start_month',
+          'created_at',
+          'updated_at'
+        ]
+      },
+
+      // 工作經驗建立請求 Schema
+      WorkExperienceCreateRequest: {
+        type: 'object',
+        required: ['is_working', 'company_name', 'workplace', 'job_category', 'job_title', 'start_year', 'start_month'],
+        properties: {
+          is_working: {
+            type: 'boolean',
+            description: '是否仍在職（在職中則不需填寫結束日期）',
+            example: false
+          },
+          company_name: {
+            type: 'string',
+            maxLength: 100,
+            minLength: 1,
+            description: '公司名稱',
+            example: 'ABC科技股份有限公司'
+          },
+          workplace: {
+            type: 'string',
+            maxLength: 100,
+            minLength: 1,
+            description: '工作地點',
+            example: '台北市信義區'
+          },
+          job_category: {
+            type: 'string',
+            maxLength: 50,
+            minLength: 1,
+            description: '職業類別',
+            example: '軟體開發'
+          },
+          job_title: {
+            type: 'string',
+            maxLength: 100,
+            minLength: 1,
+            description: '職位名稱',
+            example: '資深軟體工程師'
+          },
+          start_year: {
+            type: 'integer',
+            minimum: 1900,
+            description: '開始年份',
+            example: 2020
+          },
+          start_month: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 12,
+            description: '開始月份',
+            example: 3
+          },
+          end_year: {
+            type: 'integer',
+            minimum: 1900,
+            nullable: true,
+            description: '結束年份（在職中請設為null）',
+            example: 2023
+          },
+          end_month: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 12,
+            nullable: true,
+            description: '結束月份（在職中請設為null）',
+            example: 8
+          }
+        }
+      },
+
+      // 工作經驗更新請求 Schema
+      WorkExperienceUpdateRequest: {
+        type: 'object',
+        properties: {
+          is_working: {
+            type: 'boolean',
+            description: '是否仍在職',
+            example: true
+          },
+          company_name: {
+            type: 'string',
+            maxLength: 100,
+            minLength: 1,
+            description: '公司名稱',
+            example: 'XYZ科技股份有限公司'
+          },
+          workplace: {
+            type: 'string',
+            maxLength: 100,
+            minLength: 1,
+            description: '工作地點',
+            example: '新北市板橋區'
+          },
+          job_category: {
+            type: 'string',
+            maxLength: 50,
+            minLength: 1,
+            description: '職業類別',
+            example: '系統架構'
+          },
+          job_title: {
+            type: 'string',
+            maxLength: 100,
+            minLength: 1,
+            description: '職位名稱',
+            example: '技術主管'
+          },
+          start_year: {
+            type: 'integer',
+            minimum: 1900,
+            description: '開始年份',
+            example: 2023
+          },
+          start_month: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 12,
+            description: '開始月份',
+            example: 9
+          },
+          end_year: {
+            type: 'integer',
+            minimum: 1900,
+            nullable: true,
+            description: '結束年份（在職中請設為null）',
+            example: null
+          },
+          end_month: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 12,
+            nullable: true,
+            description: '結束月份（在職中請設為null）',
+            example: null
+          }
+        }
+      },
+
+      // 工作經驗建立回應 Schema
+      WorkExperienceCreateResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/CreatedResponse' },
+          {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                example: '工作經驗建立成功'
+              },
+              data: {
+                type: 'object',
+                properties: {
+                  work_experience: {
+                    $ref: '#/components/schemas/WorkExperience'
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 工作經驗更新回應 Schema
+      WorkExperienceUpdateResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                example: '工作經驗更新成功'
+              },
+              data: {
+                type: 'object',
+                properties: {
+                  work_experience: {
+                    $ref: '#/components/schemas/WorkExperience'
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // === 認證相關 Schema ===
+
+      // 使用者個人資料 Schema (排除敏感資訊)
+      UserProfile: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '使用者 ID',
+            example: 1
+          },
+          uuid: {
+            type: 'string',
+            format: 'uuid',
+            description: '使用者 UUID',
+            example: '123e4567-e89b-12d3-a456-426614174000'
+          },
+          google_id: {
+            type: 'string',
+            nullable: true,
+            description: 'Google ID (第三方登入)',
+            example: null
+          },
+          name: {
+            type: 'string',
+            nullable: true,
+            description: '真實姓名',
+            example: '王小明'
+          },
+          nick_name: {
+            type: 'string',
+            description: '暱稱',
+            example: '王小明'
+          },
+          email: {
+            type: 'string',
+            format: 'email',
+            description: '電子郵件',
+            example: 'user@example.com'
+          },
+          birthday: {
+            type: 'string',
+            format: 'date',
+            nullable: true,
+            description: '生日',
+            example: '1990-01-01'
+          },
+          contact_phone: {
+            type: 'string',
+            nullable: true,
+            description: '聯絡電話',
+            example: '0912345678'
+          },
+          avatar_image: {
+            type: 'string',
+            nullable: true,
+            description: '頭像圖片 URL',
+            example: 'https://example.com/avatar.jpg'
+          },
+          avatar_google_url: {
+            type: 'string',
+            nullable: true,
+            description: 'Google 頭像 URL',
+            example: null
+          },
+          role: {
+            type: 'string',
+            enum: ['student', 'teacher', 'admin'],
+            description: '使用者角色',
+            example: 'student'
+          },
+          account_status: {
+            type: 'string',
+            enum: ['active', 'suspended', 'pending'],
+            description: '帳號狀態',
+            example: 'active'
+          },
+          last_login_at: {
+            type: 'string',
+            format: 'date-time',
+            nullable: true,
+            description: '最後登入時間',
+            example: '2024-01-15T10:30:00.000Z'
+          },
+          created_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '建立時間',
+            example: '2024-01-15T10:30:00.000Z'
+          },
+          updated_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '更新時間',
+            example: '2024-01-15T10:30:00.000Z'
+          },
+          deleted_at: {
+            type: 'string',
+            format: 'date-time',
+            nullable: true,
+            description: '刪除時間 (軟刪除)',
+            example: null
+          }
+        }
+      },
+
+      // 認證 Token 資料 Schema
+      AuthTokens: {
+        type: 'object',
+        properties: {
+          access_token: {
+            type: 'string',
+            description: 'JWT Access Token',
+            example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+          },
+          refresh_token: {
+            type: 'string',
+            description: 'JWT Refresh Token',
+            example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+          },
+          token_type: {
+            type: 'string',
+            description: 'Token 類型',
+            example: 'Bearer'
+          },
+          expires_in: {
+            type: 'integer',
+            description: 'Access Token 過期時間 (秒)',
+            example: 3600
+          }
+        }
+      },
+
+      // 完整認證回應 Schema
+      AuthResponse: {
+        type: 'object',
+        properties: {
+          user: {
+            $ref: '#/components/schemas/UserProfile'
+          },
+          access_token: {
+            type: 'string',
+            description: 'JWT Access Token',
+            example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+          },
+          refresh_token: {
+            type: 'string',
+            description: 'JWT Refresh Token',
+            example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+          },
+          token_type: {
+            type: 'string',
+            description: 'Token 類型',
+            example: 'Bearer'
+          },
+          expires_in: {
+            type: 'integer',
+            description: 'Access Token 過期時間 (秒)',
+            example: 3600
+          }
+        }
+      },
+
+      // 註冊成功回應 Schema
+      RegisterResponse: {
+        type: 'object',
+        properties: {
+          status: {
+            type: 'string',
+            enum: ['success'],
+            example: 'success'
+          },
+          message: {
+            type: 'string',
+            example: '註冊成功'
+          },
+          data: {
+            $ref: '#/components/schemas/AuthResponse'
+          }
+        }
+      },
+
+      // 登入成功回應 Schema
+      LoginResponse: {
+        type: 'object',
+        properties: {
+          status: {
+            type: 'string',
+            enum: ['success'],
+            example: 'success'
+          },
+          message: {
+            type: 'string',
+            example: '登入成功'
+          },
+          data: {
+            $ref: '#/components/schemas/AuthResponse'
+          }
+        }
+      },
+
+      // 刷新 Token 成功回應 Schema
+      RefreshTokenResponse: {
+        type: 'object',
+        properties: {
+          status: {
+            type: 'string',
+            enum: ['success'],
+            example: 'success'
+          },
+          message: {
+            type: 'string',
+            example: 'Token 刷新成功'
+          },
+          data: {
+            $ref: '#/components/schemas/AuthResponse'
+          }
+        }
+      },
+
+      // 取得個人資料回應 Schema
+      GetProfileResponse: {
+        type: 'object',
+        properties: {
+          status: {
+            type: 'string',
+            enum: ['success'],
+            example: 'success'
+          },
+          message: {
+            type: 'string',
+            example: '取得個人資料成功'
+          },
+          data: {
+            type: 'object',
+            properties: {
+              user: {
+                $ref: '#/components/schemas/UserProfile'
+              }
+            }
+          }
+        }
+      },
+
+      // 更新個人資料回應 Schema
+      UpdateProfileResponse: {
+        type: 'object',
+        properties: {
+          status: {
+            type: 'string',
+            enum: ['success'],
+            example: 'success'
+          },
+          message: {
+            type: 'string',
+            example: '個人資料更新成功'
+          },
+          data: {
+            type: 'object',
+            properties: {
+              user: {
+                $ref: '#/components/schemas/UserProfile'
+              }
+            }
+          }
+        }
+      },
+
+      // 忘記密碼回應 Schema
+      ForgotPasswordResponse: {
+        type: 'object',
+        properties: {
+          status: {
+            type: 'string',
+            enum: ['success'],
+            example: 'success'
+          },
+          message: {
+            type: 'string',
+            example: '重設密碼郵件已發送，請檢查您的信箱'
+          },
+          data: {
+            type: 'object',
+            nullable: true,
+            example: null
+          }
+        }
+      },
+
+      // 刪除帳號回應 Schema
+      DeleteProfileResponse: {
+        type: 'object',
+        properties: {
+          status: {
+            type: 'string',
+            enum: ['success'],
+            example: 'success'
+          },
+          message: {
+            type: 'string',
+            example: '帳號已成功刪除'
+          },
+          data: {
+            type: 'object',
+            nullable: true,
+            example: null
+          }
+        }
+      },
+
+      // 認證錯誤回應 Schema (補充缺少的 AuthErrorResponse)
+      AuthErrorResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/ErrorResponse' },
+          {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                description: '認證錯誤訊息',
+                example: '請先登入'
+              }
+            }
+          }
+        ]
+      },
+      ResetPasswordRequest: {
+        type: 'object',
+        required: ['token', 'new_password'],
+        properties: {
+          token: {
+            type: 'string',
+            minLength: 1,
+            description: '重設密碼令牌',
+            example: 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6'
+          },
+          new_password: {
+            type: 'string',
+            minLength: 8,
+            description: '新密碼（至少8字元）',
+            example: 'newSecurePassword123'
+          }
+        }
+      },
+
+      // 重設密碼回應 Schema
+      ResetPasswordResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/SuccessResponse' },
+          {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                example: '密碼重設成功'
+              }
+            }
+          }
+        ]
+      },
+
+      // Schema錯誤 Schema (統一的參數驗證錯誤 schema)
+      SchemasError: {
+        allOf: [
+          { $ref: '#/components/schemas/ErrorResponse' },
+          {
+            type: 'object',
+            properties: {
+              message: {
+                type: 'string',
+                description: '錯誤訊息',
+                example: '參數驗證失敗'
+              },
+              errors: {
+                type: 'object',
+                additionalProperties: {
+                  type: 'array',
+                  items: {
+                    type: 'string'
+                  }
+                },
+                description: '詳細錯誤資訊',
+                example: {
+                  email: ['請輸入有效的電子郵件格式'],
+                  password: ['密碼必須至少8字元']
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      // 標準化回應格式
+      ApiResponse: {
         type: 'object',
         required: ['status', 'message'],
         properties: {
@@ -634,46 +1453,13 @@ const swaggerDefinition = {
             description: '詳細錯誤資訊',
             nullable: true
           },
-          pagination: {
-            $ref: '#/components/schemas/Pagination'
-          },
           meta: {
             type: 'object',
             description: '額外 metadata',
             nullable: true
           }
         }
-      },
-
-      // 分頁資訊
-      Pagination: {
-        type: 'object',
-        properties: {
-          page: {
-            type: 'integer',
-            minimum: 1,
-            description: '當前頁碼'
-          },
-          limit: {
-            type: 'integer',
-            minimum: 1,
-            maximum: 100,
-            description: '每頁資料筆數'
-          },
-          total: {
-            type: 'integer',
-            minimum: 0,
-            description: '總資料筆數'
-          },
-          totalPages: {
-            type: 'integer',
-            minimum: 0,
-            description: '總頁數'
-          }
-        }
-      },
-
-      // 成功回應
+      },      // 成功回應
       SuccessResponse: {
         allOf: [
           { $ref: '#/components/schemas/ApiResponse' },
@@ -1818,8 +2604,10 @@ const swaggerDefinition = {
             type: 'object',
             properties: {
               data: {
-                type: 'null',
-                description: '刪除成功時無回傳資料'
+                type: 'object',
+                nullable: true,
+                description: '刪除成功時無回傳資料',
+                example: null
               }
             }
           }

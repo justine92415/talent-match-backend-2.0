@@ -251,7 +251,7 @@ const router = Router()
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  */
 router.get('/public', validateQuery(publicCourseQuerySchema), publicCourseController.getPublicCourses)
 
@@ -299,7 +299,7 @@ router.get('/public', validateQuery(publicCourseQuerySchema), publicCourseContro
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  */
 router.get('/public/:id', validateParams(courseIdParamSchema), publicCourseController.getPublicCourseDetail)
 
@@ -380,6 +380,6 @@ router.get('/public/:id', validateParams(courseIdParamSchema), publicCourseContr
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *               $ref: '#/components/schemas/SchemasError'
  */
 export default router
