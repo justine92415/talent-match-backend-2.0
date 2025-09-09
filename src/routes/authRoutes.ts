@@ -190,116 +190,55 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: "success"
- *                 message:
- *                   type: string
- *                   example: "登入成功"
- *                 data:
- *                   type: object
- *                   properties:
- *                     user:
- *                       type: object
- *                       properties:
- *                         id:
- *                           type: integer
- *                           example: 1
- *                         uuid:
- *                           type: string
- *                           format: uuid
- *                         nick_name:
- *                           type: string
- *                           example: "使用者暱稱"
- *                         email:
- *                           type: string
- *                           example: "user@example.com"
- *                         role:
- *                           type: string
- *                           example: "student"
- *                         account_status:
- *                           type: string
- *                           example: "active"
- *                         last_login_at:
- *                           type: string
- *                           format: date-time
- *                     access_token:
- *                       type: string
- *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *                     refresh_token:
- *                       type: string
- *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *                     token_type:
- *                       type: string
- *                       example: "Bearer"
- *                     expires_in:
- *                       type: integer
- *                       example: 3600
+ *               $ref: '#/components/schemas/LoginResponse'
  *       400:
  *         description: 請求參數錯誤
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: "error"
- *                 message:
- *                   type: string
- *                   example: "登入失敗"
- *                 errors:
- *                   type: object
- *                   properties:
- *                     email:
- *                       type: array
- *                       items:
- *                         type: string
- *                       example: ["請輸入有效的電子郵件格式"]
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *             examples:
+ *               validation_error:
+ *                 summary: 參數驗證錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "登入失敗"
+ *                   errors:
+ *                     email: ["請輸入有效的電子郵件格式"]
  *       401:
  *         description: 認證失敗
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: "error"
- *                 message:
- *                   type: string
- *                   example: "登入失敗"
- *                 errors:
- *                   type: object
- *                   properties:
- *                     credentials:
- *                       type: array
- *                       items:
- *                         type: string
- *                       example: ["電子郵件或密碼錯誤"]
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *             examples:
+ *               invalid_credentials:
+ *                 summary: 電子郵件或密碼錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "登入失敗"
+ *                   errors:
+ *                     credentials: ["電子郵件或密碼錯誤"]
  *       403:
  *         description: 帳號被停用
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: "error"
- *                 message:
- *                   type: string
- *                   example: "帳號已停用"
- *                 errors:
- *                   type: object
- *                   properties:
- *                     account:
- *                       type: array
- *                       items:
- *                         type: string
- *                       example: ["您的帳號已被停用，請聯絡客服"]
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *             examples:
+ *               account_suspended:
+ *                 summary: 帳號已停用
+ *                 value:
+ *                   status: "error"
+ *                   message: "帳號已停用"
+ *                   errors:
+ *                     account: ["您的帳號已被停用，請聯絡客服"]
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
  */
 router.post(
   '/login',
@@ -334,31 +273,7 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: "success"
- *                 message:
- *                   type: string
- *                   example: "Token 刷新成功"
- *                 data:
- *                   type: object
- *                   properties:
- *                     user:
- *                       $ref: '#/components/schemas/UserProfile'
- *                     access_token:
- *                       type: string
- *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *                     refresh_token:
- *                       type: string
- *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *                     token_type:
- *                       type: string
- *                       example: "Bearer"
- *                     expires_in:
- *                       type: number
- *                       example: 3600
+ *               $ref: '#/components/schemas/RefreshTokenResponse'
  *       400:
  *         description: 請求參數錯誤
  *         content:
@@ -456,14 +371,7 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: "success"
- *                 message:
- *                   type: string
- *                   example: "重設密碼郵件已發送，請檢查您的信箱"
+ *               $ref: '#/components/schemas/ForgotPasswordResponse'
  *       400:
  *         description: 請求參數錯誤
  *         content:
@@ -586,7 +494,7 @@ router.post('/reset-password', validateRequest(resetPasswordSchema, ERROR_MESSAG
  * /api/auth/profile:
  *   get:
  *     summary: 取得個人資料
- *     tags: [User Profile]
+ *     tags: [Authentication]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -595,51 +503,19 @@ router.post('/reset-password', validateRequest(resetPasswordSchema, ERROR_MESSAG
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: "success"
- *                 message:
- *                   type: string
- *                   example: "成功取得個人資料"
- *                 data:
- *                   type: object
- *                   properties:
- *                     user:
- *                       type: object
- *                       properties:
- *                         id:
- *                           type: integer
- *                           example: 1
- *                         uuid:
- *                           type: string
- *                           format: uuid
- *                         nick_name:
- *                           type: string
- *                           example: "使用者暱稱"
- *                         email:
- *                           type: string
- *                           example: "user@example.com"
- *                         role:
- *                           type: string
- *                           example: "student"
- *                         account_status:
- *                           type: string
- *                           example: "active"
+ *               $ref: '#/components/schemas/GetProfileResponse'
  *       401:
  *         description: 未授權
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: "error"
- *                 message:
- *                   type: string
- *                   example: "未提供授權 Token"
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
  */
 router.get('/profile', authenticateToken, authController.getProfile)
 
@@ -648,7 +524,7 @@ router.get('/profile', authenticateToken, authController.getProfile)
  * /api/auth/profile:
  *   put:
  *     summary: 更新個人資料
- *     tags: [User Profile]
+ *     tags: [Authentication]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -666,18 +542,22 @@ router.get('/profile', authenticateToken, authController.getProfile)
  *               name:
  *                 type: string
  *                 maxLength: 100
+ *                 nullable: true
  *                 example: "王小明"
  *               birthday:
  *                 type: string
  *                 format: date
+ *                 nullable: true
  *                 example: "1990-01-01"
  *               contact_phone:
  *                 type: string
  *                 maxLength: 20
+ *                 nullable: true
  *                 example: "0912345678"
  *               avatar_image:
  *                 type: string
  *                 format: uri
+ *                 nullable: true
  *                 example: "https://example.com/avatar.jpg"
  *     responses:
  *       200:
@@ -685,34 +565,40 @@ router.get('/profile', authenticateToken, authController.getProfile)
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: "success"
- *                 message:
- *                   type: string
- *                   example: "成功更新個人資料"
- *                 data:
- *                   type: object
- *                   properties:
- *                     user:
- *                       type: object
+ *               $ref: '#/components/schemas/UpdateProfileResponse'
  *       400:
  *         description: 請求參數錯誤
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: "error"
- *                 message:
- *                   type: string
- *                   example: "該暱稱已被使用"
+ *               $ref: '#/components/schemas/SchemasErrorResponse'
+ *             examples:
+ *               nickname_exists:
+ *                 summary: 暱稱已被使用
+ *                 value:
+ *                   status: "error"
+ *                   message: "該暱稱已被使用"
+ *                   errors:
+ *                     nick_name: ["此暱稱已被其他使用者使用"]
+ *               validation_error:
+ *                 summary: 參數驗證錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "參數驗證失敗"
+ *                   errors:
+ *                     nick_name: ["暱稱長度必須在1-50字元之間"]
  *       401:
  *         description: 未授權
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
  */
 router.put('/profile', authenticateToken, validateRequest(updateProfileSchema, ERROR_MESSAGES.SYSTEM.VALIDATION_ERROR), authController.updateProfile)
 
@@ -721,25 +607,43 @@ router.put('/profile', authenticateToken, validateRequest(updateProfileSchema, E
  * /api/auth/profile:
  *   delete:
  *     summary: 刪除個人帳號
- *     tags: [User Profile]
+ *     tags: [Authentication]
  *     security:
  *       - bearerAuth: []
+ *     description: |
+ *       執行軟刪除使用者帳號，保留資料完整性以供稽核。
+ *       
+ *       **功能特性**：
+ *       - 使用 TypeORM 軟刪除機制
+ *       - 設定 deleted_at 時間戳記
+ *       - 刪除後使用者無法登入
+ *       - 暱稱和email釋放供新用戶使用
+ *       - 保持歷史資料完整性
  *     responses:
  *       200:
  *         description: 帳號成功刪除
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: "success"
- *                 message:
- *                   type: string
- *                   example: "帳號已成功刪除"
+ *               $ref: '#/components/schemas/DeleteProfileResponse'
  *       401:
  *         description: 未授權
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       404:
+ *         description: 使用者不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/NotFoundErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
  */
 router.delete('/profile', authenticateToken, authController.deleteProfile)
 
