@@ -30,9 +30,8 @@ describe('工作經驗管理 API', () => {
     // 建立測試使用者和教師
     testUser = await createTestUser({
       ...validUserData,
-      email: createUniqueEmail(),
-      role: UserRole.TEACHER
-    })
+      email: createUniqueEmail()
+    }, UserRole.TEACHER)
 
     testTeacher = await createTestTeacher(testUser.id, {
       ...validTeacherApplicationData,
@@ -41,7 +40,7 @@ describe('工作經驗管理 API', () => {
 
     authToken = generateAuthToken({
       id: testUser.id,
-      role: testUser.role,
+      roles: testUser.roles,
       uuid: testUser.uuid
     })
   })
@@ -120,13 +119,12 @@ describe('工作經驗管理 API', () => {
     it('應該拒絕非教師的請求', async () => {
       const studentUser = await createTestUser({
         ...validUserData,
-        email: createUniqueEmail(),
-        role: UserRole.STUDENT
-      })
+        email: createUniqueEmail()
+      }, UserRole.STUDENT)
 
       const studentToken = generateAuthToken({
         id: studentUser.id,
-        role: studentUser.role,
+        roles: studentUser.roles,
         uuid: studentUser.uuid
       })
 
@@ -333,13 +331,12 @@ describe('工作經驗管理 API', () => {
       // 建立學生使用者
       const studentUser = await createTestUser({
         ...validUserData,
-        email: createUniqueEmail(),
-        role: UserRole.STUDENT
-      })
+        email: createUniqueEmail()
+      }, UserRole.STUDENT)
 
       const studentToken = generateAuthToken({
         id: studentUser.id,
-        role: studentUser.role,
+        roles: studentUser.roles,
         uuid: studentUser.uuid
       })
 
@@ -460,9 +457,8 @@ describe('工作經驗管理 API', () => {
       // 建立另一個教師使用者
       const otherUser = await createTestUser({
         ...validUserData,
-        email: createUniqueEmail(),
-        role: UserRole.TEACHER
-      })
+        email: createUniqueEmail()
+      }, UserRole.TEACHER)
 
       const otherTeacher = await createTestTeacher(otherUser.id, {
         ...validTeacherApplicationData,
@@ -471,7 +467,7 @@ describe('工作經驗管理 API', () => {
 
       const otherToken = generateAuthToken({
         id: otherUser.id,
-        role: otherUser.role,
+        roles: otherUser.roles,
         uuid: otherUser.uuid
       })
 
@@ -575,9 +571,8 @@ describe('工作經驗管理 API', () => {
       // 建立另一個教師使用者
       const otherUser = await createTestUser({
         ...validUserData,
-        email: createUniqueEmail(),
-        role: UserRole.TEACHER
-      })
+        email: createUniqueEmail()
+      }, UserRole.TEACHER)
 
       const otherTeacher = await createTestTeacher(otherUser.id, {
         ...validTeacherApplicationData,
@@ -586,7 +581,7 @@ describe('工作經驗管理 API', () => {
 
       const otherToken = generateAuthToken({
         id: otherUser.id,
-        role: otherUser.role,
+        roles: otherUser.roles,
         uuid: otherUser.uuid
       })
 

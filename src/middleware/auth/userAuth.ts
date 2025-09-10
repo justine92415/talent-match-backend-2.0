@@ -84,11 +84,10 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
       throw Errors.accountSuspended('帳號狀態異常', 401)
     }
 
-    // 6. 將使用者資訊附加到 request 物件（支援多重角色）
+    // 6. 將使用者資訊附加到 request 物件（純多重角色系統）
     req.user = {
       userId: decoded.userId,
-      role: decoded.role,  // 主要角色，向後相容性
-      roles: decoded.roles || [decoded.role],  // 所有角色陣列，向後相容舊 token
+      roles: decoded.roles || [],  // 使用 JWT 中的角色陣列
       type: decoded.type
     } as AuthenticatedUser
 

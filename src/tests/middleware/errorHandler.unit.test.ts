@@ -19,7 +19,7 @@ describe('ErrorHandler Middleware - 新的簡潔錯誤格式', () => {
       method: 'POST',
       url: '/api/test',
       body: { test: 'data' },
-      user: { userId: 1, role: 'student', roles: ['student'], type: 'access' }
+      user: { userId: 1, roles: ['student'], type: 'access' }
     }
     
     mockRes = {

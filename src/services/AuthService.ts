@@ -44,14 +44,16 @@ export class AuthService {
       nick_name: userData.nick_name,
       email: userData.email,
       password: hashedPassword,
-      role: UserRole.STUDENT,
       account_status: AccountStatus.ACTIVE
     })
 
     const savedUser = await this.userRepository.save(newUser)
 
+    // 為新使用者設定預設學生角色
+    await this.userRoleService.initializeDefaultRole(savedUser.id)
+
     // 生成 Token
-    const tokens = await this.generateTokens(savedUser.id, savedUser.role)
+    const tokens = await this.generateTokens(savedUser.id)
 
     // 回傳使用者資料（不包含敏感資訊）
     const userResponse = this.formatUserResponse(savedUser)
@@ -92,7 +94,7 @@ export class AuthService {
     await this.updateLastLoginTime(user.id)
 
     // 生成 Token
-    const tokens = await this.generateTokens(user.id, user.role)
+    const tokens = await this.generateTokens(user.id)
 
     // 回傳使用者資料（不包含敏感資訊）
     const userResponse = this.formatUserResponse({
@@ -133,7 +135,7 @@ export class AuthService {
       }
 
       // 生成新的 tokens
-      const tokens = await this.generateTokens(user.id, user.role)
+      const tokens = await this.generateTokens(user.id)
       
       // 準備使用者回應資料（排除敏感欄位）
       const userResponse = this.sanitizeUser(user)
@@ -329,7 +331,6 @@ export class AuthService {
       contact_phone: user.contact_phone,
       avatar_image: user.avatar_image,
       avatar_google_url: user.avatar_google_url,
-      role: user.role,
       roles: user.roles,
       account_status: user.account_status,
       last_login_at: user.last_login_at,
@@ -340,9 +341,9 @@ export class AuthService {
   }
 
   /**
-   * 生成 JWT Tokens - 支援多重角色
+   * 生成 JWT Tokens - 僅使用多重角色系統
    */
-  private async generateTokens(userId: number, primaryRole: UserRole): Promise<AuthTokens> {
+  private async generateTokens(userId: number): Promise<AuthTokens> {
     // 使用高精度時間戳確保每次生成的 token 都不同
     const accessTokenTime = Date.now()
     const refreshTokenTime = Date.now() + 1 // 確保 refresh token 時間戳不同
@@ -352,16 +353,14 @@ export class AuthService {
     
     const accessToken = jwt.sign({ 
       userId, 
-      role: primaryRole,  // 保留主要角色以確保向後相容性
-      roles,  // 新增所有角色陣列
+      roles,  // 只使用角色陣列
       type: 'access',
       timestamp: accessTokenTime
     }, JWT_CONFIG.SECRET, { expiresIn: JWT_CONFIG.ACCESS_TOKEN_EXPIRES_IN })
 
     const refreshToken = jwt.sign({ 
       userId, 
-      role: primaryRole,  // 保留主要角色以確保向後相容性
-      roles,  // 新增所有角色陣列
+      roles,  // 只使用角色陣列
       type: 'refresh',
       timestamp: refreshTokenTime
     }, JWT_CONFIG.SECRET, { expiresIn: JWT_CONFIG.REFRESH_TOKEN_EXPIRES_IN })

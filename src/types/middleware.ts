@@ -4,12 +4,11 @@ import { AdminTokenPayload } from './admin.interface'
 import { JwtTokenPayload } from './auth.interface'
 
 /**
- * 認證後的使用者資訊 - 支援多重角色
+ * 認證後的使用者資訊 - 純多重角色系統
  */
 export interface AuthenticatedUser {
   userId: number
-  role: string  // 主要角色，向後相容性
-  roles: string[]  // 所有角色陣列
+  roles: string[]  // 只使用角色陣列
   type: string
 }
 
@@ -68,7 +67,7 @@ export interface MiddlewareErrorResponse {
   errors?: ValidationErrorDetails
 }
 
-// 全域類型擴展 - 支援多重角色
+// 全域類型擴展 - 純多重角色系統
 declare global {
   namespace Express {
     interface Request {

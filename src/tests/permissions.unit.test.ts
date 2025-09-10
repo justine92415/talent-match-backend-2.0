@@ -51,7 +51,6 @@ describe('多重角色權限系統單元測試', () => {
     it('應該正確解析包含多重角色的 JWT token', () => {
       const user = createUser(1, UserRole.STUDENT, [UserRole.STUDENT, UserRole.TEACHER])
       
-      expect(user.role).toBe(UserRole.STUDENT)
       expect(user.roles).toContain(UserRole.STUDENT)
       expect(user.roles).toContain(UserRole.TEACHER)
       expect(user.roles).toHaveLength(2)

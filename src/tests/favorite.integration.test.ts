@@ -62,27 +62,23 @@ describe('收藏功能 API', () => {
     const courseRepository = dataSource.getRepository(Course)
 
     // 建立學生使用者
-    studentUser = userRepository.create({
+    studentUser = await UserTestHelpers.createUserEntityWithRole({
       uuid: '550e8400-e29b-41d4-a716-446655440001',
       email: 'student@example.com',
       nick_name: '學生A',
       password: 'hashedpassword',
-      role: UserRole.STUDENT,
       account_status: AccountStatus.ACTIVE
-    })
-    await userRepository.save(studentUser)
+    }, UserRole.STUDENT)
     studentToken = UserTestHelpers.generateAuthToken(studentUser)
 
     // 建立教師使用者
-    teacherUser = userRepository.create({
+    teacherUser = await UserTestHelpers.createUserEntityWithRole({
       uuid: '550e8400-e29b-41d4-a716-446655440002',
       email: 'teacher@example.com',
       nick_name: 'Python老師',
       password: 'hashedpassword',
-      role: UserRole.TEACHER,
       account_status: AccountStatus.ACTIVE
-    })
-    await userRepository.save(teacherUser)
+    }, UserRole.TEACHER)
     teacherToken = UserTestHelpers.generateAuthToken(teacherUser)
 
     // 建立教師記錄
@@ -319,16 +315,13 @@ describe('收藏功能 API', () => {
 
     it('應該回傳空列表當使用者沒有收藏', async () => {
       // 建立新的使用者（沒有收藏）
-      const userRepository = dataSource.getRepository(User)
-      const newUser = userRepository.create({
+      const newUser = await UserTestHelpers.createUserEntityWithRole({
         uuid: '550e8400-e29b-41d4-a716-446655440099', // 新增必需的 UUID
         email: 'newuser@example.com',
         nick_name: '新使用者',
         password: 'password',
-        role: UserRole.STUDENT,
         account_status: AccountStatus.ACTIVE
-      })
-      await userRepository.save(newUser)
+      }, UserRole.STUDENT)
       const newUserToken = UserTestHelpers.generateAuthToken(newUser)
 
       const response = await RequestTestHelpers.sendAuthenticatedRequest(

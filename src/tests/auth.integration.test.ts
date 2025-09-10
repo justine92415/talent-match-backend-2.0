@@ -48,7 +48,6 @@ describe('POST /api/auth/register', () => {
             uuid: expect.any(String),
             nick_name: validUserData.nick_name,
             email: validUserData.email,
-            role: 'student',
             account_status: 'active',
             created_at: expect.any(String)
           },
@@ -208,7 +207,6 @@ describe('POST /api/auth/login', () => {
             uuid: expect.any(String),
             nick_name: validUserData.nick_name,
             email: validUserData.email,
-            role: 'student',
             account_status: 'active',
             last_login_at: expect.any(String)
           },
@@ -415,8 +413,7 @@ describe('POST /api/auth/login', () => {
         expect(response.body.data.user).toMatchObject({
           id: loginResponse.body.data.user.id,
           email: validUserData2.email,
-          nick_name: validUserData2.nick_name,
-          role: 'student'
+          nick_name: validUserData2.nick_name
         })
       })
     })
@@ -926,7 +923,6 @@ describe('POST /api/auth/login', () => {
           expect(response.body.data.user).toHaveProperty('id')
           expect(response.body.data.user).toHaveProperty('nick_name', '測試使用者')
           expect(response.body.data.user).toHaveProperty('email', 'test@example.com')
-          expect(response.body.data.user).toHaveProperty('role', UserRole.STUDENT)
           expect(response.body.data.user).toHaveProperty('account_status', AccountStatus.ACTIVE)
           expect(response.body.data.user).not.toHaveProperty('password')
           expect(response.body.data.user).not.toHaveProperty('password_reset_token')

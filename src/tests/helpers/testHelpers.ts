@@ -13,6 +13,7 @@ import { TeacherWorkExperience } from '@entities/TeacherWorkExperience'
 import { Course } from '@entities/Course'
 import { Video } from '@entities/Video'
 import { CourseVideo } from '@entities/CourseVideo'
+import { UserRoleService } from '@services/UserRoleService'
 import { CourseFile } from '@entities/CourseFile'
 import { UserRole, AccountStatus, ApplicationStatus, CourseStatus, VideoType } from '@entities/enums'
 import { validUserData, createUserEntityData, teacherUserEntityData, suspendedUserEntityData } from '@tests/fixtures/userFixtures'
@@ -96,18 +97,46 @@ class UserTestHelpers {
     return await userRepository.save(user)
   }
 
+    /**
+   * 建立有角色的測試使用者實體
+   * @param userData 使用者資料
+   * @param role 使用者角色
+   * @returns 帶有角色的使用者實體
+   */
+  static async createUserEntityWithRole(userData: Partial<TestUserCreateData> = {}, role: UserRole = UserRole.STUDENT) {
+    // 移除 role 參數，避免傳遞給實體建立
+    const { role: _, ...cleanUserData } = userData as any
+    
+    // 建立使用者實體
+    const user = await UserTestHelpers.createUserEntity(cleanUserData)
+    
+    // 設定角色
+    const userRoleService = new UserRoleService()
+    await userRoleService.addRole(user.id, role)
+    
+    // 重新載入使用者以獲得角色關聯
+    const userRepository = dataSource.getRepository(User)
+    const userWithRoles = await userRepository.findOne({
+      where: { id: user.id },
+      relations: ['roles']
+    })
+    
+    return userWithRoles!
+  }
+
   /**
-   * 產生 JWT 認證 Token
+   * 產生 JWT Token（用於測試）
    * @param user 使用者物件
-   * @param tokenType Token 類型（'access' | 'refresh'）
+   * @param tokenType Token 類型
    * @param expiresIn 過期時間
    * @returns JWT Token
    */
-  static generateAuthToken(user: { id: number; role: UserRole; uuid: string }, tokenType: 'access' | 'refresh' = 'access', expiresIn: string = '1h'): string {
+  static generateAuthToken(user: { id: number; roles?: { role: UserRole }[]; uuid: string }, tokenType: 'access' | 'refresh' = 'access', expiresIn: string = '1h'): string {
+    const roles = user.roles?.map(r => r.role) || []
     return jwt.sign(
       {
         userId: user.id,
-        role: user.role,
+        roles: roles,
         uuid: user.uuid,
         type: tokenType
       },
@@ -121,26 +150,26 @@ class UserTestHelpers {
    * @param user 使用者物件
    * @returns 過期的 JWT Token
    */
-  static generateExpiredToken(user: { id: number; role: UserRole; uuid: string }): string {
+  static generateExpiredToken(user: { id: number; roles?: { role: UserRole }[]; uuid: string }): string {
+    const roles = user.roles?.map(r => r.role) || []
     return jwt.sign(
       {
         userId: user.id,
-        role: user.role,
+        roles: roles,
         uuid: user.uuid,
         type: 'access'
       },
       ConfigManager.get<string>('secret.jwtSecret'),
       { expiresIn: '-1h' }
     )
-  }
-
-  /**
+  }  /**
    * 建立完整的測試使用者（實體 + Token）
    * @param userData 使用者資料覆寫
    * @returns 使用者實體和認證 Token
    */
-  static async createTestUserWithToken(userData: Partial<TestUserCreateData> = {}) {
-    const user = await this.createUserEntity(userData)
+  static async createTestUserWithToken(userData: Partial<TestUserCreateData & { role?: UserRole }> = {}) {
+    const { role = UserRole.STUDENT, ...cleanUserData } = userData
+    const user = await this.createUserEntityWithRole(cleanUserData, role)
     const authToken = this.generateAuthToken(user)
 
     return {
@@ -154,8 +183,8 @@ class UserTestHelpers {
    * @returns 不同角色和狀態的使用者及其 Token
    */
   static async createUserVariations() {
-    const student = await this.createUserEntity()
-    const teacher = await this.createTeacherUserEntity()
+    const student = await this.createUserEntityWithRole({}, UserRole.STUDENT)
+    const teacher = await this.createUserEntityWithRole({ email: 'teacher@example.com' }, UserRole.TEACHER)
     const suspended = await this.createSuspendedUserEntity()
 
     return {
@@ -976,7 +1005,7 @@ export default {
 }
 
 // 匯出常用函式別名（向下相容）
-export const createTestUser = UserTestHelpers.createUserEntity
+export const createTestUser = UserTestHelpers.createUserEntityWithRole
 export const createTestTeacher = TeacherTestHelpers.createTeacherApplication
 export const createTestWorkExperience = WorkExperienceTestHelpers.createTestWorkExperience
 export const generateAuthToken = UserTestHelpers.generateAuthToken

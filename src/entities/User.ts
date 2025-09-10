@@ -48,10 +48,6 @@ export class User {
   @Column({ type: 'text', nullable: true })
   avatar_google_url?: string | null
 
-  /** 使用者角色 */
-  @Column({ type: 'enum', enum: UserRoleEnum })
-  role!: UserRoleEnum
-
   /** 帳號狀態 */
   @Column({ type: 'enum', enum: AccountStatus })
   account_status!: AccountStatus

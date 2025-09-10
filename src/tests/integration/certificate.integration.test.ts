@@ -36,7 +36,7 @@ describe('證書管理 API', () => {
     // 生成認證 token
     authToken = UserTestHelpers.generateAuthToken({
       id: teacherUser.id,
-      role: teacherUser.role,
+      roles: teacherUser.roles,
       uuid: teacherUser.uuid
     })
 
@@ -124,18 +124,14 @@ describe('證書管理 API', () => {
 
     describe('權限錯誤', () => {
       it('應該回傳 403 當使用者不是教師', async () => {
-        const studentData = {
+        const studentUser = await UserTestHelpers.createUserEntityWithRole({
           ...createUserEntityData(),
-          email: 'student-cert@example.com',
-          role: UserRole.STUDENT
-        }
-
-        const userRepository = dataSource.getRepository(User)
-        const studentUser = await userRepository.save(studentData)
+          email: 'student-cert@example.com'
+        }, UserRole.STUDENT)
 
         const studentToken = UserTestHelpers.generateAuthToken({
           id: studentUser.id,
-          role: studentUser.role,
+          roles: studentUser.roles,
           uuid: studentUser.uuid
         })
 
@@ -256,18 +252,14 @@ describe('證書管理 API', () => {
 
     describe('權限錯誤', () => {
       it('應該回傳 403 當使用者不是教師', async () => {
-        const studentData = {
+        const studentUser = await UserTestHelpers.createUserEntityWithRole({
           ...createUserEntityData(),
-          email: 'student-cert2@example.com',
-          role: UserRole.STUDENT
-        }
-
-        const userRepository = dataSource.getRepository(User)
-        const studentUser = await userRepository.save(studentData)
+          email: 'student-cert2@example.com'
+        }, UserRole.STUDENT)
 
         const studentToken = UserTestHelpers.generateAuthToken({
           id: studentUser.id,
-          role: studentUser.role,
+          roles: studentUser.roles,
           uuid: studentUser.uuid
         })
 
@@ -410,7 +402,7 @@ describe('證書管理 API', () => {
 
         const otherAuthToken = UserTestHelpers.generateAuthToken({
           id: otherTeacherUser.id,
-          role: otherTeacherUser.role,
+          roles: otherTeacherUser.roles,
           uuid: otherTeacherUser.uuid
         })
 
@@ -492,7 +484,7 @@ describe('證書管理 API', () => {
 
         const otherAuthToken = UserTestHelpers.generateAuthToken({
           id: otherTeacherUser.id,
-          role: otherTeacherUser.role,
+          roles: otherTeacherUser.roles,
           uuid: otherTeacherUser.uuid
         })
 

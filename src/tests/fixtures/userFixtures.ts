@@ -110,7 +110,6 @@ export const createUserEntityData = (overrides: Partial<User> = {}): Partial<Use
   email: 'test@example.com',
   nick_name: '測試使用者',
   name: '測試使用者真實姓名',
-  role: UserRole.STUDENT,
   account_status: AccountStatus.ACTIVE,
   password: 'hashedpassword123',
   contact_phone: '0912345678',
@@ -123,7 +122,6 @@ export const teacherUserEntityData = (overrides: Partial<User> = {}): Partial<Us
   email: 'teacher@example.com',
   nick_name: '教師使用者',
   name: '教師使用者真實姓名',
-  role: UserRole.TEACHER,
   account_status: AccountStatus.ACTIVE,
   password: 'hashedpassword123',
   ...overrides
@@ -135,7 +133,6 @@ export const adminUserEntityData = (overrides: Partial<User> = {}): Partial<User
   email: 'admin@example.com',
   nick_name: '管理員使用者',
   name: '管理員使用者真實姓名',
-  role: UserRole.ADMIN,
   account_status: AccountStatus.ACTIVE,
   password: 'hashedpassword123',
   ...overrides
@@ -147,7 +144,6 @@ export const suspendedUserEntityData = (overrides: Partial<User> = {}): Partial<
   email: 'suspended@example.com',
   nick_name: '停用使用者',
   name: '停用使用者真實姓名',
-  role: UserRole.STUDENT,
   account_status: AccountStatus.SUSPENDED,
   password: 'hashedpassword123',
   ...overrides
