@@ -358,7 +358,7 @@ describe('POST /api/auth/login', () => {
     })
   })
 
-  describe('POST /api/auth/refresh-token', () => {
+  describe('POST /api/auth/refresh', () => {
     describe('成功刷新案例', () => {
       it('應該成功刷新 Token 並回傳 200', async () => {
         // Arrange - 先註冊並登入取得 refresh token
@@ -373,7 +373,7 @@ describe('POST /api/auth/login', () => {
 
         // Act
         const response = await request(app)
-          .post('/api/auth/refresh-token')
+          .post('/api/auth/refresh')
           .send({ refresh_token: refreshToken })
           .expect(200)
 
@@ -407,7 +407,7 @@ describe('POST /api/auth/login', () => {
 
         // Act
         const response = await request(app)
-          .post('/api/auth/refresh-token')
+          .post('/api/auth/refresh')
           .send({ refresh_token: refreshToken })
           .expect(200)
 
@@ -426,7 +426,7 @@ describe('POST /api/auth/login', () => {
         const invalidToken = 'invalid.refresh.token'
 
         const response = await request(app)
-          .post('/api/auth/refresh-token')
+          .post('/api/auth/refresh')
           .send({ refresh_token: invalidToken })
           .expect(401)
 
@@ -448,7 +448,7 @@ describe('POST /api/auth/login', () => {
 
       it('應該拒絕缺少 refresh token 並回傳 400', async () => {
         const response = await request(app)
-          .post('/api/auth/refresh-token')
+          .post('/api/auth/refresh')
           .send({})
           .expect(400)
 
@@ -465,7 +465,7 @@ describe('POST /api/auth/login', () => {
     describe('邊界測試', () => {
       it('應該拒絕空白的 refresh token', async () => {
         const response = await request(app)
-          .post('/api/auth/refresh-token')
+          .post('/api/auth/refresh')
           .send({ refresh_token: '' })
           .expect(400)
 
@@ -477,7 +477,7 @@ describe('POST /api/auth/login', () => {
 
       it('應該拒絕非字串格式的 refresh token', async () => {
         const response = await request(app)
-          .post('/api/auth/refresh-token')
+          .post('/api/auth/refresh')
           .send({ refresh_token: 12345 })
           .expect(400)
 

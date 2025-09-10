@@ -7,6 +7,7 @@ import { UserRole, AccountStatus } from '@entities/enums'
 import { Errors, BusinessError } from '@utils/errors'
 import { AuthMessages } from '@constants/Message'
 import { JWT_CONFIG, PASSWORD_CONFIG } from '@config/secret'
+import { UserRoleService } from '@services/UserRoleService'
 import {
   RegisterUserData,
   LoginUserData,
@@ -22,6 +23,7 @@ import {
 
 export class AuthService {
   private userRepository = dataSource.getRepository(User)
+  private userRoleService = new UserRoleService()
 
   /**
    * 註冊新使用者
@@ -49,7 +51,7 @@ export class AuthService {
     const savedUser = await this.userRepository.save(newUser)
 
     // 生成 Token
-    const tokens = this.generateTokens(savedUser.id, savedUser.role)
+    const tokens = await this.generateTokens(savedUser.id, savedUser.role)
 
     // 回傳使用者資料（不包含敏感資訊）
     const userResponse = this.formatUserResponse(savedUser)
@@ -90,7 +92,7 @@ export class AuthService {
     await this.updateLastLoginTime(user.id)
 
     // 生成 Token
-    const tokens = this.generateTokens(user.id, user.role)
+    const tokens = await this.generateTokens(user.id, user.role)
 
     // 回傳使用者資料（不包含敏感資訊）
     const userResponse = this.formatUserResponse({
@@ -131,17 +133,14 @@ export class AuthService {
       }
 
       // 生成新的 tokens
-      const tokens = this.generateTokens(user.id, user.role)
+      const tokens = await this.generateTokens(user.id, user.role)
       
       // 準備使用者回應資料（排除敏感欄位）
       const userResponse = this.sanitizeUser(user)
 
       return {
         user: userResponse,
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-        token_type: tokens.token_type,
-        expires_in: tokens.expires_in
+        ...tokens
       }
 
     } catch (error) {
@@ -341,23 +340,28 @@ export class AuthService {
   }
 
   /**
-   * 生成 JWT Tokens
+   * 生成 JWT Tokens - 支援多重角色
    */
-  private generateTokens(userId: number, role: UserRole): AuthTokens {
+  private async generateTokens(userId: number, primaryRole: UserRole): Promise<AuthTokens> {
     // 使用高精度時間戳確保每次生成的 token 都不同
     const accessTokenTime = Date.now()
     const refreshTokenTime = Date.now() + 1 // 確保 refresh token 時間戳不同
     
+    // 獲取使用者的所有有效角色
+    const roles = await this.userRoleService.getUserRoles(userId)
+    
     const accessToken = jwt.sign({ 
       userId, 
-      role, 
+      role: primaryRole,  // 保留主要角色以確保向後相容性
+      roles,  // 新增所有角色陣列
       type: 'access',
       timestamp: accessTokenTime
     }, JWT_CONFIG.SECRET, { expiresIn: JWT_CONFIG.ACCESS_TOKEN_EXPIRES_IN })
 
     const refreshToken = jwt.sign({ 
       userId, 
-      role, 
+      role: primaryRole,  // 保留主要角色以確保向後相容性
+      roles,  // 新增所有角色陣列
       type: 'refresh',
       timestamp: refreshTokenTime
     }, JWT_CONFIG.SECRET, { expiresIn: JWT_CONFIG.REFRESH_TOKEN_EXPIRES_IN })
