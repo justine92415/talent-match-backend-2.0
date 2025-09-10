@@ -66,7 +66,8 @@ export class AuthService {
   async login(userData: LoginUserData): Promise<AuthResponse> {
     // 查找使用者
     const user = await this.userRepository.findOne({
-      where: { email: userData.email }
+      where: { email: userData.email },
+      relations: ['roles']
     })
 
     // 檢查使用者是否存在
@@ -117,7 +118,10 @@ export class AuthService {
       }
 
       // 查詢使用者並檢查狀態
-      const user = await this.userRepository.findOne({ where: { id: decoded.userId } })
+      const user = await this.userRepository.findOne({ 
+        where: { id: decoded.userId },
+        relations: ['roles']
+      })
       if (!user) {
         throw Errors.invalidToken()
       }
@@ -268,7 +272,8 @@ export class AuthService {
     
     // 取得更新後的使用者資料
     const updatedUser = await userRepository.findOne({
-      where: { id: userId }
+      where: { id: userId },
+      relations: ['roles']
     })
 
     if (!updatedUser) {
@@ -326,6 +331,7 @@ export class AuthService {
       avatar_image: user.avatar_image,
       avatar_google_url: user.avatar_google_url,
       role: user.role,
+      roles: user.roles,
       account_status: user.account_status,
       last_login_at: user.last_login_at,
       created_at: user.created_at,
