@@ -265,7 +265,7 @@ router.post('/reset-password', validateRequest(resetPasswordSchema, ERROR_MESSAG
 
 /**
  * @swagger
- * /auth/profile:
+ * /api/auth/profile:
  *   get:
  *     tags: [Authentication]
  *     summary: 取得使用者個人資料
@@ -314,7 +314,7 @@ router.get('/profile', authenticateToken, authController.getProfile)
 
 /**
  * @swagger
- * /auth/profile:
+ * /api/auth/profile:
  *   put:
  *     tags: [Authentication]
  *     summary: 更新使用者個人資料
@@ -421,7 +421,7 @@ router.put('/profile', authenticateToken, validateRequest(updateProfileSchema, E
 
 /**
  * @swagger
- * /auth/profile:
+ * /api/auth/profile:
  *   delete:
  *     tags: [Authentication]
  *     summary: 刪除使用者帳號
