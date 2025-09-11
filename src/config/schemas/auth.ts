@@ -38,7 +38,7 @@ export const authSchemas = {
         example: '密碼重設成功'
       },
       data: {
-        type: 'null',
+        nullable: true,
         description: '回應資料（此 API 無回傳資料）',
         example: null
       }
@@ -109,7 +109,7 @@ export const authSchemas = {
         example: '重設密碼郵件已發送'
       },
       data: {
-        type: 'null',
+        nullable: true,
         description: '回應資料（此 API 無回傳資料）',
         example: null
       }
@@ -537,7 +537,7 @@ export const authSchemas = {
         example: '帳號已成功刪除'
       },
       data: {
-        type: 'null',
+        nullable: true,
         description: '回應資料（此 API 無回傳資料）',
         example: null
       }
