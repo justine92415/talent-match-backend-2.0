@@ -14,6 +14,7 @@ import cartRoutes from '@routes/cartRoutes'
 import orderRoutes from '@routes/orderRoutes'
 import purchaseRoutes from '@routes/purchaseRoutes'
 import reservationRoutes from '@routes/reservationRoutes'
+import { fileUploadRoutes } from './fileUploadRoutes'
 
 const router = Router()
 
@@ -61,5 +62,8 @@ router.use('/purchases', purchaseRoutes)
 
 // 掛載預約管理相關路由
 router.use('/reservations', reservationRoutes)
+
+// 掛載檔案上傳相關路由
+router.use('/files', fileUploadRoutes)
 
 export default router
