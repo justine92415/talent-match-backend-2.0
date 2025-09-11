@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm'
-import { UserRole, AccountStatus } from './enums'
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, OneToMany } from 'typeorm'
+import { UserRole as UserRoleEnum, AccountStatus } from './enums'
+import { UserRole } from './UserRole'
 
 @Entity('users')
 export class User {
@@ -47,10 +48,6 @@ export class User {
   @Column({ type: 'text', nullable: true })
   avatar_google_url?: string | null
 
-  /** 使用者角色 */
-  @Column({ type: 'enum', enum: UserRole })
-  role!: UserRole
-
   /** 帳號狀態 */
   @Column({ type: 'enum', enum: AccountStatus })
   account_status!: AccountStatus
@@ -86,4 +83,8 @@ export class User {
   /** 刪除時間（軟刪除） */
   @DeleteDateColumn({ type: 'timestamp', nullable: true })
   deleted_at?: Date | null
+
+  /** 使用者角色列表 */
+  @OneToMany(() => UserRole, userRole => userRole.user)
+  roles!: UserRole[]
 }

@@ -47,19 +47,18 @@ describe('教師時間管理 API', () => {
     teacherId = teacher.id
     teacherToken = UserTestHelpers.generateAuthToken({
       id: teacherUser.id,
-      role: teacherUser.role,
+      roles: teacherUser.roles,
       uuid: teacherUser.uuid
     })
 
     // 建立非教師使用者
-    const nonTeacherUser = await UserTestHelpers.createUserEntity({
+    const nonTeacherUser = await UserTestHelpers.createUserEntityWithRole({
       ...validUserData,
-      email: 'student@example.com',
-      role: UserRole.STUDENT
-    })
+      email: 'student@example.com'
+    }, UserRole.STUDENT)
     nonTeacherToken = UserTestHelpers.generateAuthToken({
       id: nonTeacherUser.id,
-      role: nonTeacherUser.role,
+      roles: nonTeacherUser.roles,
       uuid: nonTeacherUser.uuid
     })
   })

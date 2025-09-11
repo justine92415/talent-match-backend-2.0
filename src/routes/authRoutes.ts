@@ -248,7 +248,7 @@ router.post(
 
 /**
  * @swagger
- * /api/auth/refresh-token:
+ * /api/auth/refresh:
  *   post:
  *     tags:
  *       - Authentication
@@ -316,7 +316,7 @@ router.post(
  *               $ref: '#/components/schemas/ServerErrorResponse'
  */
 router.post(
-  '/refresh-token',
+  '/refresh',
   validateRequest(refreshTokenSchema, ERROR_MESSAGES.SYSTEM.VALIDATION_ERROR), // 參數驗證
   authController.refreshToken // 業務邏輯
 )

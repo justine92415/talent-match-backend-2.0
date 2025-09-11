@@ -26,6 +26,23 @@
           "  pm.globals.set('base_url', 'http://localhost:8080');",
           "}",
           "",
+          "// 檢查是否需要自動帶入 access_token",
+          "const currentUrl = pm.request.url.toString();",
+          "const isAuthEndpoint = currentUrl.includes('/auth/login') || currentUrl.includes('/auth/register') || currentUrl.includes('/auth/forgot-password') || currentUrl.includes('/auth/reset-password');",
+          "const isPublicEndpoint = currentUrl.includes('/public') || (currentUrl.includes('/courses') && pm.request.method === 'GET' && !currentUrl.includes('price-options'));",
+          "",
+          "// 如果不是認證端點或公開端點，且有 access_token，自動設置 Authorization header",
+          "if (!isAuthEndpoint && !isPublicEndpoint) {",
+          "  const accessToken = pm.globals.get('access_token');",
+          "  if (accessToken) {",
+          "    pm.request.headers.add({",
+          "      key: 'Authorization',",
+          "      value: `Bearer ${accessToken}`",
+          "    });",
+          "    console.log('已自動帶入 Authorization header');",
+          "  }",
+          "}",
+          "",
           "// 不修改 URL，保持原始配置"
         ]
       }
@@ -35,10 +52,33 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "// 自動儲存 access_token",
-          "if (pm.response.json() && pm.response.json().data && pm.response.json().data.access_token) {",
-          "  pm.globals.set('access_token', pm.response.json().data.access_token);",
-          "  console.log('已儲存 access_token:', pm.response.json().data.access_token);",
+          "// 檢查是否為認證相關 API 回應",
+          "if (pm.response.code === 200 || pm.response.code === 201) {",
+          "  try {",
+          "    const jsonData = pm.response.json();",
+          "    ",
+          "    // 自動儲存 access_token 和 refresh_token（登入、註冊、刷新 token 時）",
+          "    if (jsonData && jsonData.data) {",
+          "      if (jsonData.data.access_token) {",
+          "        pm.globals.set('access_token', jsonData.data.access_token);",
+          "        console.log('✅ 已儲存 access_token:', jsonData.data.access_token.substring(0, 20) + '...');",
+          "      }",
+          "      ",
+          "      if (jsonData.data.refresh_token) {",
+          "        pm.globals.set('refresh_token', jsonData.data.refresh_token);",
+          "        console.log('✅ 已儲存 refresh_token:', jsonData.data.refresh_token.substring(0, 20) + '...');",
+          "      }",
+          "      ",
+          "      if (jsonData.data.expires_in) {",
+          "        // 計算 token 過期時間",
+          "        const expiresAt = new Date(Date.now() + (jsonData.data.expires_in * 1000));",
+          "        pm.globals.set('token_expires_at', expiresAt.toISOString());",
+          "        console.log('✅ Token 將於', expiresAt.toLocaleString(), '過期');",
+          "      }",
+          "    }",
+          "  } catch (e) {",
+          "    // 如果不是 JSON 回應，跳過",
+          "  }",
           "}",
           "",
           "// 檢查回應狀態",
@@ -46,11 +86,24 @@
           "  pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
           "});",
           "",
-          "pm.test('Response has correct format', function () {",
-          "  const jsonData = pm.response.json();",
-          "  pm.expect(jsonData).to.have.property('status');",
-          "  pm.expect(jsonData).to.have.property('message');",
-          "});"
+          "// 檢查回應格式（只有 JSON 回應才檢查）",
+          "if (pm.response.headers.get('Content-Type') && pm.response.headers.get('Content-Type').includes('application/json')) {",
+          "  pm.test('Response has correct format', function () {",
+          "    const jsonData = pm.response.json();",
+          "    pm.expect(jsonData).to.have.property('status');",
+          "    pm.expect(jsonData).to.have.property('message');",
+          "  });",
+          "}",
+          "",
+          "// 如果是 401 錯誤且有 refresh_token，提示使用者可能需要刷新 token",
+          "if (pm.response.code === 401) {",
+          "  const refreshToken = pm.globals.get('refresh_token');",
+          "  if (refreshToken) {",
+          "    console.log('⚠️  收到 401 錯誤，建議使用 refresh token API 刷新 access token');",
+          "  } else {",
+          "    console.log('⚠️  收到 401 錯誤，請先登入取得 token');",
+          "  }",
+          "}"
         ]
       }
     }
@@ -69,10 +122,151 @@
   ],
   "item": [
     {
+      "name": "⚙️ 工具函式",
+      "item": [
+        {
+          "name": "🧹 清理所有 Token",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// 清理所有認證相關的全域變數",
+                  "pm.globals.unset('access_token');",
+                  "pm.globals.unset('refresh_token');",
+                  "pm.globals.unset('user_id');",
+                  "pm.globals.unset('user_uuid');",
+                  "pm.globals.unset('user_role');",
+                  "pm.globals.unset('token_expires_at');",
+                  "",
+                  "console.log('🧹 已清理所有認證資料');",
+                  "console.log('現在可以重新登入或註冊');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/profile",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "auth", "profile"]
+            },
+            "description": "清理工具：移除所有儲存的認證資料"
+          }
+        },
+        {
+          "name": "📊 檢視目前 Token 狀態",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// 顯示目前的認證狀態",
+                  "const accessToken = pm.globals.get('access_token');",
+                  "const refreshToken = pm.globals.get('refresh_token');",
+                  "const userRole = pm.globals.get('user_role');",
+                  "const expiresAt = pm.globals.get('token_expires_at');",
+                  "",
+                  "console.log('📊 目前認證狀態：');",
+                  "console.log('Access Token:', accessToken ? (accessToken.substring(0, 20) + '...') : '❌ 未設定');",
+                  "console.log('Refresh Token:', refreshToken ? (refreshToken.substring(0, 20) + '...') : '❌ 未設定');",
+                  "console.log('使用者角色:', userRole || '❌ 未設定');",
+                  "",
+                  "if (expiresAt) {",
+                  "    const expiry = new Date(expiresAt);",
+                  "    const now = new Date();",
+                  "    const isExpired = now > expiry;",
+                  "    console.log('Token 狀態:', isExpired ? '❌ 已過期' : '✅ 有效');",
+                  "    console.log('過期時間:', expiry.toLocaleString());",
+                  "} else {",
+                  "    console.log('過期時間: ❌ 未設定');",
+                  "}",
+                  "",
+                  "// 不實際發送請求",
+                  "pm.execution.skipRequest();"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/profile",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "auth", "profile"]
+            },
+            "description": "檢視工具：顯示目前的認證狀態和 Token 資訊"
+          }
+        }
+      ],
+      "description": "便利工具，用於管理認證狀態和除錯"
+    },
+    {
       "name": "認證管理 (Auth)",
       "item": [
         {
           "name": "使用者註冊",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// 註冊專用測試腳本",
+                  "pm.test('註冊狀態碼應為 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('回應應包含所需的認證資料', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status', 'success');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    pm.expect(jsonData.data).to.have.property('access_token');",
+                  "    pm.expect(jsonData.data).to.have.property('refresh_token');",
+                  "    pm.expect(jsonData.data).to.have.property('user');",
+                  "});",
+                  "",
+                  "// 儲存認證資料到全域變數",
+                  "if (pm.response.code === 201) {",
+                  "    try {",
+                  "        const responseData = pm.response.json();",
+                  "        ",
+                  "        if (responseData.data) {",
+                  "            // 儲存 tokens",
+                  "            pm.globals.set('access_token', responseData.data.access_token);",
+                  "            pm.globals.set('refresh_token', responseData.data.refresh_token);",
+                  "            ",
+                  "            // 儲存使用者資訊",
+                  "            pm.globals.set('user_id', responseData.data.user.id);",
+                  "            pm.globals.set('user_uuid', responseData.data.user.uuid);",
+                  "            pm.globals.set('user_role', responseData.data.user.role);",
+                  "            ",
+                  "            // 計算 token 過期時間",
+                  "            if (responseData.data.expires_in) {",
+                  "                const expiresAt = new Date(Date.now() + (responseData.data.expires_in * 1000));",
+                  "                pm.globals.set('token_expires_at', expiresAt.toISOString());",
+                  "            }",
+                  "            ",
+                  "            console.log('🎉 註冊成功！');",
+                  "            console.log('✅ Access Token:', responseData.data.access_token.substring(0, 20) + '...');",
+                  "            console.log('✅ Refresh Token:', responseData.data.refresh_token.substring(0, 20) + '...');",
+                  "            console.log('✅ 使用者:', responseData.data.user.nick_name, '(' + responseData.data.user.role + ')');",
+                  "        }",
+                  "    } catch (error) {",
+                  "        console.error('❌ 儲存註冊資料時發生錯誤:', error);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -96,6 +290,60 @@
         },
         {
           "name": "使用者登入",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// 登入專用測試腳本",
+                  "pm.test('登入狀態碼應為 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('回應應包含所需的認證資料', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status', 'success');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    pm.expect(jsonData.data).to.have.property('access_token');",
+                  "    pm.expect(jsonData.data).to.have.property('refresh_token');",
+                  "    pm.expect(jsonData.data).to.have.property('user');",
+                  "});",
+                  "",
+                  "// 儲存認證資料到全域變數",
+                  "if (pm.response.code === 200) {",
+                  "    try {",
+                  "        const responseData = pm.response.json();",
+                  "        ",
+                  "        if (responseData.data) {",
+                  "            // 儲存 tokens",
+                  "            pm.globals.set('access_token', responseData.data.access_token);",
+                  "            pm.globals.set('refresh_token', responseData.data.refresh_token);",
+                  "            ",
+                  "            // 儲存使用者資訊",
+                  "            pm.globals.set('user_id', responseData.data.user.id);",
+                  "            pm.globals.set('user_uuid', responseData.data.user.uuid);",
+                  "            pm.globals.set('user_role', responseData.data.user.role);",
+                  "            ",
+                  "            // 計算 token 過期時間",
+                  "            if (responseData.data.expires_in) {",
+                  "                const expiresAt = new Date(Date.now() + (responseData.data.expires_in * 1000));",
+                  "                pm.globals.set('token_expires_at', expiresAt.toISOString());",
+                  "            }",
+                  "            ",
+                  "            console.log('🎉 登入成功！');",
+                  "            console.log('✅ Access Token:', responseData.data.access_token.substring(0, 20) + '...');",
+                  "            console.log('✅ Refresh Token:', responseData.data.refresh_token.substring(0, 20) + '...');",
+                  "            console.log('✅ 使用者:', responseData.data.user.nick_name, '(' + responseData.data.user.role + ')');",
+                  "        }",
+                  "    } catch (error) {",
+                  "        console.error('❌ 儲存登入資料時發生錯誤:', error);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -119,6 +367,53 @@
         },
         {
           "name": "刷新 Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// 刷新 Token 專用測試腳本",
+                  "pm.test('Token 刷新狀態碼應為 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('回應應包含新的認證資料', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status', 'success');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    pm.expect(jsonData.data).to.have.property('access_token');",
+                  "    pm.expect(jsonData.data).to.have.property('refresh_token');",
+                  "});",
+                  "",
+                  "// 儲存新的認證資料到全域變數",
+                  "if (pm.response.code === 200) {",
+                  "    try {",
+                  "        const responseData = pm.response.json();",
+                  "        ",
+                  "        if (responseData.data) {",
+                  "            // 更新 tokens",
+                  "            pm.globals.set('access_token', responseData.data.access_token);",
+                  "            pm.globals.set('refresh_token', responseData.data.refresh_token);",
+                  "            ",
+                  "            // 計算新的 token 過期時間",
+                  "            if (responseData.data.expires_in) {",
+                  "                const expiresAt = new Date(Date.now() + (responseData.data.expires_in * 1000));",
+                  "                pm.globals.set('token_expires_at', expiresAt.toISOString());",
+                  "            }",
+                  "            ",
+                  "            console.log('🔄 Token 刷新成功！');",
+                  "            console.log('✅ 新的 Access Token:', responseData.data.access_token.substring(0, 20) + '...');",
+                  "            console.log('✅ 新的 Refresh Token:', responseData.data.refresh_token.substring(0, 20) + '...');",
+                  "        }",
+                  "    } catch (error) {",
+                  "        console.error('❌ 儲存刷新後的認證資料時發生錯誤:', error);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -225,6 +520,32 @@
         },
         {
           "name": "刪除帳號",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// 刪除帳號專用測試腳本",
+                  "pm.test('刪除帳號狀態碼應為 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// 帳號刪除成功後清理所有認證資料",
+                  "if (pm.response.code === 200) {",
+                  "    pm.globals.unset('access_token');",
+                  "    pm.globals.unset('refresh_token');",
+                  "    pm.globals.unset('user_id');",
+                  "    pm.globals.unset('user_uuid');",
+                  "    pm.globals.unset('user_role');",
+                  "    pm.globals.unset('token_expires_at');",
+                  "    ",
+                  "    console.log('🗑️  帳號刪除成功，已清理所有認證資料');",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "DELETE",
             "header": [],

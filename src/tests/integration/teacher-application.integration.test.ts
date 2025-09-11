@@ -11,6 +11,7 @@ import { TeacherCertificate } from '@entities/TeacherCertificate'
 import { ApplicationStatus } from '@entities/enums'
 import { ERROR_CODES } from '@constants/ErrorCode'
 import { ERROR_MESSAGES } from '@constants/Message'
+import { UserRole } from '@entities/enums'
 
 // 使用新的 fixtures 和 helper
 import { validTeacherApplicationData, invalidTeacherApplicationData, expectedResponseStructures, validIntroductions } from '@tests/fixtures/teacherFixtures'
@@ -37,7 +38,7 @@ describe('教師申請 API 整合測試', () => {
     await clearDatabase()
 
     // 使用 UserTestHelpers 建立測試使用者
-    testUser = await UserTestHelpers.createUserEntity()
+    testUser = await UserTestHelpers.createUserEntityWithRole({}, UserRole.STUDENT)
     authToken = UserTestHelpers.generateAuthToken(testUser)
   })
 

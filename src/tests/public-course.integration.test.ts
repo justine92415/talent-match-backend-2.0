@@ -73,15 +73,13 @@ describe('公開課程瀏覽搜尋 API', () => {
     const courseRepository = dataSource.getRepository(Course)
 
     // 建立活躍教師
-    activeTeacherUser = userRepository.create({
+    activeTeacherUser = await UserTestHelpers.createUserEntityWithRole({
       uuid: TEST_USER_DATA.ACTIVE_TEACHER_UUID,
       email: TEST_USER_DATA.ACTIVE_TEACHER_EMAIL,
       nick_name: TEST_USER_DATA.ACTIVE_TEACHER_NICK_NAME,
       password: TEST_USER_DATA.COMMON_PASSWORD,
-      role: UserRole.TEACHER,
       account_status: AccountStatus.ACTIVE
-    })
-    await userRepository.save(activeTeacherUser)
+    }, UserRole.TEACHER)
 
     activeTeacher = teacherRepository.create({
       user_id: activeTeacherUser.id,
@@ -95,15 +93,13 @@ describe('公開課程瀏覽搜尋 API', () => {
     await teacherRepository.save(activeTeacher)
 
     // 建立停用教師
-    inactiveTeacherUser = userRepository.create({
+    inactiveTeacherUser = await UserTestHelpers.createUserEntityWithRole({
       uuid: TEST_USER_DATA.INACTIVE_TEACHER_UUID,
       email: TEST_USER_DATA.INACTIVE_TEACHER_EMAIL,
       nick_name: TEST_USER_DATA.INACTIVE_TEACHER_NICK_NAME,
       password: TEST_USER_DATA.COMMON_PASSWORD,
-      role: UserRole.TEACHER,
       account_status: AccountStatus.SUSPENDED
-    })
-    await userRepository.save(inactiveTeacherUser)
+    }, UserRole.TEACHER)
 
     inactiveTeacher = teacherRepository.create({
       user_id: inactiveTeacherUser.id,

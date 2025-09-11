@@ -7,6 +7,7 @@ import { UserRole, AccountStatus } from '@entities/enums'
 import { BusinessError, Errors } from '@utils/errors'
 import { BusinessMessages, ValidationMessages } from '@constants/Message'
 import { LEARNING_EXPERIENCE_BUSINESS } from '@constants/learningExperience'
+import { UserRoleService } from '@services/UserRoleService'
 import type { 
   CreateLearningExperienceRequest,
   UpdateLearningExperienceRequest,
@@ -21,11 +22,13 @@ export class LearningExperienceService {
   private learningExperienceRepository: Repository<TeacherLearningExperience>
   private teacherRepository: Repository<Teacher>
   private userRepository: Repository<User>
+  private userRoleService: UserRoleService
 
   constructor() {
     this.learningExperienceRepository = dataSource.getRepository(TeacherLearningExperience)
     this.teacherRepository = dataSource.getRepository(Teacher)
     this.userRepository = dataSource.getRepository(User)
+    this.userRoleService = new UserRoleService()
   }
 
   /**
@@ -182,21 +185,26 @@ export class LearningExperienceService {
    * 使用 JOIN 查詢優化效能
    */
   private async validateTeacherUser(userId: number): Promise<Teacher> {
+    // 首先檢查使用者是否有教師角色
+    const userRoles = await this.userRoleService.getUserRoles(userId)
+    if (!userRoles.includes(UserRole.TEACHER)) {
+      throw Errors.unauthorizedAccess(BusinessMessages.TEACHER_PERMISSION_REQUIRED, 403)
+    }
+
     // 使用 JOIN 查詢，一次取得使用者和教師資訊
     const teacher = await this.teacherRepository
       .createQueryBuilder('teacher')
       .innerJoin('teacher.user', 'user')
       .where('user.id = :userId', { userId })
-      .andWhere('user.role = :role', { role: UserRole.TEACHER })
       .andWhere('user.account_status = :status', { status: AccountStatus.ACTIVE })
       .select(['teacher.id', 'teacher.user_id'])
       .getOne()
     
     if (!teacher) {
-      // 進一步檢查是權限問題還是教師記錄不存在
+      // 進一步檢查是使用者狀態問題還是教師記錄不存在
       const user = await this.userRepository.findOne({ where: { id: userId } })
       
-      if (!user || user.role !== UserRole.TEACHER || user.account_status !== AccountStatus.ACTIVE) {
+      if (!user || user.account_status !== AccountStatus.ACTIVE) {
         throw Errors.unauthorizedAccess(BusinessMessages.TEACHER_PERMISSION_REQUIRED, 403)
       } else {
         throw new BusinessError('TEACHER_NOT_FOUND', BusinessMessages.TEACHER_NOT_FOUND, 404)
