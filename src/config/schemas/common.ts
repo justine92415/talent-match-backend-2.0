@@ -101,17 +101,125 @@ export const commonSchemas = {
     }
   },
 
+  // === 標準化錯誤回應 Schema ===
+  
+  // 400 驗證錯誤回應 (包含詳細錯誤欄位)
+  ValidationErrorResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        description: '回應狀態',
+        enum: ['error'],
+        example: 'error'
+      },
+      message: {
+        type: 'string',
+        description: '錯誤訊息',
+        example: '參數驗證失敗'
+      },
+      errors: {
+        type: 'object',
+        description: '詳細驗證錯誤資訊',
+        additionalProperties: {
+          type: 'array',
+          items: {
+            type: 'string'
+          }
+        },
+        example: {
+          email: ['電子郵件格式不正確'],
+          password: ['密碼必須至少8字元']
+        }
+      }
+    }
+  },
+
+  // 401 未授權錯誤
+  UnauthorizedErrorResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        description: '回應狀態',
+        enum: ['error'],
+        example: 'error'
+      },
+      message: {
+        type: 'string',
+        description: '錯誤訊息',
+        example: 'Token 無效'
+      }
+    }
+  },
+
+  // 403 禁止存取錯誤
+  ForbiddenErrorResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        description: '回應狀態',
+        enum: ['error'],
+        example: 'error'
+      },
+      message: {
+        type: 'string',
+        description: '錯誤訊息',
+        example: '權限不足'
+      }
+    }
+  },
+
+  // 404 資源不存在錯誤
+  NotFoundErrorResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        description: '回應狀態',
+        enum: ['error'],
+        example: 'error'
+      },
+      message: {
+        type: 'string',
+        description: '錯誤訊息',
+        example: '使用者不存在'
+      }
+    }
+  },
+
+  // 409 業務邏輯錯誤
+  BusinessErrorResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        description: '回應狀態',
+        enum: ['error'],
+        example: 'error'
+      },
+      message: {
+        type: 'string',
+        description: '錯誤訊息',
+        example: '電子郵件已被使用'
+      }
+    }
+  },
+
   // 系統錯誤回應 Schema（Auth API 實際使用）
   ServerErrorResponse: {
     type: 'object',
     properties: {
       status: {
         type: 'string',
+        description: '回應狀態',
         enum: ['error'],
         example: 'error'
       },
       message: {
         type: 'string',
+        description: '錯誤訊息',
         example: '系統錯誤，請稍後再試'
       }
     }

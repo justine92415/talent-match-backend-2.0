@@ -29,66 +29,54 @@ export const authSchemas = {
       status: {
         type: 'string',
         enum: ['success'],
+        description: '回應狀態',
         example: 'success'
       },
       message: {
         type: 'string',
+        description: '成功訊息',
         example: '密碼重設成功'
       },
       data: {
         type: 'null',
+        description: '回應資料（此 API 無回傳資料）',
         example: null
       }
     }
   },
 
   ResetPasswordValidationErrorResponse: {
-    type: 'object',
-    properties: {
-      status: {
-        type: 'string',
-        enum: ['error'],
-        example: 'error'
-      },
-      message: {
-        type: 'string',
-        example: '參數驗證失敗'
-      },
-      errors: {
+    allOf: [
+      { $ref: '#/components/schemas/ValidationErrorResponse' },
+      {
         type: 'object',
         properties: {
-          token: {
-            type: 'array',
-            items: { type: 'string' },
-            example: ['Token 為必填欄位']
+          message: {
+            example: '參數驗證失敗'
           },
-          new_password: {
-            type: 'array',
-            items: { type: 'string' },
-            example: ['密碼必須至少8字元']
+          errors: {
+            example: {
+              token: ['Token 為必填欄位'],
+              new_password: ['密碼必須至少8字元']
+            }
           }
         }
       }
-    }
+    ]
   },
 
   ResetPasswordBusinessErrorResponse: {
-    type: 'object',
-    properties: {
-      status: {
-        type: 'string',
-        enum: ['error'],
-        example: 'error'
-      },
-      message: {
-        type: 'string',
-        example: '重設密碼 Token 無效或已過期'
-      },
-      errors: {
+    allOf: [
+      { $ref: '#/components/schemas/BusinessErrorResponse' },
+      {
         type: 'object',
-        example: {}
+        properties: {
+          message: {
+            example: '重設密碼 Token 無效或已過期'
+          }
+        }
       }
-    }
+    ]
   },
 
   // === 忘記密碼 API Schema ===
@@ -112,42 +100,39 @@ export const authSchemas = {
       status: {
         type: 'string',
         enum: ['success'],
+        description: '回應狀態',
         example: 'success'
       },
       message: {
         type: 'string',
+        description: '成功訊息',
         example: '重設密碼郵件已發送'
       },
       data: {
         type: 'null',
+        description: '回應資料（此 API 無回傳資料）',
         example: null
       }
     }
   },
 
   ForgotPasswordValidationErrorResponse: {
-    type: 'object',
-    properties: {
-      status: {
-        type: 'string',
-        enum: ['error'],
-        example: 'error'
-      },
-      message: {
-        type: 'string',
-        example: '參數驗證失敗'
-      },
-      errors: {
+    allOf: [
+      { $ref: '#/components/schemas/ValidationErrorResponse' },
+      {
         type: 'object',
         properties: {
-          email: {
-            type: 'array',
-            items: { type: 'string' },
-            example: ['電子郵件格式不正確']
+          message: {
+            example: '參數驗證失敗'
+          },
+          errors: {
+            example: {
+              email: ['電子郵件格式不正確']
+            }
           }
         }
       }
-    }
+    ]
   },
 
   // === Refresh Token API Schema ===
@@ -169,10 +154,12 @@ export const authSchemas = {
       status: {
         type: 'string',
         enum: ['success'],
+        description: '回應狀態',
         example: 'success'
       },
       message: {
         type: 'string',
+        description: '成功訊息',
         example: 'Token 刷新成功'
       },
       data: {
@@ -182,47 +169,36 @@ export const authSchemas = {
   },
 
   RefreshTokenValidationErrorResponse: {
-    type: 'object',
-    properties: {
-      status: {
-        type: 'string',
-        enum: ['error'],
-        example: 'error'
-      },
-      message: {
-        type: 'string',
-        example: '參數驗證失敗'
-      },
-      errors: {
+    allOf: [
+      { $ref: '#/components/schemas/ValidationErrorResponse' },
+      {
         type: 'object',
         properties: {
-          refresh_token: {
-            type: 'array',
-            items: { type: 'string' },
-            example: ['Refresh token 為必填欄位']
+          message: {
+            example: '參數驗證失敗'
+          },
+          errors: {
+            example: {
+              refresh_token: ['Refresh token 為必填欄位']
+            }
           }
         }
       }
-    }
+    ]
   },
 
   RefreshTokenBusinessErrorResponse: {
-    type: 'object',
-    properties: {
-      status: {
-        type: 'string',
-        enum: ['error'],
-        example: 'error'
-      },
-      message: {
-        type: 'string',
-        example: 'Token 無效或已過期'
-      },
-      errors: {
+    allOf: [
+      { $ref: '#/components/schemas/BusinessErrorResponse' },
+      {
         type: 'object',
-        example: {}
+        properties: {
+          message: {
+            example: 'Token 無效或已過期'
+          }
+        }
       }
-    }
+    ]
   },
 
   // === 登入 API Schema ===
@@ -251,10 +227,12 @@ export const authSchemas = {
       status: {
         type: 'string',
         enum: ['success'],
+        description: '回應狀態',
         example: 'success'
       },
       message: {
         type: 'string',
+        description: '成功訊息',
         example: '登入成功'
       },
       data: {
@@ -264,52 +242,37 @@ export const authSchemas = {
   },
 
   LoginValidationErrorResponse: {
-    type: 'object',
-    properties: {
-      status: {
-        type: 'string',
-        enum: ['error'],
-        example: 'error'
-      },
-      message: {
-        type: 'string',
-        example: '登入失敗'
-      },
-      errors: {
+    allOf: [
+      { $ref: '#/components/schemas/ValidationErrorResponse' },
+      {
         type: 'object',
         properties: {
-          email: {
-            type: 'array',
-            items: { type: 'string' },
-            example: ['電子郵件格式不正確']
+          message: {
+            example: '登入失敗'
           },
-          password: {
-            type: 'array',
-            items: { type: 'string' },
-            example: ['密碼不能為空']
+          errors: {
+            example: {
+              email: ['電子郵件格式不正確'],
+              password: ['密碼不能為空']
+            }
           }
         }
       }
-    }
+    ]
   },
 
   LoginBusinessErrorResponse: {
-    type: 'object',
-    properties: {
-      status: {
-        type: 'string',
-        enum: ['error'],
-        example: 'error'
-      },
-      message: {
-        type: 'string',
-        example: '帳號或密碼錯誤'
-      },
-      errors: {
+    allOf: [
+      { $ref: '#/components/schemas/BusinessErrorResponse' },
+      {
         type: 'object',
-        example: {}
+        properties: {
+          message: {
+            example: '帳號或密碼錯誤'
+          }
+        }
       }
-    }
+    ]
   },
 
   // === 註冊 API Schema ===
@@ -346,10 +309,12 @@ export const authSchemas = {
       status: {
         type: 'string',
         enum: ['success'],
+        description: '回應狀態',
         example: 'success'
       },
       message: {
         type: 'string',
+        description: '成功訊息',
         example: '註冊成功'
       },
       data: {
@@ -359,68 +324,44 @@ export const authSchemas = {
   },
 
   RegisterValidationErrorResponse: {
-    type: 'object',
-    properties: {
-      status: {
-        type: 'string',
-        enum: ['error'],
-        example: 'error'
-      },
-      message: {
-        type: 'string',
-        example: '註冊失敗'
-      },
-      errors: {
+    allOf: [
+      { $ref: '#/components/schemas/ValidationErrorResponse' },
+      {
         type: 'object',
         properties: {
-          nick_name: {
-            type: 'array',
-            items: { type: 'string' },
-            example: ['暱稱為必填欄位']
+          message: {
+            example: '註冊失敗'
           },
-          email: {
-            type: 'array',
-            items: { type: 'string' },
-            example: ['Email 格式不正確']
-          },
-          password: {
-            type: 'array',
-            items: { type: 'string' },
-            example: ['密碼必須至少8字元且包含中英文']
+          errors: {
+            example: {
+              nick_name: ['暱稱為必填欄位'],
+              email: ['Email 格式不正確'],
+              password: ['密碼必須至少8字元且包含中英文']
+            }
           }
         }
       }
-    }
+    ]
   },
 
   RegisterBusinessErrorResponse: {
-    type: 'object',
-    properties: {
-      status: {
-        type: 'string',
-        enum: ['error'],
-        example: 'error'
-      },
-      message: {
-        type: 'string',
-        example: '註冊失敗'
-      },
-      errors: {
+    allOf: [
+      { $ref: '#/components/schemas/ValidationErrorResponse' },
+      {
         type: 'object',
         properties: {
-          email: {
-            type: 'array',
-            items: { type: 'string' },
-            example: ['此電子郵件已被註冊']
+          message: {
+            example: '註冊失敗'
           },
-          nick_name: {
-            type: 'array',
-            items: { type: 'string' },
-            example: ['該暱稱已被使用']
+          errors: {
+            example: {
+              email: ['此電子郵件已被註冊'],
+              nick_name: ['該暱稱已被使用']
+            }
           }
         }
       }
-    }
+    ]
   },
 
   // === 共用 Auth 回應資料 ===
@@ -428,7 +369,8 @@ export const authSchemas = {
     type: 'object',
     properties: {
       user: {
-        $ref: '#/components/schemas/UserProfile'
+        $ref: '#/components/schemas/UserProfile',
+        description: '使用者個人資料物件'
       },
       access_token: {
         type: 'string',
@@ -459,14 +401,17 @@ export const authSchemas = {
     properties: {
       status: {
         type: 'string',
+        description: '回應狀態',
         example: 'success'
       },
       message: {
         type: 'string',
+        description: '成功訊息',
         example: '成功取得個人資料'
       },
       data: {
         type: 'object',
+        description: '個人資料物件',
         properties: {
           user: {
             $ref: '#/components/schemas/UserProfile'
@@ -524,14 +469,17 @@ export const authSchemas = {
     properties: {
       status: {
         type: 'string',
+        description: '回應狀態',
         example: 'success'
       },
       message: {
         type: 'string',
+        description: '成功訊息',
         example: '個人資料更新成功'
       },
       data: {
         type: 'object',
+        description: '更新後的個人資料物件',
         properties: {
           user: {
             $ref: '#/components/schemas/UserProfile'
@@ -542,47 +490,37 @@ export const authSchemas = {
   },
 
   UpdateProfileValidationError: {
-    type: 'object',
-    properties: {
-      status: {
-        type: 'string',
-        example: 'error'
-      },
-      message: {
-        type: 'string',
-        example: '資料驗證失敗'
-      },
-      details: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            field: {
-              type: 'string',
-              example: 'nick_name'
-            },
-            message: {
-              type: 'string',
-              example: '暱稱長度不能超過50個字元'
+    allOf: [
+      { $ref: '#/components/schemas/ValidationErrorResponse' },
+      {
+        type: 'object',
+        properties: {
+          message: {
+            example: '資料驗證失敗'
+          },
+          errors: {
+            example: {
+              nick_name: ['暱稱長度不能超過50個字元'],
+              contact_phone: ['聯絡電話格式不正確']
             }
           }
         }
       }
-    }
+    ]
   },
 
   UpdateProfileBusinessError: {
-    type: 'object',
-    properties: {
-      status: {
-        type: 'string',
-        example: 'error'
-      },
-      message: {
-        type: 'string',
-        example: '暱稱已存在'
+    allOf: [
+      { $ref: '#/components/schemas/BusinessErrorResponse' },
+      {
+        type: 'object',
+        properties: {
+          message: {
+            example: '暱稱已存在'
+          }
+        }
       }
-    }
+    ]
   },
 
   DeleteProfileResponse: {
@@ -590,14 +528,17 @@ export const authSchemas = {
     properties: {
       status: {
         type: 'string',
+        description: '回應狀態',
         example: 'success'
       },
       message: {
         type: 'string',
+        description: '成功訊息',
         example: '帳號已成功刪除'
       },
       data: {
         type: 'null',
+        description: '回應資料（此 API 無回傳資料）',
         example: null
       }
     }

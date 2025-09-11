@@ -296,27 +296,13 @@ router.post('/reset-password', validateRequest(resetPasswordSchema, ERROR_MESSAG
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: "error"
- *                 message:
- *                   type: string
- *                   example: "Token 無效"
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
  *       404:
  *         description: 使用者不存在
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: "error"
- *                 message:
- *                   type: string
- *                   example: "使用者不存在"
+ *               $ref: '#/components/schemas/NotFoundErrorResponse'
  *       500:
  *         description: 伺服器內部錯誤
  *         content:
@@ -417,27 +403,13 @@ router.get('/profile', authenticateToken, authController.getProfile)
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: "error"
- *                 message:
- *                   type: string
- *                   example: "Token 無效"
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
  *       404:
  *         description: 使用者不存在
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: "error"
- *                 message:
- *                   type: string
- *                   example: "使用者不存在"
+ *               $ref: '#/components/schemas/NotFoundErrorResponse'
  *       500:
  *         description: 伺服器內部錯誤
  *         content:
@@ -491,27 +463,13 @@ router.put('/profile', authenticateToken, validateRequest(updateProfileSchema, E
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: "error"
- *                 message:
- *                   type: string
- *                   example: "Token 無效"
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
  *       404:
  *         description: 使用者不存在
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: "error"
- *                 message:
- *                   type: string
- *                   example: "使用者不存在"
+ *               $ref: '#/components/schemas/NotFoundErrorResponse'
  *       500:
  *         description: 伺服器內部錯誤
  *         content:
