@@ -7,6 +7,7 @@ import { UserRole, AccountStatus } from '@entities/enums'
 import { Errors, BusinessError } from '@utils/errors'
 import { AuthMessages } from '@constants/Message'
 import { JWT_CONFIG, PASSWORD_CONFIG } from '@config/secret'
+import { UserRoleService } from '@services/UserRoleService'
 import {
   RegisterUserData,
   LoginUserData,
@@ -22,6 +23,7 @@ import {
 
 export class AuthService {
   private userRepository = dataSource.getRepository(User)
+  private userRoleService = new UserRoleService()
 
   /**
    * 註冊新使用者
@@ -42,14 +44,16 @@ export class AuthService {
       nick_name: userData.nick_name,
       email: userData.email,
       password: hashedPassword,
-      role: UserRole.STUDENT,
       account_status: AccountStatus.ACTIVE
     })
 
     const savedUser = await this.userRepository.save(newUser)
 
+    // 為新使用者設定預設學生角色
+    await this.userRoleService.initializeDefaultRole(savedUser.id)
+
     // 生成 Token
-    const tokens = this.generateTokens(savedUser.id, savedUser.role)
+    const tokens = await this.generateTokens(savedUser.id)
 
     // 回傳使用者資料（不包含敏感資訊）
     const userResponse = this.formatUserResponse(savedUser)
@@ -66,7 +70,8 @@ export class AuthService {
   async login(userData: LoginUserData): Promise<AuthResponse> {
     // 查找使用者
     const user = await this.userRepository.findOne({
-      where: { email: userData.email }
+      where: { email: userData.email },
+      relations: ['roles']
     })
 
     // 檢查使用者是否存在
@@ -89,7 +94,7 @@ export class AuthService {
     await this.updateLastLoginTime(user.id)
 
     // 生成 Token
-    const tokens = this.generateTokens(user.id, user.role)
+    const tokens = await this.generateTokens(user.id)
 
     // 回傳使用者資料（不包含敏感資訊）
     const userResponse = this.formatUserResponse({
@@ -117,7 +122,10 @@ export class AuthService {
       }
 
       // 查詢使用者並檢查狀態
-      const user = await this.userRepository.findOne({ where: { id: decoded.userId } })
+      const user = await this.userRepository.findOne({ 
+        where: { id: decoded.userId },
+        relations: ['roles']
+      })
       if (!user) {
         throw Errors.invalidToken()
       }
@@ -127,17 +135,14 @@ export class AuthService {
       }
 
       // 生成新的 tokens
-      const tokens = this.generateTokens(user.id, user.role)
+      const tokens = await this.generateTokens(user.id)
       
       // 準備使用者回應資料（排除敏感欄位）
       const userResponse = this.sanitizeUser(user)
 
       return {
         user: userResponse,
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-        token_type: tokens.token_type,
-        expires_in: tokens.expires_in
+        ...tokens
       }
 
     } catch (error) {
@@ -268,7 +273,8 @@ export class AuthService {
     
     // 取得更新後的使用者資料
     const updatedUser = await userRepository.findOne({
-      where: { id: userId }
+      where: { id: userId },
+      relations: ['roles']
     })
 
     if (!updatedUser) {
@@ -325,7 +331,7 @@ export class AuthService {
       contact_phone: user.contact_phone,
       avatar_image: user.avatar_image,
       avatar_google_url: user.avatar_google_url,
-      role: user.role,
+      roles: user.roles,
       account_status: user.account_status,
       last_login_at: user.last_login_at,
       created_at: user.created_at,
@@ -335,23 +341,26 @@ export class AuthService {
   }
 
   /**
-   * 生成 JWT Tokens
+   * 生成 JWT Tokens - 僅使用多重角色系統
    */
-  private generateTokens(userId: number, role: UserRole): AuthTokens {
+  private async generateTokens(userId: number): Promise<AuthTokens> {
     // 使用高精度時間戳確保每次生成的 token 都不同
     const accessTokenTime = Date.now()
     const refreshTokenTime = Date.now() + 1 // 確保 refresh token 時間戳不同
     
+    // 獲取使用者的所有有效角色
+    const roles = await this.userRoleService.getUserRoles(userId)
+    
     const accessToken = jwt.sign({ 
       userId, 
-      role, 
+      roles,  // 只使用角色陣列
       type: 'access',
       timestamp: accessTokenTime
     }, JWT_CONFIG.SECRET, { expiresIn: JWT_CONFIG.ACCESS_TOKEN_EXPIRES_IN })
 
     const refreshToken = jwt.sign({ 
       userId, 
-      role, 
+      roles,  // 只使用角色陣列
       type: 'refresh',
       timestamp: refreshTokenTime
     }, JWT_CONFIG.SECRET, { expiresIn: JWT_CONFIG.REFRESH_TOKEN_EXPIRES_IN })

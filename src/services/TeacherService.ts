@@ -42,13 +42,17 @@ export class TeacherService {
    */
   private async validateUserEligibility(userId: number): Promise<User> {
     // 檢查使用者是否存在
-    const user = await this.userRepository.findOne({ where: { id: userId } })
+    const user = await this.userRepository.findOne({ 
+      where: { id: userId },
+      relations: ['roles']
+    })
     if (!user) {
       throw Errors.userNotFound()
     }
 
-    // 檢查使用者角色是否為學生
-    if (user.role !== UserRole.STUDENT) {
+    // 檢查使用者是否有學生角色
+    const userRoles = user.roles?.map(r => r.role) || []
+    if (!userRoles.includes(UserRole.STUDENT)) {
       throw Errors.unauthorizedAccess(BusinessMessages.STUDENT_ONLY_APPLY_TEACHER, 403)
     }
 
@@ -266,16 +270,22 @@ export class TeacherService {
    * @returns 教師記錄
    */
   private async validateTeacherUser(userId: number): Promise<Teacher> {
-    // 檢查使用者是否存在且為教師角色
+    // 檢查使用者是否存在且帳號啟用
     const user = await this.userRepository.findOne({ 
       where: { 
         id: userId, 
-        role: UserRole.TEACHER,
         account_status: AccountStatus.ACTIVE
-      } 
+      },
+      relations: ['roles']
     })
     
     if (!user) {
+      throw Errors.unauthorizedAccess(BusinessMessages.TEACHER_PERMISSION_REQUIRED, 403)
+    }
+
+    // 檢查是否有教師角色
+    const userRoles = user.roles?.map(r => r.role) || []
+    if (!userRoles.includes(UserRole.TEACHER)) {
       throw Errors.unauthorizedAccess(BusinessMessages.TEACHER_PERMISSION_REQUIRED, 403)
     }
 

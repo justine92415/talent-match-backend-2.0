@@ -77,7 +77,6 @@ describe('管理員功能整合測試', () => {
       email: 'test@example.com',
       password: '$2b$10$hashedpassword',
       nick_name: '測試使用者',
-      role: UserRole.STUDENT,
       account_status: AccountStatus.ACTIVE,
       created_at: new Date(),
       updated_at: new Date()
@@ -326,12 +325,12 @@ describe('管理員功能整合測試', () => {
       })
 
       it('應該拒絕一般使用者 token', async () => {
-        // 建立一般使用者 token
+        // 建立一般使用者 token（沒有管理員角色）
         const userToken = jwt.sign(
           { 
             userId: testUser.id,
             email: testUser.email,
-            role: testUser.role 
+            roles: [] // 空的角色陣列
           },
           JWT_CONFIG.SECRET,
           { expiresIn: '1h' }
@@ -566,7 +565,7 @@ describe('管理員功能整合測試', () => {
         { 
           userId: testUser.id,
           email: testUser.email,
-          role: testUser.role 
+          roles: [] // 空的角色陣列
         },
         JWT_CONFIG.SECRET,
         { expiresIn: '1h' }

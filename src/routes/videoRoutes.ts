@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { videoController } from '@controllers/VideoController'
-import { authenticateToken, requireTeacher } from '@middleware/auth'
+import { authMiddlewareChains } from '@middleware/auth'
 import { validateRequest } from '@middleware/schemas'
 import { 
   uploadVideoSchema,
@@ -121,7 +121,7 @@ const router = Router()
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.post('/', authenticateToken, requireTeacher, validateRequest(uploadVideoSchema), videoController.uploadVideo)
+router.post('/', ...authMiddlewareChains.teacherAuth, validateRequest(uploadVideoSchema), videoController.uploadVideo)
 
 /**
  * @swagger
@@ -219,7 +219,7 @@ router.post('/', authenticateToken, requireTeacher, validateRequest(uploadVideoS
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.get('/', authenticateToken, requireTeacher, validateRequest(videoListQuerySchema), videoController.getVideoList)
+router.get('/', ...authMiddlewareChains.teacherAuth, validateRequest(videoListQuerySchema), videoController.getVideoList)
 
 /**
  * @swagger
@@ -301,7 +301,7 @@ router.get('/', authenticateToken, requireTeacher, validateRequest(videoListQuer
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.get('/:id', authenticateToken, requireTeacher, videoController.getVideoDetail)
+router.get('/:id', ...authMiddlewareChains.teacherAuth, videoController.getVideoDetail)
 
 /**
  * @swagger
@@ -415,7 +415,7 @@ router.get('/:id', authenticateToken, requireTeacher, videoController.getVideoDe
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.put('/:id', authenticateToken, requireTeacher, validateRequest(updateVideoSchema), videoController.updateVideo)
+router.put('/:id', ...authMiddlewareChains.teacherAuth, validateRequest(updateVideoSchema), videoController.updateVideo)
 
 /**
  * @swagger
@@ -497,6 +497,6 @@ router.put('/:id', authenticateToken, requireTeacher, validateRequest(updateVide
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.delete('/:id', authenticateToken, requireTeacher, videoController.deleteVideo)
+router.delete('/:id', ...authMiddlewareChains.teacherAuth, videoController.deleteVideo)
 
 export default router

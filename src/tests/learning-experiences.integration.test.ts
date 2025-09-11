@@ -9,7 +9,7 @@ import { clearDatabase, initTestDatabase } from '@tests/helpers/database'
 import { dataSource } from '@db/data-source'
 import { Teacher } from '@entities/Teacher'
 import { TeacherLearningExperience } from '@entities/TeacherLearningExperience'
-import { ApplicationStatus } from '@entities/enums'
+import { ApplicationStatus, UserRole } from '@entities/enums'
 import {
   validLearningExperiences,
   invalidLearningExperiences,
@@ -37,7 +37,7 @@ describe('Learning Experience Management Integration Tests', () => {
     await clearDatabase()
     
     // 建立測試用教師使用者和教師記錄
-    const user = await UserTestHelpers.createTeacherUserEntity()
+    const user = await UserTestHelpers.createUserEntityWithRole({}, UserRole.TEACHER)
     const teacher = await TeacherTestHelpers.createTeacherApplication(user.id, {
       application_status: ApplicationStatus.APPROVED
     })
@@ -46,7 +46,7 @@ describe('Learning Experience Management Integration Tests', () => {
     // 建立認證 token
     accessToken = UserTestHelpers.generateAuthToken({
       id: user.id,
-      role: user.role,
+      roles: [{ role: UserRole.TEACHER }],  // 使用教師角色物件陣列
       uuid: user.uuid
     })
   })
@@ -93,9 +93,9 @@ describe('Learning Experience Management Integration Tests', () => {
 
       it('應該只回傳當前教師的學習經歷', async () => {
         // Arrange - 建立另一個教師和其學習經歷
-        const otherUser = await UserTestHelpers.createTeacherUserEntity({
+        const otherUser = await UserTestHelpers.createUserEntityWithRole({
           email: 'other@teacher.com'
-        })
+        }, UserRole.TEACHER)
         const otherTeacher = await TeacherTestHelpers.createTeacherApplication(otherUser.id, {
           application_status: ApplicationStatus.APPROVED
         })
@@ -340,9 +340,9 @@ describe('Learning Experience Management Integration Tests', () => {
 
       it('應該回傳 403 當嘗試更新其他教師的學習經歷', async () => {
         // Arrange - 建立其他教師的學習經歷
-        const otherUser = await UserTestHelpers.createTeacherUserEntity({
+        const otherUser = await UserTestHelpers.createUserEntityWithRole({
           email: 'other@teacher.com'
-        })
+        }, UserRole.TEACHER)
         const otherTeacher = await TeacherTestHelpers.createTeacherApplication(otherUser.id, {
           application_status: ApplicationStatus.APPROVED
         })
@@ -412,9 +412,9 @@ describe('Learning Experience Management Integration Tests', () => {
 
       it('應該回傳 403 當嘗試刪除其他教師的學習經歷', async () => {
         // Arrange - 建立其他教師的學習經歷
-        const otherUser = await UserTestHelpers.createTeacherUserEntity({
+        const otherUser = await UserTestHelpers.createUserEntityWithRole({
           email: 'other-delete@teacher.com'
-        })
+        }, UserRole.TEACHER)
         const otherTeacher = await TeacherTestHelpers.createTeacherApplication(otherUser.id, {
           application_status: ApplicationStatus.APPROVED
         })

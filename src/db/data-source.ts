@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm'
 import config from '@config/index'
 import { User } from '@entities/User'
+import { UserRole } from '@entities/UserRole'
 import { City } from '@entities/City'
 import { MainCategory } from '@entities/MainCategory'
 import { SubCategory } from '@entities/SubCategory'
@@ -48,6 +49,7 @@ export const dataSource = new DataSource({
   poolSize: process.env.NODE_ENV === 'test' ? 5 : 10, // 測試環境使用較少連線
   entities: [
     User,
+    UserRole,
     City,
     MainCategory,
     SubCategory,

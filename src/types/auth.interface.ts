@@ -50,11 +50,11 @@ export interface AuthTokens {
 }
 
 /**
- * JWT Token Payload 介面
+ * JWT Token Payload 介面 - 純多重角色系統
  */
 export interface JwtTokenPayload {
   userId: number
-  role: string
+  roles: string[]  // 只使用多重角色陣列
   type: 'access' | 'refresh'
   timestamp?: number
   iat?: number
@@ -73,7 +73,7 @@ export interface UpdateUserProfileData {
 }
 
 /**
- * 格式化使用者回應介面（排除敏感欄位）
+ * 格式化使用者回應介面（排除敏感欄位） - 純多重角色系統
  */
 export interface FormattedUserResponse {
   id: number
@@ -86,7 +86,11 @@ export interface FormattedUserResponse {
   contact_phone?: string | null
   avatar_image?: string | null
   avatar_google_url?: string | null
-  role: string
+  roles: Array<{
+    role: string
+    is_active: boolean
+    granted_at: Date
+  }>  // 只使用多重角色陣列
   account_status: string
   last_login_at?: Date | null
   created_at: Date

@@ -2,10 +2,52 @@ import { Router } from 'express'
 import { TeacherDashboardController } from '@controllers/TeacherDashboardController'
 
 const teacherDashboardController = new TeacherDashboardController()
-import { authenticateToken, requireTeacher } from '@middleware/auth'
+import { 
+  authMiddlewareChains, 
+  createAuthChain, 
+  requireOwnership,
+  authenticateToken,
+  requireTeacher
+} from '@middleware/auth'
 import { teacherDashboardValidation as teacherDashboardSchemas } from '@middleware/schemas/system'
+import { UserRole } from '@entities/enums'
 
 const router = Router()
+
+/**
+ * 教師後台擁有者權限檢查
+ * 確保教師只能存取自己的後台資料
+ */
+const requireTeacherOwnership = requireOwnership(
+  (req) => req.params.teacherId || req.params.id,
+  async (userId: number, teacherId: string | number): Promise<boolean> => {
+    if (!teacherId) {
+      return false
+    }
+    
+    // 查詢資料庫確認教師申請記錄的 user_id 是否等於當前使用者ID
+    try {
+      const { dataSource } = await import('@db/data-source')
+      const { Teacher } = await import('@entities/Teacher')
+      
+      const teacherRepository = dataSource.getRepository(Teacher)
+      const teacher = await teacherRepository.findOne({
+        where: { id: parseInt(teacherId.toString()) },
+        select: ['id', 'user_id']
+      })
+      
+      if (!teacher) {
+        return false
+      }
+      
+      return teacher.user_id === userId
+    } catch (error) {
+      console.error('Error checking teacher ownership:', error)
+      return false
+    }
+  },
+  '您只能存取自己的教師後台資料'
+)
 
 /**
  * @swagger
@@ -291,10 +333,11 @@ const router = Router()
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
+// 方法1：使用認證鏈
 router.get(
   '/:teacherId/overview',
-  authenticateToken,
-  requireTeacher,
+  ...authMiddlewareChains.teacherAuth,
+  requireTeacherOwnership,
   teacherDashboardSchemas.validateDashboardOverviewQuery,
   teacherDashboardController.getDashboardOverview
 )
@@ -368,10 +411,11 @@ router.get(
  *       403:
  *         $ref: '#/components/responses/Forbidden'
  */
+// 統計資料路由 - 需要教師身份且擁有權限驗證
 router.get(
   '/:teacherId/statistics',
-  authenticateToken,
-  requireTeacher,
+  ...authMiddlewareChains.teacherAuth,
+  requireTeacherOwnership,
   teacherDashboardSchemas.validateStatisticsQuery,
   teacherDashboardController.getStatistics
 )
@@ -455,8 +499,7 @@ router.get(
  */
 router.get(
   '/:teacherId/students',
-  authenticateToken,
-  requireTeacher,
+  ...authMiddlewareChains.teacherAuth,
   teacherDashboardSchemas.validateStudentListQuery,
   teacherDashboardController.getStudentList
 )
