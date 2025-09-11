@@ -18,6 +18,7 @@ export * from './cart.interface'
 export * from './order.interface'
 export * from './payment.interface'
 export * from './reservation.interface'
+export * from './fileUpload.interface'
 
 // 解決命名衝突：明確重新匯出評價相關型別
 export {
