@@ -16,16 +16,27 @@ export class TeacherController {
    */
   apply = handleErrorAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const userId = req.user!.userId // 經過 authenticateToken 中間件後，req.user 必定存在
-    const { nationality, introduction } = req.body
+    const { city, district, address, main_category_id, sub_category_ids, introduction } = req.body
 
-    const teacher = await this.teacherService.apply(userId, { nationality, introduction })
+    const teacher = await this.teacherService.apply(userId, { 
+      city, 
+      district, 
+      address, 
+      main_category_id, 
+      sub_category_ids, 
+      introduction 
+    })
     
     res.status(201).json(handleCreated({
       teacher: {
         id: teacher.id,
         uuid: teacher.uuid,
         user_id: teacher.user_id,
-        nationality: teacher.nationality,
+        city: teacher.city,
+        district: teacher.district,
+        address: teacher.address,
+        main_category_id: teacher.main_category_id,
+        sub_category_ids: teacher.sub_category_ids,
         introduction: teacher.introduction,
         application_status: teacher.application_status,
         application_submitted_at: teacher.application_submitted_at,
@@ -51,7 +62,11 @@ export class TeacherController {
         id: teacher.id,
         uuid: teacher.uuid,
         user_id: teacher.user_id,
-        nationality: teacher.nationality,
+        city: teacher.city,
+        district: teacher.district,
+        address: teacher.address,
+        main_category_id: teacher.main_category_id,
+        sub_category_ids: teacher.sub_category_ids,
         introduction: teacher.introduction,
         application_status: teacher.application_status,
         application_submitted_at: teacher.application_submitted_at,
@@ -69,10 +84,14 @@ export class TeacherController {
    */
   updateApplication = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
     const userId = req.user!.userId // 經過 authenticateToken 中間件後，req.user 必定存在
-    const { nationality, introduction } = req.body
+    const { city, district, address, main_category_id, sub_category_ids, introduction } = req.body
 
     const teacher = await this.teacherService.updateApplication(userId, {
-      nationality,
+      city,
+      district,
+      address,
+      main_category_id,
+      sub_category_ids,
       introduction
     })
 
@@ -81,7 +100,11 @@ export class TeacherController {
         id: teacher.id,
         uuid: teacher.uuid,
         user_id: teacher.user_id,
-        nationality: teacher.nationality,
+        city: teacher.city,
+        district: teacher.district,
+        address: teacher.address,
+        main_category_id: teacher.main_category_id,
+        sub_category_ids: teacher.sub_category_ids,
         introduction: teacher.introduction,
         application_status: teacher.application_status,
         application_submitted_at: teacher.application_submitted_at,
@@ -129,7 +152,11 @@ export class TeacherController {
         id: teacher.id,
         uuid: teacher.uuid,
         user_id: teacher.user_id,
-        nationality: teacher.nationality,
+        city: teacher.city,
+        district: teacher.district,
+        address: teacher.address,
+        main_category_id: teacher.main_category_id,
+        sub_category_ids: teacher.sub_category_ids,
         introduction: teacher.introduction,
         application_status: teacher.application_status,
         application_submitted_at: teacher.application_submitted_at,
@@ -151,17 +178,25 @@ export class TeacherController {
    */
   updateProfile = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
     const userId = req.user!.userId // 經過 authenticateToken 中間件後，req.user 必定存在
-    const { nationality, introduction } = req.body
+    const { city, district, address, main_category_id, sub_category_ids, introduction } = req.body
 
     const teacher = await this.teacherService.updateProfile(userId, {
-      nationality,
+      city,
+      district,
+      address,
+      main_category_id,
+      sub_category_ids,
       introduction
     })
 
     res.status(200).json(handleSuccess({
       teacher: {
         id: teacher.id,
-        nationality: teacher.nationality,
+        city: teacher.city,
+        district: teacher.district,
+        address: teacher.address,
+        main_category_id: teacher.main_category_id,
+        sub_category_ids: teacher.sub_category_ids,
         introduction: teacher.introduction,
         application_status: teacher.application_status,
         updated_at: teacher.updated_at

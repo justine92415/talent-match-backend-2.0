@@ -1,7 +1,9 @@
-import { Repository, Not, IsNull } from 'typeorm'
+import { Repository, Not, IsNull, In } from 'typeorm'
 import { dataSource } from '@db/data-source'
 import { Teacher } from '@entities/Teacher'
 import { User } from '@entities/User'
+import { MainCategory } from '@entities/MainCategory'
+import { SubCategory } from '@entities/SubCategory'
 import { TeacherWorkExperience } from '@entities/TeacherWorkExperience'
 import { TeacherLearningExperience } from '@entities/TeacherLearningExperience'
 import { TeacherCertificate } from '@entities/TeacherCertificate'
@@ -23,6 +25,8 @@ import {
 export class TeacherService {
   private readonly teacherRepository: Repository<Teacher>
   private readonly userRepository: Repository<User>
+  private readonly mainCategoryRepository: Repository<MainCategory>
+  private readonly subCategoryRepository: Repository<SubCategory>
   private readonly workExperienceRepository: Repository<TeacherWorkExperience>
   private readonly learningExperienceRepository: Repository<TeacherLearningExperience>
   private readonly certificateRepository: Repository<TeacherCertificate>
@@ -30,9 +34,63 @@ export class TeacherService {
   constructor() {
     this.teacherRepository = dataSource.getRepository(Teacher)
     this.userRepository = dataSource.getRepository(User)
+    this.mainCategoryRepository = dataSource.getRepository(MainCategory)
+    this.subCategoryRepository = dataSource.getRepository(SubCategory)
     this.workExperienceRepository = dataSource.getRepository(TeacherWorkExperience)
     this.learningExperienceRepository = dataSource.getRepository(TeacherLearningExperience)
     this.certificateRepository = dataSource.getRepository(TeacherCertificate)
+  }
+
+  /**
+   * 驗證主分類是否存在且啟用
+   * @private
+   * @param mainCategoryId 主分類 ID
+   */
+  private async validateMainCategory(mainCategoryId: number): Promise<void> {
+    const mainCategory = await this.mainCategoryRepository.findOne({
+      where: { 
+        id: mainCategoryId,
+        is_active: true
+      }
+    })
+    
+    if (!mainCategory) {
+      throw Errors.validationFailed('所選的教授科目不存在或已停用')
+    }
+  }
+
+  /**
+   * 驗證子分類是否存在、啟用且屬於指定的主分類
+   * @private
+   * @param mainCategoryId 主分類 ID
+   * @param subCategoryIds 子分類 ID 陣列
+   */
+  private async validateSubCategories(mainCategoryId: number, subCategoryIds: number[]): Promise<void> {
+    if (subCategoryIds.length === 0) {
+      throw Errors.validationFailed('至少需要選擇1個專長')
+    }
+    
+    if (subCategoryIds.length > 3) {
+      throw Errors.validationFailed('最多只能選擇3個專長')
+    }
+
+    // 檢查是否有重複的子分類
+    const uniqueIds = [...new Set(subCategoryIds)]
+    if (uniqueIds.length !== subCategoryIds.length) {
+      throw Errors.validationFailed('專長不能重複選擇')
+    }
+
+    const subCategories = await this.subCategoryRepository.find({
+      where: {
+        id: In(subCategoryIds),
+        main_category_id: mainCategoryId,
+        is_active: true
+      }
+    })
+
+    if (subCategories.length !== subCategoryIds.length) {
+      throw Errors.validationFailed('部分專長不存在、已停用或不屬於所選的教授科目')
+    }
   }
 
   /**
@@ -92,10 +150,20 @@ export class TeacherService {
     // 檢查是否已有教師申請記錄
     await this.checkExistingApplication(userId)
 
+    // 驗證主分類
+    await this.validateMainCategory(applicationData.main_category_id)
+
+    // 驗證子分類
+    await this.validateSubCategories(applicationData.main_category_id, applicationData.sub_category_ids)
+
     // 建立教師申請記錄
     const teacher = this.teacherRepository.create({
       user_id: userId,
-      nationality: applicationData.nationality,
+      city: applicationData.city,
+      district: applicationData.district,
+      address: applicationData.address,
+      main_category_id: applicationData.main_category_id,
+      sub_category_ids: applicationData.sub_category_ids,
       introduction: applicationData.introduction,
       application_status: ApplicationStatus.PENDING
     })
@@ -112,7 +180,7 @@ export class TeacherService {
     const teacher = await this.teacherRepository.findOne({ 
       where: { user_id: userId },
       select: [
-        'id', 'uuid', 'user_id', 'nationality', 'introduction',
+        'id', 'uuid', 'user_id', 'city', 'district', 'address', 'main_category_id', 'sub_category_ids', 'introduction',
         'application_status', 'application_submitted_at', 'application_reviewed_at',
         'reviewer_id', 'review_notes', 'created_at', 'updated_at'
       ]
@@ -155,9 +223,34 @@ export class TeacherService {
     // 驗證是否可以修改
     this.validateApplicationEditable(teacher)
 
+    // 如果有更新主分類，進行驗證
+    if (updateData.main_category_id !== undefined) {
+      await this.validateMainCategory(updateData.main_category_id)
+    }
+
+    // 如果有更新子分類，進行驗證
+    if (updateData.sub_category_ids !== undefined) {
+      const mainCategoryId = updateData.main_category_id ?? teacher.main_category_id
+      if (mainCategoryId) {
+        await this.validateSubCategories(mainCategoryId, updateData.sub_category_ids)
+      }
+    }
+
     // 更新欄位
-    if (updateData.nationality !== undefined) {
-      teacher.nationality = updateData.nationality
+    if (updateData.city !== undefined) {
+      teacher.city = updateData.city
+    }
+    if (updateData.district !== undefined) {
+      teacher.district = updateData.district
+    }
+    if (updateData.address !== undefined) {
+      teacher.address = updateData.address
+    }
+    if (updateData.main_category_id !== undefined) {
+      teacher.main_category_id = updateData.main_category_id
+    }
+    if (updateData.sub_category_ids !== undefined) {
+      teacher.sub_category_ids = updateData.sub_category_ids
     }
     if (updateData.introduction !== undefined) {
       teacher.introduction = updateData.introduction
@@ -236,7 +329,7 @@ export class TeacherService {
         application_status: ApplicationStatus.APPROVED 
       },
       select: [
-        'id', 'uuid', 'user_id', 'nationality', 'introduction',
+        'id', 'uuid', 'user_id', 'city', 'district', 'address', 'main_category_id', 'sub_category_ids', 'introduction',
         'application_status', 'application_reviewed_at', 'reviewer_id', 'review_notes',
         'updated_at'
       ]
@@ -246,9 +339,34 @@ export class TeacherService {
       throw Errors.teacherNotFound()
     }
 
+    // 如果有更新主分類，進行驗證
+    if (updateData.main_category_id !== undefined) {
+      await this.validateMainCategory(updateData.main_category_id)
+    }
+
+    // 如果有更新子分類，進行驗證
+    if (updateData.sub_category_ids !== undefined) {
+      const mainCategoryId = updateData.main_category_id ?? teacher.main_category_id
+      if (mainCategoryId) {
+        await this.validateSubCategories(mainCategoryId, updateData.sub_category_ids)
+      }
+    }
+
     // 更新欄位
-    if (updateData.nationality !== undefined) {
-      teacher.nationality = updateData.nationality
+    if (updateData.city !== undefined) {
+      teacher.city = updateData.city
+    }
+    if (updateData.district !== undefined) {
+      teacher.district = updateData.district
+    }
+    if (updateData.address !== undefined) {
+      teacher.address = updateData.address
+    }
+    if (updateData.main_category_id !== undefined) {
+      teacher.main_category_id = updateData.main_category_id
+    }
+    if (updateData.sub_category_ids !== undefined) {
+      teacher.sub_category_ids = updateData.sub_category_ids
     }
     if (updateData.introduction !== undefined) {
       teacher.introduction = updateData.introduction

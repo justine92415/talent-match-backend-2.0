@@ -2,7 +2,11 @@
  * 教師申請請求介面
  */
 export interface TeacherApplicationData {
-  nationality: string
+  city: string
+  district: string
+  address: string
+  main_category_id: number
+  sub_category_ids: number[]
   introduction: string
 }
 
@@ -10,7 +14,11 @@ export interface TeacherApplicationData {
  * 教師申請更新請求介面
  */
 export interface TeacherApplicationUpdateData {
-  nationality?: string
+  city?: string
+  district?: string
+  address?: string
+  main_category_id?: number
+  sub_category_ids?: number[]
   introduction?: string
 }
 
@@ -21,7 +29,11 @@ export interface TeacherProfileData {
   id: number
   uuid: string
   user_id: number
-  nationality: string
+  city: string
+  district: string
+  address: string
+  main_category_id: number
+  sub_category_ids: number[]
   introduction: string
   application_status: string
   application_submitted_at: Date | null
@@ -40,7 +52,11 @@ export interface TeacherProfileData {
  * 教師基本資料更新請求介面
  */
 export interface TeacherProfileUpdateRequest {
-  nationality?: string
+  city?: string
+  district?: string
+  address?: string
+  main_category_id?: number
+  sub_category_ids?: number[]
   introduction?: string
 }
 

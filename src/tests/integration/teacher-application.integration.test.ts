@@ -67,7 +67,11 @@ describe('教師申請 API 整合測試', () => {
     it('應該拒絕重複申請並回傳 409 錯誤', async () => {
       // Arrange - 使用 TeacherTestHelpers 先建立一個申請
       await TeacherTestHelpers.createTeacherApplication(testUser.id, {
-        nationality: '台灣',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
         introduction: validIntroductions.existing,
         application_status: ApplicationStatus.PENDING
       })
@@ -90,7 +94,7 @@ describe('教師申請 API 整合測試', () => {
 
     it('應該拒絕無效的國籍並回傳 400 錯誤', async () => {
       // Arrange - 使用 fixtures 中的無效資料
-      const invalidData = invalidTeacherApplicationData.emptyNationality
+      const invalidData = invalidTeacherApplicationData.emptyCity
 
       // Act
       const response = await request(app).post('/api/teachers/apply').set('Authorization', `Bearer ${authToken}`).send(invalidData)
@@ -195,7 +199,11 @@ describe('教師申請 API 整合測試', () => {
     it('應該成功取得申請狀態並回傳 200', async () => {
       // Arrange - 使用 TeacherTestHelpers 建立申請記錄
       const teacher = await TeacherTestHelpers.createTeacherApplication(testUser.id, {
-        nationality: '台灣',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
         introduction: validIntroductions.basic,
         application_status: ApplicationStatus.PENDING
       })
@@ -211,7 +219,11 @@ describe('教師申請 API 整合測試', () => {
       expect(response.body.data.teacher).toMatchObject({
         id: teacher.id,
         uuid: teacher.uuid,
-        nationality: teacher.nationality,
+        city: teacher.city,
+        district: teacher.district,
+        address: teacher.address,
+        main_category_id: teacher.main_category_id,
+        sub_category_ids: teacher.sub_category_ids,
         introduction: teacher.introduction,
         application_status: ApplicationStatus.PENDING
       })
@@ -231,7 +243,11 @@ describe('教師申請 API 整合測試', () => {
     it('應該成功更新申請資料並回傳 200', async () => {
       // Arrange - 使用 TeacherTestHelpers 建立申請記錄
       const teacher = await TeacherTestHelpers.createTeacherApplication(testUser.id, {
-        nationality: '台灣',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
         introduction: validIntroductions.original,
         application_status: ApplicationStatus.PENDING
       })
@@ -248,7 +264,11 @@ describe('教師申請 API 整合測試', () => {
       // 驗證更新後的資料
       expect(response.body.data.teacher).toMatchObject({
         id: teacher.id,
-        nationality: updateData.nationality,
+        city: updateData.city,
+        district: updateData.district,
+        address: updateData.address,
+        main_category_id: updateData.main_category_id,
+        sub_category_ids: updateData.sub_category_ids,
         introduction: updateData.introduction
       })
     })
@@ -256,13 +276,22 @@ describe('教師申請 API 整合測試', () => {
     it('應該拒絕在已通過狀態下的修改並回傳 400 錯誤', async () => {
       // Arrange - 建立已通過的申請記錄
       await TeacherTestHelpers.createTeacherApplication(testUser.id, {
-        nationality: '台灣',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
         introduction: validIntroductions.detailed,
         application_status: ApplicationStatus.APPROVED
       })
 
       const updateData = {
-        nationality: '日本'
+        city: '大阪',
+        district: '梅田区',
+        address: '梅田1-1-1',
+        main_category_id: 2,
+        sub_category_ids: [3, 4],
+        introduction: validIntroductions.updated
       }
 
       // Act
@@ -281,7 +310,11 @@ describe('教師申請 API 整合測試', () => {
     it('應該成功重新提交被拒絕的申請並回傳 200 狀態', async () => {
       // Arrange - 建立被拒絕的申請記錄
       const rejectedApplication = await TeacherTestHelpers.createTeacherApplication(testUser.id, {
-        nationality: '台灣',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
         introduction: validIntroductions.detailed,
         application_status: ApplicationStatus.REJECTED,
         review_notes: '申請資料不完整',
@@ -327,7 +360,11 @@ describe('教師申請 API 整合測試', () => {
     it('應該拒絕重新提交非拒絕狀態的申請並回傳 400 錯誤', async () => {
       // Arrange - 建立待審核的申請記錄
       await TeacherTestHelpers.createTeacherApplication(testUser.id, {
-        nationality: '台灣',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
         introduction: validIntroductions.detailed,
         application_status: ApplicationStatus.PENDING
       })
@@ -346,7 +383,11 @@ describe('教師申請 API 整合測試', () => {
     it('應該拒絕重新提交已通過的申請並回傳 400 錯誤', async () => {
       // Arrange - 建立已通過的申請記錄
       await TeacherTestHelpers.createTeacherApplication(testUser.id, {
-        nationality: '台灣',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
         introduction: validIntroductions.detailed,
         application_status: ApplicationStatus.APPROVED
       })
@@ -391,7 +432,11 @@ describe('教師申請 API 整合測試', () => {
     it('應該成功取得教師基本資料並回傳 200', async () => {
       // Arrange - 建立已通過審核的教師
       const approvedTeacher = await TeacherTestHelpers.createTeacherApplication(testUser.id, {
-        nationality: '台灣',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
         introduction: validIntroductions.detailed,
         application_status: ApplicationStatus.APPROVED,
         application_reviewed_at: new Date(),
@@ -411,7 +456,11 @@ describe('教師申請 API 整合測試', () => {
             id: approvedTeacher.id,
             uuid: expect.any(String),
             user_id: testUser.id,
-            nationality: '台灣',
+            city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
             introduction: validIntroductions.detailed,
             application_status: ApplicationStatus.APPROVED,
             application_submitted_at: null,
@@ -432,7 +481,11 @@ describe('教師申請 API 整合測試', () => {
     it('應該拒絕未通過審核的教師取得資料並回傳 404', async () => {
       // Arrange - 建立待審核的教師申請
       await TeacherTestHelpers.createTeacherApplication(testUser.id, {
-        nationality: '台灣',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
         introduction: validIntroductions.detailed,
         application_status: ApplicationStatus.PENDING
       })
@@ -477,7 +530,11 @@ describe('教師申請 API 整合測試', () => {
     it('應該成功更新教師資料並觸發重新審核', async () => {
       // Arrange - 建立已通過審核的教師
       const approvedTeacher = await TeacherTestHelpers.createTeacherApplication(testUser.id, {
-        nationality: '台灣',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
         introduction: validIntroductions.original,
         application_status: ApplicationStatus.APPROVED,
         application_reviewed_at: new Date(),
@@ -485,7 +542,11 @@ describe('教師申請 API 整合測試', () => {
       })
 
       const updateData = {
-        nationality: '日本',
+        city: '東京',
+        district: '渋谷区',
+        address: '渋谷1-1-1',
+        main_category_id: 2,
+        sub_category_ids: [8, 9],
         introduction: validIntroductions.profileUpdate
       }
 
@@ -500,7 +561,11 @@ describe('教師申請 API 整合測試', () => {
         data: {
           teacher: {
             id: approvedTeacher.id,
-            nationality: '日本',
+            city: '東京',
+        district: '渋谷区',
+        address: '渋谷1-1-1',
+        main_category_id: 2,
+        sub_category_ids: [8, 9],
             introduction: validIntroductions.profileUpdate,
             application_status: ApplicationStatus.PENDING,
             updated_at: expect.any(String)
@@ -513,7 +578,11 @@ describe('教師申請 API 整合測試', () => {
     it('應該支援部分更新教師資料', async () => {
       // Arrange - 建立已通過審核的教師
       const approvedTeacher = await TeacherTestHelpers.createTeacherApplication(testUser.id, {
-        nationality: '台灣',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
         introduction: validIntroductions.detailed,
         application_status: ApplicationStatus.APPROVED,
         application_reviewed_at: new Date(),
@@ -521,7 +590,12 @@ describe('教師申請 API 整合測試', () => {
       })
 
       const updateData = {
-        nationality: '美國'
+        city: '洛杉磯',
+        district: '好萊塢',
+        address: '好萊塢大道123號',
+        main_category_id: 3,
+        sub_category_ids: [14, 15],
+        introduction: validIntroductions.experienced
       }
 
       // Act
@@ -535,8 +609,12 @@ describe('教師申請 API 整合測試', () => {
         data: {
           teacher: {
             id: approvedTeacher.id,
-            nationality: '美國',
-            introduction: validIntroductions.detailed, // 保持原有介紹
+            city: '洛杉磯',
+        district: '好萊塢',
+        address: '好萊塢大道123號',
+        main_category_id: 3,
+        sub_category_ids: [14, 15],
+            introduction: validIntroductions.experienced,
             application_status: ApplicationStatus.PENDING,
             updated_at: expect.any(String)
           }
@@ -547,13 +625,22 @@ describe('教師申請 API 整合測試', () => {
     it('應該拒絕未通過審核的教師更新資料並回傳 404', async () => {
       // Arrange - 建立待審核的教師申請
       await TeacherTestHelpers.createTeacherApplication(testUser.id, {
-        nationality: '台灣',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
         introduction: validIntroductions.detailed,
         application_status: ApplicationStatus.PENDING
       })
 
       const updateData = {
-        nationality: '日本'
+        city: '京都',
+        district: '清水',
+        address: '清水寺前1-1',
+        main_category_id: 2,
+        sub_category_ids: [3, 4],
+        introduction: validIntroductions.japanese
       }
 
       // Act
@@ -570,7 +657,12 @@ describe('教師申請 API 整合測試', () => {
     it('應該在沒有教師記錄時回傳 404 錯誤', async () => {
       // Arrange
       const updateData = {
-        nationality: '日本'
+        city: '札幌',
+        district: '雪祭區',
+        address: '雪祭大道1-1',
+        main_category_id: 4,
+        sub_category_ids: [8, 9],
+        introduction: validIntroductions.basic
       }
 
       // Act
@@ -587,13 +679,21 @@ describe('教師申請 API 整合測試', () => {
     it('應該拒絕無效的國籍資料並回傳 400 錯誤', async () => {
       // Arrange - 建立已通過審核的教師
       await TeacherTestHelpers.createTeacherApplication(testUser.id, {
-        nationality: '台灣',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
         introduction: validIntroductions.detailed,
         application_status: ApplicationStatus.APPROVED
       })
 
       const invalidData = {
-        nationality: '' // 空白國籍
+        city: '', // 空白城市
+        district: '',
+        address: '',
+        main_category_id: 1,
+        sub_category_ids: []
       }
 
       // Act
@@ -611,7 +711,11 @@ describe('教師申請 API 整合測試', () => {
     it('應該拒絕過短的自我介紹並回傳 400 錯誤', async () => {
       // Arrange - 建立已通過審核的教師
       await TeacherTestHelpers.createTeacherApplication(testUser.id, {
-        nationality: '台灣',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
         introduction: validIntroductions.detailed,
         application_status: ApplicationStatus.APPROVED
       })
@@ -637,7 +741,11 @@ describe('教師申請 API 整合測試', () => {
     it('應該拒絕過長的自我介紹並回傳 400 錯誤', async () => {
       // Arrange - 建立已通過審核的教師
       await TeacherTestHelpers.createTeacherApplication(testUser.id, {
-        nationality: '台灣',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
         introduction: validIntroductions.detailed,
         application_status: ApplicationStatus.APPROVED
       })
@@ -663,7 +771,12 @@ describe('教師申請 API 整合測試', () => {
     it('應該拒絕未認證的請求並回傳 401 錯誤', async () => {
       // Arrange
       const updateData = {
-        nationality: '日本'
+        city: '福岡',
+        district: '博多',
+        address: '博多站前1-1',
+        main_category_id: 5,
+        sub_category_ids: [10],
+        introduction: validIntroductions.basic
       }
 
       // Act
@@ -682,7 +795,11 @@ describe('教師申請 API 整合測試', () => {
     it('應該成功提交完整申請並回傳 200 狀態', async () => {
       // Arrange - 建立基本申請
       const teacher = await TeacherTestHelpers.createTeacherApplication(testUser.id, {
-        nationality: '台灣',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
         introduction: validIntroductions.basic,
         application_status: ApplicationStatus.PENDING
       })
@@ -770,7 +887,11 @@ describe('教師申請 API 整合測試', () => {
     it('應該拒絕缺少工作經驗的提交並回傳 400 錯誤', async () => {
       // Arrange - 只建立基本申請，沒有工作經驗
       await TeacherTestHelpers.createTeacherApplication(testUser.id, {
-        nationality: '台灣',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
         introduction: validIntroductions.basic,
         application_status: ApplicationStatus.PENDING
       })
@@ -792,7 +913,11 @@ describe('教師申請 API 整合測試', () => {
     it('應該拒絕缺少學習經歷的提交並回傳 400 錯誤', async () => {
       // Arrange - 建立申請和工作經驗，但沒有學習經歷
       const teacher = await TeacherTestHelpers.createTeacherApplication(testUser.id, {
-        nationality: '台灣',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
         introduction: validIntroductions.basic,
         application_status: ApplicationStatus.PENDING
       })
@@ -825,7 +950,11 @@ describe('教師申請 API 整合測試', () => {
     it('應該拒絕缺少證書的提交並回傳 400 錯誤', async () => {
       // Arrange - 建立申請、工作經驗和學習經歷，但沒有證書
       const teacher = await TeacherTestHelpers.createTeacherApplication(testUser.id, {
-        nationality: '台灣',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
         introduction: validIntroductions.basic,
         application_status: ApplicationStatus.PENDING
       })
@@ -886,7 +1015,11 @@ describe('教師申請 API 整合測試', () => {
     it('應該拒絕已提交的申請重複提交並回傳 400 錯誤', async () => {
       // Arrange - 建立已提交的完整申請
       const teacher = await TeacherTestHelpers.createTeacherApplication(testUser.id, {
-        nationality: '台灣',
+        city: '台北市',
+        district: '信義區',
+        address: '信義路100號',
+        main_category_id: 1,
+        sub_category_ids: [1, 2],
         introduction: validIntroductions.basic,
         application_status: ApplicationStatus.PENDING,
         application_submitted_at: new Date()

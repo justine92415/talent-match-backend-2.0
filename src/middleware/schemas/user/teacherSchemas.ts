@@ -5,15 +5,67 @@ import { ValidationMessages } from '@constants/Message'
  * 教師申請驗證 Schema
  */
 export const teacherApplicationSchema = Joi.object({
-  nationality: Joi.string()
+  city: Joi.string()
     .min(1)
     .max(50)
     .required()
     .messages({
-      'string.empty': '國籍不能為空',
-      'string.min': '國籍至少需要1個字元',
-      'string.max': '國籍長度不能超過50個字元',
-      'any.required': '國籍為必填欄位'
+      'string.empty': '縣市不能為空',
+      'string.min': '縣市至少需要1個字元',
+      'string.max': '縣市長度不能超過50個字元',
+      'any.required': '縣市為必填欄位'
+    }),
+  district: Joi.string()
+    .min(1)
+    .max(50)
+    .required()
+    .messages({
+      'string.empty': '區域不能為空',
+      'string.min': '區域至少需要1個字元',
+      'string.max': '區域長度不能超過50個字元',
+      'any.required': '區域為必填欄位'
+    }),
+  address: Joi.string()
+    .min(1)
+    .max(200)
+    .required()
+    .messages({
+      'string.empty': '地址不能為空',
+      'string.min': '地址至少需要1個字元',
+      'string.max': '地址長度不能超過200個字元',
+      'any.required': '地址為必填欄位'
+    }),
+  main_category_id: Joi.number()
+    .integer()
+    .positive()
+    .required()
+    .messages({
+      'number.base': '教授科目必須為數字',
+      'number.integer': '教授科目必須為整數',
+      'number.positive': '教授科目必須為正數',
+      'any.required': '教授科目為必填欄位'
+    }),
+  sub_category_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .positive()
+        .messages({
+          'number.base': '專長必須為數字',
+          'number.integer': '專長必須為整數',
+          'number.positive': '專長必須為正數'
+        })
+    )
+    .min(1)
+    .max(3)
+    .unique()
+    .required()
+    .messages({
+      'array.base': '專長必須為陣列格式',
+      'array.min': '至少需要選擇1個專長',
+      'array.max': '最多只能選擇3個專長',
+      'array.unique': '專長不能重複選擇',
+      'any.required': '專長為必填欄位'
     }),
   introduction: Joi.string()
     .min(100)
@@ -31,14 +83,62 @@ export const teacherApplicationSchema = Joi.object({
  * 教師申請更新驗證 Schema
  */
 export const teacherApplicationUpdateSchema = Joi.object({
-  nationality: Joi.string()
+  city: Joi.string()
     .min(1)
     .max(50)
     .optional()
     .messages({
-      'string.empty': '國籍不能為空',
-      'string.min': '國籍至少需要1個字元',
-      'string.max': '國籍長度不能超過50個字元'
+      'string.empty': '縣市不能為空',
+      'string.min': '縣市至少需要1個字元',
+      'string.max': '縣市長度不能超過50個字元'
+    }),
+  district: Joi.string()
+    .min(1)
+    .max(50)
+    .optional()
+    .messages({
+      'string.empty': '區域不能為空',
+      'string.min': '區域至少需要1個字元',
+      'string.max': '區域長度不能超過50個字元'
+    }),
+  address: Joi.string()
+    .min(1)
+    .max(200)
+    .optional()
+    .messages({
+      'string.empty': '地址不能為空',
+      'string.min': '地址至少需要1個字元',
+      'string.max': '地址長度不能超過200個字元'
+    }),
+  main_category_id: Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .messages({
+      'number.base': '教授科目必須為數字',
+      'number.integer': '教授科目必須為整數',
+      'number.positive': '教授科目必須為正數'
+    }),
+  sub_category_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .positive()
+        .messages({
+          'number.base': '專長必須為數字',
+          'number.integer': '專長必須為整數',
+          'number.positive': '專長必須為正數'
+        })
+    )
+    .min(1)
+    .max(3)
+    .unique()
+    .optional()
+    .messages({
+      'array.base': '專長必須為陣列格式',
+      'array.min': '至少需要選擇1個專長',
+      'array.max': '最多只能選擇3個專長',
+      'array.unique': '專長不能重複選擇'
     }),
   introduction: Joi.string()
     .min(100)
@@ -55,14 +155,62 @@ export const teacherApplicationUpdateSchema = Joi.object({
  * 教師資料更新驗證 Schema
  */
 export const teacherProfileUpdateSchema = Joi.object({
-  nationality: Joi.string()
+  city: Joi.string()
     .min(1)
     .max(50)
     .optional()
     .messages({
-      'string.empty': '國籍不能為空',
-      'string.min': '國籍至少需要1個字元',
-      'string.max': '國籍長度不能超過50個字元'
+      'string.empty': '縣市不能為空',
+      'string.min': '縣市至少需要1個字元',
+      'string.max': '縣市長度不能超過50個字元'
+    }),
+  district: Joi.string()
+    .min(1)
+    .max(50)
+    .optional()
+    .messages({
+      'string.empty': '區域不能為空',
+      'string.min': '區域至少需要1個字元',
+      'string.max': '區域長度不能超過50個字元'
+    }),
+  address: Joi.string()
+    .min(1)
+    .max(200)
+    .optional()
+    .messages({
+      'string.empty': '地址不能為空',
+      'string.min': '地址至少需要1個字元',
+      'string.max': '地址長度不能超過200個字元'
+    }),
+  main_category_id: Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .messages({
+      'number.base': '教授科目必須為數字',
+      'number.integer': '教授科目必須為整數',
+      'number.positive': '教授科目必須為正數'
+    }),
+  sub_category_ids: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .positive()
+        .messages({
+          'number.base': '專長必須為數字',
+          'number.integer': '專長必須為整數',
+          'number.positive': '專長必須為正數'
+        })
+    )
+    .min(1)
+    .max(3)
+    .unique()
+    .optional()
+    .messages({
+      'array.base': '專長必須為陣列格式',
+      'array.min': '至少需要選擇1個專長',
+      'array.max': '最多只能選擇3個專長',
+      'array.unique': '專長不能重複選擇'
     }),
   introduction: Joi.string()
     .min(100)
