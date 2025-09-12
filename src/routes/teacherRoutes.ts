@@ -111,9 +111,176 @@ const teacherController = new TeacherController()
  */
 router.post('/apply', authenticateToken, validateRequest(teacherApplicationSchema, '教師申請參數驗證失敗'), teacherController.apply)
 
+/**
+ * @swagger
+ * /api/teachers/apply-status:
+ *   get:
+ *     tags:
+ *       - Teachers
+ *     summary: 查詢教師申請狀態與完整表單資料
+ *     description: |
+ *       取得使用者的教師申請狀態和所有步驟的表單資料，用於前端判斷申請進度和預填表單。
+ *       
+ *       **多步驟表單結構**：
+ *       1. 基本資訊：地址、教授科目、專長、自我介紹
+ *       2. 工作經驗：工作經歷列表
+ *       3. 學歷背景：學習經歷列表  
+ *       4. 教學證照：證照列表
+ *       
+ *       **前端判斷邏輯**：
+ *       ```javascript
+ *       // 判斷申請狀態
+ *       if (!data) return 'FIRST_TIME'           // 第一次申請
+ *       if (!data.application_submitted_at) {
+ *         // 判斷進行到哪一步
+ *         if (!data.basic_info.city) return 'STEP_1'           // 基本資訊未填
+ *         if (data.work_experiences.length === 0) return 'STEP_2'     // 工作經驗未填
+ *         if (data.learning_experiences.length === 0) return 'STEP_3' // 學歷未填
+ *         if (data.certificates.length === 0) return 'STEP_4'         // 證照未填
+ *         return 'READY_TO_SUBMIT'              // 可提交
+ *       } else {
+ *         return 'SUBMITTED'                    // 已提交
+ *       }
+ *       ```
+ *       
+ *       **業務邏輯**：
+ *       - 如果使用者從未申請過，回傳 404
+ *       - 如果有申請記錄，回傳完整的申請狀態和所有步驟資料
+ *       - 前端可根據資料完整性判斷目前進度和預填表單
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 成功取得申請狀態與表單資料
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TeacherApplyStatusSuccessResponse'
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       404:
+ *         description: 尚未申請 - 使用者從未建立教師申請
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/NotFoundErrorResponse'
+ *             example:
+ *               status: "error"
+ *               message: "尚未申請成為教師"
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
+router.get('/apply-status', authenticateToken, teacherController.getApplyStatus)
 
-router.get('/application', authenticateToken, teacherController.getApplication)
+/**
+ * @swagger
+ * /api/teachers/basic-info:
+ *   get:
+ *     tags:
+ *       - Teachers
+ *     summary: 取得教師基本資訊
+ *     description: |
+ *       取得已通過申請的教師基本資訊，主要用於教師個人資料管理。
+ *       與 /apply-status 的差異：
+ *       - 此路由專門用於已通過申請的教師基本資料 CRUD
+ *       - /apply-status 用於申請流程中的狀態判斷與表單預填
+ *       
+ *       **業務邏輯**：
+ *       - 僅提供基本資訊欄位，不包含申請狀態相關欄位
+ *       - 主要給已獲得教師身份的使用者管理個人基本資料使用
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 成功取得教師基本資訊
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TeacherBasicInfoSuccessResponse'
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       404:
+ *         description: 找不到教師資料
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/NotFoundErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
+router.get('/basic-info', authenticateToken, teacherController.getBasicInfo)
 
+/**
+ * @swagger
+ * /api/teachers/basic-info:
+ *   put:
+ *     tags:
+ *       - Teachers
+ *     summary: 更新教師基本資訊
+ *     description: |
+ *       更新已通過申請的教師基本資訊，專門用於個人資料管理。
+ *       
+ *       **業務邏輯**：
+ *       - 僅允許更新基本資訊欄位
+ *       - 不影響申請狀態相關欄位
+ *       - 主要給已獲得教師身份的使用者更新個人基本資料
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TeacherBasicInfoUpdateRequest'
+ *     responses:
+ *       200:
+ *         description: 教師基本資訊更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TeacherBasicInfoUpdateSuccessResponse'
+ *       400:
+ *         description: 請求參數錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       404:
+ *         description: 找不到教師資料
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/NotFoundErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
+router.put('/basic-info', authenticateToken, validateRequest(teacherProfileUpdateSchema, '教師資料更新參數驗證失敗'), teacherController.updateBasicInfo)
 
 router.put('/application', authenticateToken, validateRequest(teacherApplicationUpdateSchema, '更新申請參數驗證失敗'), teacherController.updateApplication)
 
