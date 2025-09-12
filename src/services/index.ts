@@ -30,6 +30,7 @@ export { reviewService } from './ReviewService'
 export { scheduleService } from './ScheduleService'
 export { teacherService } from './TeacherService'
 export { teacherDashboardService } from './TeacherDashboardService'
+export { userAvatarService } from './UserAvatarService'
 export { videoService } from './VideoService'
 
 // === 服務類別匯出 ===
@@ -52,4 +53,5 @@ export { ReviewService } from './ReviewService'
 export { ScheduleService } from './ScheduleService'
 export { TeacherService } from './TeacherService'
 export { TeacherDashboardService } from './TeacherDashboardService'
+export { UserAvatarService } from './UserAvatarService'
 export { VideoService } from './VideoService'

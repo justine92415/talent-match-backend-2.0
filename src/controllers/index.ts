@@ -16,6 +16,7 @@ export { ReviewController } from './ReviewController'
 export { ScheduleController } from './ScheduleController'
 export { TeacherController } from './TeacherController'
 export { VideoController } from './VideoController'
+export { UserAvatarController } from './UserAvatarController'
 
 // 購物車和訂單相關控制器
 export { CartController } from './CartController'

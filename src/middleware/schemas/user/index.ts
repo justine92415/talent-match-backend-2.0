@@ -5,3 +5,4 @@
 export * from './profileSchemas'
 export * from './teacherSchemas'
 export * from './certificateSchemas'
+export * from './avatarSchemas'

@@ -106,7 +106,6 @@ dist
 # report
 mochawesome-report/
 doc/
-upload/
 *.env
 .vscode/
 .idea/

@@ -22,6 +22,9 @@ export const MESSAGES = {
     PROFILE_RETRIEVED: '成功取得個人資料',
     PROFILE_UPDATED: '成功更新個人資料',
     ACCOUNT_DELETED: '帳號已成功刪除',
+    AVATAR_UPLOADED: '頭像上傳成功',
+    AVATAR_UPDATED: '頭像更新成功',
+    AVATAR_DELETED: '頭像刪除成功',
 
     // 管理員成功訊息
     ADMIN_LOGIN_SUCCESS: '管理員登入成功',
@@ -167,6 +170,14 @@ export const MESSAGES = {
     COURSE_FILE_UPLOAD_LIMIT_EXCEEDED: '單次上傳檔案數量不能超過5個',
     COURSE_FILE_NAME_REQUIRED: '檔案名稱為必填欄位',
     COURSE_FILE_NAME_TOO_LONG: '檔案名稱不能超過255個字元',
+    
+    // 頭像上傳驗證
+    AVATAR_FILE_REQUIRED: '請選擇要上傳的頭像檔案',
+    AVATAR_FILE_TOO_LARGE: '頭像檔案大小不能超過5MB',
+    AVATAR_FILE_FORMAT_INVALID: '頭像格式不支援，請上傳 JPEG、JPG、PNG、WebP 格式',
+    AVATAR_FILE_DIMENSIONS_INVALID: '頭像尺寸不能超過2000x2000像素',
+    AVATAR_FILE_TOO_SMALL: '頭像尺寸不能小於100x100像素',
+    AVATAR_FILE_CORRUPTED: '頭像檔案已損壞，請重新上傳',
     
     // 更新相關驗證
     UPDATE_DATA_REQUIRED: '至少需要提供一個欄位進行更新',
@@ -352,6 +363,12 @@ export const MESSAGES = {
     COURSE_FILE_UPLOAD_FAILED: '檔案上傳失敗',
     COURSE_FILE_DELETE_FAILED: '檔案刪除失敗',
     COURSE_FILE_LIMIT_REACHED: '課程檔案數量已達上限',
+    
+    // 頭像上傳業務規則
+    AVATAR_UPLOAD_FAILED: '頭像上傳失敗，請重試',
+    AVATAR_DELETE_FAILED: '舊頭像刪除失敗',
+    AVATAR_PROCESSING_FAILED: '頭像處理失敗，請重新上傳',
+    AVATAR_UPDATE_FAILED: '頭像更新失敗，請重試',
     
     // 課程瀏覽相關
     COURSE_NOT_PUBLISHED: '課程未發布或不存在',
