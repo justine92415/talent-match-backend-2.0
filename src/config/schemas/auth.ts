@@ -439,11 +439,25 @@ export const authSchemas = {
         example: '張小明'
       },
       birthday: {
-        type: 'string',
-        format: 'date',
-        nullable: true,
-        description: '生日 (YYYY-MM-DD格式)',
-        example: '1990-01-15'
+        oneOf: [
+          {
+            type: 'string',
+            format: 'date',
+            description: '有效的日期格式 (YYYY-MM-DD)',
+            example: '1990-01-15'
+          },
+          {
+            type: 'string',
+            enum: [''],
+            description: '空字串表示清空生日',
+            example: ''
+          },
+          {
+            type: 'null',
+            description: 'null 值表示不更新此欄位'
+          }
+        ],
+        description: '生日 - 可為有效日期、空字串(清空)或 null'
       },
       contact_phone: {
         type: 'string',
@@ -501,6 +515,7 @@ export const authSchemas = {
           errors: {
             example: {
               nick_name: ['暱稱長度不能超過50個字元'],
+              birthday: ['生日必須是有效的日期格式、空字串或 null'],
               contact_phone: ['聯絡電話格式不正確']
             }
           }
