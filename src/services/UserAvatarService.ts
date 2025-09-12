@@ -59,12 +59,21 @@ export class UserAvatarService {
       })
 
       // 清理舊頭像（如果存在且不是 Google 頭像）
-      if (oldAvatarUrl && !oldAvatarUrl.includes('googleapis.com') && !oldAvatarUrl.includes('googleusercontent.com')) {
+      if (oldAvatarUrl && !this.isGoogleAvatar(oldAvatarUrl)) {
+        console.log(`準備清理舊頭像: ${oldAvatarUrl}`)
         try {
-          await this.fileUploadService.deleteFile(this.extractFirebaseUrlFromDownloadUrl(oldAvatarUrl))
+          const firebaseUrl = this.extractFirebaseUrlFromDownloadUrl(oldAvatarUrl)
+          console.log(`解析出的 Firebase URL: ${firebaseUrl}`)
+          await this.fileUploadService.deleteFile(firebaseUrl)
+          console.log('✅ 舊頭像已從 Firebase Storage 清理:', oldAvatarUrl)
         } catch (error) {
-          console.warn('清理舊頭像失敗，但不影響新頭像上傳:', error)
+          console.error('❌ 清理舊頭像失敗:', error)
+          // 不拋出錯誤，避免影響主要流程，但記錄詳細錯誤
         }
+      } else if (oldAvatarUrl) {
+        console.log(`跳過 Google 頭像清理: ${oldAvatarUrl}`)
+      } else {
+        console.log('使用者沒有舊頭像需要清理')
       }
 
       // 重新獲取更新後的使用者資料
@@ -118,12 +127,19 @@ export class UserAvatarService {
       const currentAvatarUrl = user.avatar_image
 
       // 不能刪除 Google 頭像，只能清除資料庫記錄
-      if (!currentAvatarUrl.includes('googleapis.com') && !currentAvatarUrl.includes('googleusercontent.com')) {
+      if (!this.isGoogleAvatar(currentAvatarUrl)) {
+        console.log(`準備刪除頭像檔案: ${currentAvatarUrl}`)
         try {
-          await this.fileUploadService.deleteFile(this.extractFirebaseUrlFromDownloadUrl(currentAvatarUrl))
+          const firebaseUrl = this.extractFirebaseUrlFromDownloadUrl(currentAvatarUrl)
+          console.log(`解析出的 Firebase URL: ${firebaseUrl}`)
+          await this.fileUploadService.deleteFile(firebaseUrl)
+          console.log('✅ 頭像檔案已從 Firebase Storage 刪除')
         } catch (error) {
-          console.warn('清理頭像檔案失敗:', error)
+          console.error('❌ 清理頭像檔案失敗:', error)
+          // 即使檔案刪除失敗，仍然繼續清除資料庫記錄
         }
+      } else {
+        console.log(`跳過 Google 頭像檔案刪除: ${currentAvatarUrl}`)
       }
 
       // 清除使用者頭像記錄
@@ -164,6 +180,34 @@ export class UserAvatarService {
     }
 
     return user
+  }
+
+  /**
+   * 檢查是否為 Google 頭像
+   * 
+   * @param avatarUrl 頭像 URL
+   * @returns 是否為 Google 頭像
+   */
+  private isGoogleAvatar(avatarUrl: string): boolean {
+    // Google 頭像的特徵：
+    // - 來自 Google 的域名（但不包括 Firebase Storage）
+    // - 包含 googleapis.com 但不是 firebasestorage.googleapis.com
+    // - 包含 googleusercontent.com
+    // - 包含 google.com/avatar
+    
+    const isGoogleUserContent = avatarUrl.includes('googleusercontent.com')
+    const isGoogleAvatar = avatarUrl.includes('google.com/avatar')
+    const isGoogleApis = avatarUrl.includes('googleapis.com') && !avatarUrl.includes('firebasestorage.googleapis.com')
+    
+    const result = isGoogleUserContent || isGoogleAvatar || isGoogleApis
+    
+    console.log(`檢查是否為 Google 頭像: ${avatarUrl}`)
+    console.log(`- googleusercontent.com: ${isGoogleUserContent}`)
+    console.log(`- google.com/avatar: ${isGoogleAvatar}`)
+    console.log(`- googleapis.com (非Firebase): ${isGoogleApis}`)
+    console.log(`- 判定結果: ${result ? 'Google頭像' : 'Firebase頭像'}`)
+    
+    return result
   }
 
   /**
@@ -298,18 +342,43 @@ export class UserAvatarService {
    * @returns Firebase URL (gs://...)
    */
   private extractFirebaseUrlFromDownloadUrl(downloadUrl: string): string {
-    // 解析 Firebase Storage 的公開 URL 格式
-    // https://firebasestorage.googleapis.com/v0/b/bucket/o/path?alt=media
-    const match = downloadUrl.match(/\/b\/([^\/]+)\/o\/([^?]+)/)
+    console.log(`正在解析 URL: ${downloadUrl}`)
     
-    if (!match) {
-      throw new Error('無法解析 Firebase URL 格式')
+    // 支援多種 Firebase Storage URL 格式
+    
+    // 格式 1: https://firebasestorage.googleapis.com/v0/b/bucket-name.firebasestorage.app/o/path?alt=media&token=xxx
+    // 格式 1b: https://firebasestorage.googleapis.com/v0/b/bucket-name/o/path?alt=media&token=xxx
+    let match = downloadUrl.match(/\/b\/([^\/]+)\/o\/([^?]+)/)
+    if (match) {
+      const [, bucketName, encodedPath] = match
+      const filePath = decodeURIComponent(encodedPath)
+      
+      // 如果 bucketName 包含 .firebasestorage.app，需要保留完整名稱
+      const result = `gs://${bucketName}/${filePath}`
+      console.log(`格式 1 解析結果: ${result}`)
+      return result
     }
 
-    const [, bucketName, encodedPath] = match
-    const filePath = decodeURIComponent(encodedPath)
-    
-    return `gs://${bucketName}/${filePath}`
+    // 格式 2: https://storage.googleapis.com/bucket/path/file.ext
+    match = downloadUrl.match(/https:\/\/storage\.googleapis\.com\/([^\/]+)\/(.+)/)
+    if (match) {
+      const [, bucketName, filePath] = match
+      const result = `gs://${bucketName}/${filePath}`
+      console.log(`格式 2 解析結果: ${result}`)
+      return result
+    }
+
+    // 格式 3: https://bucket.storage.googleapis.com/path/file.ext
+    match = downloadUrl.match(/https:\/\/([^\.]+)\.storage\.googleapis\.com\/(.+)/)
+    if (match) {
+      const [, bucketName, filePath] = match
+      const result = `gs://${bucketName}/${filePath}`
+      console.log(`格式 3 解析結果: ${result}`)
+      return result
+    }
+
+    console.error(`無法解析的 URL 格式: ${downloadUrl}`)
+    throw new Error(`無法解析 Firebase URL 格式: ${downloadUrl}`)
   }
 
   /**

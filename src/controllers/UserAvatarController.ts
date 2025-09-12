@@ -73,25 +73,4 @@ export class UserAvatarController {
 
     res.status(200).json(handleSuccess(null, result.message))
   })
-
-  /**
-   * 取得使用者頭像資訊
-   * 
-   * GET /upload/avatar/info
-   * 
-   * @param req 請求物件
-   * @param res 回應物件
-   * @param next 下一個中間件函式
-   */
-  getAvatarInfo = handleErrorAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    // 從認證中間件取得使用者 ID
-    const userId = req.user!.userId
-
-    // 可以擴展為從服務層取得頭像詳細資訊
-    // 目前暫時返回基本資訊
-    res.status(200).json(handleSuccess({
-      userId,
-      message: '取得頭像資訊成功'
-    }, '取得頭像資訊成功'))
-  })
 }
