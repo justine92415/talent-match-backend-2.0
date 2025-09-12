@@ -170,46 +170,4 @@ router.delete('/avatar',
   userAvatarController.deleteAvatar
 )
 
-/**
- * @swagger
- * /api/upload/avatar/info:
- *   get:
- *     tags:
- *       - User Avatar
- *     summary: 取得使用者頭像資訊
- *     description: |
- *       取得當前使用者的頭像詳細資訊。
- *       
- *       **業務邏輯**：
- *       - 驗證使用者已登入（JWT Token）
- *       - 回傳使用者基本頭像資訊
- *       
- *       **注意**：此 API 目前為基礎實作，未來可擴展為回傳完整的頭像詳細資訊。
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: 取得頭像資訊成功
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/AvatarInfoSuccessResponse'
- *       401:
- *         description: 未授權 - Token 無效或過期
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
- *       500:
- *         description: 伺服器內部錯誤
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ServerErrorResponse'
- */
-router.get('/avatar/info', 
-  authenticateToken, 
-  userAvatarController.getAvatarInfo
-)
-
 export { router as uploadRoutes }

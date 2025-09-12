@@ -23,46 +23,31 @@ export const userAvatarSchemas = {
         type: 'object',
         description: '上傳結果資訊',
         properties: {
-          userId: {
-            type: 'string',
-            description: '使用者 ID',
-            example: '12345'
-          },
-          originalName: {
-            type: 'string',
-            description: '原始檔案名稱',
-            example: 'my-avatar.jpg'
-          },
-          fileName: {
-            type: 'string',
-            description: '儲存的檔案名稱',
-            example: 'user-12345-avatar-1695123456789.jpg'
-          },
-          mimeType: {
-            type: 'string',
-            description: '檔案類型',
-            example: 'image/jpeg'
-          },
-          size: {
-            type: 'integer',
-            description: '檔案大小（位元組）',
-            example: 1024000
-          },
-          downloadURL: {
+          avatarUrl: {
             type: 'string',
             description: 'Firebase Storage 下載連結',
-            example: 'https://storage.googleapis.com/bucket/avatars/user-12345-avatar.jpg'
+            example: 'https://firebasestorage.googleapis.com/v0/b/bucket/o/avatars%2Fuser_123%2Favatar_123.jpg?alt=media'
           },
-          firebaseUrl: {
-            type: 'string',
-            description: 'Firebase Storage 內部路徑',
-            example: 'gs://bucket/avatars/user-12345-avatar.jpg'
-          },
-          uploadedAt: {
-            type: 'string',
-            format: 'date-time',
-            description: '上傳時間',
-            example: '2024-09-12T10:30:00.000Z'
+          user: {
+            type: 'object',
+            description: '更新後的使用者資訊',
+            properties: {
+              id: {
+                type: 'integer',
+                description: '使用者 ID',
+                example: 123
+              },
+              nick_name: {
+                type: 'string',
+                description: '使用者暱稱',
+                example: 'John Doe'
+              },
+              avatar_image: {
+                type: 'string',
+                description: '使用者頭像 URL',
+                example: 'https://firebasestorage.googleapis.com/v0/b/bucket/o/avatars%2Fuser_123%2Favatar_123.jpg?alt=media'
+              }
+            }
           }
         }
       }
@@ -88,40 +73,6 @@ export const userAvatarSchemas = {
         nullable: true,
         description: '回應資料（此 API 無回傳資料）',
         example: null
-      }
-    }
-  },
-
-  // 頭像資訊查詢成功回應 Schema
-  AvatarInfoSuccessResponse: {
-    type: 'object',
-    properties: {
-      status: {
-        type: 'string',
-        description: '回應狀態',
-        enum: ['success'],
-        example: 'success'
-      },
-      message: {
-        type: 'string',
-        description: '成功訊息',
-        example: '取得頭像資訊成功'
-      },
-      data: {
-        type: 'object',
-        description: '頭像資訊',
-        properties: {
-          userId: {
-            type: 'string',
-            description: '使用者 ID',
-            example: '12345'
-          },
-          message: {
-            type: 'string',
-            description: '資訊訊息',
-            example: '取得頭像資訊成功'
-          }
-        }
       }
     }
   },
