@@ -70,9 +70,9 @@ export class TeacherController {
 
     // 並行取得所有相關資料
     const [workExperiences, learningExperiences, certificates] = await Promise.all([
-      this.teacherService.getWorkExperiences(userId),
-      learningExperienceService.getLearningExperiences(userId),
-      certificateService.getCertificatesByUserId(userId)
+      this.teacherService.getWorkExperiencesForApplication(userId),
+      learningExperienceService.getLearningExperiencesForApplication(userId),
+      certificateService.getCertificatesByUserIdForApplication(userId)
     ])
 
     res.status(200).json(handleSuccess({

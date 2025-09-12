@@ -32,6 +32,48 @@ export class LearningExperienceService {
   }
 
   /**
+   * 取得申請中或已認證教師的學習經歷清單（用於申請狀態查詢）
+   * @param userId 使用者 ID
+   * @returns 學習經歷清單
+   */
+  async getLearningExperiencesForApplication(userId: number): Promise<LearningExperienceData[]> {
+    // 先嘗試取得教師申請記錄
+    const teacher = await this.teacherRepository.findOne({ 
+      where: { user_id: userId }
+    })
+    
+    if (!teacher) {
+      return [] // 如果沒有申請記錄，回傳空陣列
+    }
+
+    // 使用 QueryBuilder 優化查詢，只選擇需要的欄位
+    const experiences = await this.learningExperienceRepository
+      .createQueryBuilder('experience')
+      .where('experience.teacher_id = :teacherId', { teacherId: teacher.id })
+      .orderBy('experience.start_year', LEARNING_EXPERIENCE_BUSINESS.DEFAULT_ORDER_DIRECTION)
+      .select([
+        'experience.id',
+        'experience.teacher_id',
+        'experience.is_in_school',
+        'experience.degree',
+        'experience.school_name',
+        'experience.department',
+        'experience.region',
+        'experience.start_year',
+        'experience.start_month',
+        'experience.end_year',
+        'experience.end_month',
+        'experience.file_path',
+        'experience.created_at',
+        'experience.updated_at'
+      ])
+      .getMany()
+
+    // 使用現有的轉換方法
+    return experiences.map(experience => this.transformToLearningExperienceData(experience))
+  }
+
+  /**
    * 取得教師的學習經歷清單
    * 優化查詢效能：只選擇必要欄位
    */

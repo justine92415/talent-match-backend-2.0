@@ -417,6 +417,27 @@ export class TeacherService {
   }
 
   /**
+   * 取得申請中或已認證教師的工作經驗列表（用於申請狀態查詢）
+   * @param userId 使用者 ID
+   * @returns 工作經驗列表
+   */
+  async getWorkExperiencesForApplication(userId: number): Promise<TeacherWorkExperience[]> {
+    // 先嘗試取得教師申請記錄
+    const teacher = await this.teacherRepository.findOne({ 
+      where: { user_id: userId }
+    })
+    
+    if (!teacher) {
+      return [] // 如果沒有申請記錄，回傳空陣列
+    }
+    
+    return await this.workExperienceRepository.find({
+      where: { teacher_id: teacher.id },
+      order: { created_at: 'DESC' }
+    })
+  }
+
+  /**
    * 取得教師的工作經驗列表
    * @param userId 使用者 ID
    * @returns 工作經驗列表

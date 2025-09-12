@@ -63,6 +63,30 @@ export class CertificateService {
   }
 
   /**
+   * 取得申請中或已認證教師的證書列表（用於申請狀態查詢）
+   * @param userId - 使用者 ID
+   * @returns 證書列表
+   */
+  async getCertificatesByUserIdForApplication(userId: number): Promise<TeacherCertificate[]> {
+    // 先嘗試取得教師申請記錄
+    const teacher = await this.teacherRepository.findOne({ 
+      where: { user_id: userId }
+    })
+    
+    if (!teacher) {
+      return [] // 如果沒有申請記錄，回傳空陣列
+    }
+    
+    const certificates = await this.certificateRepository
+      .createQueryBuilder('certificate')
+      .where('certificate.teacher_id = :teacherId', { teacherId: teacher.id })
+      .orderBy('certificate.created_at', 'DESC')
+      .getMany()
+
+    return certificates
+  }
+
+  /**
    * 取得教師的證書列表
    * @param userId - 使用者 ID
    * @returns 證書列表
