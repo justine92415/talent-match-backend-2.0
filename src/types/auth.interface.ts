@@ -67,7 +67,7 @@ export interface JwtTokenPayload {
 export interface UpdateUserProfileData {
   nick_name?: string
   name?: string | null
-  birthday?: Date | null
+  birthday?: Date | string | null  // 支援 Date 物件、空字串或 null
   contact_phone?: string | null
   avatar_image?: string | null
 }

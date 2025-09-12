@@ -330,12 +330,13 @@ router.get('/profile', authenticateToken, authController.getProfile)
  *       **支援更新欄位:**
  *       - `nick_name`: 暱稱 (1-50字元，需唯一)
  *       - `name`: 真實姓名 (最大100字元)
- *       - `birthday`: 生日 (日期格式)
+ *       - `birthday`: 生日 (YYYY-MM-DD格式，可傳入空字串清空)
  *       - `contact_phone`: 聯絡電話 (最大20字元)
  *       - `avatar_image`: 大頭貼網址 (需為有效URL)
  * 
  *       **驗證規則:**
  *       - 暱稱不能為空且需唯一
+ *       - 生日可為有效日期、空字串(清空)或null
  *       - 電話號碼僅支援數字、+、-、空格、括號
  *       - 大頭貼需為有效的URL格式
  *     security:
@@ -365,6 +366,7 @@ router.get('/profile', authenticateToken, authController.getProfile)
  *               summary: 將某些欄位設為空值
  *               value:
  *                 name: null
+ *                 birthday: ""
  *                 contact_phone: ""
  *                 avatar_image: null
  *     responses:
