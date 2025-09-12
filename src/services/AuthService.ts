@@ -268,8 +268,14 @@ export class AuthService {
       }
     }
 
+    // 處理生日欄位：將空字串轉換為 null
+    const processedUpdateData = { ...updateData }
+    if ('birthday' in processedUpdateData && processedUpdateData.birthday === '') {
+      processedUpdateData.birthday = null
+    }
+
     // 更新使用者資料
-    await userRepository.update(userId, updateData)
+    await userRepository.update(userId, processedUpdateData)
     
     // 取得更新後的使用者資料
     const updatedUser = await userRepository.findOne({

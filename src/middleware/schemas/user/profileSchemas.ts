@@ -12,9 +12,20 @@ export const updateProfileSchema = Joi.object({
   name: Joi.string().max(100).optional().allow(null, "").messages({
     "string.max": "姓名長度不能超過100個字元"
   }),
-  birthday: Joi.date().optional().allow(null).messages({
-    "date.base": "生日必須是有效的日期格式"
-  }),
+  birthday: Joi.alternatives()
+    .try(
+      Joi.date().messages({
+        "date.base": "生日必須是有效的日期格式"
+      }),
+      Joi.string().valid("").messages({
+        "any.only": "生日只能為空字串或有效日期格式"
+      }),
+      Joi.valid(null)
+    )
+    .optional()
+    .messages({
+      "alternatives.match": "生日必須是有效的日期格式、空字串或 null"
+    }),
   contact_phone: Joi.string().pattern(/^[0-9+\-\s()]+$/).max(20).optional().allow(null, "").messages({
     "string.pattern.base": "聯絡電話格式不正確",
     "string.max": "聯絡電話長度不能超過20個字元"
