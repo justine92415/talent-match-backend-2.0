@@ -10,11 +10,12 @@ import { dataSource } from '@db/data-source'
 import { AdminUser } from '@entities/AdminUser'
 import { Teacher } from '@entities/Teacher'
 import { Course } from '@entities/Course'
-import { ApplicationStatus, CourseStatus } from '@entities/enums'
+import { ApplicationStatus, CourseStatus, UserRole } from '@entities/enums'
 import { BusinessError, SystemError } from '@utils/errors'
 import { ERROR_CODES } from '@constants/ErrorCode'
 import { MESSAGES } from '@constants/Message'
 import { JWT_CONFIG } from '@config/secret'
+import { userRoleService } from './UserRoleService'
 import {
   AdminLoginRequest,
   AdminLoginResponse,
@@ -166,6 +167,14 @@ export class AdminService {
     teacher.review_notes = undefined // 清除之前的拒絕原因
 
     const updatedTeacher = await this.teacherRepository.save(teacher)
+
+    // 角色升級：TEACHER_APPLICANT → TEACHER
+    await userRoleService.upgradeRole(
+      updatedTeacher.user_id, 
+      UserRole.TEACHER_APPLICANT, 
+      UserRole.TEACHER,
+      adminId
+    )
 
     return {
       teacher: {

@@ -17,6 +17,7 @@ import {
   CreateWorkExperienceRequest,
   UpdateWorkExperienceRequest
 } from '@models/index'
+import { userRoleService } from './UserRoleService'
 
 /**
  * 教師申請和管理相關的業務服務類別
@@ -168,7 +169,12 @@ export class TeacherService {
       application_status: ApplicationStatus.PENDING
     })
 
-    return await this.teacherRepository.save(teacher)
+    const savedTeacher = await this.teacherRepository.save(teacher)
+
+    // 自動賦予 TEACHER_APPLICANT 角色
+    await userRoleService.addRole(userId, UserRole.TEACHER_APPLICANT)
+
+    return savedTeacher
   }
 
   /**
@@ -417,6 +423,62 @@ export class TeacherService {
   }
 
   /**
+   * 驗證使用者是否為教師或申請者，並取得相應權限
+   * @private
+   * @param userId 使用者 ID
+   * @returns 教師記錄和權限資訊
+   */
+  private async validateTeacherUserOrApplicant(userId: number): Promise<{
+    teacher: Teacher;
+    canModifyApplication: boolean;
+    isApprovedTeacher: boolean;
+  }> {
+    // 檢查使用者是否存在且帳號啟用
+    const user = await this.userRepository.findOne({ 
+      where: { 
+        id: userId, 
+        account_status: AccountStatus.ACTIVE
+      }
+    })
+    
+    if (!user) {
+      throw Errors.unauthorizedAccess('使用者不存在或帳號已停用', 403)
+    }
+
+    // 檢查角色
+    const hasTeacherRole = await userRoleService.hasRole(userId, UserRole.TEACHER)
+    let hasApplicantRole = await userRoleService.hasRole(userId, UserRole.TEACHER_APPLICANT)
+    
+    // 取得教師記錄
+    const teacher = await this.teacherRepository.findOne({ where: { user_id: userId } })
+    if (!teacher) {
+      throw Errors.teacherNotFound('找不到教師申請記錄')
+    }
+
+    // 暫時的向後相容性修復：如果用戶有申請記錄但沒有 TEACHER_APPLICANT 角色，自動補充
+    if (!hasTeacherRole && !hasApplicantRole && teacher) {
+      console.log(`自動為用戶 ${userId} 補充 TEACHER_APPLICANT 角色（向後相容性修復）`)
+      await userRoleService.addRole(userId, UserRole.TEACHER_APPLICANT)
+      hasApplicantRole = true
+    }
+    
+    if (!hasTeacherRole && !hasApplicantRole) {
+      throw Errors.unauthorizedAccess('需要教師權限才能執行此操作', 403)
+    }
+
+    // 確定權限範圍
+    const isApprovedTeacher = hasTeacherRole && teacher.application_status === ApplicationStatus.APPROVED
+    const canModifyApplication = hasApplicantRole && 
+      [ApplicationStatus.PENDING, ApplicationStatus.REJECTED].includes(teacher.application_status)
+
+    return {
+      teacher,
+      canModifyApplication: canModifyApplication || isApprovedTeacher,
+      isApprovedTeacher
+    }
+  }
+
+  /**
    * 取得申請中或已認證教師的工作經驗列表（用於申請狀態查詢）
    * @param userId 使用者 ID
    * @returns 工作經驗列表
@@ -451,14 +513,19 @@ export class TeacherService {
     })
   }
 
-  /**
+    /**
    * 建立工作經驗記錄
    * @param userId 使用者 ID
    * @param workExperienceData 工作經驗資料
    * @returns 建立的工作經驗記錄
    */
   async createWorkExperience(userId: number, workExperienceData: CreateWorkExperienceRequest): Promise<TeacherWorkExperience> {
-    const teacher = await this.validateTeacherUser(userId)
+    const { teacher, canModifyApplication } = await this.validateTeacherUserOrApplicant(userId)
+    
+    // 檢查是否可以修改申請資料
+    if (!canModifyApplication) {
+      throw Errors.unauthorizedAccess('目前申請狀態不允許修改資料')
+    }
     
     // 基本資料驗證
     this.validateWorkExperienceData(workExperienceData)
@@ -468,16 +535,16 @@ export class TeacherService {
       ...workExperienceData
     })
     
-    const workExperienceId = result.identifiers[0].id
-    const savedWorkExperience = await this.workExperienceRepository.findOne({
-      where: { id: workExperienceId }
+    const workExperience = await this.workExperienceRepository.findOne({
+      where: { id: result.identifiers[0].id },
+      order: { created_at: 'DESC' }
     })
     
-    if (!savedWorkExperience) {
-      throw Errors.internalError()
+    if (!workExperience) {
+      throw Errors.internalError('工作經驗建立失敗')
     }
     
-    return savedWorkExperience
+    return workExperience
   }
 
   /**
@@ -488,7 +555,12 @@ export class TeacherService {
    * @returns 更新後的工作經驗記錄
    */
   async updateWorkExperience(userId: number, workExperienceId: number, updateData: UpdateWorkExperienceRequest): Promise<TeacherWorkExperience> {
-    const teacher = await this.validateTeacherUser(userId)
+    const { teacher, canModifyApplication } = await this.validateTeacherUserOrApplicant(userId)
+    
+    // 檢查是否可以修改申請資料
+    if (!canModifyApplication) {
+      throw Errors.unauthorizedAccess('目前申請狀態不允許修改資料')
+    }
     
     // 先檢查工作經驗是否存在
     const workExperience = await this.workExperienceRepository.findOne({
@@ -520,7 +592,12 @@ export class TeacherService {
    * @param workExperienceId 工作經驗 ID
    */
   async deleteWorkExperience(userId: number, workExperienceId: number): Promise<void> {
-    const teacher = await this.validateTeacherUser(userId)
+    const { teacher, canModifyApplication } = await this.validateTeacherUserOrApplicant(userId)
+    
+    // 檢查是否可以修改申請資料
+    if (!canModifyApplication) {
+      throw Errors.unauthorizedAccess('目前申請狀態不允許修改資料')
+    }
     
     // 先檢查工作經驗是否存在
     const workExperience = await this.workExperienceRepository.findOne({

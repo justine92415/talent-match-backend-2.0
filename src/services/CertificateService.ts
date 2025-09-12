@@ -1,8 +1,12 @@
 import { dataSource } from '@db/data-source'
 import { Teacher } from '@entities/Teacher'
 import { TeacherCertificate } from '@entities/TeacherCertificate'
+import { User } from '@entities/User'
+import { UserRole, AccountStatus, ApplicationStatus } from '@entities/enums'
 import { BusinessError } from '@utils/errors'
 import { BusinessMessages } from '@constants/Message'
+import { Errors } from '@utils/errors'
+import { userRoleService } from './UserRoleService'
 import getLogger from '@utils/logger'
 
 const logger = getLogger('CertificateService')
@@ -14,6 +18,7 @@ const logger = getLogger('CertificateService')
 export class CertificateService {
   private teacherRepository = dataSource.getRepository(Teacher)
   private certificateRepository = dataSource.getRepository(TeacherCertificate)
+  private userRepository = dataSource.getRepository(User)
 
   /**
    * 根據 ID 和教師 ID 查找證書
@@ -60,6 +65,54 @@ export class CertificateService {
     }
 
     return teacher
+  }
+
+  /**
+   * 驗證使用者是否為教師或申請者，並取得相應權限
+   * @param userId - 使用者 ID
+   * @returns 教師記錄和權限資訊
+   */
+  private async validateTeacherUserOrApplicant(userId: number): Promise<{
+    teacher: Teacher;
+    canModifyApplication: boolean;
+    isApprovedTeacher: boolean;
+  }> {
+    // 檢查使用者是否存在且帳號啟用
+    const user = await this.userRepository.findOne({ 
+      where: { 
+        id: userId, 
+        account_status: AccountStatus.ACTIVE
+      }
+    })
+    
+    if (!user) {
+      throw Errors.unauthorizedAccess('使用者不存在或帳號已停用', 403)
+    }
+
+    // 檢查角色
+    const hasTeacherRole = await userRoleService.hasRole(userId, UserRole.TEACHER)
+    const hasApplicantRole = await userRoleService.hasRole(userId, UserRole.TEACHER_APPLICANT)
+    
+    if (!hasTeacherRole && !hasApplicantRole) {
+      throw Errors.unauthorizedAccess('需要教師權限才能執行此操作', 403)
+    }
+
+    // 取得教師記錄
+    const teacher = await this.teacherRepository.findOne({ where: { user_id: userId } })
+    if (!teacher) {
+      throw new BusinessError('TEACHER_NOT_FOUND', '找不到教師申請記錄', 404)
+    }
+
+    // 確定權限範圍
+    const isApprovedTeacher = hasTeacherRole && teacher.application_status === ApplicationStatus.APPROVED
+    const canModifyApplication = hasApplicantRole && 
+      [ApplicationStatus.PENDING, ApplicationStatus.REJECTED].includes(teacher.application_status)
+
+    return {
+      teacher,
+      canModifyApplication: canModifyApplication || isApprovedTeacher,
+      isApprovedTeacher
+    }
   }
 
   /**
@@ -123,7 +176,12 @@ export class CertificateService {
     subject: string
     file_path: string
   }): Promise<TeacherCertificate> {
-    const teacher = await this.validateTeacherUser(userId)
+    const { teacher, canModifyApplication } = await this.validateTeacherUserOrApplicant(userId)
+
+    // 檢查是否可以修改申請資料
+    if (!canModifyApplication) {
+      throw Errors.unauthorizedAccess('目前申請狀態不允許修改資料')
+    }
 
     const certificate = this.certificateRepository.create({
       teacher_id: teacher.id,
@@ -155,7 +213,13 @@ export class CertificateService {
     subject?: string
     file_path?: string
   }): Promise<TeacherCertificate> {
-    const teacher = await this.validateTeacherUser(userId)
+    const { teacher, canModifyApplication } = await this.validateTeacherUserOrApplicant(userId)
+
+    // 檢查是否可以修改申請資料
+    if (!canModifyApplication) {
+      throw Errors.unauthorizedAccess('目前申請狀態不允許修改資料')
+    }
+
     const certificate = await this.validateCertificateOwnership(certificateId, teacher.id)
 
     // 更新證書資料

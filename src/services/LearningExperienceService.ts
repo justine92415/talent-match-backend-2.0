@@ -3,11 +3,11 @@ import { dataSource } from '@db/data-source'
 import { TeacherLearningExperience } from '@entities/TeacherLearningExperience'
 import { Teacher } from '@entities/Teacher'
 import { User } from '@entities/User'
-import { UserRole, AccountStatus } from '@entities/enums'
+import { UserRole, AccountStatus, ApplicationStatus } from '@entities/enums'
 import { BusinessError, Errors } from '@utils/errors'
 import { BusinessMessages, ValidationMessages } from '@constants/Message'
 import { LEARNING_EXPERIENCE_BUSINESS } from '@constants/learningExperience'
-import { UserRoleService } from '@services/UserRoleService'
+import { UserRoleService, userRoleService } from '@services/UserRoleService'
 import type { 
   CreateLearningExperienceRequest,
   UpdateLearningExperienceRequest,
@@ -114,8 +114,13 @@ export class LearningExperienceService {
     userId: number,
     data: CreateLearningExperienceRequest
   ): Promise<LearningExperienceData> {
-    // 驗證使用者是否為教師
-    const teacher = await this.validateTeacherUser(userId)
+    // 驗證使用者是否為教師或申請者
+    const { teacher, canModifyApplication } = await this.validateTeacherUserOrApplicant(userId)
+
+    // 檢查是否可以修改申請資料
+    if (!canModifyApplication) {
+      throw Errors.unauthorizedAccess('目前申請狀態不允許修改資料')
+    }
 
     // 驗證學習年份邏輯
     if (data.end_year !== undefined && data.end_year !== null) {
@@ -162,8 +167,13 @@ export class LearningExperienceService {
     experienceId: number,
     data: UpdateLearningExperienceRequest
   ): Promise<LearningExperienceData> {
-    // 驗證使用者是否為教師
-    const teacher = await this.validateTeacherUser(userId)
+    // 驗證使用者是否為教師或申請者
+    const { teacher, canModifyApplication } = await this.validateTeacherUserOrApplicant(userId)
+
+    // 檢查是否可以修改申請資料
+    if (!canModifyApplication) {
+      throw Errors.unauthorizedAccess('目前申請狀態不允許修改資料')
+    }
     
     // 檢查學習經歷是否存在並屬於該教師
     const experience = await this.findLearningExperienceByTeacher(teacher.id, experienceId)
@@ -207,8 +217,13 @@ export class LearningExperienceService {
    * 刪除學習經歷
    */
   async deleteLearningExperience(userId: number, experienceId: number): Promise<void> {
-    // 驗證使用者是否為教師
-    const teacher = await this.validateTeacherUser(userId)
+    // 驗證使用者是否為教師或申請者
+    const { teacher, canModifyApplication } = await this.validateTeacherUserOrApplicant(userId)
+
+    // 檢查是否可以修改申請資料
+    if (!canModifyApplication) {
+      throw Errors.unauthorizedAccess('目前申請狀態不允許修改資料')
+    }
     
     // 檢查學習經歷是否存在並屬於該教師
     const experience = await this.findLearningExperienceByTeacher(teacher.id, experienceId)
@@ -254,6 +269,52 @@ export class LearningExperienceService {
     }
 
     return teacher
+  }
+
+  /**
+   * 私有方法：驗證使用者是否為教師或申請者，並取得相應權限
+   */
+  private async validateTeacherUserOrApplicant(userId: number): Promise<{
+    teacher: Teacher;
+    canModifyApplication: boolean;
+    isApprovedTeacher: boolean;
+  }> {
+    // 檢查使用者是否存在且帳號啟用
+    const user = await this.userRepository.findOne({ 
+      where: { 
+        id: userId, 
+        account_status: AccountStatus.ACTIVE
+      }
+    })
+    
+    if (!user) {
+      throw Errors.unauthorizedAccess('使用者不存在或帳號已停用', 403)
+    }
+
+    // 檢查角色
+    const hasTeacherRole = await userRoleService.hasRole(userId, UserRole.TEACHER)
+    const hasApplicantRole = await userRoleService.hasRole(userId, UserRole.TEACHER_APPLICANT)
+    
+    if (!hasTeacherRole && !hasApplicantRole) {
+      throw Errors.unauthorizedAccess('需要教師權限才能執行此操作', 403)
+    }
+
+    // 取得教師記錄
+    const teacher = await this.teacherRepository.findOne({ where: { user_id: userId } })
+    if (!teacher) {
+      throw new BusinessError('TEACHER_NOT_FOUND', '找不到教師申請記錄', 404)
+    }
+
+    // 確定權限範圍
+    const isApprovedTeacher = hasTeacherRole && teacher.application_status === ApplicationStatus.APPROVED
+    const canModifyApplication = hasApplicantRole && 
+      [ApplicationStatus.PENDING, ApplicationStatus.REJECTED].includes(teacher.application_status)
+
+    return {
+      teacher,
+      canModifyApplication: canModifyApplication || isApprovedTeacher,
+      isApprovedTeacher
+    }
   }
 
   /**
