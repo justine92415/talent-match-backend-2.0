@@ -620,22 +620,7 @@ export const teacherSchemas = {
           work_experiences: {
             type: 'array',
             items: {
-              type: 'object',
-              properties: {
-                id: { type: 'integer', description: '工作經驗 ID', example: 1 },
-                teacher_id: { type: 'integer', description: '教師 ID', example: 1 },
-                is_working: { type: 'boolean', description: '是否仍在職', example: false },
-                company_name: { type: 'string', description: '公司名稱', example: '某某科技公司' },
-                workplace: { type: 'string', description: '工作地點', example: '台北市信義區' },
-                job_category: { type: 'string', description: '工作類別', example: '軟體開發' },
-                job_title: { type: 'string', description: '職位名稱', example: '資深工程師' },
-                start_year: { type: 'integer', description: '開始年份', example: 2020 },
-                start_month: { type: 'integer', description: '開始月份', example: 1 },
-                end_year: { type: 'integer', nullable: true, description: '結束年份', example: 2022 },
-                end_month: { type: 'integer', nullable: true, description: '結束月份', example: 12 },
-                created_at: { type: 'string', format: 'date-time', description: '建立時間', example: '2024-01-01T00:00:00.000Z' },
-                updated_at: { type: 'string', format: 'date-time', description: '更新時間', example: '2024-01-15T10:30:00.000Z' }
-              }
+              $ref: '#/components/schemas/WorkExperience'
             },
             description: '工作經驗列表'
           },
@@ -643,6 +628,27 @@ export const teacherSchemas = {
         }
       }
     }
+  },
+
+  // 工作經驗實體 Schema
+  WorkExperience: {
+    type: 'object',
+    properties: {
+      id: { type: 'integer', description: '工作經驗 ID', example: 1 },
+      teacher_id: { type: 'integer', description: '教師 ID', example: 1 },
+      is_working: { type: 'boolean', description: '是否仍在職', example: false },
+      company_name: { type: 'string', description: '公司名稱', example: '某某科技公司' },
+      workplace: { type: 'string', description: '工作地點', example: '台北市信義區' },
+      job_category: { type: 'string', description: '工作類別', example: '軟體開發' },
+      job_title: { type: 'string', description: '職位名稱', example: '資深工程師' },
+      start_year: { type: 'integer', description: '開始年份', example: 2020 },
+      start_month: { type: 'integer', description: '開始月份', example: 1 },
+      end_year: { type: 'integer', nullable: true, description: '結束年份', example: 2022 },
+      end_month: { type: 'integer', nullable: true, description: '結束月份', example: 12 },
+      created_at: { type: 'string', format: 'date-time', description: '建立時間', example: '2024-01-01T00:00:00.000Z' },
+      updated_at: { type: 'string', format: 'date-time', description: '更新時間', example: '2024-01-15T10:30:00.000Z' }
+    },
+    required: ['id', 'teacher_id', 'company_name', 'workplace', 'job_category', 'job_title', 'is_working', 'start_year', 'start_month', 'created_at', 'updated_at']
   },
 
   // 工作經驗建立請求 Schema
@@ -807,22 +813,7 @@ export const teacherSchemas = {
         type: 'object',
         properties: {
           work_experience: {
-            type: 'object',
-            properties: {
-              id: { type: 'integer', description: '工作經驗 ID', example: 1 },
-              teacher_id: { type: 'integer', description: '教師 ID', example: 1 },
-              is_working: { type: 'boolean', description: '是否仍在職', example: false },
-              company_name: { type: 'string', description: '公司名稱', example: '某某科技公司' },
-              workplace: { type: 'string', description: '工作地點', example: '台北市信義區' },
-              job_category: { type: 'string', description: '工作類別', example: '軟體開發' },
-              job_title: { type: 'string', description: '職位名稱', example: '資深工程師' },
-              start_year: { type: 'integer', description: '開始年份', example: 2020 },
-              start_month: { type: 'integer', description: '開始月份', example: 1 },
-              end_year: { type: 'integer', nullable: true, description: '結束年份', example: 2022 },
-              end_month: { type: 'integer', nullable: true, description: '結束月份', example: 12 },
-              created_at: { type: 'string', format: 'date-time', description: '建立時間', example: '2024-01-01T00:00:00.000Z' },
-              updated_at: { type: 'string', format: 'date-time', description: '更新時間', example: '2024-01-15T10:30:00.000Z' }
-            }
+            $ref: '#/components/schemas/WorkExperience'
           }
         }
       }
@@ -853,7 +844,7 @@ export const teacherSchemas = {
         type: 'object',
         properties: {
           work_experience: {
-            $ref: '#/components/schemas/WorkExperienceCreateSuccessResponse/properties/data/properties/work_experience'
+            $ref: '#/components/schemas/WorkExperience'
           }
         }
       }
@@ -883,6 +874,26 @@ export const teacherSchemas = {
     }
   },
 
+  // 學習經驗實體 Schema
+  LearningExperience: {
+    type: 'object',
+    properties: {
+      id: { type: 'integer', description: '學習經驗 ID', example: 1 },
+      teacher_id: { type: 'integer', description: '教師 ID', example: 1 },
+      school_name: { type: 'string', description: '學校名稱', example: '國立台灣大學' },
+      major: { type: 'string', description: '主修科目', example: '資訊工程學系' },
+      degree: { type: 'string', enum: ['高中', '專科', '學士', '碩士', '博士'], description: '學位', example: '學士' },
+      is_studying: { type: 'boolean', description: '是否仍在就讀', example: false },
+      start_year: { type: 'integer', description: '開始年份', example: 2016 },
+      start_month: { type: 'integer', description: '開始月份', example: 9 },
+      end_year: { type: 'integer', nullable: true, description: '結束年份', example: 2020 },
+      end_month: { type: 'integer', nullable: true, description: '結束月份', example: 6 },
+      created_at: { type: 'string', format: 'date-time', description: '建立時間', example: '2024-01-01T00:00:00.000Z' },
+      updated_at: { type: 'string', format: 'date-time', description: '更新時間', example: '2024-01-15T10:30:00.000Z' }
+    },
+    required: ['id', 'teacher_id', 'school_name', 'major', 'degree', 'is_studying', 'start_year', 'start_month', 'created_at', 'updated_at']
+  },
+
   // 學習經驗列表成功回應 Schema
   LearningExperienceListSuccessResponse: {
     type: 'object',
@@ -904,21 +915,7 @@ export const teacherSchemas = {
           learning_experiences: {
             type: 'array',
             items: {
-              type: 'object',
-              properties: {
-                id: { type: 'integer', description: '學習經驗 ID', example: 1 },
-                teacher_id: { type: 'integer', description: '教師 ID', example: 1 },
-                school_name: { type: 'string', description: '學校名稱', example: '國立台灣大學' },
-                major: { type: 'string', description: '主修科目', example: '資訊工程學系' },
-                degree: { type: 'string', enum: ['高中', '專科', '學士', '碩士', '博士'], description: '學位', example: '學士' },
-                is_studying: { type: 'boolean', description: '是否仍在就讀', example: false },
-                start_year: { type: 'integer', description: '開始年份', example: 2016 },
-                start_month: { type: 'integer', description: '開始月份', example: 9 },
-                end_year: { type: 'integer', nullable: true, description: '結束年份', example: 2020 },
-                end_month: { type: 'integer', nullable: true, description: '結束月份', example: 6 },
-                created_at: { type: 'string', format: 'date-time', description: '建立時間', example: '2024-01-01T00:00:00.000Z' },
-                updated_at: { type: 'string', format: 'date-time', description: '更新時間', example: '2024-01-15T10:30:00.000Z' }
-              }
+              $ref: '#/components/schemas/LearningExperience'
             },
             description: '學習經驗列表'
           },
@@ -1010,21 +1007,7 @@ export const teacherSchemas = {
         type: 'object',
         properties: {
           learning_experience: {
-            type: 'object',
-            properties: {
-              id: { type: 'integer', description: '學習經驗 ID', example: 1 },
-              teacher_id: { type: 'integer', description: '教師 ID', example: 1 },
-              school_name: { type: 'string', description: '學校名稱', example: '國立台灣大學' },
-              major: { type: 'string', description: '主修科目', example: '資訊工程學系' },
-              degree: { type: 'string', enum: ['高中', '專科', '學士', '碩士', '博士'], description: '學位', example: '學士' },
-              is_studying: { type: 'boolean', description: '是否仍在就讀', example: false },
-              start_year: { type: 'integer', description: '開始年份', example: 2016 },
-              start_month: { type: 'integer', description: '開始月份', example: 9 },
-              end_year: { type: 'integer', nullable: true, description: '結束年份', example: 2020 },
-              end_month: { type: 'integer', nullable: true, description: '結束月份', example: 6 },
-              created_at: { type: 'string', format: 'date-time', description: '建立時間', example: '2024-01-01T00:00:00.000Z' },
-              updated_at: { type: 'string', format: 'date-time', description: '更新時間', example: '2024-01-15T10:30:00.000Z' }
-            }
+            $ref: '#/components/schemas/LearningExperience'
           }
         }
       }
@@ -1055,7 +1038,7 @@ export const teacherSchemas = {
         type: 'object',
         properties: {
           learning_experience: {
-            $ref: '#/components/schemas/LearningExperienceCreateSuccessResponse/properties/data/properties/learning_experience'
+            $ref: '#/components/schemas/LearningExperience'
           }
         }
       }
@@ -1085,6 +1068,23 @@ export const teacherSchemas = {
     }
   },
 
+  // 證照實體 Schema
+  Certificate: {
+    type: 'object',
+    properties: {
+      id: { type: 'integer', description: '證照 ID', example: 1 },
+      teacher_id: { type: 'integer', description: '教師 ID', example: 1 },
+      certificate_name: { type: 'string', description: '證照名稱', example: 'AWS Solutions Architect' },
+      issuer: { type: 'string', description: '發證機構', example: 'Amazon Web Services' },
+      year: { type: 'integer', description: '取得年份', example: 2023 },
+      month: { type: 'integer', description: '取得月份', example: 8 },
+      certificate_url: { type: 'string', format: 'uri', nullable: true, description: '證照檔案 URL', example: 'https://example.com/certificate.pdf' },
+      created_at: { type: 'string', format: 'date-time', description: '建立時間', example: '2024-01-01T00:00:00.000Z' },
+      updated_at: { type: 'string', format: 'date-time', description: '更新時間', example: '2024-01-15T10:30:00.000Z' }
+    },
+    required: ['id', 'teacher_id', 'certificate_name', 'issuer', 'year', 'month', 'created_at', 'updated_at']
+  },
+
   // 證照列表成功回應 Schema
   CertificateListSuccessResponse: {
     type: 'object',
@@ -1106,18 +1106,7 @@ export const teacherSchemas = {
           certificates: {
             type: 'array',
             items: {
-              type: 'object',
-              properties: {
-                id: { type: 'integer', description: '證照 ID', example: 1 },
-                teacher_id: { type: 'integer', description: '教師 ID', example: 1 },
-                certificate_name: { type: 'string', description: '證照名稱', example: 'AWS Solutions Architect' },
-                issuer: { type: 'string', description: '發證機構', example: 'Amazon Web Services' },
-                year: { type: 'integer', description: '取得年份', example: 2023 },
-                month: { type: 'integer', description: '取得月份', example: 8 },
-                certificate_url: { type: 'string', format: 'uri', nullable: true, description: '證照檔案 URL', example: 'https://example.com/certificate.pdf' },
-                created_at: { type: 'string', format: 'date-time', description: '建立時間', example: '2024-01-01T00:00:00.000Z' },
-                updated_at: { type: 'string', format: 'date-time', description: '更新時間', example: '2024-01-15T10:30:00.000Z' }
-              }
+              $ref: '#/components/schemas/Certificate'
             },
             description: '證照列表'
           },
@@ -1189,18 +1178,7 @@ export const teacherSchemas = {
         type: 'object',
         properties: {
           certificate: {
-            type: 'object',
-            properties: {
-              id: { type: 'integer', description: '證照 ID', example: 1 },
-              teacher_id: { type: 'integer', description: '教師 ID', example: 1 },
-              certificate_name: { type: 'string', description: '證照名稱', example: 'AWS Solutions Architect' },
-              issuer: { type: 'string', description: '發證機構', example: 'Amazon Web Services' },
-              year: { type: 'integer', description: '取得年份', example: 2023 },
-              month: { type: 'integer', description: '取得月份', example: 8 },
-              certificate_url: { type: 'string', format: 'uri', nullable: true, description: '證照檔案 URL', example: 'https://example.com/certificate.pdf' },
-              created_at: { type: 'string', format: 'date-time', description: '建立時間', example: '2024-01-01T00:00:00.000Z' },
-              updated_at: { type: 'string', format: 'date-time', description: '更新時間', example: '2024-01-15T10:30:00.000Z' }
-            }
+            $ref: '#/components/schemas/Certificate'
           }
         }
       }
@@ -1231,7 +1209,7 @@ export const teacherSchemas = {
         type: 'object',
         properties: {
           certificate: {
-            $ref: '#/components/schemas/CertificateCreateSuccessResponse/properties/data/properties/certificate'
+            $ref: '#/components/schemas/Certificate'
           }
         }
       }
@@ -1261,6 +1239,36 @@ export const teacherSchemas = {
     }
   },
 
+  // 排程實體 Schema
+  Schedule: {
+    type: 'object',
+    properties: {
+      id: { type: 'integer', description: '排程 ID', example: 1 },
+      teacher_id: { type: 'integer', description: '教師 ID', example: 1 },
+      day_of_week: { type: 'integer', enum: [0, 1, 2, 3, 4, 5, 6], description: '星期（0=星期日, 1=星期一, ..., 6=星期六）', example: 1 },
+      start_time: { type: 'string', pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$', description: '開始時間（HH:mm 格式）', example: '09:00' },
+      end_time: { type: 'string', pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$', description: '結束時間（HH:mm 格式）', example: '17:00' },
+      created_at: { type: 'string', format: 'date-time', description: '建立時間', example: '2024-01-01T00:00:00.000Z' },
+      updated_at: { type: 'string', format: 'date-time', description: '更新時間', example: '2024-01-15T10:30:00.000Z' }
+    },
+    required: ['id', 'teacher_id', 'day_of_week', 'start_time', 'end_time', 'created_at', 'updated_at']
+  },
+
+  // 格式化排程 Schema
+  FormattedSchedules: {
+    type: 'object',
+    properties: {
+      monday: { type: 'array', items: { type: 'string', example: '09:00-17:00' }, description: '星期一排程' },
+      tuesday: { type: 'array', items: { type: 'string', example: '09:00-17:00' }, description: '星期二排程' },
+      wednesday: { type: 'array', items: { type: 'string', example: '09:00-17:00' }, description: '星期三排程' },
+      thursday: { type: 'array', items: { type: 'string', example: '09:00-17:00' }, description: '星期四排程' },
+      friday: { type: 'array', items: { type: 'string', example: '09:00-17:00' }, description: '星期五排程' },
+      saturday: { type: 'array', items: { type: 'string', example: '09:00-12:00' }, description: '星期六排程' },
+      sunday: { type: 'array', items: { type: 'string' }, description: '星期日排程' }
+    },
+    description: '格式化的排程資料'
+  },
+
   // 排程取得成功回應 Schema
   ScheduleGetSuccessResponse: {
     type: 'object',
@@ -1282,31 +1290,12 @@ export const teacherSchemas = {
           schedules: {
             type: 'array',
             items: {
-              type: 'object',
-              properties: {
-                id: { type: 'integer', description: '排程 ID', example: 1 },
-                teacher_id: { type: 'integer', description: '教師 ID', example: 1 },
-                day_of_week: { type: 'integer', enum: [0, 1, 2, 3, 4, 5, 6], description: '星期（0=星期日, 1=星期一, ..., 6=星期六）', example: 1 },
-                start_time: { type: 'string', pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$', description: '開始時間（HH:mm 格式）', example: '09:00' },
-                end_time: { type: 'string', pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$', description: '結束時間（HH:mm 格式）', example: '17:00' },
-                created_at: { type: 'string', format: 'date-time', description: '建立時間', example: '2024-01-01T00:00:00.000Z' },
-                updated_at: { type: 'string', format: 'date-time', description: '更新時間', example: '2024-01-15T10:30:00.000Z' }
-              }
+              $ref: '#/components/schemas/Schedule'
             },
             description: '排程列表'
           },
           formatted_schedules: {
-            type: 'object',
-            properties: {
-              monday: { type: 'array', items: { type: 'string', example: '09:00-17:00' }, description: '星期一排程' },
-              tuesday: { type: 'array', items: { type: 'string', example: '09:00-17:00' }, description: '星期二排程' },
-              wednesday: { type: 'array', items: { type: 'string', example: '09:00-17:00' }, description: '星期三排程' },
-              thursday: { type: 'array', items: { type: 'string', example: '09:00-17:00' }, description: '星期四排程' },
-              friday: { type: 'array', items: { type: 'string', example: '09:00-17:00' }, description: '星期五排程' },
-              saturday: { type: 'array', items: { type: 'string', example: '09:00-12:00' }, description: '星期六排程' },
-              sunday: { type: 'array', items: { type: 'string' }, description: '星期日排程' }
-            },
-            description: '格式化的排程資料'
+            $ref: '#/components/schemas/FormattedSchedules'
           }
         }
       }
@@ -1370,10 +1359,13 @@ export const teacherSchemas = {
         type: 'object',
         properties: {
           schedules: {
-            $ref: '#/components/schemas/ScheduleGetSuccessResponse/properties/data/properties/schedules'
+            type: 'array',
+            items: {
+              $ref: '#/components/schemas/Schedule'
+            }
           },
           formatted_schedules: {
-            $ref: '#/components/schemas/ScheduleGetSuccessResponse/properties/data/properties/formatted_schedules'
+            $ref: '#/components/schemas/FormattedSchedules'
           },
           updated_count: { type: 'integer', description: '更新的排程數量', example: 5 },
           deleted_count: { type: 'integer', description: '刪除的舊排程數量', example: 3 }
