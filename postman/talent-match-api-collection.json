@@ -202,6 +202,103 @@
       "description": "便利工具，用於管理認證狀態和除錯"
     },
     {
+      "name": "標籤管理 (Tags)",
+      "item": [
+        {
+          "name": "取得所有標籤清單",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// 標籤清單取得測試",
+                  "pm.test('狀態碼應為 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('回應格式應正確', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status', true);",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('標籤資料結構應正確', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.data.length > 0) {",
+                  "        const firstTag = jsonData.data[0];",
+                  "        pm.expect(firstTag).to.have.property('id');",
+                  "        pm.expect(firstTag).to.have.property('main_category');",
+                  "        pm.expect(firstTag).to.have.property('sub_category');",
+                  "        pm.expect(firstTag).to.have.property('icon_url');",
+                  "        pm.expect(firstTag.sub_category).to.be.an('array');",
+                  "        ",
+                  "        // 檢查次分類格式",
+                  "        if (firstTag.sub_category.length > 0) {",
+                  "            const firstSubCategory = firstTag.sub_category[0];",
+                  "            pm.expect(firstSubCategory).to.have.property('id');",
+                  "            pm.expect(firstSubCategory).to.have.property('name');",
+                  "        }",
+                  "    }",
+                  "});",
+                  "",
+                  "console.log('✅ 標籤清單取得成功');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tags",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tags"]
+            },
+            "description": "取得系統中所有啟用的主分類和次分類標籤清單，供前端選單使用。此為公開 API，不需認證。"
+          },
+          "response": [
+            {
+              "name": "成功取得標籤清單",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/tags",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "tags"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": true,\n  \"message\": \"取得標籤清單成功\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"main_category\": \"藝術創作\",\n      \"sub_category\": [\n        {\n          \"id\": 1,\n          \"name\": \"水彩畫\"\n        },\n        {\n          \"id\": 2,\n          \"name\": \"油畫\"\n        },\n        {\n          \"id\": 3,\n          \"name\": \"素描\"\n        }\n      ],\n      \"icon_url\": \"assets/images/tag-icon/draw_abstract.svg\"\n    },\n    {\n      \"id\": 2,\n      \"main_category\": \"舞蹈表演\",\n      \"sub_category\": [\n        {\n          \"id\": 4,\n          \"name\": \"芭蕾舞\"\n        },\n        {\n          \"id\": 5,\n          \"name\": \"現代舞\"\n        }\n      ],\n      \"icon_url\": \"assets/images/tag-icon/dance.svg\"\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ],
+      "description": "取得系統標籤相關資訊，包含主分類和次分類清單"
+    },
+    {
       "name": "認證管理 (Auth)",
       "item": [
         {
