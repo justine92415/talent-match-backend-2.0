@@ -55,50 +55,131 @@ export const invalidIntroductions = {
 // 基本有效教師申請資料
 export const validTeacherApplicationData = {
   basic: {
-    nationality: '台灣',
+    city: '台北市',
+    district: '信義區',
+    address: '信義路100號',
+    main_category_id: 1,
+    sub_category_ids: [1, 2],
     introduction: validIntroductions.basic
   },
 
   detailed: {
-    nationality: '台灣', 
+    city: '台中市',
+    district: '西屯區', 
+    address: '台灣大道200號',
+    main_category_id: 1,
+    sub_category_ids: [1, 2, 3],
     introduction: validIntroductions.detailed
   },
 
   japanese: {
-    nationality: '日本',
+    city: '高雄市',
+    district: '前鎮區',
+    address: '成功路300號',
+    main_category_id: 2,
+    sub_category_ids: [8, 9],  // 日文、韓文（屬於語言學習類別）
     introduction: validIntroductions.japanese
   },
 
   updated: {
-    nationality: '日本',
+    city: '台南市',
+    district: '安平區',
+    address: '安平路400號',
+    main_category_id: 2,
+    sub_category_ids: [7],  // 英文（屬於語言學習類別）
     introduction: validIntroductions.updated
   },
 
   multiFieldUpdate: {
-    nationality: '美國',
+    city: '新北市',
+    district: '板橋區',
+    address: '中山路500號',
+    main_category_id: 3,
+    sub_category_ids: [14, 15],  // 鋼琴、吉他（屬於音樂才藝類別）
     introduction: validIntroductions.experienced
   }
 }
 
 // 無效教師申請資料（用於驗證測試）
 export const invalidTeacherApplicationData = {
-  emptyNationality: {
-    nationality: '',
+  emptyCity: {
+    city: '',
+    district: '信義區',
+    address: '信義路100號',
+    main_category_id: 1,
+    sub_category_ids: [1, 2],
+    introduction: validIntroductions.basic
+  },
+
+  emptyDistrict: {
+    city: '台北市',
+    district: '',
+    address: '信義路100號',
+    main_category_id: 1,
+    sub_category_ids: [1, 2],
+    introduction: validIntroductions.basic
+  },
+
+  emptyAddress: {
+    city: '台北市',
+    district: '信義區',
+    address: '',
+    main_category_id: 1,
+    sub_category_ids: [1, 2],
+    introduction: validIntroductions.basic
+  },
+
+  invalidMainCategory: {
+    city: '台北市',
+    district: '信義區',
+    address: '信義路100號',
+    main_category_id: 999,
+    sub_category_ids: [1, 2],
+    introduction: validIntroductions.basic
+  },
+
+  emptySubCategories: {
+    city: '台北市',
+    district: '信義區',
+    address: '信義路100號',
+    main_category_id: 1,
+    sub_category_ids: [],
+    introduction: validIntroductions.basic
+  },
+
+  tooManySubCategories: {
+    city: '台北市',
+    district: '信義區',
+    address: '信義路100號',
+    main_category_id: 1,
+    sub_category_ids: [1, 2, 3, 4],
     introduction: validIntroductions.basic
   },
 
   shortIntroduction: {
-    nationality: '台灣',
+    city: '台北市',
+    district: '信義區',
+    address: '信義路100號',
+    main_category_id: 1,
+    sub_category_ids: [1, 2],
     introduction: invalidIntroductions.tooShort
   },
 
   longIntroduction: {
-    nationality: '台灣',
+    city: '台北市',
+    district: '信義區',
+    address: '信義路100號',
+    main_category_id: 1,
+    sub_category_ids: [1, 2],
     introduction: invalidIntroductions.tooLong
   },
 
   emptyIntroduction: {
-    nationality: '台灣',
+    city: '台北市',
+    district: '信義區',
+    address: '信義路100號',
+    main_category_id: 1,
+    sub_category_ids: [1, 2],
     introduction: invalidIntroductions.empty
   }
 }
@@ -107,7 +188,11 @@ export const invalidTeacherApplicationData = {
 export const createTeacherEntityData = (overrides: Partial<Teacher> = {}): Partial<Teacher> => ({
   uuid: '550e8400-e29b-41d4-a716-446655440001',
   user_id: 1,
-  nationality: '台灣',
+  city: '台北市',
+  district: '信義區',
+  address: '信義路100號',
+  main_category_id: 1,
+  sub_category_ids: [1, 2],
   introduction: validIntroductions.basic,
   application_status: ApplicationStatus.PENDING,
   application_submitted_at: undefined,
@@ -293,7 +378,11 @@ export const expectedResponseStructures = {
         id: expect.any(Number),
         uuid: expect.any(String),
         user_id: expect.any(Number),
-        nationality: expect.any(String),
+        city: expect.any(String),
+        district: expect.any(String),
+        address: expect.any(String),
+        main_category_id: expect.any(Number),
+        sub_category_ids: expect.any(Array),
         introduction: expect.any(String),
         application_status: ApplicationStatus.PENDING,
         application_submitted_at: null,
@@ -325,7 +414,11 @@ export const expectedResponseStructures = {
       teacher: {
         id: expect.any(Number),
         uuid: expect.any(String),
-        nationality: expect.any(String),
+        city: expect.any(String),
+        district: expect.any(String),
+        address: expect.any(String),
+        main_category_id: expect.any(Number),
+        sub_category_ids: expect.any(Array),
         introduction: expect.any(String),
         application_status: expect.any(String),
         application_submitted_at: null,
@@ -351,7 +444,11 @@ export const expectedResponseStructures = {
     data: {
       teacher: {
         id: expect.any(Number),
-        nationality: expect.any(String),
+        city: expect.any(String),
+        district: expect.any(String),
+        address: expect.any(String),
+        main_category_id: expect.any(Number),
+        sub_category_ids: expect.any(Array),
         introduction: expect.any(String),
         updated_at: expect.any(String)
       }

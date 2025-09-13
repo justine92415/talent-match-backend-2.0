@@ -343,7 +343,9 @@ export class PublicCourseService {
           nick_name: teacher.user.nick_name,
           avatar_image: teacher.user.avatar_image || ''
         },
-        nationality: teacher.nationality || '',
+        city: teacher.city || '',
+        district: teacher.district || '',
+        address: teacher.address || '',
         introduction: teacher.introduction || '',
         total_students: 0, // TODO: 實際計算
         total_courses: 0,  // TODO: 實際計算
@@ -355,7 +357,9 @@ export class PublicCourseService {
           nick_name: DEFAULT_TEACHER.NICKNAME,
           avatar_image: ''
         },
-        nationality: '',
+        city: '',
+        district: '',
+        address: '',
         introduction: '',
         total_students: 0,
         total_courses: 0,

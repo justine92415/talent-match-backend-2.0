@@ -439,6 +439,8 @@ export const authSchemas = {
         example: '張小明'
       },
       birthday: {
+        type: 'string',
+        nullable: true,
         oneOf: [
           {
             type: 'string',
@@ -451,10 +453,6 @@ export const authSchemas = {
             enum: [''],
             description: '空字串表示清空生日',
             example: ''
-          },
-          {
-            type: 'null',
-            description: 'null 值表示不更新此欄位'
           }
         ],
         description: '生日 - 可為有效日期、空字串(清空)或 null'

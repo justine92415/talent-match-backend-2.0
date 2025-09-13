@@ -71,7 +71,11 @@ export const TEST_USER_DATA = {
   TOTAL_STUDENTS: 100,
   TOTAL_COURSES: 5,
   AVERAGE_RATING: 4.5,
-  NATIONALITY: '台灣',
+  CITY: '台北市',
+  DISTRICT: '信義區',
+  ADDRESS: '信義路100號',
+  MAIN_CATEGORY_ID: 1,
+  SUB_CATEGORY_IDS: [1, 2],
   INTRODUCTION: '我是Python專業教師'
 } as const
 
@@ -143,7 +147,7 @@ export const EXPECTED_PROPERTIES = {
   COURSE_PROPERTIES: ['id', 'name', 'content', 'status'] as const,
   
   // 教師屬性
-  TEACHER_PROPERTIES: ['id', 'user', 'nationality', 'introduction'] as const,
+  TEACHER_PROPERTIES: ['id', 'user', 'city', 'district', 'address', 'main_category_id', 'sub_category_ids', 'introduction'] as const,
   
   // 分頁屬性
   PAGINATION_PROPERTIES: ['current_page', 'per_page', 'total', 'total_pages'] as const,

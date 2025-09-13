@@ -26,9 +26,9 @@ export class TeacherLearningExperience {
   @Column({ length: 200 })
   department!: string
 
-  /** 地區：TRUE=台灣, FALSE=海外 */
-  @Column({ type: 'boolean' })
-  region!: boolean
+  /** 地區：TRUE=台灣, FALSE=海外（已棄用，保留向後相容性） */
+  @Column({ type: 'boolean', default: true, nullable: true })
+  region?: boolean
 
   /** 開始年份 */
   @Column({ type: 'integer' })

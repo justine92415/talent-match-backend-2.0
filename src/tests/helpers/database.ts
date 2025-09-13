@@ -1,5 +1,6 @@
 import { dataSource } from '@db/data-source'
 import { User } from '@entities/User'
+import { DatabaseSeeder } from '@db/seeds/index'
 
 // 全域測試資料庫管理器
 class TestDatabaseManager {
@@ -69,6 +70,10 @@ export const clearDatabase = async (): Promise<void> => {
       // 重新啟用外鍵約束檢查
       await manager.query('SET session_replication_role = DEFAULT;')
     })
+
+    // 確保基礎種子資料存在
+    const seeder = new DatabaseSeeder()
+    await seeder.run(dataSource)
 
     console.log('✅ 測試資料庫已清理')
   } catch (error) {

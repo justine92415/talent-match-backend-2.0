@@ -4,13 +4,7 @@
   "values": [
     {
       "key": "base_url",
-      "value": "https://api.talent-match.com",
-      "type": "default",
-      "enabled": true
-    },
-    {
-      "key": "api_prefix",
-      "value": "/api",
+      "value": "https://talentmatch2.zeabur.app",
       "type": "default",
       "enabled": true
     },

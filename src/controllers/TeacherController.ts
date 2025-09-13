@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { teacherService } from '@services/index'
+import { teacherService, certificateService, learningExperienceService } from '@services/index'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 import { SUCCESS, MESSAGES } from '@constants/Message'
 import { Teacher } from '@entities/Teacher'
@@ -16,16 +16,27 @@ export class TeacherController {
    */
   apply = handleErrorAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const userId = req.user!.userId // 經過 authenticateToken 中間件後，req.user 必定存在
-    const { nationality, introduction } = req.body
+    const { city, district, address, main_category_id, sub_category_ids, introduction } = req.body
 
-    const teacher = await this.teacherService.apply(userId, { nationality, introduction })
+    const teacher = await this.teacherService.apply(userId, { 
+      city, 
+      district, 
+      address, 
+      main_category_id, 
+      sub_category_ids, 
+      introduction 
+    })
     
     res.status(201).json(handleCreated({
       teacher: {
         id: teacher.id,
         uuid: teacher.uuid,
         user_id: teacher.user_id,
-        nationality: teacher.nationality,
+        city: teacher.city,
+        district: teacher.district,
+        address: teacher.address,
+        main_category_id: teacher.main_category_id,
+        sub_category_ids: teacher.sub_category_ids,
         introduction: teacher.introduction,
         application_status: teacher.application_status,
         application_submitted_at: teacher.application_submitted_at,
@@ -36,6 +47,113 @@ export class TeacherController {
         updated_at: teacher.updated_at
       }
     }, SUCCESS.TEACHER_APPLICATION_CREATED))
+  })
+
+  /**
+   * 獲取教師申請狀態與完整表單資料
+   */
+  getApplyStatus = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.userId // 經過 authenticateToken 中間件後，req.user 必定存在
+
+    // 嘗試取得教師申請資料
+    let teacher: Teacher | null = null
+    try {
+      teacher = await this.teacherService.getApplication(userId)
+    } catch (error) {
+      // 如果找不到申請記錄，回傳 404
+      res.status(404).json({
+        status: 'error',
+        message: '尚未申請成為教師'
+      })
+      return
+    }
+
+    // 並行取得所有相關資料
+    const [workExperiences, learningExperiences, certificates] = await Promise.all([
+      this.teacherService.getWorkExperiencesForApplication(userId),
+      learningExperienceService.getLearningExperiencesForApplication(userId),
+      certificateService.getCertificatesByUserIdForApplication(userId)
+    ])
+
+    res.status(200).json(handleSuccess({
+      application_status: teacher.application_status,
+      application_submitted_at: teacher.application_submitted_at,
+      application_reviewed_at: teacher.application_reviewed_at,
+      reviewer_id: teacher.reviewer_id,
+      review_notes: teacher.review_notes,
+      basic_info: {
+        city: teacher.city,
+        district: teacher.district,
+        address: teacher.address,
+        main_category_id: teacher.main_category_id,
+        sub_category_ids: teacher.sub_category_ids,
+        introduction: teacher.introduction
+      },
+      work_experiences: workExperiences,
+      learning_experiences: learningExperiences,
+      certificates: certificates,
+      id: teacher.id,
+      uuid: teacher.uuid,
+      user_id: teacher.user_id,
+      created_at: teacher.created_at,
+      updated_at: teacher.updated_at
+    }, SUCCESS.TEACHER_APPLICATION_GET_SUCCESS))
+  })
+
+  /**
+   * 獲取教師基本資訊
+   */
+  getBasicInfo = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.userId // 經過 authenticateToken 中間件後，req.user 必定存在
+
+    const teacher = await this.teacherService.getProfile(userId)
+
+    res.status(200).json(handleSuccess({
+      basic_info: {
+        id: teacher.id,
+        uuid: teacher.uuid,
+        user_id: teacher.user_id,
+        city: teacher.city,
+        district: teacher.district,
+        address: teacher.address,
+        main_category_id: teacher.main_category_id,
+        sub_category_ids: teacher.sub_category_ids,
+        introduction: teacher.introduction,
+        created_at: teacher.created_at,
+        updated_at: teacher.updated_at
+      }
+    }, SUCCESS.TEACHER_PROFILE_GET_SUCCESS))
+  })
+
+  /**
+   * 更新教師基本資訊
+   */
+  updateBasicInfo = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.userId // 經過 authenticateToken 中間件後，req.user 必定存在
+    const { city, district, address, main_category_id, sub_category_ids, introduction } = req.body
+
+    const teacher = await this.teacherService.updateProfile(userId, {
+      city,
+      district,
+      address,
+      main_category_id,
+      sub_category_ids,
+      introduction
+    })
+
+    res.status(200).json(handleSuccess({
+      basic_info: {
+        id: teacher.id,
+        city: teacher.city,
+        district: teacher.district,
+        address: teacher.address,
+        main_category_id: teacher.main_category_id,
+        sub_category_ids: teacher.sub_category_ids,
+        introduction: teacher.introduction,
+        updated_at: teacher.updated_at
+      },
+      notice: MESSAGES.TEACHER.PROFILE_UPDATE_NOTICE
+    }, SUCCESS.TEACHER_PROFILE_UPDATED))
   })
 
   /**
@@ -51,7 +169,11 @@ export class TeacherController {
         id: teacher.id,
         uuid: teacher.uuid,
         user_id: teacher.user_id,
-        nationality: teacher.nationality,
+        city: teacher.city,
+        district: teacher.district,
+        address: teacher.address,
+        main_category_id: teacher.main_category_id,
+        sub_category_ids: teacher.sub_category_ids,
         introduction: teacher.introduction,
         application_status: teacher.application_status,
         application_submitted_at: teacher.application_submitted_at,
@@ -69,10 +191,14 @@ export class TeacherController {
    */
   updateApplication = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
     const userId = req.user!.userId // 經過 authenticateToken 中間件後，req.user 必定存在
-    const { nationality, introduction } = req.body
+    const { city, district, address, main_category_id, sub_category_ids, introduction } = req.body
 
     const teacher = await this.teacherService.updateApplication(userId, {
-      nationality,
+      city,
+      district,
+      address,
+      main_category_id,
+      sub_category_ids,
       introduction
     })
 
@@ -81,7 +207,11 @@ export class TeacherController {
         id: teacher.id,
         uuid: teacher.uuid,
         user_id: teacher.user_id,
-        nationality: teacher.nationality,
+        city: teacher.city,
+        district: teacher.district,
+        address: teacher.address,
+        main_category_id: teacher.main_category_id,
+        sub_category_ids: teacher.sub_category_ids,
         introduction: teacher.introduction,
         application_status: teacher.application_status,
         application_submitted_at: teacher.application_submitted_at,
@@ -129,7 +259,11 @@ export class TeacherController {
         id: teacher.id,
         uuid: teacher.uuid,
         user_id: teacher.user_id,
-        nationality: teacher.nationality,
+        city: teacher.city,
+        district: teacher.district,
+        address: teacher.address,
+        main_category_id: teacher.main_category_id,
+        sub_category_ids: teacher.sub_category_ids,
         introduction: teacher.introduction,
         application_status: teacher.application_status,
         application_submitted_at: teacher.application_submitted_at,
@@ -151,17 +285,25 @@ export class TeacherController {
    */
   updateProfile = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
     const userId = req.user!.userId // 經過 authenticateToken 中間件後，req.user 必定存在
-    const { nationality, introduction } = req.body
+    const { city, district, address, main_category_id, sub_category_ids, introduction } = req.body
 
     const teacher = await this.teacherService.updateProfile(userId, {
-      nationality,
+      city,
+      district,
+      address,
+      main_category_id,
+      sub_category_ids,
       introduction
     })
 
     res.status(200).json(handleSuccess({
       teacher: {
         id: teacher.id,
-        nationality: teacher.nationality,
+        city: teacher.city,
+        district: teacher.district,
+        address: teacher.address,
+        main_category_id: teacher.main_category_id,
+        sub_category_ids: teacher.sub_category_ids,
         introduction: teacher.introduction,
         application_status: teacher.application_status,
         updated_at: teacher.updated_at
@@ -185,17 +327,38 @@ export class TeacherController {
   })
 
   /**
-   * 建立工作經驗
+   * 建立工作經驗（統一使用陣列格式）
    */
   createWorkExperience = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
     const userId = req.user!.userId
-    const workExperienceData = req.body
-    
-    const workExperience = await this.teacherService.createWorkExperience(userId, workExperienceData)
+    const requestData = req.body
+
+    // 統一處理陣列格式的工作經驗資料
+    const workExperiences = await this.teacherService.createWorkExperiencesBatch(userId, requestData)
     
     res.status(201).json(handleCreated({
-      work_experience: workExperience
-    }, SUCCESS.TEACHER_WORK_EXPERIENCE_CREATED))
+      work_experiences: workExperiences
+    }, `成功建立 ${workExperiences.length} 筆工作經驗`))
+  })
+
+  /**
+   * 批次新增或更新工作經驗（UPSERT）
+   */
+  upsertWorkExperiences = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.userId
+    const requestData = req.body
+
+    // 批次處理工作經驗 UPSERT 操作
+    const result = await this.teacherService.upsertWorkExperiencesBatch(userId, requestData)
+    
+    res.status(200).json(handleSuccess({
+      statistics: {
+        total_processed: result.totalProcessed,
+        created_count: result.createdCount,
+        updated_count: result.updatedCount
+      },
+      work_experiences: result.workExperiences
+    }, `成功處理工作經驗：新增 ${result.createdCount} 筆，更新 ${result.updatedCount} 筆`))
   })
 
   /**

@@ -42,9 +42,25 @@ export class Teacher {
   @Column({ type: 'text', nullable: true })
   review_notes?: string
 
-  /** 國籍 */
+  /** 縣市 */
   @Column({ length: 50, nullable: true })
-  nationality?: string
+  city?: string
+
+  /** 區域 */
+  @Column({ length: 50, nullable: true })
+  district?: string
+
+  /** 地址 */
+  @Column({ length: 200, nullable: true })
+  address?: string
+
+  /** 教授科目（主分類ID） */
+  @Column({ nullable: true })
+  main_category_id?: number
+
+  /** 專長（子分類ID陣列，以JSON格式儲存） */
+  @Column({ type: 'json', nullable: true })
+  sub_category_ids?: number[]
 
   /** 教師自我介紹 */
   @Column({ type: 'text', nullable: true })

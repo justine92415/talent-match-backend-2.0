@@ -13,10 +13,11 @@ export interface PublicTeacherProfile {
   email: string
   bio?: string
   expertise?: string
-  city?: CitySummary | null
+  city?: string | null
+  district?: string | null
+  address?: string | null
   profile_picture?: string | null
   introduction?: string | null
-  nationality?: string | null
   total_students: number
   total_courses: number
   average_rating: number

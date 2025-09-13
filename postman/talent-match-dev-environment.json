@@ -9,12 +9,6 @@
       "enabled": true
     },
     {
-      "key": "api_prefix",
-      "value": "",
-      "type": "default",
-      "enabled": true
-    },
-    {
       "key": "access_token",
       "value": "",
       "type": "secret",

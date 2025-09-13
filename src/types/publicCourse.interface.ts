@@ -129,7 +129,9 @@ export interface PublicTeacherDetail {
     nick_name: string
     avatar_image?: string
   }
-  nationality?: string
+  city?: string
+  district?: string
+  address?: string
   introduction?: string
   total_students: number
   total_courses: number
@@ -305,7 +307,9 @@ export interface PublicTeacherResponse {
       nick_name: string
       avatar_image?: string
     }
-    nationality?: string
+    city?: string
+    district?: string
+    address?: string
     introduction?: string
     total_students: number
     total_courses: number

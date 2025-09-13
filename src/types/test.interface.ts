@@ -31,7 +31,11 @@ export interface TestUserCreateData {
 export interface TestTeacherCreateData {
   uuid?: string
   user_id?: number
-  nationality?: string
+  city?: string
+  district?: string
+  address?: string
+  main_category_id?: number
+  sub_category_ids?: number[]
   introduction?: string
   application_status?: ApplicationStatus
   application_submitted_at?: Date | undefined
