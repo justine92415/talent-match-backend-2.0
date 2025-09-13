@@ -734,7 +734,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "teachers", "work-experiences"]
             },
-            "description": "新增工作經驗記錄，支援單筆或多筆"
+            "description": "批次新增工作經驗記錄，統一使用陣列格式，支援一次新增多筆工作經驗"
           }
         },
         {

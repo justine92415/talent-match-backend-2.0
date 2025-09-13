@@ -9,11 +9,16 @@ import {
   teacherApplicationUpdateSchema,
   teacherProfileUpdateSchema,
   learningExperienceCreateSchema,
-  learningExperienceUpdateSchema
+  learningExperienceCreateBatchSchema,
+  learningExperienceUpdateSchema,
+  workExperienceUpsertSchema,
+  learningExperienceUpsertSchema
 } from '@middleware/schemas/user/teacherSchemas'
 import {
   certificateCreateSchema,
-  certificateUpdateSchema
+  certificateCreateBatchSchema,
+  certificateUpdateSchema,
+  certificateUpsertSchema
 } from '@middleware/schemas/user/certificateSchemas'
 import { scheduleUpdateSchema, conflictsQuerySchema } from '@middleware/schemas/system/scheduleSchemas'
 import { certificateController } from '@controllers/CertificateController'
@@ -682,6 +687,132 @@ router.post('/work-experiences', authenticateToken, teacherController.createWork
 
 /**
  * @swagger
+ * /api/teachers/work-experiences:
+ *   put:
+ *     tags:
+ *       - Teachers
+ *     summary: 批次新增或更新工作經驗
+ *     description: |
+ *       批次處理工作經驗記錄，支援同時新增和更新操作。
+ *       
+ *       **UPSERT 邏輯**：
+ *       - 有 `id` 的記錄：執行更新操作
+ *       - 沒有 `id` 的記錄：執行新增操作
+ *       - 支援在同一個請求中混合處理新增和更新
+ *       - 所有操作在單一交易中執行，確保資料一致性
+ *       
+ *       **使用場景**：
+ *       - 使用者中途離開申請頁面後重新填寫
+ *       - 需要同時修改現有資料並新增新的工作經驗
+ *       - 前端不需要複雜的邏輯判斷應該呼叫 POST 還是 PUT
+ *       
+ *       **請求格式**：
+ *       - 統一使用 `{ work_experiences: [工作經驗陣列] }` 格式
+ *       - 每個工作經驗物件可選擇性包含 `id` 欄位
+ *       
+ *       **業務邏輯**：
+ *       - 驗證使用者為有效的教師或教師申請者
+ *       - 對於有 `id` 的記錄，驗證使用者擁有權
+ *       - 驗證所有工作經驗資料的完整性和邏輯性
+ *       - 檢查開始和結束時間的合理性
+ *       - 一次最多支援 20 筆工作經驗
+ *       - 在資料庫交易中執行所有操作
+ *       - 回傳處理結果統計和更新後的資料
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/WorkExperienceUpsertRequest'
+ *           examples:
+ *             mixed_operations:
+ *               summary: 混合新增和更新操作
+ *               value:
+ *                 work_experiences:
+ *                   - id: 123
+ *                     company_name: "更新後的公司名稱"
+ *                     workplace: "台北市信義區"
+ *                     job_category: "軟體開發"
+ *                     job_title: "資深工程師"
+ *                     is_working: false
+ *                     start_year: 2020
+ *                     start_month: 1
+ *                     end_year: 2023
+ *                     end_month: 6
+ *                   - company_name: "新公司"
+ *                     workplace: "新北市板橋區"
+ *                     job_category: "產品管理"
+ *                     job_title: "產品經理"
+ *                     is_working: true
+ *                     start_year: 2023
+ *                     start_month: 7
+ *                     end_year: null
+ *                     end_month: null
+ *     responses:
+ *       200:
+ *         description: 批次處理成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/WorkExperienceUpsertResponse'
+ *             examples:
+ *               success:
+ *                 summary: 成功處理混合操作
+ *                 value:
+ *                   message: "工作經驗批次處理完成"
+ *                   data:
+ *                     work_experiences:
+ *                       - id: 123
+ *                         user_id: 456
+ *                         company_name: "更新後的公司名稱"
+ *                         workplace: "台北市信義區"
+ *                         job_category: "軟體開發"
+ *                         job_title: "資深工程師"
+ *                         is_working: false
+ *                         start_year: 2020
+ *                         start_month: 1
+ *                         end_year: 2023
+ *                         end_month: 6
+ *                         created_at: "2024-01-15T10:30:00.000Z"
+ *                         updated_at: "2024-01-20T14:25:00.000Z"
+ *                       - id: 789
+ *                         user_id: 456
+ *                         company_name: "新公司"
+ *                         workplace: "新北市板橋區"
+ *                         job_category: "產品管理"
+ *                         job_title: "產品經理"
+ *                         is_working: true
+ *                         start_year: 2023
+ *                         start_month: 7
+ *                         end_year: null
+ *                         end_month: null
+ *                         created_at: "2024-01-20T14:25:00.000Z"
+ *                         updated_at: "2024-01-20T14:25:00.000Z"
+ *       400:
+ *         description: 請求參數錯誤或資料驗證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: 未授權存取
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
+router.put('/work-experiences', authenticateToken, validateRequest(workExperienceUpsertSchema, '工作經驗批次處理參數驗證失敗'), teacherController.upsertWorkExperiences)
+
+/**
+ * @swagger
  * /api/teachers/work-experiences/{id}:
  *   put:
  *     tags:
@@ -869,14 +1000,14 @@ router.get('/learning-experiences', authenticateToken, learningExperienceControl
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/LearningExperienceCreateRequest'
+ *             $ref: '#/components/schemas/LearningExperienceBatchCreateRequest'
  *     responses:
  *       201:
  *         description: 學習經歷建立成功
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/LearningExperienceCreateSuccessResponse'
+ *               $ref: '#/components/schemas/LearningExperienceBatchCreateSuccessResponse'
  *       400:
  *         description: 請求參數錯誤
  *         content:
@@ -896,7 +1027,99 @@ router.get('/learning-experiences', authenticateToken, learningExperienceControl
  *             schema:
  *               $ref: '#/components/schemas/ServerErrorResponse'
  */
-router.post('/learning-experiences', authenticateToken, validateRequest(learningExperienceCreateSchema), learningExperienceController.createLearningExperience)
+router.post('/learning-experiences', authenticateToken, validateRequest(learningExperienceCreateBatchSchema), learningExperienceController.createLearningExperience)
+
+/**
+ * @swagger
+ * /api/teachers/learning-experiences:
+ *   put:
+ *     tags:
+ *       - Teachers
+ *     summary: 批次新增或更新學習經驗
+ *     description: |
+ *       批次處理學習經驗記錄，支援同時新增和更新操作。
+ *       
+ *       **UPSERT 邏輯**：
+ *       - 有 `id` 的記錄：執行更新操作
+ *       - 沒有 `id` 的記錄：執行新增操作
+ *       - 支援在同一個請求中混合處理新增和更新
+ *       - 所有操作在單一交易中執行，確保資料一致性
+ *       
+ *       **使用場景**：
+ *       - 使用者中途離開申請頁面後重新填寫
+ *       - 需要同時修改現有資料並新增新的學習經驗
+ *       - 前端不需要複雜的邏輯判斷應該呼叫 POST 還是 PUT
+ *       
+ *       **請求格式**：
+ *       - 統一使用 `{ learning_experiences: [學習經驗陣列] }` 格式
+ *       - 每個學習經驗物件可選擇性包含 `id` 欄位
+ *       
+ *       **業務邏輯**：
+ *       - 驗證使用者為有效的教師或教師申請者
+ *       - 對於有 `id` 的記錄，驗證使用者擁有權
+ *       - 驗證所有學習經驗資料的完整性和邏輯性
+ *       - 檢查開始和結束時間的合理性
+ *       - 一次最多支援 20 筆學習經驗
+ *       - 在資料庫交易中執行所有操作
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/LearningExperienceUpsertRequest'
+ *           examples:
+ *             mixed_operations:
+ *               summary: 混合新增和更新操作
+ *               value:
+ *                 learning_experiences:
+ *                   - id: 123
+ *                     degree: "碩士"
+ *                     school_name: "某某大學"
+ *                     department: "資訊管理學系碩士班"
+ *                     region: true
+ *                     is_in_school: false
+ *                     start_year: 2020
+ *                     start_month: 9
+ *                     end_year: 2022
+ *                     end_month: 6
+ *                   - degree: "博士"
+ *                     school_name: "另一所大學"
+ *                     department: "電腦科學系"
+ *                     region: false
+ *                     is_in_school: true
+ *                     start_year: 2022
+ *                     start_month: 9
+ *                     end_year: null
+ *                     end_month: null
+ *     responses:
+ *       200:
+ *         description: 批次處理成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LearningExperienceUpsertResponse'
+ *       400:
+ *         description: 請求參數錯誤或資料驗證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: 未授權存取
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
+router.put('/learning-experiences', authenticateToken, validateRequest(learningExperienceUpsertSchema, '學習經驗批次處理參數驗證失敗'), learningExperienceController.upsertLearningExperiences)
 
 /**
  * @swagger
@@ -1080,14 +1303,14 @@ router.get('/certificates', authenticateToken, certificateController.getCertific
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/CertificateCreateRequest'
+ *             $ref: '#/components/schemas/CertificateBatchCreateRequest'
  *     responses:
  *       201:
  *         description: 證書建立成功
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/CertificateCreateSuccessResponse'
+ *               $ref: '#/components/schemas/CertificateBatchCreateSuccessResponse'
  *       400:
  *         description: 請求參數錯誤
  *         content:
@@ -1113,7 +1336,95 @@ router.get('/certificates', authenticateToken, certificateController.getCertific
  *             schema:
  *               $ref: '#/components/schemas/ServerErrorResponse'
  */
-router.post('/certificates', authenticateToken, validateRequest(certificateCreateSchema), certificateController.createCertificate)
+router.post('/certificates', authenticateToken, validateRequest(certificateCreateBatchSchema), certificateController.createCertificate)
+
+/**
+ * @swagger
+ * /api/teachers/certificates:
+ *   put:
+ *     tags:
+ *       - Teachers
+ *     summary: 批次新增或更新證書
+ *     description: |
+ *       批次處理證書記錄，支援同時新增和更新操作。
+ *       
+ *       **UPSERT 邏輯**：
+ *       - 有 `id` 的記錄：執行更新操作
+ *       - 沒有 `id` 的記錄：執行新增操作
+ *       - 支援在同一個請求中混合處理新增和更新
+ *       - 所有操作在單一交易中執行，確保資料一致性
+ *       
+ *       **使用場景**：
+ *       - 使用者中途離開申請頁面後重新填寫
+ *       - 需要同時修改現有資料並新增新的證書
+ *       - 前端不需要複雜的邏輯判斷應該呼叫 POST 還是 PUT
+ *       
+ *       **請求格式**：
+ *       - 統一使用 `{ certificates: [證書陣列] }` 格式
+ *       - 每個證書物件可選擇性包含 `id` 欄位
+ *       
+ *       **業務邏輯**：
+ *       - 驗證使用者為有效的教師或教師申請者
+ *       - 對於有 `id` 的記錄，驗證使用者擁有權
+ *       - 驗證所有證書資料的完整性和邏輯性
+ *       - 檢查證書名稱和發證機構的合理性
+ *       - 一次最多支援 20 筆證書
+ *       - 在資料庫交易中執行所有操作
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CertificateUpsertRequest'
+ *           examples:
+ *             mixed_operations:
+ *               summary: 混合新增和更新操作
+ *               value:
+ *                 certificates:
+ *                   - id: 123
+ *                     verifying_institution: "某某認證機構"
+ *                     license_name: "更新後的證書名稱"
+ *                     holder_name: "王小明"
+ *                     license_number: "CERT-2023-001"
+ *                     category_id: "programming"
+ *                     subject: "程式設計"
+ *                     file_path: ""
+ *                   - verifying_institution: "另一個認證機構"
+ *                     license_name: "新的專業證書"
+ *                     holder_name: "王小明"
+ *                     license_number: "CERT-2024-002"
+ *                     category_id: "design"
+ *                     subject: "設計"
+ *                     file_path: ""
+ *     responses:
+ *       200:
+ *         description: 批次處理成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CertificateUpsertResponse'
+ *       400:
+ *         description: 請求參數錯誤或資料驗證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: 未授權存取
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
+router.put('/certificates', authenticateToken, validateRequest(certificateUpsertSchema, '證書批次處理參數驗證失敗'), certificateController.upsertCertificates)
 
 /**
  * @swagger

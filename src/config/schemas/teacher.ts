@@ -1074,15 +1074,17 @@ export const teacherSchemas = {
     properties: {
       id: { type: 'integer', description: '證照 ID', example: 1 },
       teacher_id: { type: 'integer', description: '教師 ID', example: 1 },
-      certificate_name: { type: 'string', description: '證照名稱', example: 'AWS Solutions Architect' },
-      issuer: { type: 'string', description: '發證機構', example: 'Amazon Web Services' },
-      year: { type: 'integer', description: '取得年份', example: 2023 },
-      month: { type: 'integer', description: '取得月份', example: 8 },
-      certificate_url: { type: 'string', format: 'uri', nullable: true, description: '證照檔案 URL', example: 'https://example.com/certificate.pdf' },
+      license_name: { type: 'string', description: '證照名稱', example: 'AWS Solutions Architect' },
+      verifying_institution: { type: 'string', description: '發證機構', example: 'Amazon Web Services' },
+      holder_name: { type: 'string', description: '持有人姓名', example: '王小明' },
+      license_number: { type: 'string', description: '證照編號', example: 'AWS-12345' },
+      category_id: { type: 'string', description: '證照類別', example: 'cloud' },
+      subject: { type: 'string', description: '證照科目', example: '雲端架構' },
+      file_path: { type: 'string', nullable: true, description: '證照檔案路徑', example: '/uploads/certificates/aws-cert.pdf' },
       created_at: { type: 'string', format: 'date-time', description: '建立時間', example: '2024-01-01T00:00:00.000Z' },
       updated_at: { type: 'string', format: 'date-time', description: '更新時間', example: '2024-01-15T10:30:00.000Z' }
     },
-    required: ['id', 'teacher_id', 'certificate_name', 'issuer', 'year', 'month', 'created_at', 'updated_at']
+    required: ['id', 'teacher_id', 'license_name', 'verifying_institution', 'holder_name', 'license_number', 'category_id', 'subject', 'created_at', 'updated_at']
   },
 
   // 證照列表成功回應 Schema
@@ -1119,42 +1121,56 @@ export const teacherSchemas = {
   // 證照建立請求 Schema
   CertificateCreateRequest: {
     type: 'object',
-    required: ['certificate_name', 'issuer', 'year', 'month'],
+    required: ['license_name', 'verifying_institution', 'holder_name', 'license_number', 'category_id', 'subject'],
     properties: {
-      certificate_name: {
+      license_name: {
         type: 'string',
         minLength: 1,
         maxLength: 200,
         description: '證照名稱（必填，1-200字元）',
         example: 'AWS Solutions Architect'
       },
-      issuer: {
+      verifying_institution: {
         type: 'string',
         minLength: 1,
         maxLength: 200,
         description: '發證機構（必填，1-200字元）',
         example: 'Amazon Web Services'
       },
-      year: {
-        type: 'integer',
-        minimum: 1900,
-        maximum: 2100,
-        description: '取得年份（必填，1900-2100）',
-        example: 2023
-      },
-      month: {
-        type: 'integer',
-        minimum: 1,
-        maximum: 12,
-        description: '取得月份（必填，1-12）',
-        example: 8
-      },
-      certificate_url: {
+      holder_name: {
         type: 'string',
-        format: 'uri',
+        minLength: 1,
+        maxLength: 100,
+        description: '持有人姓名（必填，1-100字元）',
+        example: '王小明'
+      },
+      license_number: {
+        type: 'string',
+        minLength: 1,
+        maxLength: 100,
+        description: '證照編號（必填，1-100字元）',
+        example: 'AWS-12345'
+      },
+      category_id: {
+        type: 'string',
+        minLength: 1,
+        maxLength: 50,
+        description: '證照類別（必填，1-50字元）',
+        example: 'cloud'
+      },
+      subject: {
+        type: 'string',
+        minLength: 1,
+        maxLength: 100,
+        description: '證照科目（必填，1-100字元）',
+        example: '雲端架構'
+      },
+      file_path: {
+        type: 'string',
+        maxLength: 500,
         nullable: true,
-        description: '證照檔案 URL（選填）',
-        example: 'https://example.com/certificate.pdf'
+        description: '證照檔案路徑（選填，最多500字元）',
+        example: '/uploads/certificates/aws-cert.pdf'
       }
     }
   },
@@ -1235,6 +1251,255 @@ export const teacherSchemas = {
         nullable: true,
         description: '此 API 無回傳資料',
         example: null
+      }
+    }
+  },
+
+  // === 批次和 UPSERT Schema ===
+
+  // 工作經驗批次建立請求 Schema (已存在)
+  // WorkExperienceBatchCreateRequest: {
+  //   已在上面定義
+  // },
+
+  // 工作經驗 UPSERT 請求 Schema
+  WorkExperienceUpsertRequest: {
+    type: 'object',
+    required: ['work_experiences'],
+    properties: {
+      work_experiences: {
+        type: 'array',
+        items: {
+          allOf: [
+            { $ref: '#/components/schemas/WorkExperienceCreateRequest' },
+            {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'integer',
+                  description: '工作經驗 ID（用於更新，新增時不提供）',
+                  example: 123
+                }
+              }
+            }
+          ]
+        },
+        minItems: 1,
+        maxItems: 20,
+        description: '工作經驗陣列（1-20筆）'
+      }
+    }
+  },
+
+  // 工作經驗 UPSERT 回應 Schema
+  WorkExperienceUpsertResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        enum: ['success'],
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        example: '工作經驗批次處理完成'
+      },
+      data: {
+        type: 'object',
+        properties: {
+          work_experiences: {
+            type: 'array',
+            items: { $ref: '#/components/schemas/WorkExperience' }
+          }
+        }
+      }
+    }
+  },
+
+  // 學習經驗批次建立請求 Schema
+  LearningExperienceBatchCreateRequest: {
+    type: 'object',
+    required: ['learning_experiences'],
+    properties: {
+      learning_experiences: {
+        type: 'array',
+        items: { $ref: '#/components/schemas/LearningExperienceCreateRequest' },
+        minItems: 1,
+        maxItems: 20,
+        description: '學習經驗陣列（1-20筆）'
+      }
+    }
+  },
+
+  // 學習經驗批次建立成功回應 Schema
+  LearningExperienceBatchCreateSuccessResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        enum: ['success'],
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        example: '成功建立 2 筆學習經驗'
+      },
+      data: {
+        type: 'object',
+        properties: {
+          learning_experiences: {
+            type: 'array',
+            items: { $ref: '#/components/schemas/LearningExperience' }
+          }
+        }
+      }
+    }
+  },
+
+  // 學習經驗 UPSERT 請求 Schema
+  LearningExperienceUpsertRequest: {
+    type: 'object',
+    required: ['learning_experiences'],
+    properties: {
+      learning_experiences: {
+        type: 'array',
+        items: {
+          allOf: [
+            { $ref: '#/components/schemas/LearningExperienceCreateRequest' },
+            {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'integer',
+                  description: '學習經驗 ID（用於更新，新增時不提供）',
+                  example: 456
+                }
+              }
+            }
+          ]
+        },
+        minItems: 1,
+        maxItems: 20,
+        description: '學習經驗陣列（1-20筆）'
+      }
+    }
+  },
+
+  // 學習經驗 UPSERT 回應 Schema
+  LearningExperienceUpsertResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        enum: ['success'],
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        example: '學習經驗批次處理完成'
+      },
+      data: {
+        type: 'object',
+        properties: {
+          learning_experiences: {
+            type: 'array',
+            items: { $ref: '#/components/schemas/LearningExperience' }
+          }
+        }
+      }
+    }
+  },
+
+  // 證書批次建立請求 Schema
+  CertificateBatchCreateRequest: {
+    type: 'object',
+    required: ['certificates'],
+    properties: {
+      certificates: {
+        type: 'array',
+        items: { $ref: '#/components/schemas/CertificateCreateRequest' },
+        minItems: 1,
+        maxItems: 20,
+        description: '證書陣列（1-20筆）'
+      }
+    }
+  },
+
+  // 證書批次建立成功回應 Schema
+  CertificateBatchCreateSuccessResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        enum: ['success'],
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        example: '成功建立 2 張證書'
+      },
+      data: {
+        type: 'object',
+        properties: {
+          certificates: {
+            type: 'array',
+            items: { $ref: '#/components/schemas/Certificate' }
+          }
+        }
+      }
+    }
+  },
+
+  // 證書 UPSERT 請求 Schema
+  CertificateUpsertRequest: {
+    type: 'object',
+    required: ['certificates'],
+    properties: {
+      certificates: {
+        type: 'array',
+        items: {
+          allOf: [
+            { $ref: '#/components/schemas/CertificateCreateRequest' },
+            {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'integer',
+                  description: '證書 ID（用於更新，新增時不提供）',
+                  example: 789
+                }
+              }
+            }
+          ]
+        },
+        minItems: 1,
+        maxItems: 20,
+        description: '證書陣列（1-20筆）'
+      }
+    }
+  },
+
+  // 證書 UPSERT 回應 Schema
+  CertificateUpsertResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        enum: ['success'],
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        example: '證書批次處理完成'
+      },
+      data: {
+        type: 'object',
+        properties: {
+          certificates: {
+            type: 'array',
+            items: { $ref: '#/components/schemas/Certificate' }
+          }
+        }
       }
     }
   },
