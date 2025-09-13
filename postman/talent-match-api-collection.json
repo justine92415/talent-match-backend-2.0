@@ -820,7 +820,7 @@
           }
         },
         {
-          "name": "新增學習經歷",
+          "name": "批次新增學習經歷",
           "request": {
             "method": "POST",
             "header": [
@@ -831,14 +831,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"degree\": \"學士\",\n  \"school_name\": \"某某大學\",\n  \"department\": \"資訊工程學系\",\n  \"region\": true,\n  \"is_in_school\": false,\n  \"start_year\": 2016,\n  \"start_month\": 9,\n  \"end_year\": 2020,\n  \"end_month\": 6\n}"
+              "raw": "{\n  \"learning_experiences\": [\n    {\n      \"degree\": \"學士\",\n      \"school_name\": \"某某大學\",\n      \"department\": \"資訊工程學系\",\n      \"region\": true,\n      \"is_in_school\": false,\n      \"start_year\": 2016,\n      \"start_month\": 9,\n      \"end_year\": 2020,\n      \"end_month\": 6\n    },\n    {\n      \"degree\": \"碩士\",\n      \"school_name\": \"某某研究所\",\n      \"department\": \"資訊管理學系\",\n      \"region\": true,\n      \"is_in_school\": false,\n      \"start_year\": 2020,\n      \"start_month\": 9,\n      \"end_year\": 2022,\n      \"end_month\": 6\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/learning-experiences",
               "host": ["{{base_url}}"],
               "path": ["api", "teachers", "learning-experiences"]
             },
-            "description": "新增學習經歷"
+            "description": "批次新增學習經歷，支援一次新增多筆學習經歷記錄"
           }
         },
         {
@@ -867,6 +867,28 @@
               ]
             },
             "description": "更新指定的學習經歷"
+          }
+        },
+        {
+          "name": "批次新增或更新學習經歷",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"learning_experiences\": [\n    {\n      \"id\": 123,\n      \"degree\": \"碩士\",\n      \"school_name\": \"某某大學\",\n      \"department\": \"資訊管理學系碩士班\",\n      \"region\": true,\n      \"is_in_school\": false,\n      \"start_year\": 2020,\n      \"start_month\": 9,\n      \"end_year\": 2022,\n      \"end_month\": 6\n    },\n    {\n      \"degree\": \"博士\",\n      \"school_name\": \"另一所大學\",\n      \"department\": \"電腦科學系\",\n      \"region\": false,\n      \"is_in_school\": true,\n      \"start_year\": 2022,\n      \"start_month\": 9,\n      \"end_year\": null,\n      \"end_month\": null\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teachers/learning-experiences",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "learning-experiences"]
+            },
+            "description": "批次處理學習經歷記錄，支援同時新增和更新操作。有 id 的記錄會被更新，沒有 id 的記錄會被新增。"
           }
         },
         {
@@ -902,7 +924,7 @@
           }
         },
         {
-          "name": "新增證書",
+          "name": "批次新增證書",
           "request": {
             "method": "POST",
             "header": [
@@ -913,14 +935,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"verifying_institution\": \"某某認證機構\",\n  \"license_name\": \"Python 程式設計證照\",\n  \"holder_name\": \"王小明\",\n  \"license_number\": \"PYTHON123456\",\n  \"file_path\": \"/uploads/certificates/cert123.pdf\",\n  \"category_id\": \"programming\",\n  \"subject\": \"程式設計\"\n}"
+              "raw": "{\n  \"certificates\": [\n    {\n      \"verifying_institution\": \"某某認證機構\",\n      \"license_name\": \"Python 程式設計證照\",\n      \"holder_name\": \"王小明\",\n      \"license_number\": \"PYTHON123456\",\n      \"file_path\": \"\",\n      \"category_id\": \"programming\",\n      \"subject\": \"程式設計\"\n    },\n    {\n      \"verifying_institution\": \"另一個認證機構\",\n      \"license_name\": \"Java 程式設計證照\",\n      \"holder_name\": \"王小明\",\n      \"license_number\": \"JAVA789012\",\n      \"file_path\": \"\",\n      \"category_id\": \"programming\",\n      \"subject\": \"程式設計\"\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/certificates",
               "host": ["{{base_url}}"],
               "path": ["api", "teachers", "certificates"]
             },
-            "description": "新增教學證書"
+            "description": "批次新增教學證書，支援一次新增多筆證書記錄"
           }
         },
         {
@@ -949,6 +971,28 @@
               ]
             },
             "description": "更新指定的證書"
+          }
+        },
+        {
+          "name": "批次新增或更新證書",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"certificates\": [\n    {\n      \"id\": 456,\n      \"verifying_institution\": \"更新後的認證機構\",\n      \"license_name\": \"Advanced Java 程式設計證照\",\n      \"holder_name\": \"王小明\",\n      \"license_number\": \"JAVA123456\",\n      \"file_path\": \"\",\n      \"category_id\": \"programming\",\n      \"subject\": \"進階程式設計\"\n    },\n    {\n      \"verifying_institution\": \"新認證機構\",\n      \"license_name\": \"React 前端開發證照\",\n      \"holder_name\": \"王小明\",\n      \"license_number\": \"REACT789012\",\n      \"file_path\": \"\",\n      \"category_id\": \"frontend\",\n      \"subject\": \"前端開發\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teachers/certificates",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "certificates"]
+            },
+            "description": "批次處理證書記錄，支援同時新增和更新操作。有 id 的記錄會被更新，沒有 id 的記錄會被新增。"
           }
         },
         {

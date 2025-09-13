@@ -625,3 +625,169 @@ export const workExperienceUpsertSchema = Joi.object({
  * 單筆工作經驗更新驗證 Schema
  */
 export const workExperienceUpdateSchema = workExperienceItemSchema.fork(['id'], (schema: any) => schema.forbidden())
+
+// === 學習經歷批次處理相關 Schema ===
+
+/**
+ * 學習經歷項目驗證 Schema（支援 UPSERT 操作）
+ * 用於批次新增或更新學習經歷
+ */
+export const learningExperienceItemSchema = Joi.object({
+  id: Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .messages({
+      "number.base": "學習經歷 ID 必須為數字",
+      "number.integer": "學習經歷 ID 必須為整數",
+      "number.positive": "學習經歷 ID 必須為正數"
+    }),
+  is_in_school: Joi.boolean()
+    .required()
+    .messages({
+      "boolean.base": "是否在學必須為布林值",
+      "any.required": "是否在學為必填欄位"
+    }),
+  degree: Joi.string()
+    .min(1)
+    .max(50)
+    .required()
+    .messages({
+      "string.empty": ValidationMessages.DEGREE_EMPTY,
+      "string.min": ValidationMessages.DEGREE_REQUIRED,
+      "string.max": "學位長度不能超過50個字元",
+      "any.required": ValidationMessages.DEGREE_REQUIRED
+    }),
+  school_name: Joi.string()
+    .min(1)
+    .max(200)
+    .required()
+    .messages({
+      "string.empty": ValidationMessages.INSTITUTION_EMPTY,
+      "string.min": ValidationMessages.INSTITUTION_REQUIRED,
+      "string.max": "學校名稱長度不能超過200個字元",
+      "any.required": ValidationMessages.INSTITUTION_REQUIRED
+    }),
+  department: Joi.string()
+    .min(1)
+    .max(200)
+    .required()
+    .messages({
+      "string.empty": ValidationMessages.FIELD_OF_STUDY_EMPTY,
+      "string.min": ValidationMessages.FIELD_OF_STUDY_REQUIRED,
+      "string.max": "系所名稱長度不能超過200個字元",
+      "any.required": ValidationMessages.FIELD_OF_STUDY_REQUIRED
+    }),
+  region: Joi.boolean()
+    .required()
+    .messages({
+      "boolean.base": "地區必須為布林值",
+      "any.required": "地區為必填欄位"
+    }),
+  start_year: Joi.number()
+    .integer()
+    .min(1900)
+    .max(new Date().getFullYear())
+    .required()
+    .messages({
+      "number.base": ValidationMessages.START_YEAR_INVALID,
+      "number.integer": ValidationMessages.START_YEAR_INVALID,
+      "number.min": "開始年份不能早於1900年",
+      "number.max": "開始年份不能超過當前年份",
+      "any.required": ValidationMessages.START_YEAR_REQUIRED
+    }),
+  start_month: Joi.number()
+    .integer()
+    .min(1)
+    .max(12)
+    .required()
+    .messages({
+      "number.base": "開始月份必須為數字",
+      "number.integer": "開始月份必須為整數",
+      "number.min": "開始月份必須在1-12之間",
+      "number.max": "開始月份必須在1-12之間",
+      "any.required": "開始月份為必填欄位"
+    }),
+  end_year: Joi.number()
+    .integer()
+    .min(1900)
+    .max(new Date().getFullYear() + 10)
+    .optional()
+    .allow(null)
+    .messages({
+      "number.base": ValidationMessages.END_YEAR_INVALID,
+      "number.integer": ValidationMessages.END_YEAR_INVALID,
+      "number.min": "結束年份不能早於1900年",
+      "number.max": "結束年份不能超過未來10年"
+    }),
+  end_month: Joi.number()
+    .integer()
+    .min(1)
+    .max(12)
+    .optional()
+    .allow(null)
+    .messages({
+      "number.base": "結束月份必須為數字",
+      "number.integer": "結束月份必須為整數",
+      "number.min": "結束月份必須在1-12之間",
+      "number.max": "結束月份必須在1-12之間"
+    })
+}).custom((value, helpers) => {
+  // 自定義驗證：在學中不應該有結束日期
+  if (value.is_in_school && (value.end_year !== null && value.end_year !== undefined)) {
+    return helpers.error("custom.inSchoolEndDate", { 
+      message: "在學中的學習經歷不應該提供結束日期" 
+    })
+  }
+
+  // 自定義驗證：結束日期不能早於開始日期
+  if (value.end_year && value.end_month && value.start_year && value.start_month) {
+    const startDate = new Date(value.start_year, value.start_month - 1)
+    const endDate = new Date(value.end_year, value.end_month - 1)
+    
+    if (endDate < startDate) {
+      return helpers.error("custom.dateRange", { 
+        message: ValidationMessages.LEARNING_END_YEAR_BEFORE_START_YEAR 
+      })
+    }
+  }
+  
+  return value
+})
+
+/**
+ * 學習經歷批次 UPSERT 驗證 Schema
+ * 支援同時新增和更新操作
+ */
+export const learningExperienceUpsertSchema = Joi.object({
+  learning_experiences: Joi.array()
+    .items(learningExperienceItemSchema)
+    .min(1)
+    .max(20)
+    .required()
+    .messages({
+      "array.base": "學習經歷必須為陣列",
+      "array.min": "至少需要提供 1 筆學習經歷",
+      "array.max": "一次最多只能處理 20 筆學習經歷",
+      "any.required": "學習經歷為必填欄位"
+    })
+})
+
+/**
+ * 學習經歷批次建立驗證 Schema
+ * 用於 POST 請求，統一使用陣列格式
+ */
+export const learningExperienceCreateBatchSchema = Joi.object({
+  learning_experiences: Joi.array()
+    .items(learningExperienceCreateSchema)
+    .min(1)
+    .max(20)
+    .required()
+    .messages({
+      "array.base": "學習經歷必須為陣列",
+      "array.min": "至少需要提供 1 筆學習經歷",
+      "array.max": "一次最多只能建立 20 筆學習經歷",
+      "any.required": "學習經歷為必填欄位"
+    })
+})
+

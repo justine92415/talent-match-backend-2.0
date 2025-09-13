@@ -214,8 +214,230 @@ export class LearningExperienceService {
   }
 
   /**
-   * 刪除學習經歷
+   * 批次建立學習經歷
    */
+  async createLearningExperiencesBatch(
+    userId: number,
+    dataArray: CreateLearningExperienceRequest[]
+  ): Promise<LearningExperienceData[]> {
+    // 驗證使用者是否為教師或申請者
+    const { teacher, canModifyApplication } = await this.validateTeacherUserOrApplicant(userId)
+
+    // 檢查是否可以修改申請資料
+    if (!canModifyApplication) {
+      throw Errors.unauthorizedAccess('目前申請狀態不允許修改資料')
+    }
+
+    // 驗證批次數量限制
+    if (dataArray.length > 20) {
+      throw Errors.validation(
+        { learning_experiences: ['一次最多只能建立 20 筆學習經歷'] },
+        '批次數量超過限制'
+      )
+    }
+
+    // 驗證每筆資料的業務邏輯
+    dataArray.forEach((data, index) => {
+      try {
+        if (data.end_year !== undefined && data.end_year !== null) {
+          this.validateLearningYears(data.start_year, data.end_year)
+        }
+        
+        if (!data.is_in_school && (data.end_year === undefined || data.end_year === null)) {
+          throw Errors.validation(
+            { end_year: [ValidationMessages.LEARNING_GRADUATED_NO_END_DATE] },
+            ValidationMessages.LEARNING_GRADUATED_NO_END_DATE
+          )
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : '資料驗證失敗'
+        throw new BusinessError(
+          'BATCH_VALIDATION_ERROR',
+          `第 ${index + 1} 筆學習經歷：${errorMessage}`,
+          400
+        )
+      }
+    })
+
+    // 使用資料庫交易確保資料一致性
+    return await dataSource.transaction(async manager => {
+      const learningExperiences = dataArray.map(data => 
+        manager.create(TeacherLearningExperience, {
+          teacher_id: teacher.id,
+          is_in_school: data.is_in_school,
+          degree: data.degree,
+          school_name: data.school_name,
+          department: data.department,
+          region: data.region,
+          start_year: data.start_year,
+          start_month: data.start_month,
+          end_year: data.end_year,
+          end_month: data.end_month,
+          file_path: null // TODO: 檔案上傳系統完成後處理
+        })
+      )
+
+      const savedExperiences = await manager.save(TeacherLearningExperience, learningExperiences)
+      return savedExperiences.map(experience => this.transformToLearningExperienceData(experience))
+    })
+  }
+
+  /**
+   * 批次 UPSERT 學習經歷（新增或更新）
+   */
+  async upsertLearningExperiencesBatch(
+    userId: number,
+    dataArray: Array<CreateLearningExperienceRequest & { id?: number }>
+  ): Promise<{
+    statistics: {
+      total_processed: number;
+      created_count: number;
+      updated_count: number;
+    };
+    learning_experiences: LearningExperienceData[];
+  }> {
+    // 驗證使用者是否為教師或申請者
+    const { teacher, canModifyApplication } = await this.validateTeacherUserOrApplicant(userId)
+
+    // 檢查是否可以修改申請資料
+    if (!canModifyApplication) {
+      throw Errors.unauthorizedAccess('目前申請狀態不允許修改資料')
+    }
+
+    // 驗證批次數量限制
+    if (dataArray.length > 20) {
+      throw Errors.validation(
+        { learning_experiences: ['一次最多只能處理 20 筆學習經歷'] },
+        '批次數量超過限制'
+      )
+    }
+
+    // 分離新增和更新的資料
+    const toCreate: CreateLearningExperienceRequest[] = []
+    const toUpdate: Array<{ id: number; data: UpdateLearningExperienceRequest }> = []
+
+    // 驗證每筆資料並分類
+    for (let index = 0; index < dataArray.length; index++) {
+      const item = dataArray[index]
+      
+      try {
+        // 業務邏輯驗證
+        if (item.end_year !== undefined && item.end_year !== null) {
+          this.validateLearningYears(item.start_year, item.end_year)
+        }
+        
+        if (!item.is_in_school && (item.end_year === undefined || item.end_year === null)) {
+          throw Errors.validation(
+            { end_year: [ValidationMessages.LEARNING_GRADUATED_NO_END_DATE] },
+            ValidationMessages.LEARNING_GRADUATED_NO_END_DATE
+          )
+        }
+
+        // 分類處理
+        if (item.id) {
+          // 有 ID，驗證擁有權
+          const existingExperience = await this.learningExperienceRepository.findOne({
+            where: { id: item.id, teacher_id: teacher.id }
+          })
+          
+          if (!existingExperience) {
+            throw new BusinessError(
+              'OWNERSHIP_ERROR',
+              `ID為 ${item.id} 的學習經歷記錄不屬於此使用者`,
+              403
+            )
+          }
+          
+          toUpdate.push({ id: item.id, data: item })
+        } else {
+          // 沒有 ID，準備新增
+          toCreate.push(item)
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : '資料驗證失敗'
+        throw new BusinessError(
+          'BATCH_VALIDATION_ERROR',
+          `第 ${index + 1} 筆學習經歷：${errorMessage}`,
+          400
+        )
+      }
+    }
+
+    // 使用資料庫交易執行批次操作
+    return await dataSource.transaction(async manager => {
+      const results: LearningExperienceData[] = []
+
+      // 執行新增操作
+      if (toCreate.length > 0) {
+        const newExperiences = toCreate.map(data => 
+          manager.create(TeacherLearningExperience, {
+            teacher_id: teacher.id,
+            is_in_school: data.is_in_school,
+            degree: data.degree,
+            school_name: data.school_name,
+            department: data.department,
+            region: data.region,
+            start_year: data.start_year,
+            start_month: data.start_month,
+            end_year: data.end_year,
+            end_month: data.end_month,
+            file_path: null // TODO: 檔案上傳系統完成後處理
+          })
+        )
+
+        const savedNew = await manager.save(TeacherLearningExperience, newExperiences)
+        results.push(...savedNew.map(exp => this.transformToLearningExperienceData(exp)))
+      }
+
+      // 執行更新操作
+      if (toUpdate.length > 0) {
+        for (const { id, data } of toUpdate) {
+          const experience = await manager.findOne(TeacherLearningExperience, {
+            where: { id, teacher_id: teacher.id }
+          })
+
+          if (experience) {
+            Object.assign(experience, {
+              is_in_school: data.is_in_school,
+              degree: data.degree,
+              school_name: data.school_name,
+              department: data.department,
+              region: data.region,
+              start_year: data.start_year,
+              start_month: data.start_month,
+              end_year: data.end_year,
+              end_month: data.end_month
+            })
+
+            const savedUpdated = await manager.save(TeacherLearningExperience, experience)
+            results.push(this.transformToLearningExperienceData(savedUpdated))
+          }
+        }
+      }
+
+      // 按照原始順序排序結果
+      const sortedResults = results.sort((a, b) => {
+        const aIndex = dataArray.findIndex(item => 
+          (item.id && item.id === a.id) || 
+          (!item.id && item.degree === a.degree && item.school_name === a.school_name)
+        )
+        const bIndex = dataArray.findIndex(item => 
+          (item.id && item.id === b.id) || 
+          (!item.id && item.degree === b.degree && item.school_name === b.school_name)
+        )
+        return aIndex - bIndex
+      })
+
+      return {
+        statistics: {
+          total_processed: dataArray.length,
+          created_count: toCreate.length,
+          updated_count: toUpdate.length
+        },
+        learning_experiences: sortedResults
+      }
+    })
+  }
   async deleteLearningExperience(userId: number, experienceId: number): Promise<void> {
     // 驗證使用者是否為教師或申請者
     const { teacher, canModifyApplication } = await this.validateTeacherUserOrApplicant(userId)

@@ -9,10 +9,7 @@ import {
   teacherApplicationUpdateSchema,
   teacherProfileUpdateSchema,
   learningExperienceCreateSchema,
-  learningExperienceUpdateSchema,
-  workExperienceCreateBatchSchema,
-  workExperienceUpsertSchema,
-  workExperienceUpdateSchema
+  learningExperienceUpdateSchema
 } from '@middleware/schemas/user/teacherSchemas'
 import {
   certificateCreateSchema,
@@ -681,211 +678,7 @@ router.get('/work-experiences', authenticateToken, teacherController.getWorkExpe
  *             schema:
  *               $ref: '#/components/schemas/ServerErrorResponse'
  */
-router.post('/work-experiences', authenticateToken, validateRequest(workExperienceCreateBatchSchema, '工作經驗批次新增參數驗證失敗'), teacherController.createWorkExperience)
-
-/**
- * @swagger
- * /api/teachers/work-experiences:
- *   put:
- *     tags:
- *       - Teachers
- *     summary: 批次新增或更新工作經驗
- *     description: |
- *       批次處理工作經驗記錄，支援同時新增和更新操作。
- *       
- *       **UPSERT 邏輯**：
- *       - 有 `id` 的記錄：執行更新操作
- *       - 沒有 `id` 的記錄：執行新增操作
- *       - 支援在同一個請求中混合處理新增和更新
- *       - 所有操作在單一交易中執行，確保資料一致性
- *       
- *       **使用場景**：
- *       - 使用者中途離開申請頁面後重新填寫
- *       - 需要同時修改現有資料並新增新的工作經驗
- *       - 前端不需要複雜的邏輯判斷應該呼叫 POST 還是 PUT
- *       
- *       **請求格式**：
- *       - 統一使用 `{ work_experiences: [工作經驗陣列] }` 格式
- *       - 每個工作經驗物件可選擇性包含 `id` 欄位
- *       
- *       **業務邏輯**：
- *       - 驗證使用者為有效的教師或教師申請者
- *       - 對於有 `id` 的記錄，驗證使用者擁有權
- *       - 驗證所有工作經驗資料的完整性和邏輯性
- *       - 檢查開始和結束時間的合理性
- *       - 一次最多支援 20 筆工作經驗
- *       - 在資料庫交易中執行所有操作
- *       - 回傳處理結果統計和更新後的資料
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/WorkExperienceUpsertRequest'
- *           examples:
- *             mixed_operations:
- *               summary: 混合新增和更新操作
- *               value:
- *                 work_experiences:
- *                   - id: 123
- *                     company_name: "更新後的公司名稱"
- *                     workplace: "台北市信義區"
- *                     job_category: "軟體開發"
- *                     job_title: "資深工程師"
- *                     is_working: false
- *                     start_year: 2020
- *                     start_month: 1
- *                     end_year: 2023
- *                     end_month: 6
- *                   - company_name: "新公司"
- *                     workplace: "新北市板橋區"
- *                     job_category: "產品管理"
- *                     job_title: "產品經理"
- *                     is_working: true
- *                     start_year: 2023
- *                     start_month: 7
- *                     end_year: null
- *                     end_month: null
- *             update_only:
- *               summary: 僅更新現有記錄
- *               value:
- *                 work_experiences:
- *                   - id: 123
- *                     company_name: "更新的公司名稱"
- *                     workplace: "更新的工作地點"
- *                     job_category: "軟體開發"
- *                     job_title: "架構師"
- *                     is_working: true
- *                     start_year: 2020
- *                     start_month: 1
- *                     end_year: null
- *                     end_month: null
- *             create_only:
- *               summary: 僅新增新記錄
- *               value:
- *                 work_experiences:
- *                   - company_name: "新公司A"
- *                     workplace: "台中市西區"
- *                     job_category: "設計"
- *                     job_title: "UI設計師"
- *                     is_working: false
- *                     start_year: 2022
- *                     start_month: 1
- *                     end_year: 2023
- *                     end_month: 12
- *                   - company_name: "新公司B"
- *                     workplace: "高雄市前鎮區"
- *                     job_category: "行銷"
- *                     job_title: "行銷專員"
- *                     is_working: true
- *                     start_year: 2024
- *                     start_month: 1
- *                     end_year: null
- *                     end_month: null
- *     responses:
- *       200:
- *         description: 工作經驗批次處理成功
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/WorkExperienceUpsertSuccessResponse'
- *             examples:
- *               response:
- *                 summary: 批次處理成功回應
- *                 value:
- *                   status: "success"
- *                   message: "成功處理工作經驗：新增 2 筆，更新 1 筆"
- *                   data:
- *                     statistics:
- *                       total_processed: 3
- *                       created_count: 2
- *                       updated_count: 1
- *                     work_experiences:
- *                       - id: 123
- *                         company_name: "更新後的公司名稱"
- *                         workplace: "台北市信義區"
- *                         job_category: "軟體開發"
- *                         job_title: "資深工程師"
- *                         is_working: false
- *                         start_year: 2020
- *                         start_month: 1
- *                         end_year: 2023
- *                         end_month: 6
- *                         created_at: "2024-01-15T10:30:00.000Z"
- *                         updated_at: "2024-01-15T14:45:00.000Z"
- *                       - id: 124
- *                         company_name: "新公司"
- *                         workplace: "新北市板橋區"
- *                         job_category: "產品管理"
- *                         job_title: "產品經理"
- *                         is_working: true
- *                         start_year: 2023
- *                         start_month: 7
- *                         end_year: null
- *                         end_month: null
- *                         created_at: "2024-01-15T14:45:00.000Z"
- *                         updated_at: "2024-01-15T14:45:00.000Z"
- *       400:
- *         description: 請求參數錯誤
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
- *             examples:
- *               validation_error:
- *                 summary: 參數驗證錯誤
- *                 value:
- *                   status: "error"
- *                   message: "工作經驗批次處理參數驗證失敗"
- *                   errors:
- *                     company_name: ["公司名稱為必填欄位"]
- *                     start_year: ["開始年份必須在 1900 到 2100 之間"]
- *               batch_validation_error:
- *                 summary: 批次驗證錯誤
- *                 value:
- *                   status: "error"
- *                   message: "第 2 筆工作經驗：公司名稱為必填欄位"
- *               ownership_error:
- *                 summary: 擁有權驗證錯誤
- *                 value:
- *                   status: "error"
- *                   message: "ID為 123 的工作經驗記錄不屬於此使用者"
- *               batch_limit_error:
- *                 summary: 批次數量限制錯誤
- *                 value:
- *                   status: "error"
- *                   message: "一次最多只能處理 20 筆工作經驗"
- *       401:
- *         description: 未授權 - Token 無效或過期
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
- *       403:
- *         description: 禁止存取 - 權限不足
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ForbiddenErrorResponse'
- *       404:
- *         description: 找不到要更新的工作經驗記錄
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/NotFoundErrorResponse'
- *             example:
- *               status: "error"
- *               message: "ID為 123 的工作經驗記錄不存在"
- *       500:
- *         description: 伺服器內部錯誤
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ServerErrorResponse'
- */
-router.put('/work-experiences', authenticateToken, validateRequest(workExperienceUpsertSchema, '工作經驗批次處理參數驗證失敗'), teacherController.upsertWorkExperiences)
+router.post('/work-experiences', authenticateToken, teacherController.createWorkExperience)
 
 /**
  * @swagger
@@ -951,7 +744,7 @@ router.put('/work-experiences', authenticateToken, validateRequest(workExperienc
  *             schema:
  *               $ref: '#/components/schemas/ServerErrorResponse'
  */
-router.put('/work-experiences/:id', authenticateToken, validateRequest(workExperienceUpdateSchema, '工作經驗更新參數驗證失敗'), teacherController.updateWorkExperience)
+router.put('/work-experiences/:id', authenticateToken, teacherController.updateWorkExperience)
 
 /**
  * @swagger
