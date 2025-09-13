@@ -607,6 +607,124 @@ export class TeacherService {
   }
 
   /**
+   * 批次新增或更新工作經驗記錄（UPSERT）
+   * @param userId 使用者 ID  
+   * @param batchData 批次工作經驗資料
+   * @returns UPSERT 操作結果
+   */
+  async upsertWorkExperiencesBatch(userId: number, batchData: any): Promise<{
+    totalProcessed: number
+    createdCount: number
+    updatedCount: number
+    workExperiences: TeacherWorkExperience[]
+  }> {
+    const { teacher, canModifyApplication } = await this.validateTeacherUserOrApplicant(userId)
+    
+    // 檢查是否可以修改申請資料
+    if (!canModifyApplication) {
+      throw Errors.unauthorizedAccess('目前申請狀態不允許修改資料')
+    }
+
+    // 驗證批次資料
+    if (!batchData.work_experiences || !Array.isArray(batchData.work_experiences)) {
+      throw Errors.validationFailed('work_experiences 必須是陣列')
+    }
+
+    if (batchData.work_experiences.length === 0) {
+      throw Errors.validationFailed('至少需要提供一筆工作經驗')
+    }
+
+    if (batchData.work_experiences.length > 20) {
+      throw Errors.validationFailed('一次最多只能處理 20 筆工作經驗')
+    }
+
+    // 分離新增和更新的記錄
+    const toCreate: any[] = []
+    const toUpdate: { id: number; data: any }[] = []
+    
+    // 驗證每筆工作經驗資料並分類
+    for (let i = 0; i < batchData.work_experiences.length; i++) {
+      const workExpData = batchData.work_experiences[i]
+      
+      try {
+        this.validateWorkExperienceData(workExpData)
+      } catch (error) {
+        if (error instanceof ValidationError) {
+          throw Errors.validationFailed(`第 ${i + 1} 筆工作經驗：${error.message}`)
+        }
+        throw error
+      }
+
+      if (workExpData.id) {
+        // 有 ID 的記錄為更新操作
+        toUpdate.push({ id: workExpData.id, data: workExpData })
+      } else {
+        // 沒有 ID 的記錄為新增操作
+        toCreate.push(workExpData)
+      }
+    }
+
+    // 在交易中執行所有操作
+    return await dataSource.transaction(async manager => {
+      const results: TeacherWorkExperience[] = []
+      let createdCount = 0
+      let updatedCount = 0
+
+      // 處理更新操作
+      for (const updateItem of toUpdate) {
+        // 檢查記錄是否存在且屬於該教師
+        const existingRecord = await manager.findOne(TeacherWorkExperience, {
+          where: { id: updateItem.id }
+        })
+
+        if (!existingRecord) {
+          throw Errors.applicationNotFound(`ID為 ${updateItem.id} 的工作經驗記錄不存在`)
+        }
+
+        if (existingRecord.teacher_id !== teacher.id) {
+          throw Errors.unauthorizedAccess(`ID為 ${updateItem.id} 的工作經驗記錄不屬於此使用者`)
+        }
+
+        // 更新記錄（排除 id 欄位）
+        const { id, ...updateData } = updateItem.data
+        Object.assign(existingRecord, updateData)
+        
+        const updatedRecord = await manager.save(TeacherWorkExperience, existingRecord)
+        results.push(updatedRecord)
+        updatedCount++
+      }
+
+      // 處理新增操作
+      if (toCreate.length > 0) {
+        const workExperienceEntities = toCreate.map(workExpData => ({
+          teacher_id: teacher.id,
+          ...workExpData
+        }))
+
+        const insertResults = await manager.insert(TeacherWorkExperience, workExperienceEntities)
+        const createdIds = insertResults.identifiers.map(identifier => identifier.id)
+        
+        const createdRecords = await manager.find(TeacherWorkExperience, {
+          where: { id: In(createdIds) }
+        })
+        
+        results.push(...createdRecords)
+        createdCount = createdRecords.length
+      }
+
+      // 按時間排序
+      results.sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
+
+      return {
+        totalProcessed: createdCount + updatedCount,
+        createdCount,
+        updatedCount,
+        workExperiences: results
+      }
+    })
+  }
+
+  /**
    * 更新工作經驗記錄
    * @param userId 使用者 ID
    * @param workExperienceId 工作經驗 ID

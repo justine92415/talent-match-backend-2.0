@@ -346,7 +346,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"test001@gmail.com\",\n  \"password\": \"1qaz2wsx\"\n}"
+              "raw": "{\n  \"email\": \"teacher001@gmail.com\",\n  \"password\": \"1qaz2wsx\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/login",
@@ -782,6 +782,28 @@
               ]
             },
             "description": "刪除指定的工作經驗"
+          }
+        },
+        {
+          "name": "批次新增或更新工作經驗",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"work_experiences\": [\n    {\n      \"id\": 123,\n      \"company_name\": \"更新後的公司名稱\",\n      \"workplace\": \"台北市信義區\",\n      \"job_category\": \"軟體開發\",\n      \"job_title\": \"資深工程師\",\n      \"is_working\": false,\n      \"start_year\": 2020,\n      \"start_month\": 1,\n      \"end_year\": 2023,\n      \"end_month\": 6\n    },\n    {\n      \"company_name\": \"新公司\",\n      \"workplace\": \"新北市板橋區\",\n      \"job_category\": \"產品管理\",\n      \"job_title\": \"產品經理\",\n      \"is_working\": true,\n      \"start_year\": 2023,\n      \"start_month\": 7,\n      \"end_year\": null,\n      \"end_month\": null\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teachers/work-experiences",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "work-experiences"]
+            },
+            "description": "批次處理工作經驗記錄，支援同時新增和更新操作。有 id 的記錄會被更新，沒有 id 的記錄會被新增。"
           }
         },
         {

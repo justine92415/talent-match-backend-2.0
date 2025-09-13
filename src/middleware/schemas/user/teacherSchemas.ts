@@ -457,3 +457,171 @@ export const learningExperienceUpdateSchema = Joi.object({
   
   return value
 })
+/**
+ * 單筆工作經驗驗證 Schema
+ */
+const workExperienceItemSchema = Joi.object({
+  id: Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .messages({
+      'number.base': 'ID必須為數字',
+      'number.integer': 'ID必須為整數',
+      'number.positive': 'ID必須為正數'
+    }),
+  company_name: Joi.string()
+    .min(1)
+    .max(100)
+    .required()
+    .messages({
+      'string.empty': '公司名稱不能為空',
+      'string.min': '公司名稱至少需要1個字元',
+      'string.max': '公司名稱長度不能超過100個字元',
+      'any.required': '公司名稱為必填欄位'
+    }),
+  workplace: Joi.string()
+    .min(1)
+    .max(100)
+    .required()
+    .messages({
+      'string.empty': '工作地點不能為空',
+      'string.min': '工作地點至少需要1個字元',
+      'string.max': '工作地點長度不能超過100個字元',
+      'any.required': '工作地點為必填欄位'
+    }),
+  job_category: Joi.string()
+    .min(1)
+    .max(50)
+    .required()
+    .messages({
+      'string.empty': '職業類別不能為空',
+      'string.min': '職業類別至少需要1個字元',
+      'string.max': '職業類別長度不能超過50個字元',
+      'any.required': '職業類別為必填欄位'
+    }),
+  job_title: Joi.string()
+    .min(1)
+    .max(100)
+    .required()
+    .messages({
+      'string.empty': '職稱不能為空',
+      'string.min': '職稱至少需要1個字元',
+      'string.max': '職稱長度不能超過100個字元',
+      'any.required': '職稱為必填欄位'
+    }),
+  is_working: Joi.boolean()
+    .required()
+    .messages({
+      'boolean.base': '是否在職必須為布林值',
+      'any.required': '是否在職為必填欄位'
+    }),
+  start_year: Joi.number()
+    .integer()
+    .min(1900)
+    .max(new Date().getFullYear())
+    .required()
+    .messages({
+      'number.base': '開始年份必須為數字',
+      'number.integer': '開始年份必須為整數',
+      'number.min': '開始年份不能早於1900年',
+      'number.max': '開始年份不能超過今年',
+      'any.required': '開始年份為必填欄位'
+    }),
+  start_month: Joi.number()
+    .integer()
+    .min(1)
+    .max(12)
+    .required()
+    .messages({
+      'number.base': '開始月份必須為數字',
+      'number.integer': '開始月份必須為整數',
+      'number.min': '開始月份必須在1-12之間',
+      'number.max': '開始月份必須在1-12之間',
+      'any.required': '開始月份為必填欄位'
+    }),
+  end_year: Joi.number()
+    .integer()
+    .min(1900)
+    .max(new Date().getFullYear() + 10)
+    .optional()
+    .allow(null)
+    .messages({
+      'number.base': '結束年份必須為數字',
+      'number.integer': '結束年份必須為整數',
+      'number.min': '結束年份不能早於1900年',
+      'number.max': '結束年份不能超過未來10年'
+    }),
+  end_month: Joi.number()
+    .integer()
+    .min(1)
+    .max(12)
+    .optional()
+    .allow(null)
+    .messages({
+      'number.base': '結束月份必須為數字',
+      'number.integer': '結束月份必須為整數',
+      'number.min': '結束月份必須在1-12之間',
+      'number.max': '結束月份必須在1-12之間'
+    })
+}).custom((value: any, helpers: any) => {
+  // 自定義驗證：在職中不應該有結束日期
+  if (value.is_working && (value.end_year !== null && value.end_year !== undefined)) {
+    return helpers.error('custom.workingEndDate', { 
+      message: '在職中的工作經驗不應該提供結束日期' 
+    })
+  }
+
+  // 自定義驗證：結束日期不能早於開始日期
+  if (value.end_year && value.end_month && value.start_year && value.start_month) {
+    const startDate = new Date(value.start_year, value.start_month - 1)
+    const endDate = new Date(value.end_year, value.end_month - 1)
+    
+    if (endDate < startDate) {
+      return helpers.error('custom.workDateRange', { 
+        message: '結束日期不能早於開始日期' 
+      })
+    }
+  }
+  
+  return value
+})
+
+/**
+ * 工作經驗批次新增驗證 Schema
+ */
+export const workExperienceCreateBatchSchema = Joi.object({
+  work_experiences: Joi.array()
+    .items(workExperienceItemSchema)
+    .min(1)
+    .max(20)
+    .required()
+    .messages({
+      'array.base': '工作經驗必須為陣列格式',
+      'array.min': '至少需要提供一筆工作經驗',
+      'array.max': '一次最多只能建立20筆工作經驗',
+      'any.required': '工作經驗為必填欄位'
+    })
+})
+
+/**
+ * 工作經驗批次 UPSERT 驗證 Schema
+ */
+export const workExperienceUpsertSchema = Joi.object({
+  work_experiences: Joi.array()
+    .items(workExperienceItemSchema)
+    .min(1)
+    .max(20)
+    .required()
+    .messages({
+      'array.base': '工作經驗必須為陣列格式',
+      'array.min': '至少需要提供一筆工作經驗',
+      'array.max': '一次最多只能處理20筆工作經驗',
+      'any.required': '工作經驗為必填欄位'
+    })
+})
+
+/**
+ * 單筆工作經驗更新驗證 Schema
+ */
+export const workExperienceUpdateSchema = workExperienceItemSchema.fork(['id'], (schema: any) => schema.forbidden())

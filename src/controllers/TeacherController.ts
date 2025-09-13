@@ -342,6 +342,26 @@ export class TeacherController {
   })
 
   /**
+   * 批次新增或更新工作經驗（UPSERT）
+   */
+  upsertWorkExperiences = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.userId
+    const requestData = req.body
+
+    // 批次處理工作經驗 UPSERT 操作
+    const result = await this.teacherService.upsertWorkExperiencesBatch(userId, requestData)
+    
+    res.status(200).json(handleSuccess({
+      statistics: {
+        total_processed: result.totalProcessed,
+        created_count: result.createdCount,
+        updated_count: result.updatedCount
+      },
+      work_experiences: result.workExperiences
+    }, `成功處理工作經驗：新增 ${result.createdCount} 筆，更新 ${result.updatedCount} 筆`))
+  })
+
+  /**
    * 更新工作經驗
    */
   updateWorkExperience = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
