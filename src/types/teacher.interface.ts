@@ -158,7 +158,6 @@ export interface LearningExperienceData {
   degree: string
   school_name: string
   department: string
-  region: boolean
   start_year: number
   start_month: number
   end_year: number | null

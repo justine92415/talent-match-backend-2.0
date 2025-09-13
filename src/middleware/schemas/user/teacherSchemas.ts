@@ -263,12 +263,6 @@ export const learningExperienceCreateSchema = Joi.object({
       'string.max': '系所名稱長度不能超過200個字元',
       'any.required': ValidationMessages.FIELD_OF_STUDY_REQUIRED
     }),
-  region: Joi.boolean()
-    .required()
-    .messages({
-      'boolean.base': '地區必須為布林值',
-      'any.required': '地區為必填欄位'
-    }),
   start_year: Joi.number()
     .integer()
     .min(1900)
@@ -379,11 +373,6 @@ export const learningExperienceUpdateSchema = Joi.object({
       'string.empty': ValidationMessages.FIELD_OF_STUDY_EMPTY,
       'string.min': ValidationMessages.FIELD_OF_STUDY_REQUIRED,
       'string.max': '系所名稱長度不能超過200個字元'
-    }),
-  region: Joi.boolean()
-    .optional()
-    .messages({
-      'boolean.base': '地區必須為布林值'
     }),
   start_year: Joi.number()
     .integer()
@@ -677,12 +666,6 @@ export const learningExperienceItemSchema = Joi.object({
       "string.min": ValidationMessages.FIELD_OF_STUDY_REQUIRED,
       "string.max": "系所名稱長度不能超過200個字元",
       "any.required": ValidationMessages.FIELD_OF_STUDY_REQUIRED
-    }),
-  region: Joi.boolean()
-    .required()
-    .messages({
-      "boolean.base": "地區必須為布林值",
-      "any.required": "地區為必填欄位"
     }),
   start_year: Joi.number()
     .integer()

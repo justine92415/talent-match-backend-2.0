@@ -10,6 +10,7 @@ import { TeacherCertificate } from '@entities/TeacherCertificate'
 import { UserRole, AccountStatus, ApplicationStatus } from '@entities/enums'
 import { Errors, ValidationError } from '@utils/errors'
 import { BusinessMessages, ValidationMessages } from '@constants/Message'
+import { UserRoleService } from './UserRoleService'
 import { 
   TeacherApplicationData, 
   TeacherApplicationUpdateData,
@@ -330,11 +331,28 @@ export class TeacherService {
    * @returns 更新後的教師記錄
    */
   async updateProfile(userId: number, updateData: TeacherProfileUpdateRequest): Promise<Teacher> {
+    // 檢查用戶是否有教師相關角色（TEACHER 或 TEACHER_APPLICANT）
+    const userRoleService = new UserRoleService()
+    const hasTeacherRole = await userRoleService.hasRole(userId, UserRole.TEACHER)
+    const hasApplicantRole = await userRoleService.hasRole(userId, UserRole.TEACHER_APPLICANT)
+    
+    if (!hasTeacherRole && !hasApplicantRole) {
+      throw Errors.teacherNotFound('您沒有教師或教師申請者權限')
+    }
+
+    // 根據角色決定查詢條件
+    let whereCondition: any = { user_id: userId }
+    
+    if (hasTeacherRole) {
+      // 已核准的教師只能查詢 APPROVED 狀態的記錄
+      whereCondition.application_status = ApplicationStatus.APPROVED
+    } else if (hasApplicantRole) {
+      // 申請中的用戶可以查詢非 APPROVED 狀態的記錄（PENDING, REJECTED, RESUBMITTED）
+      whereCondition.application_status = Not(ApplicationStatus.APPROVED)
+    }
+
     const teacher = await this.teacherRepository.findOne({ 
-      where: { 
-        user_id: userId, 
-        application_status: ApplicationStatus.APPROVED 
-      },
+      where: whereCondition,
       select: [
         'id', 'uuid', 'user_id', 'city', 'district', 'address', 'main_category_id', 'sub_category_ids', 'introduction',
         'application_status', 'application_reviewed_at', 'reviewer_id', 'review_notes',
