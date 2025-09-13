@@ -544,14 +544,19 @@ router.get('/work-experiences', authenticateToken, teacherController.getWorkExpe
  *       - Teachers
  *     summary: 新增工作經驗
  *     description: |
- *       新增教師工作經驗記錄。
+ *       新增教師工作經驗記錄，統一使用陣列格式。
+ *       
+ *       **請求格式**：
+ *       - 統一使用 `{ work_experiences: [工作經驗陣列] }` 格式
+ *       - 即使只有一筆資料，也需要包裝在陣列中
  *       
  *       **業務邏輯**：
  *       - 驗證使用者為有效的教師
  *       - 驗證工作經驗資料的完整性和邏輯性
  *       - 檢查開始和結束時間的合理性
+ *       - 一次最多支援 20 筆工作經驗
  *       - 建立新的工作經驗記錄
- *       - 回傳建立的工作經驗資料
+ *       - 回傳建立的工作經驗資料和統計資訊
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -559,20 +564,107 @@ router.get('/work-experiences', authenticateToken, teacherController.getWorkExpe
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/WorkExperienceCreateRequest'
+ *             $ref: '#/components/schemas/WorkExperienceBatchCreateRequest'
+ *           examples:
+ *             single_work_experience:
+ *               summary: 單筆工作經驗（陣列格式）
+ *               value:
+ *                 work_experiences:
+ *                   - company_name: "某某科技公司"
+ *                     workplace: "台北市信義區"
+ *                     job_category: "軟體開發"
+ *                     job_title: "資深工程師"
+ *                     is_working: false
+ *                     start_year: 2020
+ *                     start_month: 1
+ *                     end_year: 2022
+ *                     end_month: 12
+ *             multiple_work_experiences:
+ *               summary: 多筆工作經驗
+ *               value:
+ *                 work_experiences:
+ *                   - company_name: "某某科技公司"
+ *                     workplace: "台北市信義區"
+ *                     job_category: "軟體開發"
+ *                     job_title: "資深工程師"
+ *                     is_working: false
+ *                     start_year: 2020
+ *                     start_month: 1
+ *                     end_year: 2022
+ *                     end_month: 12
+ *                   - company_name: "另一家公司"
+ *                     workplace: "新北市板橋區"
+ *                     job_category: "產品管理"
+ *                     job_title: "產品經理"
+ *                     is_working: true
+ *                     start_year: 2023
+ *                     start_month: 1
+ *                     end_year: null
+ *                     end_month: null
  *     responses:
  *       201:
  *         description: 工作經驗建立成功
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/WorkExperienceCreateSuccessResponse'
+ *               $ref: '#/components/schemas/WorkExperienceBatchCreateSuccessResponse'
+ *             examples:
+ *               response:
+ *                 summary: 建立成功回應
+ *                 value:
+ *                   status: "success"
+ *                   message: "成功建立 2 筆工作經驗"
+ *                   data:
+ *                     work_experiences:
+ *                       - id: 123
+ *                         company_name: "某某科技公司"
+ *                         workplace: "台北市信義區"
+ *                         job_category: "軟體開發"
+ *                         job_title: "資深工程師"
+ *                         is_working: false
+ *                         start_year: 2020
+ *                         start_month: 1
+ *                         end_year: 2022
+ *                         end_month: 12
+ *                         created_at: "2024-01-15T10:30:00.000Z"
+ *                         updated_at: "2024-01-15T10:30:00.000Z"
+ *                       - id: 124
+ *                         company_name: "另一家公司"
+ *                         workplace: "新北市板橋區"
+ *                         job_category: "產品管理"
+ *                         job_title: "產品經理"
+ *                         is_working: true
+ *                         start_year: 2023
+ *                         start_month: 1
+ *                         end_year: null
+ *                         end_month: null
+ *                         created_at: "2024-01-15T10:31:00.000Z"
+ *                         updated_at: "2024-01-15T10:31:00.000Z"
  *       400:
  *         description: 請求參數錯誤
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *             examples:
+ *               validation_error:
+ *                 summary: 參數驗證錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "工作經驗參數驗證失敗"
+ *                   errors:
+ *                     company_name: ["公司名稱為必填欄位"]
+ *                     start_year: ["開始年份必須在 1900 到 2100 之間"]
+ *               batch_validation_error:
+ *                 summary: 批次驗證錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "第 2 筆工作經驗：公司名稱為必填欄位"
+ *               batch_limit_error:
+ *                 summary: 批次數量限制錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "一次最多只能建立 20 筆工作經驗"
  *       401:
  *         description: 未授權 - Token 無效或過期
  *         content:

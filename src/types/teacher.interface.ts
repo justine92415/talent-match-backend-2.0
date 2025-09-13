@@ -93,6 +93,13 @@ export interface CreateWorkExperienceRequest {
 }
 
 /**
+ * 批次工作經驗建立請求介面
+ */
+export interface CreateWorkExperiencesBatchRequest {
+  work_experiences: CreateWorkExperienceRequest[]
+}
+
+/**
  * 工作經驗更新請求介面
  */
 export interface UpdateWorkExperienceRequest {

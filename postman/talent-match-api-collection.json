@@ -21,9 +21,9 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "// 設定常用變數",
-          "if (!pm.globals.get('base_url')) {",
-          "  pm.globals.set('base_url', 'http://localhost:8080');",
+          "// 設定常用變數 - 使用環境變數",
+          "if (!pm.globals.get('base_url') && pm.environment.get('base_url')) {",
+          "  pm.globals.set('base_url', pm.environment.get('base_url'));",
           "}",
           "",
           "// 檢查是否需要自動帶入 access_token",
@@ -60,19 +60,19 @@
           "    // 自動儲存 access_token 和 refresh_token（登入、註冊、刷新 token 時）",
           "    if (jsonData && jsonData.data) {",
           "      if (jsonData.data.access_token) {",
-          "        pm.globals.set('access_token', jsonData.data.access_token);",
+          "        pm.environment.set('access_token', jsonData.data.access_token);",
           "        console.log('✅ 已儲存 access_token:', jsonData.data.access_token.substring(0, 20) + '...');",
           "      }",
           "      ",
           "      if (jsonData.data.refresh_token) {",
-          "        pm.globals.set('refresh_token', jsonData.data.refresh_token);",
+          "        pm.environment.set('refresh_token', jsonData.data.refresh_token);",
           "        console.log('✅ 已儲存 refresh_token:', jsonData.data.refresh_token.substring(0, 20) + '...');",
           "      }",
           "      ",
           "      if (jsonData.data.expires_in) {",
           "        // 計算 token 過期時間",
           "        const expiresAt = new Date(Date.now() + (jsonData.data.expires_in * 1000));",
-          "        pm.globals.set('token_expires_at', expiresAt.toISOString());",
+          "        pm.environment.set('token_expires_at', expiresAt.toISOString());",
           "        console.log('✅ Token 將於', expiresAt.toLocaleString(), '過期');",
           "      }",
           "    }",
@@ -111,12 +111,7 @@
   "variable": [
     {
       "key": "base_url",
-      "value": "http://localhost:8080",
-      "type": "string"
-    },
-    {
-      "key": "api_prefix",
-      "value": "/api",
+      "value": "",
       "type": "string"
     }
   ],
@@ -151,8 +146,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/auth/profile",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "auth", "profile"]
             },
             "description": "清理工具：移除所有儲存的認證資料"
@@ -198,8 +192,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/auth/profile",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "auth", "profile"]
             },
             "description": "檢視工具：顯示目前的認證狀態和 Token 資訊"
@@ -233,25 +226,25 @@
                   "    pm.expect(jsonData.data).to.have.property('user');",
                   "});",
                   "",
-                  "// 儲存認證資料到全域變數",
+                  "// 儲存認證資料到環境變數",
                   "if (pm.response.code === 201) {",
                   "    try {",
                   "        const responseData = pm.response.json();",
                   "        ",
                   "        if (responseData.data) {",
                   "            // 儲存 tokens",
-                  "            pm.globals.set('access_token', responseData.data.access_token);",
-                  "            pm.globals.set('refresh_token', responseData.data.refresh_token);",
+                  "            pm.environment.set('access_token', responseData.data.access_token);",
+                  "            pm.environment.set('refresh_token', responseData.data.refresh_token);",
                   "            ",
                   "            // 儲存使用者資訊",
-                  "            pm.globals.set('user_id', responseData.data.user.id);",
-                  "            pm.globals.set('user_uuid', responseData.data.user.uuid);",
-                  "            pm.globals.set('user_role', responseData.data.user.role);",
+                  "            pm.environment.set('user_id', responseData.data.user.id);",
+                  "            pm.environment.set('user_uuid', responseData.data.user.uuid);",
+                  "            pm.environment.set('user_role', responseData.data.user.role);",
                   "            ",
                   "            // 計算 token 過期時間",
                   "            if (responseData.data.expires_in) {",
                   "                const expiresAt = new Date(Date.now() + (responseData.data.expires_in * 1000));",
-                  "                pm.globals.set('token_expires_at', expiresAt.toISOString());",
+                  "                pm.environment.set('token_expires_at', expiresAt.toISOString());",
                   "            }",
                   "            ",
                   "            console.log('🎉 註冊成功！');",
@@ -277,12 +270,11 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"nick_name\": \"測試使用者\",\n  \"name\": \"王小明\",\n  \"birthday\": \"1990-01-01\",\n  \"contact_phone\": \"0912345678\",\n  \"role\": \"student\"\n}"
+              "raw": "{\n  \"email\": \"test001@gmail.com\",\n  \"password\": \"1qaz2wsx\",\n  \"nick_name\": \"測試使用者001\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/register",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "auth", "register"]
             },
             "description": "使用者註冊 API，支援學生和教師角色註冊"
@@ -310,25 +302,25 @@
                   "    pm.expect(jsonData.data).to.have.property('user');",
                   "});",
                   "",
-                  "// 儲存認證資料到全域變數",
+                  "// 儲存認證資料到環境變數",
                   "if (pm.response.code === 200) {",
                   "    try {",
                   "        const responseData = pm.response.json();",
                   "        ",
                   "        if (responseData.data) {",
                   "            // 儲存 tokens",
-                  "            pm.globals.set('access_token', responseData.data.access_token);",
-                  "            pm.globals.set('refresh_token', responseData.data.refresh_token);",
+                  "            pm.environment.set('access_token', responseData.data.access_token);",
+                  "            pm.environment.set('refresh_token', responseData.data.refresh_token);",
                   "            ",
                   "            // 儲存使用者資訊",
-                  "            pm.globals.set('user_id', responseData.data.user.id);",
-                  "            pm.globals.set('user_uuid', responseData.data.user.uuid);",
-                  "            pm.globals.set('user_role', responseData.data.user.role);",
+                  "            pm.environment.set('user_id', responseData.data.user.id);",
+                  "            pm.environment.set('user_uuid', responseData.data.user.uuid);",
+                  "            pm.environment.set('user_role', responseData.data.user.role);",
                   "            ",
                   "            // 計算 token 過期時間",
                   "            if (responseData.data.expires_in) {",
                   "                const expiresAt = new Date(Date.now() + (responseData.data.expires_in * 1000));",
-                  "                pm.globals.set('token_expires_at', expiresAt.toISOString());",
+                  "                pm.environment.set('token_expires_at', expiresAt.toISOString());",
                   "            }",
                   "            ",
                   "            console.log('🎉 登入成功！');",
@@ -354,12 +346,11 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+              "raw": "{\n  \"email\": \"test001@gmail.com\",\n  \"password\": \"1qaz2wsx\"\n}"
             },
             "url": {
-              "raw": "http://localhost:8080/api/auth/login",
-              "host": ["localhost"],
-              "port": "8080",
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
               "path": ["api", "auth", "login"]
             },
             "description": "使用者登入，返回 JWT Token"
@@ -393,13 +384,13 @@
                   "        ",
                   "        if (responseData.data) {",
                   "            // 更新 tokens",
-                  "            pm.globals.set('access_token', responseData.data.access_token);",
-                  "            pm.globals.set('refresh_token', responseData.data.refresh_token);",
+                  "            pm.environment.set('access_token', responseData.data.access_token);",
+                  "            pm.environment.set('refresh_token', responseData.data.refresh_token);",
                   "            ",
                   "            // 計算新的 token 過期時間",
                   "            if (responseData.data.expires_in) {",
                   "                const expiresAt = new Date(Date.now() + (responseData.data.expires_in * 1000));",
-                  "                pm.globals.set('token_expires_at', expiresAt.toISOString());",
+                  "                pm.environment.set('token_expires_at', expiresAt.toISOString());",
                   "            }",
                   "            ",
                   "            console.log('🔄 Token 刷新成功！');",
@@ -428,8 +419,7 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/refresh",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "auth", "refresh"]
             },
             "description": "使用 Refresh Token 刷新 Access Token"
@@ -442,8 +432,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/auth/profile",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "auth", "profile"]
             },
             "description": "取得目前登入使用者的個人資料"
@@ -465,8 +454,7 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/profile",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "auth", "profile"]
             },
             "description": "更新個人資料"
@@ -484,12 +472,11 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\"\n}"
+              "raw": "{\n  \"email\": \"test001@gmail.com\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/forgot-password",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "auth", "forgot-password"]
             },
             "description": "發送重設密碼郵件"
@@ -511,8 +498,7 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/reset-password",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "auth", "reset-password"]
             },
             "description": "使用重設令牌重設密碼"
@@ -551,8 +537,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/auth/profile",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "auth", "profile"]
             },
             "description": "刪除使用者帳號（軟刪除）"
@@ -565,7 +550,7 @@
       "name": "教師管理 (Teachers)",
       "item": [
         {
-          "name": "教師申請",
+          "name": "申請成為教師",
           "request": {
             "method": "POST",
             "header": [
@@ -576,33 +561,44 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nationality\": \"台灣\",\n  \"introduction\": \"我是一位熱愛教育的專業人士，擁有豐富的教學經驗和深厚的學術背景。我在這個領域已經工作了多年，積累了豐富的實戰經驗。我希望能在這個平台上分享我的知識，幫助更多學生成長和進步，讓他們能夠在學習的道路上走得更遠。\"\n}"
+              "raw": "{\n  \"city\": \"台北市\",\n  \"district\": \"中正區\",\n  \"address\": \"中山南路5號\",\n  \"main_category_id\": 1,\n  \"sub_category_ids\": [1, 2, 3],\n  \"introduction\": \"我是一位經驗豐富的教師，擁有10年以上的教學經驗，專精於程式設計領域，能夠以淺顯易懂的方式教導學生掌握複雜的技術概念，致力於培養學生的邏輯思維和問題解決能力。\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/teachers/application",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "teachers", "application"]
+              "raw": "{{base_url}}/api/teachers/apply",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "apply"]
             },
-            "description": "申請成為教師"
+            "description": "建立新的教師申請，提交地址資訊、教授科目、專長和自我介紹資料"
           }
         },
         {
-          "name": "查詢申請狀態",
+          "name": "查詢教師申請狀態",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/teachers/application/status",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "teachers", "application", "status"]
+              "raw": "{{base_url}}/api/teachers/apply-status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "apply-status"]
             },
-            "description": "查詢教師申請狀態"
+            "description": "取得使用者的教師申請狀態和所有步驟的表單資料，用於前端判斷申請進度和預填表單"
           }
         },
         {
-          "name": "更新申請資料",
+          "name": "取得教師基本資訊",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/basic-info",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "basic-info"]
+            },
+            "description": "取得已通過申請的教師基本資訊，主要用於教師個人資料管理"
+          }
+        },
+        {
+          "name": "更新教師基本資訊",
           "request": {
             "method": "PUT",
             "header": [
@@ -613,26 +609,189 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nationality\": \"日本\",\n  \"introduction\": \"更新後的申請介紹內容，需要長度超過100字元以符合系統驗證規則。這是教師申請的更新版本，包含了申請人更詳細的教學背景和經驗介紹。\"\n}"
+              "raw": "{\n  \"city\": \"台北市\",\n  \"district\": \"中正區\",\n  \"address\": \"中山南路5號\",\n  \"main_category_id\": 1,\n  \"sub_category_ids\": [1, 2, 3],\n  \"introduction\": \"我是一位經驗豐富的教師，擁有10年以上的教學經驗，專精於程式設計領域，能夠以淺顯易懂的方式教導學生掌握複雜的技術概念。\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/teachers/application",
-              "host": ["localhost"],
-              "port": "8080",
-              "path": ["api", "teachers", "application"]
+              "raw": "{{base_url}}/api/teachers/basic-info",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "basic-info"]
             },
-            "description": "更新教師申請資料"
+            "description": "更新已通過申請的教師基本資訊，專門用於個人資料管理"
           }
         },
         {
-          "name": "學習經歷列表",
+          "name": "更新教師基本資訊",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"city\": \"台北市\",\n  \"district\": \"中正區\",\n  \"address\": \"中山南路5號\",\n  \"main_category_id\": 1,\n  \"sub_category_ids\": [1, 2, 3],\n  \"introduction\": \"我是一位經驗豐富的教師，擁有10年以上的教學經驗，專精於程式設計領域，能夠以淺顯易懂的方式教導學生掌握複雜的技術概念。\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teachers/basic-info",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "basic-info"]
+            },
+            "description": "更新教師申請的基本資訊，用於多步驟表單的第一步"
+          }
+        },
+        {
+          "name": "重新提交申請",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/resubmit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "resubmit"]
+            },
+            "description": "重新提交教師申請"
+          }
+        },
+        {
+          "name": "提交教師申請",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/submit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "submit"]
+            },
+            "description": "最終提交教師申請"
+          }
+        },
+        {
+          "name": "取得教師個人檔案",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "profile"]
+            },
+            "description": "取得教師完整個人檔案"
+          }
+        },
+        {
+          "name": "更新教師個人檔案",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"city\": \"台北市\",\n  \"district\": \"中正區\",\n  \"address\": \"中山南路5號\",\n  \"main_category_id\": 1,\n  \"sub_category_ids\": [1, 2, 3],\n  \"introduction\": \"我是一位經驗豐富的教師，擁有10年以上的教學經驗。\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teachers/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "profile"]
+            },
+            "description": "更新教師個人檔案"
+          }
+        },
+        {
+          "name": "取得工作經驗列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/work-experiences",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "work-experiences"]
+            },
+            "description": "取得教師工作經驗列表"
+          }
+        },
+        {
+          "name": "新增工作經驗",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"work_experiences\": [\n    {\n      \"company_name\": \"某某科技公司\",\n      \"workplace\": \"台北市信義區\",\n      \"job_category\": \"軟體開發\",\n      \"job_title\": \"資深工程師\",\n      \"is_working\": false,\n      \"start_year\": 2020,\n      \"start_month\": 1,\n      \"end_year\": 2022,\n      \"end_month\": 12\n    },\n    {\n      \"company_name\": \"另一家公司\",\n      \"workplace\": \"新北市板橋區\",\n      \"job_category\": \"產品管理\",\n      \"job_title\": \"產品經理\",\n      \"is_working\": true,\n      \"start_year\": 2023,\n      \"start_month\": 1,\n      \"end_year\": null,\n      \"end_month\": null\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teachers/work-experiences",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "work-experiences"]
+            },
+            "description": "新增工作經驗記錄，支援單筆或多筆"
+          }
+        },
+        {
+          "name": "更新工作經驗",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company_name\": \"某某科技公司\",\n  \"workplace\": \"台北市信義區\",\n  \"job_category\": \"軟體開發\",\n  \"job_title\": \"資深工程師\",\n  \"is_working\": false,\n  \"start_year\": 2020,\n  \"start_month\": 1,\n  \"end_year\": 2023,\n  \"end_month\": 6\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teachers/work-experiences/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "work-experiences", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "更新指定的工作經驗"
+          }
+        },
+        {
+          "name": "刪除工作經驗",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/work-experiences/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "work-experiences", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "刪除指定的工作經驗"
+          }
+        },
+        {
+          "name": "取得學習經歷列表",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/learning-experiences",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "teachers", "learning-experiences"]
             },
             "description": "取得教師學習經歷列表"
@@ -650,12 +809,11 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"is_in_school\": false,\n  \"degree\": \"學士\",\n  \"school_name\": \"國立台灣大學\",\n  \"department\": \"資訊工程學系\",\n  \"region\": true,\n  \"start_year\": 2018,\n  \"start_month\": 9,\n  \"end_year\": 2022,\n  \"end_month\": 6\n}"
+              "raw": "{\n  \"degree\": \"學士\",\n  \"school_name\": \"某某大學\",\n  \"department\": \"資訊工程學系\",\n  \"region\": true,\n  \"is_in_school\": false,\n  \"start_year\": 2016,\n  \"start_month\": 9,\n  \"end_year\": 2020,\n  \"end_month\": 6\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/learning-experiences",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "teachers", "learning-experiences"]
             },
             "description": "新增學習經歷"
@@ -673,12 +831,11 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"is_in_school\": true,\n  \"degree\": \"碩士\",\n  \"school_name\": \"國立台灣大學\",\n  \"department\": \"資訊工程學系研究所\",\n  \"region\": true,\n  \"start_year\": 2022,\n  \"start_month\": 9,\n  \"end_year\": null,\n  \"end_month\": null\n}"
+              "raw": "{\n  \"degree\": \"碩士\",\n  \"school_name\": \"某某大學\",\n  \"department\": \"資訊管理學系\",\n  \"region\": true,\n  \"is_in_school\": false,\n  \"start_year\": 2020,\n  \"start_month\": 9,\n  \"end_year\": 2022,\n  \"end_month\": 6\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/learning-experiences/:id",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "teachers", "learning-experiences", ":id"],
               "variable": [
                 {
@@ -687,7 +844,7 @@
                 }
               ]
             },
-            "description": "更新學習經歷"
+            "description": "更新指定的學習經歷"
           }
         },
         {
@@ -697,8 +854,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/learning-experiences/:id",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "teachers", "learning-experiences", ":id"],
               "variable": [
                 {
@@ -707,18 +863,17 @@
                 }
               ]
             },
-            "description": "刪除學習經歷"
+            "description": "刪除指定的學習經歷"
           }
         },
         {
-          "name": "證書列表",
+          "name": "取得證書列表",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/certificates",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "teachers", "certificates"]
             },
             "description": "取得教師證書列表"
@@ -736,15 +891,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"verifying_institution\": \"教育部\",\n  \"license_name\": \"中等學校教師證書\",\n  \"holder_name\": \"王小明\",\n  \"license_number\": \"TC2024001234\",\n  \"category_id\": \"teaching_license\",\n  \"subject\": \"數學科教學\"\n}"
+              "raw": "{\n  \"verifying_institution\": \"某某認證機構\",\n  \"license_name\": \"Python 程式設計證照\",\n  \"holder_name\": \"王小明\",\n  \"license_number\": \"PYTHON123456\",\n  \"file_path\": \"/uploads/certificates/cert123.pdf\",\n  \"category_id\": \"programming\",\n  \"subject\": \"程式設計\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/certificates",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "teachers", "certificates"]
             },
-            "description": "新增教師證書"
+            "description": "新增教學證書"
           }
         },
         {
@@ -759,12 +913,11 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"verifying_institution\": \"教育部\",\n  \"license_name\": \"高等學校教師證書\",\n  \"holder_name\": \"王小明\",\n  \"license_number\": \"TC2024001235\",\n  \"category_id\": \"university_license\",\n  \"subject\": \"高等數學教學\"\n}"
+              "raw": "{\n  \"verifying_institution\": \"某某認證機構\",\n  \"license_name\": \"Java 程式設計證照\",\n  \"holder_name\": \"王小明\",\n  \"license_number\": \"JAVA123456\",\n  \"file_path\": \"/uploads/certificates/cert456.pdf\",\n  \"category_id\": \"programming\",\n  \"subject\": \"程式設計\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/certificates/:id",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "teachers", "certificates", ":id"],
               "variable": [
                 {
@@ -773,7 +926,7 @@
                 }
               ]
             },
-            "description": "更新教師證書"
+            "description": "更新指定的證書"
           }
         },
         {
@@ -783,8 +936,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/certificates/:id",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "teachers", "certificates", ":id"],
               "variable": [
                 {
@@ -793,7 +945,67 @@
                 }
               ]
             },
-            "description": "刪除教師證書"
+            "description": "刪除指定的證書"
+          }
+        },
+        {
+          "name": "取得教師時間表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/schedule",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "schedule"]
+            },
+            "description": "取得教師可用時間表"
+          }
+        },
+        {
+          "name": "更新教師時間表",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schedule\": {\n    \"monday\": [\"09:00-12:00\", \"14:00-17:00\"],\n    \"tuesday\": [\"09:00-12:00\", \"14:00-17:00\"],\n    \"wednesday\": [\"09:00-12:00\"],\n    \"thursday\": [\"14:00-17:00\"],\n    \"friday\": [\"09:00-12:00\", \"14:00-17:00\"],\n    \"saturday\": [],\n    \"sunday\": []\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teachers/schedule",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "schedule"]
+            },
+            "description": "更新教師可用時間表"
+          }
+        },
+        {
+          "name": "檢查時間衝突",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/teachers/schedule/conflicts?start_time=2024-01-15T09:00:00&end_time=2024-01-15T10:00:00",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teachers", "schedule", "conflicts"],
+              "query": [
+                {
+                  "key": "start_time",
+                  "value": "2024-01-15T09:00:00",
+                  "description": "開始時間 (ISO 8601 格式)"
+                },
+                {
+                  "key": "end_time", 
+                  "value": "2024-01-15T10:00:00",
+                  "description": "結束時間 (ISO 8601 格式)"
+                }
+              ]
+            },
+            "description": "檢查指定時間是否有衝突"
           }
         }
       ],
@@ -809,8 +1021,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/courses",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "courses"]
             },
             "description": "取得課程列表"
@@ -823,8 +1034,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/courses/:uuid",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "courses", ":uuid"],
               "variable": [
                 {
@@ -843,8 +1053,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/courses?keyword=Python&main_category_id=1&sub_category_id=2&city_id=1&sort=newest&page=1&limit=12",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "courses"],
               "query": [
                 {
@@ -887,8 +1096,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/courses/:uuid/reviews?page=1&limit=10",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "courses", ":uuid", "reviews"],
               "query": [
                 {
@@ -926,8 +1134,7 @@
             },
             "url": {
               "raw": "{{base_url}}/api/courses",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "courses"]
             },
             "description": "建立新課程"
@@ -949,8 +1156,7 @@
             },
             "url": {
               "raw": "{{base_url}}/api/courses/:uuid",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "courses", ":uuid"],
               "variable": [
                 {
@@ -969,8 +1175,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/courses/:uuid",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "courses", ":uuid"],
               "variable": [
                 {
@@ -989,8 +1194,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/courses/:uuid/price-options",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "courses", ":uuid", "price-options"],
               "variable": [
                 {
@@ -1018,8 +1222,7 @@
             },
             "url": {
               "raw": "{{base_url}}/api/courses/:uuid/price-options",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "courses", ":uuid", "price-options"],
               "variable": [
                 {
@@ -1044,8 +1247,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/courses?page=1&limit=12",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "courses"],
               "query": [
                 {
@@ -1068,8 +1270,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/courses/:uuid/public",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "courses", ":uuid", "public"],
               "variable": [
                 {
@@ -1094,8 +1295,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/:id/profile",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "teachers", ":id", "profile"],
               "variable": [
                 {
@@ -1114,8 +1314,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/:id/courses?page=1&limit=12",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "teachers", ":id", "courses"],
               "query": [
                 {
@@ -1159,8 +1358,7 @@
             },
             "url": {
               "raw": "{{base_url}}/api/reviews",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "reviews"]
             },
             "description": "為課程新增評價"
@@ -1182,8 +1380,7 @@
             },
             "url": {
               "raw": "{{base_url}}/api/reviews/:id",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "reviews", ":id"],
               "variable": [
                 {
@@ -1202,8 +1399,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/reviews/:id",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "reviews", ":id"],
               "variable": [
                 {
@@ -1228,8 +1424,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/favorites?page=1&limit=12",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "favorites"],
               "query": [
                 {
@@ -1261,8 +1456,7 @@
             },
             "url": {
               "raw": "{{base_url}}/api/favorites",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "favorites"]
             },
             "description": "收藏課程"
@@ -1275,8 +1469,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/favorites/:course_uuid",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "favorites", ":course_uuid"],
               "variable": [
                 {
@@ -1301,8 +1494,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/videos/course/:course_uuid",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "videos", "course", ":course_uuid"],
               "variable": [
                 {
@@ -1356,8 +1548,7 @@
             },
             "url": {
               "raw": "{{base_url}}/api/videos",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "videos"]
             },
             "description": "上傳課程影片"
@@ -1379,8 +1570,7 @@
             },
             "url": {
               "raw": "{{base_url}}/api/videos/:id",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "videos", ":id"],
               "variable": [
                 {
@@ -1399,8 +1589,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/videos/:id",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "videos", ":id"],
               "variable": [
                 {
@@ -1425,8 +1614,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/cart",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "cart"]
             },
             "description": "取得購物車內容"
@@ -1448,8 +1636,7 @@
             },
             "url": {
               "raw": "{{base_url}}/api/cart/items",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "cart", "items"]
             },
             "description": "將課程價格方案加入購物車"
@@ -1471,8 +1658,7 @@
             },
             "url": {
               "raw": "{{base_url}}/api/cart/items/:id",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "cart", "items", ":id"],
               "variable": [
                 {
@@ -1491,8 +1677,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/cart/items/:id",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "cart", "items", ":id"],
               "variable": [
                 {
@@ -1511,8 +1696,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/cart",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "cart"]
             },
             "description": "清空購物車所有項目"
@@ -1531,8 +1715,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/orders?page=1&limit=10&status=pending",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "orders"],
               "query": [
                 {
@@ -1568,8 +1751,7 @@
             },
             "url": {
               "raw": "{{base_url}}/api/orders",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "orders"]
             },
             "description": "從購物車建立訂單"
@@ -1582,8 +1764,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/orders/:uuid",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "orders", ":uuid"],
               "variable": [
                 {
@@ -1611,8 +1792,7 @@
             },
             "url": {
               "raw": "{{base_url}}/api/orders/:uuid/cancel",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "orders", ":uuid", "cancel"],
               "variable": [
                 {
@@ -1637,8 +1817,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/purchases?page=1&limit=10",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "purchases"],
               "query": [
                 {
@@ -1661,8 +1840,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/purchases/:id",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "purchases", ":id"],
               "variable": [
                 {
@@ -1687,8 +1865,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/reservations?page=1&limit=10&status=pending",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "reservations"],
               "query": [
                 {
@@ -1724,8 +1901,7 @@
             },
             "url": {
               "raw": "{{base_url}}/api/reservations",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "reservations"]
             },
             "description": "建立課程預約"
@@ -1738,8 +1914,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/reservations/:id",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "reservations", ":id"],
               "variable": [
                 {
@@ -1767,8 +1942,7 @@
             },
             "url": {
               "raw": "{{base_url}}/api/reservations/:id",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "reservations", ":id"],
               "variable": [
                 {
@@ -1787,8 +1961,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/reservations/:id",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "reservations", ":id"],
               "variable": [
                 {
@@ -1813,8 +1986,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teacher-dashboard/stats",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "teacher-dashboard", "stats"]
             },
             "description": "取得教師儀表板統計資料"
@@ -1827,8 +1999,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teacher-dashboard/courses?page=1&limit=10",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "teacher-dashboard", "courses"],
               "query": [
                 {
@@ -1851,8 +2022,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teacher-dashboard/earnings?start_date=2024-01-01&end_date=2024-12-31",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "teacher-dashboard", "earnings"],
               "query": [
                 {
@@ -1875,8 +2045,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teacher-dashboard/students?page=1&limit=10",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "teacher-dashboard", "students"],
               "query": [
                 {
@@ -1914,8 +2083,7 @@
             },
             "url": {
               "raw": "{{base_url}}/api/admin/login",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "admin", "login"]
             },
             "description": "管理員登入"
@@ -1928,8 +2096,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/admin/users?page=1&limit=20&role=all",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "admin", "users"],
               "query": [
                 {
@@ -1956,8 +2123,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/admin/teacher-applications?status=pending&page=1&limit=20",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "admin", "teacher-applications"],
               "query": [
                 {
@@ -1993,8 +2159,7 @@
             },
             "url": {
               "raw": "{{base_url}}/api/admin/teacher-applications/:id/review",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "admin", "teacher-applications", ":id", "review"],
               "variable": [
                 {
@@ -2013,8 +2178,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/admin/courses?page=1&limit=20&status=all",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "admin", "courses"],
               "query": [
                 {
@@ -2041,8 +2205,7 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/admin/stats",
-              "host": ["localhost"],
-              "port": "8080",
+              "host": ["{{base_url}}"],
               "path": ["api", "admin", "stats"]
             },
             "description": "取得系統統計資料"
@@ -2050,6 +2213,234 @@
         }
       ],
       "description": "管理員功能相關 API，需要管理員權限"
+    },
+    {
+      "name": "� 使用者頭像 (User Avatar)",
+      "item": [
+        {
+          "name": "📤 上傳頭像",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "avatar",
+                  "type": "file",
+                  "src": [],
+                  "description": "頭像檔案 (支援 JPEG, JPG, PNG, WebP，最大 5MB)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/upload/avatar",
+              "host": ["{{base_url}}"],
+              "path": ["api", "upload", "avatar"]
+            },
+            "description": "上傳使用者頭像到 Firebase Storage\n\n**新的業務規則**：\n✅ 使用者只能維護一個頭像\n✅ 上傳新頭像會自動刪除 Firebase Storage 中的舊頭像\n✅ Google 登入用戶的頭像不會從 Google 伺服器刪除，但會在資料庫中更新為新頭像\n\n**支援格式**：\n- 圖片格式: JPEG, JPG, PNG, WebP\n- ❌ 不支援: SVG, GIF, BMP 等其他格式\n\n**限制**：\n- 最大檔案大小: 5MB\n- 每個使用者只能有一個頭像\n\n**業務邏輯**：\n- 驗證使用者已登入\n- 驗證檔案格式和大小\n- 自動刪除舊頭像（如果存在且不是 Google 頭像）\n- 上傳新頭像到 Firebase Storage\n- 更新使用者頭像 URL\n\n**錯誤處理**：\n- 不支援格式會顯示具體格式錯誤訊息\n- 檔案過大會顯示當前大小和限制\n- 舊頭像清理失敗不會影響新頭像上傳"
+          },
+          "response": []
+        },
+        {
+          "name": "🗑️ 刪除頭像",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/upload/avatar",
+              "host": ["{{base_url}}"],
+              "path": ["api", "upload", "avatar"]
+            },
+            "description": "刪除使用者頭像\n\n業務邏輯：\n- 驗證使用者已登入\n- 從 Firebase Storage 刪除頭像檔案\n- 清除使用者的頭像 URL"
+          },
+          "response": []
+        }
+      ],
+      "description": "使用者頭像管理相關 API\n\n⚠️ 注意事項：\n- 需要 JWT 認證\n- 需要設定 Firebase Storage 環境變數\n- 支援的檔案格式：JPEG, JPG, PNG, WebP\n- 檔案大小限制：最大 5MB\n- 使用者只能維護一個頭像，上傳新頭像會自動刪除舊頭像\n- Google 登入用戶的頭像無法被刪除，只會清除資料庫記錄"
+    },
+    {
+      "name": "�📁 檔案上傳 (File Upload)",
+      "item": [
+        {
+          "name": "📤 上傳單個檔案",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "category",
+                  "value": "documents",
+                  "type": "text",
+                  "description": "檔案分類 (可選)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/files/upload",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files", "upload"]
+            },
+            "description": "上傳單個檔案到 Firebase Storage\n\n支援格式：\n- 圖片: JPEG, PNG, GIF, WebP\n- 文件: PDF, DOC, DOCX, TXT\n\n限制：\n- 最大檔案大小: 10MB\n- 最大檔案數量: 5個"
+          },
+          "response": []
+        },
+        {
+          "name": "📤 上傳多個檔案",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "category",
+                  "value": "images",
+                  "type": "text",
+                  "description": "檔案分類 (可選)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/files/upload",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files", "upload"]
+            },
+            "description": "上傳多個檔案到 Firebase Storage (最多5個檔案)"
+          },
+          "response": []
+        },
+        {
+          "name": "🗑️ 刪除檔案",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileUrl\": \"gs://your-bucket/uploads/documents/filename.pdf\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/files/delete",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files", "delete"]
+            },
+            "description": "從 Firebase Storage 刪除指定檔案\n\n請求參數：\n- fileUrl: Firebase Storage 檔案 URL (gs://格式)"
+          },
+          "response": []
+        },
+        {
+          "name": "📄 取得檔案資訊",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/files/metadata/{{encoded_file_url}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files", "metadata", "{{encoded_file_url}}"]
+            },
+            "description": "取得指定檔案的詳細資訊\n\n路徑參數：\n- encoded_file_url: URL 編碼的 Firebase Storage 檔案 URL\n\n使用方式：\n1. 先將檔案 URL 進行 URL 編碼\n2. 將編碼後的 URL 作為路徑參數"
+          },
+          "response": []
+        },
+        {
+          "name": "🔗 生成下載連結",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileUrl\": \"gs://your-bucket/uploads/documents/filename.pdf\",\n  \"expiresInMinutes\": 60\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/files/download-url",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files", "download-url"]
+            },
+            "description": "為私有檔案生成帶有過期時間的下載連結\n\n請求參數：\n- fileUrl: Firebase Storage 檔案 URL (gs://格式)\n- expiresInMinutes: 連結有效期限（分鐘），預設60分鐘"
+          },
+          "response": []
+        },
+        {
+          "name": "🧪 測試 Firebase 配置",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('檢查 Firebase 配置狀態', function () {",
+                  "    if (pm.response.code === 503) {",
+                  "        pm.test('Firebase 服務不可用 - 這是正常的，如果沒有設定環境變數', function () {",
+                  "            var jsonData = pm.response.json();",
+                  "            pm.expect(jsonData.error).to.eql('SERVICE_UNAVAILABLE');",
+                  "            console.log('❌ Firebase 未配置，請設定以下環境變數：');",
+                  "            console.log('   FIREBASE_SERVICE_ACCOUNT_PATH');",
+                  "            console.log('   FIREBASE_STORAGE_BUCKET');",
+                  "        });",
+                  "    } else if (pm.response.code === 401) {",
+                  "        console.log('⚠️  需要先登入取得 token');",
+                  "    } else {",
+                  "        pm.test('Firebase 服務可用', function () {",
+                  "            pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+                  "            console.log('✅ Firebase 配置正確');",
+                  "        });",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": []
+            },
+            "url": {
+              "raw": "{{base_url}}/api/files/upload",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files", "upload"]
+            },
+            "description": "測試 Firebase 配置是否正確\n\n- 如果返回 503: Firebase 未配置（正常情況）\n- 如果返回 401: 需要登入\n- 如果返回 400: Firebase 已配置但沒有檔案（正常）"
+          },
+          "response": []
+        }
+      ],
+      "description": "檔案上傳相關 API，使用 Firebase Storage 進行雲端檔案儲存\n\n⚠️ 注意事項：\n- 需要設定 Firebase 環境變數才能使用\n- 所有端點都需要 JWT 認證\n- 支援多種檔案格式和大小限制"
     }
   ]
 }

@@ -327,17 +327,18 @@ export class TeacherController {
   })
 
   /**
-   * 建立工作經驗
+   * 建立工作經驗（統一使用陣列格式）
    */
   createWorkExperience = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
     const userId = req.user!.userId
-    const workExperienceData = req.body
-    
-    const workExperience = await this.teacherService.createWorkExperience(userId, workExperienceData)
+    const requestData = req.body
+
+    // 統一處理陣列格式的工作經驗資料
+    const workExperiences = await this.teacherService.createWorkExperiencesBatch(userId, requestData)
     
     res.status(201).json(handleCreated({
-      work_experience: workExperience
-    }, SUCCESS.TEACHER_WORK_EXPERIENCE_CREATED))
+      work_experiences: workExperiences
+    }, `成功建立 ${workExperiences.length} 筆工作經驗`))
   })
 
   /**

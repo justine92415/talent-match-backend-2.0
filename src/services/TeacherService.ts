@@ -15,6 +15,7 @@ import {
   TeacherApplicationUpdateData,
   TeacherProfileUpdateRequest,
   CreateWorkExperienceRequest,
+  CreateWorkExperiencesBatchRequest,
   UpdateWorkExperienceRequest
 } from '@models/index'
 import { userRoleService } from './UserRoleService'
@@ -545,6 +546,64 @@ export class TeacherService {
     }
     
     return workExperience
+  }
+
+  /**
+   * 批次建立工作經驗記錄
+   * @param userId 使用者 ID
+   * @param batchData 批次工作經驗資料
+   * @returns 建立的工作經驗記錄陣列
+   */
+  async createWorkExperiencesBatch(userId: number, batchData: CreateWorkExperiencesBatchRequest): Promise<TeacherWorkExperience[]> {
+    const { teacher, canModifyApplication } = await this.validateTeacherUserOrApplicant(userId)
+    
+    // 檢查是否可以修改申請資料
+    if (!canModifyApplication) {
+      throw Errors.unauthorizedAccess('目前申請狀態不允許修改資料')
+    }
+
+    // 驗證批次資料
+    if (!batchData.work_experiences || !Array.isArray(batchData.work_experiences)) {
+      throw Errors.validationFailed('work_experiences 必須是陣列')
+    }
+
+    if (batchData.work_experiences.length === 0) {
+      throw Errors.validationFailed('至少需要提供一筆工作經驗')
+    }
+
+    if (batchData.work_experiences.length > 20) {
+      throw Errors.validationFailed('一次最多只能建立 20 筆工作經驗')
+    }
+
+    // 驗證每筆工作經驗資料
+    batchData.work_experiences.forEach((workExp, index) => {
+      try {
+        this.validateWorkExperienceData(workExp)
+      } catch (error) {
+        if (error instanceof ValidationError) {
+          throw Errors.validationFailed(`第 ${index + 1} 筆工作經驗：${error.message}`)
+        }
+        throw error
+      }
+    })
+
+    // 準備批次插入資料
+    const workExperienceEntities = batchData.work_experiences.map(workExpData => ({
+      teacher_id: teacher.id,
+      ...workExpData
+    }))
+
+    // 執行批次插入
+    const results = await this.workExperienceRepository.insert(workExperienceEntities)
+    
+    // 取得新建立的工作經驗記錄
+    const createdIds = results.identifiers.map(identifier => identifier.id)
+    const createdWorkExperiences = await this.workExperienceRepository.find({
+      where: { id: In(createdIds) },
+      order: { created_at: 'DESC' }
+    })
+
+    return createdWorkExperiences
   }
 
   /**

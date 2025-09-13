@@ -716,6 +716,78 @@ export const teacherSchemas = {
     }
   },
 
+  // 批次工作經驗建立請求 Schema
+  WorkExperienceBatchCreateRequest: {
+    type: 'object',
+    required: ['work_experiences'],
+    properties: {
+      work_experiences: {
+        type: 'array',
+        minItems: 1,
+        maxItems: 20,
+        description: '工作經驗陣列（必填，1-20筆）',
+        items: {
+          $ref: '#/components/schemas/WorkExperienceCreateRequest'
+        },
+        example: [
+          {
+            company_name: '某某科技公司',
+            workplace: '台北市信義區',
+            job_category: '軟體開發',
+            job_title: '資深工程師',
+            is_working: false,
+            start_year: 2020,
+            start_month: 1,
+            end_year: 2022,
+            end_month: 12
+          },
+          {
+            company_name: '另一家公司',
+            workplace: '新北市板橋區',
+            job_category: '產品管理',
+            job_title: '產品經理',
+            is_working: true,
+            start_year: 2023,
+            start_month: 1,
+            end_year: null,
+            end_month: null
+          }
+        ]
+      }
+    }
+  },
+
+  // 批次工作經驗建立成功回應 Schema
+  WorkExperienceBatchCreateSuccessResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        enum: ['success'],
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        description: '成功訊息',
+        example: '成功建立 2 筆工作經驗'
+      },
+      data: {
+        type: 'object',
+        properties: {
+          work_experiences: {
+            type: 'array',
+            description: '建立的工作經驗記錄陣列',
+            items: {
+              $ref: '#/components/schemas/WorkExperience'
+            }
+          }
+        },
+        required: ['work_experiences']
+      }
+    },
+    required: ['status', 'message', 'data']
+  },
+
   // 工作經驗建立成功回應 Schema
   WorkExperienceCreateSuccessResponse: {
     type: 'object',
