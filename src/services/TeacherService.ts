@@ -940,7 +940,21 @@ export class TeacherService {
         file_path: Not(IsNull())
       }
     })
-    if (learningExperienceCount === 0) {
+    
+    // 額外檢查是否有空字串
+    const learningExperiencesWithFiles = await this.learningExperienceRepository.find({
+      where: { 
+        teacher_id: teacherId,
+        file_path: Not(IsNull())
+      },
+      select: ['file_path']
+    })
+    
+    const validLearningExperiences = learningExperiencesWithFiles.filter(exp => 
+      exp.file_path && exp.file_path.trim() !== ''
+    )
+    
+    if (validLearningExperiences.length === 0) {
       throw Errors.validationFailed('申請資料不完整，至少需要一筆學習經歷（含檔案）')
     }
 
@@ -951,7 +965,21 @@ export class TeacherService {
         file_path: Not(IsNull())
       }
     })
-    if (certificateCount === 0) {
+    
+    // 額外檢查是否有空字串
+    const certificatesWithFiles = await this.certificateRepository.find({
+      where: { 
+        teacher_id: teacherId,
+        file_path: Not(IsNull())
+      },
+      select: ['file_path']
+    })
+    
+    const validCertificates = certificatesWithFiles.filter(cert => 
+      cert.file_path && cert.file_path.trim() !== ''
+    )
+    
+    if (validCertificates.length === 0) {
       throw Errors.validationFailed('申請資料不完整，至少需要一張證書（含檔案）')
     }
   }

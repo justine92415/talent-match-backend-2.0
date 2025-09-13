@@ -1424,7 +1424,7 @@ router.post('/certificates', authenticateToken, validateRequest(certificateCreat
  *             schema:
  *               $ref: '#/components/schemas/ServerErrorResponse'
  */
-router.put('/certificates', authenticateToken, validateRequest(certificateUpsertSchema, '證書批次處理參數驗證失敗'), certificateController.upsertCertificates)
+router.put('/certificates', authenticateToken, validateRequest(certificateCreateBatchSchema, '證書批次處理參數驗證失敗'), certificateController.upsertCertificates)
 
 /**
  * @swagger
