@@ -113,11 +113,12 @@ export class UserRoleService {
   async getPrimaryRole(userId: number): Promise<UserRoleEnum> {
     const roles = await this.getUserRoles(userId)
     
-    // 按照優先級排序：super_admin > admin > teacher > teacher_applicant > student
+    // 按照優先級排序：super_admin > admin > teacher > teacher_pending > teacher_applicant > student
     const roleOrder = [
       UserRoleEnum.SUPER_ADMIN,
       UserRoleEnum.ADMIN,
       UserRoleEnum.TEACHER,
+      UserRoleEnum.TEACHER_PENDING,
       UserRoleEnum.TEACHER_APPLICANT,
       UserRoleEnum.STUDENT
     ]
@@ -154,12 +155,16 @@ export class UserRoleService {
   }
 
   /**
-   * 檢查使用者是否為教師（包含申請者）
+   * 檢查使用者是否為教師（包含申請者和待審核）
    * @param userId 使用者 ID
-   * @returns 是否為教師或申請者
+   * @returns 是否為教師、待審核或申請者
    */
   async isTeacherOrApplicant(userId: number): Promise<boolean> {
-    return await this.hasAnyRole(userId, [UserRoleEnum.TEACHER, UserRoleEnum.TEACHER_APPLICANT])
+    return await this.hasAnyRole(userId, [
+      UserRoleEnum.TEACHER, 
+      UserRoleEnum.TEACHER_PENDING, 
+      UserRoleEnum.TEACHER_APPLICANT
+    ])
   }
 
   /**

@@ -331,13 +331,14 @@ export class TeacherService {
    * @returns 更新後的教師記錄
    */
   async updateProfile(userId: number, updateData: TeacherProfileUpdateRequest): Promise<Teacher> {
-    // 檢查用戶是否有教師相關角色（TEACHER 或 TEACHER_APPLICANT）
+    // 檢查用戶是否有教師相關角色（TEACHER、TEACHER_PENDING 或 TEACHER_APPLICANT）
     const userRoleService = new UserRoleService()
     const hasTeacherRole = await userRoleService.hasRole(userId, UserRole.TEACHER)
+    const hasPendingRole = await userRoleService.hasRole(userId, UserRole.TEACHER_PENDING)
     const hasApplicantRole = await userRoleService.hasRole(userId, UserRole.TEACHER_APPLICANT)
     
-    if (!hasTeacherRole && !hasApplicantRole) {
-      throw Errors.teacherNotFound('您沒有教師或教師申請者權限')
+    if (!hasTeacherRole && !hasPendingRole && !hasApplicantRole) {
+      throw Errors.teacherNotFound('您沒有教師相關權限')
     }
 
     // 根據角色決定查詢條件
@@ -466,6 +467,7 @@ export class TeacherService {
 
     // 檢查角色
     const hasTeacherRole = await userRoleService.hasRole(userId, UserRole.TEACHER)
+    const hasPendingRole = await userRoleService.hasRole(userId, UserRole.TEACHER_PENDING)
     let hasApplicantRole = await userRoleService.hasRole(userId, UserRole.TEACHER_APPLICANT)
     
     // 取得教師記錄
@@ -474,15 +476,15 @@ export class TeacherService {
       throw Errors.teacherNotFound('找不到教師申請記錄')
     }
 
-    // 暫時的向後相容性修復：如果用戶有申請記錄但沒有 TEACHER_APPLICANT 角色，自動補充
-    if (!hasTeacherRole && !hasApplicantRole && teacher) {
+    // 暫時的向後相容性修復：如果用戶有申請記錄但沒有相關角色，自動補充
+    if (!hasTeacherRole && !hasPendingRole && !hasApplicantRole && teacher) {
       console.log(`自動為用戶 ${userId} 補充 TEACHER_APPLICANT 角色（向後相容性修復）`)
       await userRoleService.addRole(userId, UserRole.TEACHER_APPLICANT)
       hasApplicantRole = true
     }
     
-    if (!hasTeacherRole && !hasApplicantRole) {
-      throw Errors.unauthorizedAccess('需要教師權限才能執行此操作', 403)
+    if (!hasTeacherRole && !hasPendingRole && !hasApplicantRole) {
+      throw Errors.unauthorizedAccess('需要教師相關權限才能執行此操作', 403)
     }
 
     // 確定權限範圍
@@ -921,6 +923,9 @@ export class TeacherService {
     // 更新申請狀態
     teacher.application_status = ApplicationStatus.PENDING
     teacher.application_submitted_at = new Date()
+
+    // 升級使用者角色從 TEACHER_APPLICANT 到 TEACHER_PENDING
+    await userRoleService.upgradeRole(userId, UserRole.TEACHER_APPLICANT, UserRole.TEACHER_PENDING)
 
     return await this.teacherRepository.save(teacher)
   }

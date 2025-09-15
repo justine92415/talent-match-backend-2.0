@@ -168,13 +168,27 @@ export class AdminService {
 
     const updatedTeacher = await this.teacherRepository.save(teacher)
 
-    // 角色升級：TEACHER_APPLICANT → TEACHER
-    await userRoleService.upgradeRole(
-      updatedTeacher.user_id, 
-      UserRole.TEACHER_APPLICANT, 
-      UserRole.TEACHER,
-      adminId
-    )
+    // 角色升級：TEACHER_PENDING → TEACHER
+    // 檢查使用者當前是否有 TEACHER_PENDING 角色，如果沒有則檢查 TEACHER_APPLICANT
+    const hasPendingRole = await userRoleService.hasRole(updatedTeacher.user_id, UserRole.TEACHER_PENDING)
+    const hasApplicantRole = await userRoleService.hasRole(updatedTeacher.user_id, UserRole.TEACHER_APPLICANT)
+    
+    if (hasPendingRole) {
+      await userRoleService.upgradeRole(
+        updatedTeacher.user_id, 
+        UserRole.TEACHER_PENDING, 
+        UserRole.TEACHER,
+        adminId
+      )
+    } else if (hasApplicantRole) {
+      // 向下相容：仍支援從 TEACHER_APPLICANT 直接升級
+      await userRoleService.upgradeRole(
+        updatedTeacher.user_id, 
+        UserRole.TEACHER_APPLICANT, 
+        UserRole.TEACHER,
+        adminId
+      )
+    }
 
     return {
       teacher: {

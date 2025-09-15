@@ -510,10 +510,11 @@ export class LearningExperienceService {
 
     // 檢查角色
     const hasTeacherRole = await userRoleService.hasRole(userId, UserRole.TEACHER)
+    const hasPendingRole = await userRoleService.hasRole(userId, UserRole.TEACHER_PENDING)
     const hasApplicantRole = await userRoleService.hasRole(userId, UserRole.TEACHER_APPLICANT)
     
-    if (!hasTeacherRole && !hasApplicantRole) {
-      throw Errors.unauthorizedAccess('需要教師權限才能執行此操作', 403)
+    if (!hasTeacherRole && !hasPendingRole && !hasApplicantRole) {
+      throw Errors.unauthorizedAccess('需要教師相關權限才能執行此操作', 403)
     }
 
     // 取得教師記錄
@@ -524,7 +525,7 @@ export class LearningExperienceService {
 
     // 確定權限範圍
     const isApprovedTeacher = hasTeacherRole && teacher.application_status === ApplicationStatus.APPROVED
-    const canModifyApplication = hasApplicantRole && 
+    const canModifyApplication = (hasApplicantRole || hasPendingRole) && 
       [ApplicationStatus.PENDING, ApplicationStatus.REJECTED].includes(teacher.application_status)
 
     return {
