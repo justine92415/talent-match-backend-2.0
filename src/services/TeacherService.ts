@@ -939,54 +939,24 @@ export class TeacherService {
       throw Errors.validationFailed('申請資料不完整，至少需要一筆工作經驗')
     }
 
-    // 檢查學習經歷（含檔案）
+    // 檢查學習經歷（檔案為可選）
     const learningExperienceCount = await this.learningExperienceRepository.count({
-      where: { 
-        teacher_id: teacherId,
-        file_path: Not(IsNull())
-      }
+      where: { teacher_id: teacherId }
     })
     
-    // 額外檢查是否有空字串
-    const learningExperiencesWithFiles = await this.learningExperienceRepository.find({
-      where: { 
-        teacher_id: teacherId,
-        file_path: Not(IsNull())
-      },
-      select: ['file_path']
-    })
-    
-    const validLearningExperiences = learningExperiencesWithFiles.filter(exp => 
-      exp.file_path && exp.file_path.trim() !== ''
-    )
-    
-    if (validLearningExperiences.length === 0) {
-      throw Errors.validationFailed('申請資料不完整，至少需要一筆學習經歷（含檔案）')
+    if (learningExperienceCount === 0) {
+      throw Errors.validationFailed('申請資料不完整，至少需要一筆學習經歷')
     }
 
-    // 檢查證書（含檔案）
+    // 檢查證書（檔案為可選）
     const certificateCount = await this.certificateRepository.count({
       where: { 
-        teacher_id: teacherId,
-        file_path: Not(IsNull())
+        teacher_id: teacherId
       }
     })
     
-    // 額外檢查是否有空字串
-    const certificatesWithFiles = await this.certificateRepository.find({
-      where: { 
-        teacher_id: teacherId,
-        file_path: Not(IsNull())
-      },
-      select: ['file_path']
-    })
-    
-    const validCertificates = certificatesWithFiles.filter(cert => 
-      cert.file_path && cert.file_path.trim() !== ''
-    )
-    
-    if (validCertificates.length === 0) {
-      throw Errors.validationFailed('申請資料不完整，至少需要一張證書（含檔案）')
+    if (certificateCount === 0) {
+      throw Errors.validationFailed('申請資料不完整，至少需要一張證書')
     }
   }
 }

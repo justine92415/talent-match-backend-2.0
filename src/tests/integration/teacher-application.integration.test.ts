@@ -927,7 +927,8 @@ describe('教師申請 API 整合測試', () => {
         teacher_id: teacher.id,
         is_working: true,
         company_name: '測試公司',
-        workplace: '台北市',
+        city: '台北市',
+        district: '信義區',
         job_category: '軟體開發',
         job_title: '資深工程師',
         start_year: 2020,
@@ -944,7 +945,7 @@ describe('教師申請 API 整合測試', () => {
       expect(response.status).toBe(400)
       expect(response.body).toMatchObject({
         status: 'error',
-        message: '申請資料不完整，至少需要一筆學習經歷（含檔案）'
+        message: '申請資料不完整，至少需要一筆學習經歷'
       })
     })
 
