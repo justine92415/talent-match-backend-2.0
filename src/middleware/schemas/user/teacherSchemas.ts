@@ -469,15 +469,25 @@ const workExperienceItemSchema = Joi.object({
       'string.max': '公司名稱長度不能超過100個字元',
       'any.required': '公司名稱為必填欄位'
     }),
-  workplace: Joi.string()
+  city: Joi.string()
     .min(1)
-    .max(100)
+    .max(50)
     .required()
     .messages({
-      'string.empty': '工作地點不能為空',
-      'string.min': '工作地點至少需要1個字元',
-      'string.max': '工作地點長度不能超過100個字元',
-      'any.required': '工作地點為必填欄位'
+      'string.empty': '工作縣市不能為空',
+      'string.min': '工作縣市至少需要1個字元',
+      'string.max': '工作縣市長度不能超過50個字元',
+      'any.required': '工作縣市為必填欄位'
+    }),
+  district: Joi.string()
+    .min(1)
+    .max(50)
+    .required()
+    .messages({
+      'string.empty': '工作地區不能為空',
+      'string.min': '工作地區至少需要1個字元',
+      'string.max': '工作地區長度不能超過50個字元',
+      'any.required': '工作地區為必填欄位'
     }),
   job_category: Joi.string()
     .min(1)

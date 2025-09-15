@@ -183,8 +183,9 @@ export class CertificateService {
       holder_name: certificateData.holder_name,
       license_number: certificateData.license_number,
       category_id: certificateData.category_id,
-      subject: certificateData.subject,
-      file_path: '' // TODO: 檔案上傳系統完成後處理
+      issue_year: certificateData.issue_year,
+      issue_month: certificateData.issue_month,
+      file_path: certificateData.file_path || '' // 使用提供的 file_path，否則為空字串
     })
 
     return await this.certificateRepository.save(certificate)
@@ -222,8 +223,9 @@ export class CertificateService {
           holder_name: data.holder_name,
           license_number: data.license_number,
           category_id: data.category_id,
-          subject: data.subject,
-          file_path: '' // TODO: 檔案上傳系統完成後處理
+          issue_year: data.issue_year,
+          issue_month: data.issue_month,
+          file_path: data.file_path || '' // 使用提供的 file_path，否則為空字串
         })
       )
 
@@ -313,8 +315,9 @@ export class CertificateService {
             holder_name: data.holder_name,
             license_number: data.license_number,
             category_id: data.category_id,
-            subject: data.subject,
-            file_path: '' // TODO: 檔案上傳系統完成後處理
+            issue_year: data.issue_year,
+            issue_month: data.issue_month,
+            file_path: data.file_path || '' // 使用提供的 file_path，否則為空字串
           })
         )
 
@@ -336,7 +339,8 @@ export class CertificateService {
               holder_name: data.holder_name,
               license_number: data.license_number,
               category_id: data.category_id,
-              subject: data.subject
+              issue_year: data.issue_year,
+              issue_month: data.issue_month
             })
 
             const savedUpdated = await manager.save(TeacherCertificate, certificate)
@@ -376,15 +380,7 @@ export class CertificateService {
    * @param updateData - 更新資料
    * @returns 更新後的證書記錄
    */
-  async updateCertificate(userId: number, certificateId: number, updateData: {
-    verifying_institution?: string
-    license_name?: string
-    holder_name?: string
-    license_number?: string
-    category_id?: string
-    subject?: string
-    file_path?: string
-  }): Promise<TeacherCertificate> {
+  async updateCertificate(userId: number, certificateId: number, updateData: UpdateCertificateRequest): Promise<TeacherCertificate> {
     const { teacher, canModifyApplication } = await this.validateTeacherUserOrApplicant(userId)
 
     // 檢查是否可以修改申請資料

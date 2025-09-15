@@ -821,8 +821,11 @@ export class TeacherService {
     if (!data.company_name?.trim()) {
       throw Errors.validationFailed('公司名稱為必填欄位')
     }
-    if (!data.workplace?.trim()) {
-      throw Errors.validationFailed(ValidationMessages.WORKPLACE_REQUIRED)
+    if (!data.city?.trim()) {
+      throw Errors.validationFailed('工作縣市為必填欄位')
+    }
+    if (!data.district?.trim()) {
+      throw Errors.validationFailed('工作地區為必填欄位')
     }
     if (!data.job_category?.trim()) {
       throw Errors.validationFailed('工作類別為必填欄位')
@@ -835,8 +838,11 @@ export class TeacherService {
     if (data.company_name?.length > 200) {
       throw Errors.validationFailed('公司名稱不得超過200字元')
     }
-    if (data.workplace?.length > 200) {
-      throw Errors.validationFailed('工作地點不得超過200字元')
+    if (data.city?.length > 50) {
+      throw Errors.validationFailed('工作縣市不得超過50字元')
+    }
+    if (data.district?.length > 50) {
+      throw Errors.validationFailed('工作地區不得超過50字元')
     }
     if (data.job_category?.length > 100) {
       throw Errors.validationFailed('工作類別不得超過100字元')

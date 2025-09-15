@@ -141,9 +141,14 @@ export const teacherSchemas = {
                 id: { type: 'integer', example: 1 },
                 license_name: { type: 'string', example: '某某證照' },
                 verifying_institution: { type: 'string', example: '發證機構' },
+                holder_name: { type: 'string', example: '王小明' },
                 license_number: { type: 'string', example: 'CERT123456' },
-                category_id: { type: 'string', example: 'programming' },
-                subject: { type: 'string', example: '程式設計' }
+                category_id: { type: 'integer', example: 1 },
+                issue_year: { type: 'integer', example: 2023 },
+                issue_month: { type: 'integer', example: 6 },
+                expiry_year: { type: 'integer', nullable: true, example: 2026 },
+                expiry_month: { type: 'integer', nullable: true, example: 6 },
+                file_path: { type: 'string', nullable: true, example: '/uploads/certificates/cert123.pdf' }
               }
             },
             description: '教學證照列表'
@@ -638,7 +643,8 @@ export const teacherSchemas = {
       teacher_id: { type: 'integer', description: '教師 ID', example: 1 },
       is_working: { type: 'boolean', description: '是否仍在職', example: false },
       company_name: { type: 'string', description: '公司名稱', example: '某某科技公司' },
-      workplace: { type: 'string', description: '工作地點', example: '台北市信義區' },
+      city: { type: 'string', description: '工作縣市', example: '台北市' },
+      district: { type: 'string', description: '工作地區', example: '信義區' },
       job_category: { type: 'string', description: '工作類別', example: '軟體開發' },
       job_title: { type: 'string', description: '職位名稱', example: '資深工程師' },
       start_year: { type: 'integer', description: '開始年份', example: 2020 },
@@ -648,13 +654,13 @@ export const teacherSchemas = {
       created_at: { type: 'string', format: 'date-time', description: '建立時間', example: '2024-01-01T00:00:00.000Z' },
       updated_at: { type: 'string', format: 'date-time', description: '更新時間', example: '2024-01-15T10:30:00.000Z' }
     },
-    required: ['id', 'teacher_id', 'company_name', 'workplace', 'job_category', 'job_title', 'is_working', 'start_year', 'start_month', 'created_at', 'updated_at']
+    required: ['id', 'teacher_id', 'company_name', 'city', 'district', 'job_category', 'job_title', 'is_working', 'start_year', 'start_month', 'created_at', 'updated_at']
   },
 
   // 工作經驗建立請求 Schema
   WorkExperienceCreateRequest: {
     type: 'object',
-    required: ['company_name', 'workplace', 'job_category', 'job_title', 'is_working', 'start_year', 'start_month'],
+    required: ['company_name', 'city', 'district', 'job_category', 'job_title', 'is_working', 'start_year', 'start_month'],
     properties: {
       company_name: {
         type: 'string',
@@ -663,12 +669,19 @@ export const teacherSchemas = {
         description: '公司名稱（必填，1-200字元）',
         example: '某某科技公司'
       },
-      workplace: {
+      city: {
         type: 'string',
         minLength: 1,
-        maxLength: 200,
-        description: '工作地點（必填，1-200字元）',
-        example: '台北市信義區'
+        maxLength: 50,
+        description: '工作縣市（必填，1-50字元）',
+        example: '台北市'
+      },
+      district: {
+        type: 'string',
+        minLength: 1,
+        maxLength: 50,
+        description: '工作地區（必填，1-50字元）',
+        example: '信義區'
       },
       job_category: {
         type: 'string',
@@ -738,7 +751,8 @@ export const teacherSchemas = {
         example: [
           {
             company_name: '某某科技公司',
-            workplace: '台北市信義區',
+            city: '台北市',
+            district: '信義區',
             job_category: '軟體開發',
             job_title: '資深工程師',
             is_working: false,
@@ -749,7 +763,8 @@ export const teacherSchemas = {
           },
           {
             company_name: '另一家公司',
-            workplace: '新北市板橋區',
+            city: '新北市',
+            district: '板橋區',
             job_category: '產品管理',
             job_title: '產品經理',
             is_working: true,
@@ -1078,13 +1093,16 @@ export const teacherSchemas = {
       verifying_institution: { type: 'string', description: '發證機構', example: 'Amazon Web Services' },
       holder_name: { type: 'string', description: '持有人姓名', example: '王小明' },
       license_number: { type: 'string', description: '證照編號', example: 'AWS-12345' },
-      category_id: { type: 'string', description: '證照類別', example: 'cloud' },
-      subject: { type: 'string', description: '證照科目', example: '雲端架構' },
+      category_id: { type: 'integer', description: '證照分類 ID', example: 1 },
+      issue_year: { type: 'integer', description: '發證年份', example: 2023 },
+      issue_month: { type: 'integer', description: '發證月份', example: 6 },
+      expiry_year: { type: 'integer', nullable: true, description: '到期年份', example: 2026 },
+      expiry_month: { type: 'integer', nullable: true, description: '到期月份', example: 6 },
       file_path: { type: 'string', nullable: true, description: '證照檔案路徑', example: '/uploads/certificates/aws-cert.pdf' },
       created_at: { type: 'string', format: 'date-time', description: '建立時間', example: '2024-01-01T00:00:00.000Z' },
       updated_at: { type: 'string', format: 'date-time', description: '更新時間', example: '2024-01-15T10:30:00.000Z' }
     },
-    required: ['id', 'teacher_id', 'license_name', 'verifying_institution', 'holder_name', 'license_number', 'category_id', 'subject', 'created_at', 'updated_at']
+    required: ['id', 'teacher_id', 'license_name', 'verifying_institution', 'holder_name', 'license_number', 'category_id', 'issue_year', 'issue_month', 'created_at', 'updated_at']
   },
 
   // 證照列表成功回應 Schema
@@ -1121,7 +1139,7 @@ export const teacherSchemas = {
   // 證照建立請求 Schema
   CertificateCreateRequest: {
     type: 'object',
-    required: ['license_name', 'verifying_institution', 'holder_name', 'license_number', 'category_id', 'subject'],
+    required: ['license_name', 'verifying_institution', 'holder_name', 'license_number', 'category_id', 'issue_year', 'issue_month'],
     properties: {
       license_name: {
         type: 'string',
@@ -1152,18 +1170,40 @@ export const teacherSchemas = {
         example: 'AWS-12345'
       },
       category_id: {
-        type: 'string',
-        minLength: 1,
-        maxLength: 50,
-        description: '證照類別（必填，1-50字元）',
-        example: 'cloud'
+        type: 'integer',
+        minimum: 1,
+        description: '證照分類 ID（必填，正整數）',
+        example: 1
       },
-      subject: {
-        type: 'string',
-        minLength: 1,
-        maxLength: 100,
-        description: '證照科目（必填，1-100字元）',
-        example: '雲端架構'
+      issue_year: {
+        type: 'integer',
+        minimum: 1900,
+        maximum: 2100,
+        description: '發證年份（必填，1900-2100）',
+        example: 2023
+      },
+      issue_month: {
+        type: 'integer',
+        minimum: 1,
+        maximum: 12,
+        description: '發證月份（必填，1-12）',
+        example: 6
+      },
+      expiry_year: {
+        type: 'integer',
+        minimum: 1900,
+        maximum: 2150,
+        nullable: true,
+        description: '到期年份（選填，1900-2150）',
+        example: 2026
+      },
+      expiry_month: {
+        type: 'integer',
+        minimum: 1,
+        maximum: 12,
+        nullable: true,
+        description: '到期月份（選填，1-12）',
+        example: 6
       },
       file_path: {
         type: 'string',

@@ -18,9 +18,13 @@ export class TeacherWorkExperience {
   @Column({ length: 200 })
   company_name!: string
 
-  /** 工作地點 */
-  @Column({ length: 200 })
-  workplace!: string
+  /** 工作縣市 */
+  @Column({ length: 50 })
+  city!: string
+
+  /** 工作地區 */
+  @Column({ length: 50 })
+  district!: string
 
   /** 工作類別 */
   @Column({ length: 100 })

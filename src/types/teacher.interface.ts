@@ -68,7 +68,8 @@ export interface WorkExperienceData {
   teacher_id?: number
   is_working: boolean
   company_name: string
-  workplace: string
+  city: string
+  district: string
   job_category: string
   job_title: string
   start_year: number
@@ -83,7 +84,8 @@ export interface WorkExperienceData {
 export interface CreateWorkExperienceRequest {
   is_working: boolean
   company_name: string
-  workplace: string
+  city: string
+  district: string
   job_category: string
   job_title: string
   start_year: number
@@ -105,7 +107,8 @@ export interface CreateWorkExperiencesBatchRequest {
 export interface UpdateWorkExperienceRequest {
   is_working?: boolean
   company_name?: string
-  workplace?: string
+  city?: string
+  district?: string
   job_category?: string
   job_title?: string
   start_year?: number
@@ -190,8 +193,10 @@ export interface CreateCertificateRequest {
   license_name: string
   holder_name: string
   license_number: string
-  category_id: string
-  subject: string
+  category_id: number
+  issue_year: number
+  issue_month: number
+  file_path?: string
 }
 
 /**
@@ -202,8 +207,10 @@ export interface UpdateCertificateRequest {
   license_name?: string
   holder_name?: string
   license_number?: string
-  category_id?: string
-  subject?: string
+  category_id?: number
+  issue_year?: number
+  issue_month?: number
+  file_path?: string
 }
 
 /**

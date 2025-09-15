@@ -824,7 +824,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"work_experiences\": [\n    {\n      \"company_name\": \"某某科技公司\",\n      \"workplace\": \"台北市信義區\",\n      \"job_category\": \"軟體開發\",\n      \"job_title\": \"資深工程師\",\n      \"is_working\": false,\n      \"start_year\": 2020,\n      \"start_month\": 1,\n      \"end_year\": 2022,\n      \"end_month\": 12\n    },\n    {\n      \"company_name\": \"另一家公司\",\n      \"workplace\": \"新北市板橋區\",\n      \"job_category\": \"產品管理\",\n      \"job_title\": \"產品經理\",\n      \"is_working\": true,\n      \"start_year\": 2023,\n      \"start_month\": 1,\n      \"end_year\": null,\n      \"end_month\": null\n    }\n  ]\n}"
+              "raw": "{\n  \"work_experiences\": [\n    {\n      \"company_name\": \"某某科技公司\",\n      \"city\": \"台北市\",\n      \"district\": \"信義區\",\n      \"job_category\": \"軟體開發\",\n      \"job_title\": \"資深工程師\",\n      \"is_working\": false,\n      \"start_year\": 2020,\n      \"start_month\": 1,\n      \"end_year\": 2022,\n      \"end_month\": 12\n    },\n    {\n      \"company_name\": \"另一家公司\",\n      \"city\": \"新北市\",\n      \"district\": \"板橋區\",\n      \"job_category\": \"產品管理\",\n      \"job_title\": \"產品經理\",\n      \"is_working\": true,\n      \"start_year\": 2023,\n      \"start_month\": 1,\n      \"end_year\": null,\n      \"end_month\": null\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/work-experiences",
@@ -846,7 +846,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"company_name\": \"某某科技公司\",\n  \"workplace\": \"台北市信義區\",\n  \"job_category\": \"軟體開發\",\n  \"job_title\": \"資深工程師\",\n  \"is_working\": false,\n  \"start_year\": 2020,\n  \"start_month\": 1,\n  \"end_year\": 2023,\n  \"end_month\": 6\n}"
+              "raw": "{\n  \"company_name\": \"某某科技公司\",\n  \"city\": \"台北市\",\n  \"district\": \"信義區\",\n  \"job_category\": \"軟體開發\",\n  \"job_title\": \"資深工程師\",\n  \"is_working\": false,\n  \"start_year\": 2020,\n  \"start_month\": 1,\n  \"end_year\": 2023,\n  \"end_month\": 6\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/work-experiences/:id",
@@ -893,7 +893,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"work_experiences\": [\n    {\n      \"id\": 123,\n      \"company_name\": \"更新後的公司名稱\",\n      \"workplace\": \"台北市信義區\",\n      \"job_category\": \"軟體開發\",\n      \"job_title\": \"資深工程師\",\n      \"is_working\": false,\n      \"start_year\": 2020,\n      \"start_month\": 1,\n      \"end_year\": 2023,\n      \"end_month\": 6\n    },\n    {\n      \"company_name\": \"新公司\",\n      \"workplace\": \"新北市板橋區\",\n      \"job_category\": \"產品管理\",\n      \"job_title\": \"產品經理\",\n      \"is_working\": true,\n      \"start_year\": 2023,\n      \"start_month\": 7,\n      \"end_year\": null,\n      \"end_month\": null\n    }\n  ]\n}"
+              "raw": "{\n  \"work_experiences\": [\n    {\n      \"id\": 123,\n      \"company_name\": \"更新後的公司名稱\",\n      \"city\": \"台北市\",\n      \"district\": \"信義區\",\n      \"job_category\": \"軟體開發\",\n      \"job_title\": \"資深工程師\",\n      \"is_working\": false,\n      \"start_year\": 2020,\n      \"start_month\": 1,\n      \"end_year\": 2023,\n      \"end_month\": 6\n    },\n    {\n      \"company_name\": \"新公司\",\n      \"city\": \"新北市\",\n      \"district\": \"板橋區\",\n      \"job_category\": \"產品管理\",\n      \"job_title\": \"產品經理\",\n      \"is_working\": true,\n      \"start_year\": 2023,\n      \"start_month\": 7,\n      \"end_year\": null,\n      \"end_month\": null\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/work-experiences",
@@ -1032,7 +1032,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"certificates\": [\n    {\n      \"verifying_institution\": \"某某認證機構\",\n      \"license_name\": \"Python 程式設計證照\",\n      \"holder_name\": \"王小明\",\n      \"license_number\": \"PYTHON123456\",\n      \"file_path\": \"\",\n      \"category_id\": \"programming\",\n      \"subject\": \"程式設計\"\n    },\n    {\n      \"verifying_institution\": \"另一個認證機構\",\n      \"license_name\": \"Java 程式設計證照\",\n      \"holder_name\": \"王小明\",\n      \"license_number\": \"JAVA789012\",\n      \"file_path\": \"\",\n      \"category_id\": \"programming\",\n      \"subject\": \"程式設計\"\n    }\n  ]\n}"
+              "raw": "{\n  \"certificates\": [\n    {\n      \"verifying_institution\": \"某某認證機構\",\n      \"license_name\": \"Python 程式設計證照\",\n      \"holder_name\": \"王小明\",\n      \"license_number\": \"PYTHON123456\",\n      \"file_path\": \"\",\n      \"category_id\": 1,\n      \"issue_year\": 2023,\n      \"issue_month\": 6\n    },\n    {\n      \"verifying_institution\": \"另一個認證機構\",\n      \"license_name\": \"Java 程式設計證照\",\n      \"holder_name\": \"王小明\",\n      \"license_number\": \"JAVA789012\",\n      \"file_path\": \"\",\n      \"category_id\": 1,\n      \"issue_year\": 2023,\n      \"issue_month\": 8\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/certificates",
@@ -1054,7 +1054,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"verifying_institution\": \"某某認證機構\",\n  \"license_name\": \"Java 程式設計證照\",\n  \"holder_name\": \"王小明\",\n  \"license_number\": \"JAVA123456\",\n  \"file_path\": \"/uploads/certificates/cert456.pdf\",\n  \"category_id\": \"programming\",\n  \"subject\": \"程式設計\"\n}"
+              "raw": "{\n  \"verifying_institution\": \"某某認證機構\",\n  \"license_name\": \"Java 程式設計證照\",\n  \"holder_name\": \"王小明\",\n  \"license_number\": \"JAVA123456\",\n  \"file_path\": \"/uploads/certificates/cert456.pdf\",\n  \"category_id\": 1,\n  \"issue_year\": 2023,\n  \"issue_month\": 6\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/certificates/:id",
@@ -1082,7 +1082,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"certificates\": [\n    {\n      \"id\": 456,\n      \"verifying_institution\": \"更新後的認證機構\",\n      \"license_name\": \"Advanced Java 程式設計證照\",\n      \"holder_name\": \"王小明\",\n      \"license_number\": \"JAVA123456\",\n      \"file_path\": \"\",\n      \"category_id\": \"programming\",\n      \"subject\": \"進階程式設計\"\n    },\n    {\n      \"verifying_institution\": \"新認證機構\",\n      \"license_name\": \"React 前端開發證照\",\n      \"holder_name\": \"王小明\",\n      \"license_number\": \"REACT789012\",\n      \"file_path\": \"\",\n      \"category_id\": \"frontend\",\n      \"subject\": \"前端開發\"\n    }\n  ]\n}"
+              "raw": "{\n  \"certificates\": [\n    {\n      \"id\": 456,\n      \"verifying_institution\": \"更新後的認證機構\",\n      \"license_name\": \"Advanced Java 程式設計證照\",\n      \"holder_name\": \"王小明\",\n      \"license_number\": \"JAVA123456\",\n      \"file_path\": \"\",\n      \"category_id\": 1,\n      \"issue_year\": 2023,\n      \"issue_month\": 6\n    },\n    {\n      \"verifying_institution\": \"新認證機構\",\n      \"license_name\": \"React 前端開發證照\",\n      \"holder_name\": \"王小明\",\n      \"license_number\": \"REACT789012\",\n      \"file_path\": \"\",\n      \"category_id\": 2,\n      \"issue_year\": 2024,\n      \"issue_month\": 1\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/certificates",

@@ -836,8 +836,9 @@ describe('教師申請 API 整合測試', () => {
         license_name: '教師證',
         holder_name: '測試教師',
         license_number: 'TC123456',
-        category_id: 'EDUCATION',
-        subject: '資訊教學',
+        category_id: 1,
+        issue_year: 2023,
+        issue_month: 6,
         file_path: '/uploads/certificates/test-cert.pdf'
       })
 
@@ -1056,8 +1057,9 @@ describe('教師申請 API 整合測試', () => {
         license_name: '教師證',
         holder_name: '測試教師',
         license_number: 'TC123456',
-        category_id: 'EDUCATION',
-        subject: '資訊教學',
+        category_id: 1,
+        issue_year: 2023,
+        issue_month: 6,
         file_path: '/uploads/certificates/test-cert.pdf'
       })
 

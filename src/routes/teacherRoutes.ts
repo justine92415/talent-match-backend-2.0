@@ -18,7 +18,8 @@ import {
   certificateCreateSchema,
   certificateCreateBatchSchema,
   certificateUpdateSchema,
-  certificateUpsertSchema
+  certificateUpsertSchema,
+  certificateFrontendUpsertBatchSchema
 } from '@middleware/schemas/user/certificateSchemas'
 import { scheduleUpdateSchema, conflictsQuerySchema } from '@middleware/schemas/system/scheduleSchemas'
 import { certificateController } from '@controllers/CertificateController'
@@ -576,7 +577,8 @@ router.get('/work-experiences', authenticateToken, teacherController.getWorkExpe
  *               value:
  *                 work_experiences:
  *                   - company_name: "某某科技公司"
- *                     workplace: "台北市信義區"
+ *                     city: "台北市"
+ *                     district: "信義區"
  *                     job_category: "軟體開發"
  *                     job_title: "資深工程師"
  *                     is_working: false
@@ -589,7 +591,8 @@ router.get('/work-experiences', authenticateToken, teacherController.getWorkExpe
  *               value:
  *                 work_experiences:
  *                   - company_name: "某某科技公司"
- *                     workplace: "台北市信義區"
+ *                     city: "台北市"
+ *                     district: "信義區"
  *                     job_category: "軟體開發"
  *                     job_title: "資深工程師"
  *                     is_working: false
@@ -598,7 +601,8 @@ router.get('/work-experiences', authenticateToken, teacherController.getWorkExpe
  *                     end_year: 2022
  *                     end_month: 12
  *                   - company_name: "另一家公司"
- *                     workplace: "新北市板橋區"
+ *                     city: "新北市"
+ *                     district: "板橋區"
  *                     job_category: "產品管理"
  *                     job_title: "產品經理"
  *                     is_working: true
@@ -623,7 +627,8 @@ router.get('/work-experiences', authenticateToken, teacherController.getWorkExpe
  *                     work_experiences:
  *                       - id: 123
  *                         company_name: "某某科技公司"
- *                         workplace: "台北市信義區"
+ *                         city: "台北市"
+ *                         district: "信義區"
  *                         job_category: "軟體開發"
  *                         job_title: "資深工程師"
  *                         is_working: false
@@ -635,7 +640,8 @@ router.get('/work-experiences', authenticateToken, teacherController.getWorkExpe
  *                         updated_at: "2024-01-15T10:30:00.000Z"
  *                       - id: 124
  *                         company_name: "另一家公司"
- *                         workplace: "新北市板橋區"
+ *                         city: "新北市"
+ *                         district: "板橋區"
  *                         job_category: "產品管理"
  *                         job_title: "產品經理"
  *                         is_working: true
@@ -733,7 +739,8 @@ router.post('/work-experiences', authenticateToken, teacherController.createWork
  *                 work_experiences:
  *                   - id: 123
  *                     company_name: "更新後的公司名稱"
- *                     workplace: "台北市信義區"
+ *                     city: "台北市"
+ *                     district: "信義區"
  *                     job_category: "軟體開發"
  *                     job_title: "資深工程師"
  *                     is_working: false
@@ -742,7 +749,8 @@ router.post('/work-experiences', authenticateToken, teacherController.createWork
  *                     end_year: 2023
  *                     end_month: 6
  *                   - company_name: "新公司"
- *                     workplace: "新北市板橋區"
+ *                     city: "新北市"
+ *                     district: "板橋區"
  *                     job_category: "產品管理"
  *                     job_title: "產品經理"
  *                     is_working: true
@@ -767,7 +775,8 @@ router.post('/work-experiences', authenticateToken, teacherController.createWork
  *                       - id: 123
  *                         user_id: 456
  *                         company_name: "更新後的公司名稱"
- *                         workplace: "台北市信義區"
+ *                         city: "台北市"
+ *                         district: "信義區"
  *                         job_category: "軟體開發"
  *                         job_title: "資深工程師"
  *                         is_working: false
@@ -780,7 +789,8 @@ router.post('/work-experiences', authenticateToken, teacherController.createWork
  *                       - id: 789
  *                         user_id: 456
  *                         company_name: "新公司"
- *                         workplace: "新北市板橋區"
+ *                         city: "新北市"
+ *                         district: "板橋區"
  *                         job_category: "產品管理"
  *                         job_title: "產品經理"
  *                         is_working: true
@@ -1424,7 +1434,7 @@ router.post('/certificates', authenticateToken, validateRequest(certificateCreat
  *             schema:
  *               $ref: '#/components/schemas/ServerErrorResponse'
  */
-router.put('/certificates', authenticateToken, validateRequest(certificateCreateBatchSchema, '證書批次處理參數驗證失敗'), certificateController.upsertCertificates)
+router.put('/certificates', authenticateToken, validateRequest(certificateFrontendUpsertBatchSchema, '證書批次處理參數驗證失敗'), certificateController.upsertCertificates)
 
 /**
  * @swagger

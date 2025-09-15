@@ -25,18 +25,14 @@ describe('證書管理 API', () => {
     await clearDatabase()
 
     // 建立測試教師使用者
-    const userData = {
-      ...teacherUserEntityData(),
+    teacherUser = await UserTestHelpers.createUserEntityWithRole({
       email: 'teacher-cert@example.com'
-    }
-
-    const userRepository = dataSource.getRepository(User)
-    teacherUser = await userRepository.save(userData)
+    }, UserRole.TEACHER)
 
     // 生成認證 token
     authToken = UserTestHelpers.generateAuthToken({
       id: teacherUser.id,
-      roles: teacherUser.roles,
+      roles: [{ role: UserRole.TEACHER }],
       uuid: teacherUser.uuid
     })
 
@@ -90,7 +86,8 @@ describe('證書管理 API', () => {
                 holder_name: validCertificateData.holder_name,
                 license_number: validCertificateData.license_number,
                 category_id: validCertificateData.category_id,
-                subject: validCertificateData.subject,
+                issue_year: validCertificateData.issue_year,
+                issue_month: validCertificateData.issue_month,
                 file_path: validCertificateData.file_path,
                 created_at: expect.any(String),
                 updated_at: expect.any(String)
@@ -151,26 +148,29 @@ describe('證書管理 API', () => {
         const response = await request(app)
           .post('/api/teachers/certificates')
           .set('Authorization', `Bearer ${authToken}`)
-          .send(validCertificateData)
+          .send({ certificates: [validCertificateData] })
           .expect(201)
 
         expect(response.body).toMatchObject({
           status: 'success',
-          message: '證書已新增',
+          message: expect.stringContaining('成功建立'),
           data: {
-            certificate: {
-              id: expect.any(Number),
-              teacher_id: teacher.id,
-              verifying_institution: validCertificateData.verifying_institution,
-              license_name: validCertificateData.license_name,
-              holder_name: validCertificateData.holder_name,
-              license_number: validCertificateData.license_number,
-              category_id: validCertificateData.category_id,
-              subject: validCertificateData.subject,
-              file_path: validCertificateData.file_path,
-              created_at: expect.any(String),
-              updated_at: expect.any(String)
-            }
+            certificates: expect.arrayContaining([
+              expect.objectContaining({
+                id: expect.any(Number),
+                teacher_id: teacher.id,
+                verifying_institution: validCertificateData.verifying_institution,
+                license_name: validCertificateData.license_name,
+                holder_name: validCertificateData.holder_name,
+                license_number: validCertificateData.license_number,
+                category_id: validCertificateData.category_id,
+                issue_year: validCertificateData.issue_year,
+                issue_month: validCertificateData.issue_month,
+                file_path: validCertificateData.file_path,
+                created_at: expect.any(String),
+                updated_at: expect.any(String)
+              })
+            ])
           }
         })
 
@@ -189,7 +189,7 @@ describe('證書管理 API', () => {
         const response = await request(app)
           .post('/api/teachers/certificates')
           .set('Authorization', `Bearer ${authToken}`)
-          .send(invalidCertificateData.missingInstitution)
+          .send({ certificates: [invalidCertificateData.missingInstitution] })
           .expect(400)
 
         expect(response.body).toMatchObject({
@@ -203,7 +203,7 @@ describe('證書管理 API', () => {
         const response = await request(app)
           .post('/api/teachers/certificates')
           .set('Authorization', `Bearer ${authToken}`)
-          .send(invalidCertificateData.tooLongLicenseName)
+          .send({ certificates: [invalidCertificateData.tooLongLicenseName] })
           .expect(400)
 
         expect(response.body).toMatchObject({
@@ -241,7 +241,7 @@ describe('證書管理 API', () => {
 
     describe('認證錯誤', () => {
       it('應該回傳 401 當無認證令牌', async () => {
-        const response = await request(app).post('/api/teachers/certificates').send(validCertificateData).expect(401)
+        const response = await request(app).post('/api/teachers/certificates').send({ certificates: [validCertificateData] }).expect(401)
 
         expect(response.body).toMatchObject({
           status: 'error',
@@ -266,12 +266,12 @@ describe('證書管理 API', () => {
         const response = await request(app)
           .post('/api/teachers/certificates')
           .set('Authorization', `Bearer ${studentToken}`)
-          .send(validCertificateData)
-          .expect(404)
+          .send({ certificates: [validCertificateData] })
+          .expect(403)
 
         expect(response.body).toMatchObject({
           status: 'error',
-          code: 'TEACHER_NOT_FOUND'
+          code: 'UNAUTHORIZED_ACCESS'
         })
       })
     })
@@ -294,7 +294,8 @@ describe('證書管理 API', () => {
       it('應該更新證書資料並回傳 200', async () => {
         const updateData = {
           license_name: '更新的證書名稱',
-          subject: '更新的證書主題',
+          issue_year: 2024,
+          issue_month: 1,
           file_path: '/uploads/certificates/updated-certificate.pdf'
         }
 
@@ -311,7 +312,8 @@ describe('證書管理 API', () => {
             certificate: {
               id: certificate.id,
               license_name: updateData.license_name,
-              subject: updateData.subject,
+              issue_year: updateData.issue_year,
+              issue_month: updateData.issue_month,
               file_path: updateData.file_path,
               updated_at: expect.any(String)
             }
@@ -324,7 +326,8 @@ describe('證書管理 API', () => {
           where: { id: certificate.id }
         })
         expect(updatedCertificate!.license_name).toBe(updateData.license_name)
-        expect(updatedCertificate!.subject).toBe(updateData.subject)
+        expect(updatedCertificate!.issue_year).toBe(updateData.issue_year)
+        expect(updatedCertificate!.issue_month).toBe(updateData.issue_month)
       })
 
       it('應該更新部分欄位當只提供部分資料', async () => {
@@ -392,17 +395,13 @@ describe('證書管理 API', () => {
     describe('權限錯誤', () => {
       it('應該回傳 403 當嘗試更新其他教師的證書', async () => {
         // 建立另一個教師使用者
-        const otherTeacherData = {
-          ...teacherUserEntityData(),
+        const otherTeacherUser = await UserTestHelpers.createUserEntityWithRole({
           email: 'other-teacher-cert@example.com'
-        }
-
-        const userRepository = dataSource.getRepository(User)
-        const otherTeacherUser = await userRepository.save(otherTeacherData)
+        }, UserRole.TEACHER)
 
         const otherAuthToken = UserTestHelpers.generateAuthToken({
           id: otherTeacherUser.id,
-          roles: otherTeacherUser.roles,
+          roles: [{ role: UserRole.TEACHER }],
           uuid: otherTeacherUser.uuid
         })
 
@@ -474,17 +473,13 @@ describe('證書管理 API', () => {
     describe('權限錯誤', () => {
       it('應該回傳 403 當嘗試刪除其他教師的證書', async () => {
         // 建立另一個教師使用者
-        const otherTeacherData = {
-          ...teacherUserEntityData(),
+        const otherTeacherUser = await UserTestHelpers.createUserEntityWithRole({
           email: 'other-teacher-cert2@example.com'
-        }
-
-        const userRepository = dataSource.getRepository(User)
-        const otherTeacherUser = await userRepository.save(otherTeacherData)
+        }, UserRole.TEACHER)
 
         const otherAuthToken = UserTestHelpers.generateAuthToken({
           id: otherTeacherUser.id,
-          roles: otherTeacherUser.roles,
+          roles: [{ role: UserRole.TEACHER }],
           uuid: otherTeacherUser.uuid
         })
 
@@ -515,9 +510,9 @@ describe('證書管理 API', () => {
       }
 
       // 建立兩個證書
-      await request(app).post('/api/teachers/certificates').set('Authorization', `Bearer ${authToken}`).send(certificateData1).expect(201)
+      await request(app).post('/api/teachers/certificates').set('Authorization', `Bearer ${authToken}`).send({ certificates: [certificateData1] }).expect(201)
 
-      await request(app).post('/api/teachers/certificates').set('Authorization', `Bearer ${authToken}`).send(certificateData2).expect(201)
+      await request(app).post('/api/teachers/certificates').set('Authorization', `Bearer ${authToken}`).send({ certificates: [certificateData2] }).expect(201)
 
       // 查詢證書列表應該包含兩個證書
       const response = await request(app).get('/api/teachers/certificates').set('Authorization', `Bearer ${authToken}`).expect(200)
