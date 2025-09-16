@@ -25,6 +25,9 @@ router.post('/logout', authenticateAdmin, adminController.logout)
 // Get admin profile
 router.get('/profile', authenticateAdmin, adminController.getProfile)
 
+// Get teacher applications list
+router.get('/teacher-applications', authenticateAdmin, requireAdminPermission, adminController.getTeacherApplications)
+
 // Approve teacher application
 router.post(
   '/teachers/:teacherId/approve',

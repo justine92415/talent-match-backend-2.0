@@ -113,6 +113,12 @@
       "key": "base_url",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string",
+      "description": "管理員 JWT token，從管理員登入 API 獲取"
     }
   ],
   "item": [
@@ -2231,151 +2237,251 @@
       "name": "管理員功能 (Admin)",
       "item": [
         {
-          "name": "管理員登入",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+          "name": "認證管理",
+          "item": [
+            {
+              "name": "管理員登入",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123456\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/admin/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "login"]
+                },
+                "description": "管理員登入，返回 JWT token"
               }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/api/admin/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "login"]
-            },
-            "description": "管理員登入"
-          }
-        },
-        {
-          "name": "使用者管理",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/admin/users?page=1&limit=20&role=all",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "users"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
+            {
+              "name": "管理員登出",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/admin/logout",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "logout"]
                 },
-                {
-                  "key": "limit",
-                  "value": "20"
-                },
-                {
-                  "key": "role",
-                  "value": "all"
-                }
-              ]
-            },
-            "description": "取得使用者列表"
-          }
-        },
-        {
-          "name": "教師申請審核",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/admin/teacher-applications?status=pending&page=1&limit=20",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "teacher-applications"],
-              "query": [
-                {
-                  "key": "status",
-                  "value": "pending"
-                },
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "20"
-                }
-              ]
-            },
-            "description": "取得待審核的教師申請列表"
-          }
-        },
-        {
-          "name": "核准教師申請",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+                "description": "管理員登出"
               }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"status\": \"approved\",\n  \"review_notes\": \"申請資料完整，核准通過\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/api/admin/teacher-applications/:id/review",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "teacher-applications", ":id", "review"],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "1"
-                }
-              ]
-            },
-            "description": "審核教師申請"
-          }
+            {
+              "name": "獲取管理員資訊",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/admin/profile",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "profile"]
+                },
+                "description": "獲取當前登入管理員的基本資訊"
+              }
+            }
+          ]
         },
         {
-          "name": "課程管理",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/admin/courses?page=1&limit=20&status=all",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "courses"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
+          "name": "教師申請管理",
+          "item": [
+            {
+              "name": "獲取教師申請列表",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/admin/teacher-applications?status=pending&page=1&limit=20",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "teacher-applications"],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "pending",
+                      "description": "篩選狀態：pending, approved, rejected (可選)"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "頁碼，預設 1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20",
+                      "description": "每頁數量，預設 20，最大 100"
+                    }
+                  ]
                 },
-                {
-                  "key": "limit",
-                  "value": "20"
-                },
-                {
-                  "key": "status",
-                  "value": "all"
-                }
-              ]
+                "description": "獲取教師申請列表，支援狀態篩選和分頁"
+              }
             },
-            "description": "取得所有課程列表"
-          }
+            {
+              "name": "核准教師申請",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/admin/teachers/:teacherId/approve",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "teachers", ":teacherId", "approve"],
+                  "variable": [
+                    {
+                      "key": "teacherId",
+                      "value": "1",
+                      "description": "教師 ID"
+                    }
+                  ]
+                },
+                "description": "核准教師申請，自動將使用者角色從 TEACHER_PENDING 升級為 TEACHER"
+              }
+            },
+            {
+              "name": "拒絕教師申請",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reason\": \"申請資料不完整，請補充相關證明文件\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/admin/teachers/:teacherId/reject",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "teachers", ":teacherId", "reject"],
+                  "variable": [
+                    {
+                      "key": "teacherId",
+                      "value": "1",
+                      "description": "教師 ID"
+                    }
+                  ]
+                },
+                "description": "拒絕教師申請，必須提供拒絕原因"
+              }
+            }
+          ]
         },
         {
-          "name": "系統統計",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/admin/stats",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "stats"]
+          "name": "課程申請管理",
+          "item": [
+            {
+              "name": "核准課程申請",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/admin/courses/:courseId/approve",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "courses", ":courseId", "approve"],
+                  "variable": [
+                    {
+                      "key": "courseId",
+                      "value": "1",
+                      "description": "課程 ID"
+                    }
+                  ]
+                },
+                "description": "核准課程申請"
+              }
             },
-            "description": "取得系統統計資料"
-          }
+            {
+              "name": "拒絕課程申請",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reason\": \"課程內容不符合平台規範\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/admin/courses/:courseId/reject",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "courses", ":courseId", "reject"],
+                  "variable": [
+                    {
+                      "key": "courseId",
+                      "value": "1",
+                      "description": "課程 ID"
+                    }
+                  ]
+                },
+                "description": "拒絕課程申請，必須提供拒絕原因"
+              }
+            }
+          ]
         }
       ],
-      "description": "管理員功能相關 API，需要管理員權限"
+      "description": "管理員功能相關 API，需要管理員權限\n\n**實際實作的 API 路由：**\n- POST /api/admin/login - 管理員登入\n- POST /api/admin/logout - 管理員登出\n- GET /api/admin/profile - 獲取管理員資訊\n- GET /api/admin/teacher-applications - 獲取教師申請列表\n- POST /api/admin/teachers/:teacherId/approve - 核准教師申請\n- POST /api/admin/teachers/:teacherId/reject - 拒絕教師申請\n- POST /api/admin/courses/:courseId/approve - 核准課程申請\n- POST /api/admin/courses/:courseId/reject - 拒絕課程申請\n\n**注意事項：**\n- 所有 API 都需要 admin 身份認證\n- 管理員登入使用 username/password，不是 email/password\n- 審核教師申請會自動處理角色升級（TEACHER_PENDING → TEACHER）"
     },
     {
       "name": "� 使用者頭像 (User Avatar)",

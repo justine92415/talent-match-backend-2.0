@@ -429,6 +429,59 @@ export class AdminService {
       )
     }
   }
+
+  /**
+   * 獲取教師申請列表
+   * @param status 申請狀態篩選
+   * @param page 頁碼
+   * @param limit 每頁數量
+   * @returns 分頁的教師申請列表
+   */
+  async getTeacherApplications(status?: ApplicationStatus, page = 1, limit = 20) {
+    const queryBuilder = this.teacherRepository
+      .createQueryBuilder('teacher')
+      .leftJoinAndSelect('teacher.user', 'user')
+      .orderBy('teacher.application_submitted_at', 'DESC')
+
+    // 狀態篩選
+    if (status) {
+      queryBuilder.where('teacher.application_status = :status', { status })
+    }
+
+    // 分頁
+    const skip = (page - 1) * limit
+    queryBuilder.skip(skip).take(limit)
+
+    const [applications, total] = await queryBuilder.getManyAndCount()
+
+    return {
+      applications: applications.map(teacher => ({
+        id: teacher.id,
+        uuid: teacher.uuid,
+        user: {
+          id: teacher.user?.id,
+          name: teacher.user?.name,
+          email: teacher.user?.email,
+          contact_phone: teacher.user?.contact_phone
+        },
+        introduction: teacher.introduction,
+        city: teacher.city,
+        district: teacher.district,
+        main_category_id: teacher.main_category_id,
+        sub_category_ids: teacher.sub_category_ids,
+        application_status: teacher.application_status,
+        application_submitted_at: teacher.application_submitted_at,
+        application_reviewed_at: teacher.application_reviewed_at,
+        review_notes: teacher.review_notes
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    }
+  }
 }
 
 // 匯出服務實例
