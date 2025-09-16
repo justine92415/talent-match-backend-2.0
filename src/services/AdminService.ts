@@ -10,11 +10,12 @@ import { dataSource } from '@db/data-source'
 import { AdminUser } from '@entities/AdminUser'
 import { Teacher } from '@entities/Teacher'
 import { Course } from '@entities/Course'
-import { ApplicationStatus, CourseStatus } from '@entities/enums'
+import { ApplicationStatus, CourseStatus, UserRole } from '@entities/enums'
 import { BusinessError, SystemError } from '@utils/errors'
 import { ERROR_CODES } from '@constants/ErrorCode'
 import { MESSAGES } from '@constants/Message'
 import { JWT_CONFIG } from '@config/secret'
+import { userRoleService } from './UserRoleService'
 import {
   AdminLoginRequest,
   AdminLoginResponse,
@@ -166,6 +167,28 @@ export class AdminService {
     teacher.review_notes = undefined // 清除之前的拒絕原因
 
     const updatedTeacher = await this.teacherRepository.save(teacher)
+
+    // 角色升級：TEACHER_PENDING → TEACHER
+    // 檢查使用者當前是否有 TEACHER_PENDING 角色，如果沒有則檢查 TEACHER_APPLICANT
+    const hasPendingRole = await userRoleService.hasRole(updatedTeacher.user_id, UserRole.TEACHER_PENDING)
+    const hasApplicantRole = await userRoleService.hasRole(updatedTeacher.user_id, UserRole.TEACHER_APPLICANT)
+    
+    if (hasPendingRole) {
+      await userRoleService.upgradeRole(
+        updatedTeacher.user_id, 
+        UserRole.TEACHER_PENDING, 
+        UserRole.TEACHER,
+        adminId
+      )
+    } else if (hasApplicantRole) {
+      // 向下相容：仍支援從 TEACHER_APPLICANT 直接升級
+      await userRoleService.upgradeRole(
+        updatedTeacher.user_id, 
+        UserRole.TEACHER_APPLICANT, 
+        UserRole.TEACHER,
+        adminId
+      )
+    }
 
     return {
       teacher: {
@@ -404,6 +427,59 @@ export class AdminService {
         MESSAGES.AUTH.ADMIN_PERMISSION_DENIED,
         403
       )
+    }
+  }
+
+  /**
+   * 獲取教師申請列表
+   * @param status 申請狀態篩選
+   * @param page 頁碼
+   * @param limit 每頁數量
+   * @returns 分頁的教師申請列表
+   */
+  async getTeacherApplications(status?: ApplicationStatus, page = 1, limit = 20) {
+    const queryBuilder = this.teacherRepository
+      .createQueryBuilder('teacher')
+      .leftJoinAndSelect('teacher.user', 'user')
+      .orderBy('teacher.application_submitted_at', 'DESC')
+
+    // 狀態篩選
+    if (status) {
+      queryBuilder.where('teacher.application_status = :status', { status })
+    }
+
+    // 分頁
+    const skip = (page - 1) * limit
+    queryBuilder.skip(skip).take(limit)
+
+    const [applications, total] = await queryBuilder.getManyAndCount()
+
+    return {
+      applications: applications.map(teacher => ({
+        id: teacher.id,
+        uuid: teacher.uuid,
+        user: {
+          id: teacher.user?.id,
+          name: teacher.user?.name,
+          email: teacher.user?.email,
+          contact_phone: teacher.user?.contact_phone
+        },
+        introduction: teacher.introduction,
+        city: teacher.city,
+        district: teacher.district,
+        main_category_id: teacher.main_category_id,
+        sub_category_ids: teacher.sub_category_ids,
+        application_status: teacher.application_status,
+        application_submitted_at: teacher.application_submitted_at,
+        application_reviewed_at: teacher.application_reviewed_at,
+        review_notes: teacher.review_notes
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
     }
   }
 }

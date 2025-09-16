@@ -2,7 +2,11 @@
  * 教師申請請求介面
  */
 export interface TeacherApplicationData {
-  nationality: string
+  city: string
+  district: string
+  address: string
+  main_category_id: number
+  sub_category_ids: number[]
   introduction: string
 }
 
@@ -10,7 +14,11 @@ export interface TeacherApplicationData {
  * 教師申請更新請求介面
  */
 export interface TeacherApplicationUpdateData {
-  nationality?: string
+  city?: string
+  district?: string
+  address?: string
+  main_category_id?: number
+  sub_category_ids?: number[]
   introduction?: string
 }
 
@@ -21,7 +29,11 @@ export interface TeacherProfileData {
   id: number
   uuid: string
   user_id: number
-  nationality: string
+  city: string
+  district: string
+  address: string
+  main_category_id: number
+  sub_category_ids: number[]
   introduction: string
   application_status: string
   application_submitted_at: Date | null
@@ -40,7 +52,11 @@ export interface TeacherProfileData {
  * 教師基本資料更新請求介面
  */
 export interface TeacherProfileUpdateRequest {
-  nationality?: string
+  city?: string
+  district?: string
+  address?: string
+  main_category_id?: number
+  sub_category_ids?: number[]
   introduction?: string
 }
 
@@ -52,7 +68,8 @@ export interface WorkExperienceData {
   teacher_id?: number
   is_working: boolean
   company_name: string
-  workplace: string
+  city: string
+  district: string
   job_category: string
   job_title: string
   start_year: number
@@ -67,7 +84,8 @@ export interface WorkExperienceData {
 export interface CreateWorkExperienceRequest {
   is_working: boolean
   company_name: string
-  workplace: string
+  city: string
+  district: string
   job_category: string
   job_title: string
   start_year: number
@@ -77,12 +95,20 @@ export interface CreateWorkExperienceRequest {
 }
 
 /**
+ * 批次工作經驗建立請求介面
+ */
+export interface CreateWorkExperiencesBatchRequest {
+  work_experiences: CreateWorkExperienceRequest[]
+}
+
+/**
  * 工作經驗更新請求介面
  */
 export interface UpdateWorkExperienceRequest {
   is_working?: boolean
   company_name?: string
-  workplace?: string
+  city?: string
+  district?: string
   job_category?: string
   job_title?: string
   start_year?: number
@@ -135,7 +161,6 @@ export interface LearningExperienceData {
   degree: string
   school_name: string
   department: string
-  region: boolean
   start_year: number
   start_month: number
   end_year: number | null
@@ -168,8 +193,10 @@ export interface CreateCertificateRequest {
   license_name: string
   holder_name: string
   license_number: string
-  category_id: string
-  subject: string
+  category_id: number
+  issue_year: number
+  issue_month: number
+  file_path?: string
 }
 
 /**
@@ -180,8 +207,10 @@ export interface UpdateCertificateRequest {
   license_name?: string
   holder_name?: string
   license_number?: string
-  category_id?: string
-  subject?: string
+  category_id?: number
+  issue_year?: number
+  issue_month?: number
+  file_path?: string
 }
 
 /**

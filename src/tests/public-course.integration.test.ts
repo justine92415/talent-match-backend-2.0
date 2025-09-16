@@ -84,7 +84,11 @@ describe('公開課程瀏覽搜尋 API', () => {
     activeTeacher = teacherRepository.create({
       user_id: activeTeacherUser.id,
       application_status: ApplicationStatus.APPROVED,
-      nationality: TEST_USER_DATA.NATIONALITY,
+      city: TEST_USER_DATA.CITY,
+      district: TEST_USER_DATA.DISTRICT,
+      address: TEST_USER_DATA.ADDRESS,
+      main_category_id: TEST_USER_DATA.MAIN_CATEGORY_ID,
+      sub_category_ids: [...TEST_USER_DATA.SUB_CATEGORY_IDS],
       introduction: TEST_USER_DATA.INTRODUCTION,
       total_students: TEST_USER_DATA.TOTAL_STUDENTS,
       total_courses: TEST_USER_DATA.TOTAL_COURSES,

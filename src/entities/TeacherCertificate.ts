@@ -35,12 +35,16 @@ export class TeacherCertificate {
   file_path!: string
 
   /** 證書類別ID */
-  @Column({ length: 50 })
-  category_id!: string
+  @Column({ type: 'integer' })
+  category_id!: number
 
-  /** 證書主題 */
-  @Column({ length: 100 })
-  subject!: string
+  /** 發證年份 */
+  @Column({ type: 'integer' })
+  issue_year!: number
+
+  /** 發證月份 */
+  @Column({ type: 'integer' })
+  issue_month!: number
 
   /** 建立時間 */
   @CreateDateColumn({ type: 'timestamp' })
