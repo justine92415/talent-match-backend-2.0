@@ -167,6 +167,31 @@ export class AdminController {
 
     res.status(200).json(handleSuccess(profileData, MESSAGES.AUTH.PROFILE_RETRIEVED))
   })
+
+  /**
+   * 獲取教師申請列表
+   * GET /api/admin/teacher-applications
+   * 需要管理員認證
+   */
+  getTeacherApplications = handleErrorAsync(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const adminId = this.getAdminId(req)
+    
+    // 驗證管理員權限
+    await this.adminService.validateAdminPermission(adminId)
+
+    // 獲取查詢參數
+    const status = req.query.status as string
+    const page = parseInt(req.query.page as string) || 1
+    const limit = Math.min(parseInt(req.query.limit as string) || 20, 100) // 限制最大100
+
+    const result = await this.adminService.getTeacherApplications(
+      status as any, // 類型轉換，AdminService 會驗證
+      page,
+      limit
+    )
+
+    res.status(200).json(handleSuccess(result, '成功獲取教師申請列表'))
+  })
 }
 
 // 創建並匯出控制器實例

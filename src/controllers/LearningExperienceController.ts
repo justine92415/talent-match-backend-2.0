@@ -25,35 +25,45 @@ export class LearningExperienceController {
   })
 
   /**
-   * 建立新的學習經歷
+   * 建立新的學習經歷（支援批次）
    * POST /api/teachers/learning-experiences
    */
   createLearningExperience = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
     const userId = req.user!.userId // 經過 authenticateToken 中間件後，userId 必定存在
     
-    // TODO: 檔案上傳系統完成後，處理 certificate_file 上傳
-    // const certificateFile = req.file // multer 中間件處理的檔案
-    const learningExperienceData: CreateLearningExperienceRequest = {
-      is_in_school: req.body.is_in_school,
-      degree: req.body.degree,
-      school_name: req.body.school_name,
-      department: req.body.department,
-      region: req.body.region,
-      start_year: req.body.start_year,
-      start_month: req.body.start_month,
-      end_year: req.body.end_year,
-      end_month: req.body.end_month
-      // TODO: 檔案上傳系統完成後新增
-      // certificate_file: certificateFile
-    }
+    // 從 req.body.learning_experiences 取得陣列資料
+    const learningExperiencesData = req.body.learning_experiences
 
-    const newExperience = await learningExperienceService.createLearningExperience(
+    const newExperiences = await learningExperienceService.createLearningExperiencesBatch(
       userId, 
-      learningExperienceData
+      learningExperiencesData
     )
     
-    // 符合預期的回應格式：{ data: { learning_experience: {...} } }
-    res.status(201).json(handleCreated({ learning_experience: newExperience }, SuccessMessages.LEARNING_EXPERIENCE_CREATED))
+    // 符合預期的回應格式：{ data: { learning_experiences: [...] } }
+    const message = `成功建立 ${newExperiences.length} 筆學習經歷`
+    res.status(201).json(handleCreated({ learning_experiences: newExperiences }, message))
+  })
+
+  /**
+   * 批次新增或更新學習經歷
+   * PUT /api/teachers/learning-experiences
+   */
+  upsertLearningExperiences = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.userId
+    
+    // 從 req.body.learning_experiences 取得陣列資料
+    const learningExperiencesData = req.body.learning_experiences
+
+    const result = await learningExperienceService.upsertLearningExperiencesBatch(
+      userId, 
+      learningExperiencesData
+    )
+    
+    const message = `成功處理學習經歷：新增 ${result.statistics.created_count} 筆，更新 ${result.statistics.updated_count} 筆`
+    res.json(handleSuccess({
+      statistics: result.statistics,
+      learning_experiences: result.learning_experiences
+    }, message))
   })
 
   /**

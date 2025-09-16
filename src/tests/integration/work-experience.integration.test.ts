@@ -57,7 +57,7 @@ describe('工作經驗管理 API', () => {
       const workExperience = await createTestWorkExperience(testTeacher.id, {
         is_working: true,
         company_name: '科技公司',
-        workplace: '台北市',
+        city: '台北市', district: '信義區',
         job_category: '軟體開發',
         job_title: '資深工程師',
         start_year: 2020,
@@ -78,7 +78,7 @@ describe('工作經驗管理 API', () => {
               teacher_id: testTeacher.id,
               is_working: true,
               company_name: '科技公司',
-              workplace: '台北市',
+              city: '台北市', district: '信義區',
               job_category: '軟體開發',
               job_title: '資深工程師',
               start_year: 2020,
@@ -143,7 +143,7 @@ describe('工作經驗管理 API', () => {
       const workExperienceData = {
         is_working: true,
         company_name: 'ABC公司',
-        workplace: '台北市',
+        city: '台北市', district: '信義區',
         job_category: '軟體開發',
         job_title: '資深工程師',
         start_year: 2020,
@@ -165,7 +165,7 @@ describe('工作經驗管理 API', () => {
             teacher_id: testTeacher.id,
             is_working: true,
             company_name: 'ABC公司',
-            workplace: '台北市',
+            city: '台北市', district: '信義區',
             job_category: '軟體開發',
             job_title: '資深工程師',
             start_year: 2020,
@@ -190,7 +190,7 @@ describe('工作經驗管理 API', () => {
       const workExperienceData = {
         is_working: false,
         company_name: 'XYZ公司',
-        workplace: '新竹市',
+        city: '新竹市', district: '東區',
         job_category: '產品管理',
         job_title: '產品經理',
         start_year: 2018,
@@ -214,7 +214,7 @@ describe('工作經驗管理 API', () => {
             teacher_id: testTeacher.id,
             is_working: false,
             company_name: 'XYZ公司',
-            workplace: '新竹市',
+            city: '新竹市', district: '東區',
             job_category: '產品管理',
             job_title: '產品經理',
             start_year: 2018,
@@ -246,7 +246,7 @@ describe('工作經驗管理 API', () => {
       const invalidData = {
         is_working: false,
         company_name: 'ABC公司',
-        workplace: '台北市',
+        city: '台北市', district: '信義區',
         job_category: '軟體開發',
         job_title: '工程師',
         start_year: 2023,
@@ -268,7 +268,7 @@ describe('工作經驗管理 API', () => {
       const invalidData = {
         is_working: true,
         company_name: 'ABC公司',
-        workplace: '台北市',
+        city: '台北市', district: '信義區',
         job_category: '軟體開發',
         job_title: '工程師',
         start_year: 2020,
@@ -290,7 +290,7 @@ describe('工作經驗管理 API', () => {
       const invalidData = {
         is_working: false,
         company_name: 'ABC公司',
-        workplace: '台北市',
+        city: '台北市', district: '信義區',
         job_category: '軟體開發',
         job_title: '工程師',
         start_year: 2020,
@@ -311,7 +311,7 @@ describe('工作經驗管理 API', () => {
       const workExperienceData = {
         is_working: true,
         company_name: 'ABC公司',
-        workplace: '台北市',
+        city: '台北市', district: '信義區',
         job_category: '軟體開發',
         job_title: '工程師',
         start_year: 2020,
@@ -343,7 +343,7 @@ describe('工作經驗管理 API', () => {
       const workExperienceData = {
         is_working: true,
         company_name: 'ABC公司',
-        workplace: '台北市',
+        city: '台北市', district: '信義區',
         job_category: '軟體開發',
         job_title: '工程師',
         start_year: 2020,
@@ -371,7 +371,7 @@ describe('工作經驗管理 API', () => {
       testWorkExperience = await createTestWorkExperience(testTeacher.id, {
         is_working: false,
         company_name: '原公司名稱',
-        workplace: '原工作地點',
+        city: '台北市', district: '信義區',
         job_category: '原工作類別',
         job_title: '原職位',
         start_year: 2020,
@@ -384,7 +384,7 @@ describe('工作經驗管理 API', () => {
     it('應該成功更新工作經驗', async () => {
       const updateData = {
         company_name: '更新的公司名稱',
-        workplace: '更新的工作地點',
+        city: '新北市', district: '板橋區',
         job_title: '更新的職位',
         end_year: 2024,
         end_month: 8
@@ -405,7 +405,7 @@ describe('工作經驗管理 API', () => {
             teacher_id: testTeacher.id,
             is_working: false,
             company_name: '更新的公司名稱',
-            workplace: '更新的工作地點',
+            city: '新北市', district: '板橋區',
             job_category: '原工作類別', // 未更新的欄位保持原值
             job_title: '更新的職位',
             start_year: 2020,
@@ -529,7 +529,7 @@ describe('工作經驗管理 API', () => {
       testWorkExperience = await createTestWorkExperience(testTeacher.id, {
         is_working: false,
         company_name: '要刪除的公司',
-        workplace: '台北市',
+        city: '台北市', district: '信義區',
         job_category: '軟體開發',
         job_title: '工程師',
         start_year: 2020,

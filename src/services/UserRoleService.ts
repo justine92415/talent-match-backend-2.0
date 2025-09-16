@@ -113,11 +113,13 @@ export class UserRoleService {
   async getPrimaryRole(userId: number): Promise<UserRoleEnum> {
     const roles = await this.getUserRoles(userId)
     
-    // 按照優先級排序：super_admin > admin > teacher > student
+    // 按照優先級排序：super_admin > admin > teacher > teacher_pending > teacher_applicant > student
     const roleOrder = [
       UserRoleEnum.SUPER_ADMIN,
       UserRoleEnum.ADMIN,
       UserRoleEnum.TEACHER,
+      UserRoleEnum.TEACHER_PENDING,
+      UserRoleEnum.TEACHER_APPLICANT,
       UserRoleEnum.STUDENT
     ]
 
@@ -129,6 +131,40 @@ export class UserRoleService {
 
     // 如果沒有任何角色，預設為學生
     return UserRoleEnum.STUDENT
+  }
+
+  /**
+   * 角色升級：移除舊角色，指派新角色
+   * @param userId 使用者 ID
+   * @param fromRole 原角色
+   * @param toRole 新角色
+   * @param grantedBy 指派者 ID（可選）
+   */
+  async upgradeRole(userId: number, fromRole: UserRoleEnum, toRole: UserRoleEnum, grantedBy?: number): Promise<void> {
+    // 檢查是否具有原角色
+    const hasOldRole = await this.hasRole(userId, fromRole)
+    if (!hasOldRole) {
+      throw Errors.unauthorizedAccess(`使用者不具有 ${fromRole} 角色`)
+    }
+
+    // 移除舊角色
+    await this.removeRole(userId, fromRole)
+
+    // 指派新角色
+    await this.addRole(userId, toRole, grantedBy)
+  }
+
+  /**
+   * 檢查使用者是否為教師（包含申請者和待審核）
+   * @param userId 使用者 ID
+   * @returns 是否為教師、待審核或申請者
+   */
+  async isTeacherOrApplicant(userId: number): Promise<boolean> {
+    return await this.hasAnyRole(userId, [
+      UserRoleEnum.TEACHER, 
+      UserRoleEnum.TEACHER_PENDING, 
+      UserRoleEnum.TEACHER_APPLICANT
+    ])
   }
 
   /**

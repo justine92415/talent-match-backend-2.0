@@ -27,22 +27,44 @@ export class CertificateController {
   })
 
   /**
-   * 建立新證書
+   * 建立新證書（支援批次）
    * POST /api/teachers/certificates
    * 
-   * 請求資料已通過 middleware 使用 certificateCreateSchema 驗證
+   * 請求資料已通過 middleware 使用 certificateCreateBatchSchema 驗證
    */
   createCertificate = handleErrorAsync(async (req: Request, res: Response) => {
     const userId = req.user!.userId
     
-    // 資料已經過 Joi middleware 驗證和清理
-    const certificateData = req.body
+    // 從 req.body.certificates 取得陣列資料
+    const certificatesData = req.body.certificates
 
-    const newCertificate = await this.certificateService.createCertificate(userId, certificateData)
+    const newCertificates = await this.certificateService.createCertificatesBatch(userId, certificatesData)
 
+    const message = `成功建立 ${newCertificates.length} 張證照`
     res.status(201).json(handleCreated({
-      certificate: newCertificate
-    }, '證書已新增'))
+      certificates: newCertificates
+    }, message))
+  })
+
+  /**
+   * 批次新增或更新證照
+   * PUT /api/teachers/certificates
+   * 
+   * 請求資料已通過 middleware 使用 certificateUpsertSchema 驗證
+   */
+  upsertCertificates = handleErrorAsync(async (req: Request, res: Response) => {
+    const userId = req.user!.userId
+    
+    // 從 req.body.certificates 取得陣列資料
+    const certificatesData = req.body.certificates
+
+    const result = await this.certificateService.upsertCertificatesBatch(userId, certificatesData)
+
+    const message = `成功處理證照：新增 ${result.statistics.created_count} 張，更新 ${result.statistics.updated_count} 張`
+    res.status(200).json(handleSuccess({
+      statistics: result.statistics,
+      certificates: result.certificates
+    }, message))
   })
 
   /**
