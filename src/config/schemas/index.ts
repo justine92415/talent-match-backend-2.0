@@ -8,6 +8,7 @@ import { authSchemas } from './auth'
 import { userAvatarSchemas } from './userAvatar'
 import { teacherSchemas } from './teacher'
 import { tagsSchemas } from './tags'
+import { courseSchemas } from './course'
 
 // 合併所有 Schema
 export const allSchemas = {
@@ -15,8 +16,9 @@ export const allSchemas = {
   ...authSchemas,
   ...userAvatarSchemas,
   ...teacherSchemas,
-  ...tagsSchemas
+  ...tagsSchemas,
+  ...courseSchemas
 }
 
 // 也可以分別匯出，供特定需求使用
-export { commonSchemas, authSchemas, userAvatarSchemas, teacherSchemas, tagsSchemas }
+export { commonSchemas, authSchemas, userAvatarSchemas, teacherSchemas, tagsSchemas, courseSchemas }

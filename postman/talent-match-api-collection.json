@@ -1202,17 +1202,17 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/courses/:uuid",
+              "raw": "{{base_url}}/api/courses/:id",
               "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":uuid"],
+              "path": ["api", "courses", ":id"],
               "variable": [
                 {
-                  "key": "uuid",
-                  "value": "course-uuid-here"
+                  "key": "id",
+                  "value": "1"
                 }
               ]
             },
-            "description": "取得課程詳細資訊"
+            "description": "取得課程詳細資訊（需要教師身份認證，只能查看自己的課程或公開課程）"
           }
         },
         {
@@ -1221,30 +1221,10 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/courses?keyword=Python&main_category_id=1&sub_category_id=2&city_id=1&sort=newest&page=1&limit=12",
+              "raw": "{{base_url}}/api/courses?page=1&limit=12",
               "host": ["{{base_url}}"],
               "path": ["api", "courses"],
               "query": [
-                {
-                  "key": "keyword",
-                  "value": "Python"
-                },
-                {
-                  "key": "main_category_id",
-                  "value": "1"
-                },
-                {
-                  "key": "sub_category_id",
-                  "value": "2"
-                },
-                {
-                  "key": "city_id",
-                  "value": "1"
-                },
-                {
-                  "key": "sort",
-                  "value": "newest"
-                },
                 {
                   "key": "page",
                   "value": "1"
@@ -1255,7 +1235,7 @@
                 }
               ]
             },
-            "description": "搜索和篩選課程"
+            "description": "取得教師自己的課程列表（需要認證）"
           }
         },
         {
@@ -1264,9 +1244,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/courses/:uuid/reviews?page=1&limit=10",
+              "raw": "{{base_url}}/api/courses/:id/reviews?page=1&limit=10",
               "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":uuid", "reviews"],
+              "path": ["api", "courses", ":id", "reviews"],
               "query": [
                 {
                   "key": "page",
@@ -1279,12 +1259,12 @@
               ],
               "variable": [
                 {
-                  "key": "uuid",
-                  "value": "course-uuid-here"
+                  "key": "id",
+                  "value": "1"
                 }
               ]
             },
-            "description": "取得課程評價列表"
+            "description": "取得課程評價列表（需要教師身份認證）"
           }
         },
         {
@@ -1321,20 +1301,20 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Python 程式設計進階\",\n  \"content\": \"進階Python程式設計課程，涵蓋物件導向、資料結構等\",\n  \"main_category_id\": 1,\n  \"sub_category_id\": 2,\n  \"city_id\": 1,\n  \"status\": \"published\"\n}"
+              "raw": "{\n  \"name\": \"Python 程式設計進階\",\n  \"content\": \"進階Python程式設計課程，涵蓋物件導向、資料結構等\",\n  \"main_category_id\": 1,\n  \"sub_category_id\": 2,\n  \"city_id\": 1\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/courses/:uuid",
+              "raw": "{{base_url}}/api/courses/:id",
               "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":uuid"],
+              "path": ["api", "courses", ":id"],
               "variable": [
                 {
-                  "key": "uuid",
-                  "value": "course-uuid-here"
+                  "key": "id",
+                  "value": "1"
                 }
               ]
             },
-            "description": "更新課程資訊"
+            "description": "更新課程資訊（需要教師身份認證，只能更新自己的課程）"
           }
         },
         {
@@ -1343,17 +1323,120 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/courses/:uuid",
+              "raw": "{{base_url}}/api/courses/:id",
               "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":uuid"],
+              "path": ["api", "courses", ":id"],
               "variable": [
                 {
-                  "key": "uuid",
-                  "value": "course-uuid-here"
+                  "key": "id",
+                  "value": "1"
                 }
               ]
             },
-            "description": "刪除課程"
+            "description": "刪除課程（需要教師身份認證，只能刪除自己的未發布課程）"
+          }
+        },
+        {
+          "name": "提交課程審核",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"submission_notes\": \"課程已準備完成，請協助審核\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/courses/:id/submit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "courses", ":id", "submit"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "提交課程審核（需要教師身份認證，只有草稿狀態且未在審核中的課程可提交）"
+          }
+        },
+        {
+          "name": "重新提交課程審核",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"submission_notes\": \"已根據回饋修正課程內容，請重新審核\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/courses/:id/resubmit",
+              "host": ["{{base_url}}"],
+              "path": ["api", "courses", ":id", "resubmit"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "重新提交課程審核（需要教師身份認證，只有被拒絕的課程可重新提交）"
+          }
+        },
+        {
+          "name": "發布課程",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/courses/:id/publish",
+              "host": ["{{base_url}}"],
+              "path": ["api", "courses", ":id", "publish"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "發布課程（需要教師身份認證，只有草稿且審核通過的課程可發布）"
+          }
+        },
+        {
+          "name": "封存課程",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"archive_reason\": \"課程內容需要大幅更新，暫時下架\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/courses/:id/archive",
+              "host": ["{{base_url}}"],
+              "path": ["api", "courses", ":id", "archive"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "封存課程（需要教師身份認證，只有已發布的課程可封存）"
           }
         },
         {
@@ -1362,17 +1445,17 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/courses/:uuid/price-options",
+              "raw": "{{base_url}}/api/courses/:courseId/price-options",
               "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":uuid", "price-options"],
+              "path": ["api", "courses", ":courseId", "price-options"],
               "variable": [
                 {
-                  "key": "uuid",
-                  "value": "course-uuid-here"
+                  "key": "courseId",
+                  "value": "1"
                 }
               ]
             },
-            "description": "取得課程價格方案"
+            "description": "取得課程價格方案列表（需要教師身份認證）"
           }
         },
         {
@@ -1387,24 +1470,79 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"單堂課程\",\n  \"price\": 1500,\n  \"duration_minutes\": 60,\n  \"max_students\": 1,\n  \"description\": \"一對一個人指導課程\"\n}"
+              "raw": "{\n  \"name\": \"單堂課程\",\n  \"price\": 1500,\n  \"quantity\": 1,\n  \"description\": \"一對一個人指導課程\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/courses/:uuid/price-options",
+              "raw": "{{base_url}}/api/courses/:courseId/price-options",
               "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":uuid", "price-options"],
+              "path": ["api", "courses", ":courseId", "price-options"],
               "variable": [
                 {
-                  "key": "uuid",
-                  "value": "course-uuid-here"
+                  "key": "courseId",
+                  "value": "1"
                 }
               ]
             },
-            "description": "新增課程價格方案"
+            "description": "新增課程價格方案（需要教師身份認證）"
+          }
+        },
+        {
+          "name": "更新價格方案",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"單堂課程 (進階)\",\n  \"price\": 1800,\n  \"quantity\": 1,\n  \"description\": \"一對一進階課程指導\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/courses/:courseId/price-options/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "courses", ":courseId", "price-options", ":id"],
+              "variable": [
+                {
+                  "key": "courseId",
+                  "value": "1"
+                },
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "更新價格方案（需要教師身份認證）"
+          }
+        },
+        {
+          "name": "刪除價格方案",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/courses/:courseId/price-options/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "courses", ":courseId", "price-options", ":id"],
+              "variable": [
+                {
+                  "key": "courseId",
+                  "value": "1"
+                },
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "刪除價格方案（需要教師身份認證）"
           }
         }
       ],
-      "description": "課程管理相關 API，包含課程 CRUD、搜索、價格方案等功能"
+      "description": "課程管理相關 API，包含課程 CRUD、狀態管理、價格方案等功能\n\n**教師課程管理功能**：\n- POST /api/courses - 建立課程\n- PUT /api/courses/:id - 更新課程\n- GET /api/courses/:id - 取得課程詳情\n- GET /api/courses - 教師課程列表\n- DELETE /api/courses/:id - 刪除課程\n\n**課程狀態管理**：\n- POST /api/courses/:id/submit - 提交審核\n- POST /api/courses/:id/resubmit - 重新提交審核\n- POST /api/courses/:id/publish - 發布課程\n- POST /api/courses/:id/archive - 封存課程\n\n**價格方案管理**：\n- GET /api/courses/:courseId/price-options - 取得價格方案\n- POST /api/courses/:courseId/price-options - 新增價格方案\n- PUT /api/courses/:courseId/price-options/:id - 更新價格方案\n- DELETE /api/courses/:courseId/price-options/:id - 刪除價格方案\n\n**注意事項**：\n- 所有端點都需要教師身份認證\n- 使用 :id 參數（數字），不是 :uuid\n- 狀態管理遵循特定業務規則"
     },
     {
       "name": "公開課程瀏覽 (Public Courses)",
@@ -1415,10 +1553,30 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/courses?page=1&limit=12",
+              "raw": "{{base_url}}/api/courses/public?keyword=Python&main_category_id=1&sub_category_id=2&city_id=1&sort=newest&page=1&limit=12",
               "host": ["{{base_url}}"],
-              "path": ["api", "courses"],
+              "path": ["api", "courses", "public"],
               "query": [
+                {
+                  "key": "keyword",
+                  "value": "Python"
+                },
+                {
+                  "key": "main_category_id",
+                  "value": "1"
+                },
+                {
+                  "key": "sub_category_id",
+                  "value": "2"
+                },
+                {
+                  "key": "city_id",
+                  "value": "1"
+                },
+                {
+                  "key": "sort",
+                  "value": "newest"
+                },
                 {
                   "key": "page",
                   "value": "1"
@@ -1429,7 +1587,7 @@
                 }
               ]
             },
-            "description": "瀏覽公開課程列表（無需認證）"
+            "description": "瀏覽公開課程列表，支援搜索和篩選（無需認證）"
           }
         },
         {
@@ -1438,13 +1596,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/courses/:uuid/public",
+              "raw": "{{base_url}}/api/courses/public/:id",
               "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":uuid", "public"],
+              "path": ["api", "courses", "public", ":id"],
               "variable": [
                 {
-                  "key": "uuid",
-                  "value": "course-uuid-here"
+                  "key": "id",
+                  "value": "1"
                 }
               ]
             },
@@ -1452,7 +1610,7 @@
           }
         }
       ],
-      "description": "公開課程瀏覽相關 API，無需認證即可存取"
+      "description": "公開課程瀏覽相關 API，無需認證即可存取\n\n**實際實作的路由**：\n- GET /api/courses/public - 公開課程列表（支援搜索篩選）\n- GET /api/courses/public/:id - 公開課程詳情\n\n**功能說明**：\n- 無需認證即可存取\n- 支援關鍵字搜索和分類篩選\n- 瀏覽課程詳情會增加瀏覽次數\n- 只顯示已發布的課程"
     },
     {
       "name": "公開教師資料 (Public Teachers)",

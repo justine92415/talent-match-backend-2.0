@@ -47,30 +47,678 @@ const courseController = new CourseController()
 const courseVideoController = new CourseVideoController()
 const courseFileController = new CourseFileController()
 
+/**
+ * @swagger
+ * /api/courses:
+ *   post:
+ *     tags:
+ *       - Course Management
+ *     summary: 建立新課程
+ *     description: |
+ *       建立新的課程，需要教師身份認證。成功建立後回傳課程基本資訊。
+ *       
+ *       **業務邏輯**：
+ *       - 驗證使用者具有教師權限且審核通過
+ *       - 驗證請求參數 (課程名稱、內容、分類、城市等)
+ *       - 自動生成課程 UUID 和設定預設值
+ *       - 建立課程記錄，狀態為草稿 (draft)
+ *       - 回傳建立的課程完整資訊
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateCourseRequest'
+ *     responses:
+ *       201:
+ *         description: 課程建立成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CreateCourseSuccessResponse'
+ *       400:
+ *         description: 請求參數錯誤或業務邏輯錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - $ref: '#/components/schemas/CreateCourseValidationErrorResponse'
+ *                 - $ref: '#/components/schemas/CreateCourseBusinessErrorResponse'
+ *             examples:
+ *               validation_error:
+ *                 summary: 參數驗證錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "參數驗證失敗"
+ *                   errors:
+ *                     name: ["課程名稱為必填欄位"]
+ *                     content: ["課程內容為必填欄位"]
+ *                     main_category_id: ["主分類 ID 為必填欄位"]
+ *               business_error:
+ *                 summary: 業務邏輯錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "教師審核尚未通過，無法建立課程"
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       403:
+ *         description: 禁止存取 - 需要教師權限
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CreateCourseTeacherPermissionErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
 // Create course
 router.post('/', authenticateToken, createSchemasMiddleware({ body: createCourseSchema }), courseController.createCourse)
 
+/**
+ * @swagger
+ * /api/courses/{id}:
+ *   put:
+ *     tags:
+ *       - Course Management
+ *     summary: 更新課程資訊
+ *     description: |
+ *       更新指定的課程資訊，需要教師身份認證。只能更新自己的課程。
+ *       
+ *       **業務邏輯**：
+ *       - 驗證使用者具有教師權限
+ *       - 驗證課程存在且為使用者所擁有
+ *       - 驗證請求參數 (所有參數皆為選填)
+ *       - 更新課程資料並回傳完整課程資訊
+ *       - 自動更新 updated_at 時間戳
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: 課程 ID (數字)
+ *         example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateCourseRequest'
+ *     responses:
+ *       200:
+ *         description: 課程更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UpdateCourseSuccessResponse'
+ *       400:
+ *         description: 請求參數錯誤或業務邏輯錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - $ref: '#/components/schemas/UpdateCourseValidationErrorResponse'
+ *                 - $ref: '#/components/schemas/UpdateCourseBusinessErrorResponse'
+ *             examples:
+ *               validation_error:
+ *                 summary: 參數驗證錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "參數驗證失敗"
+ *                   errors:
+ *                     name: ["課程名稱長度不能超過255字元"]
+ *                     main_category_id: ["主分類 ID 必須為正整數"]
+ *               business_error:
+ *                 summary: 業務邏輯錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "需要教師權限才能更新課程"
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       403:
+ *         description: 禁止存取 - 權限不足或只能更新自己的課程
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UpdateCoursePermissionErrorResponse'
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UpdateCourseNotFoundErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
 // Update course
 router.put('/:id', authenticateToken, createSchemasMiddleware({ params: courseIdSchema, body: updateCourseSchema }), courseController.updateCourse)
 
+/**
+ * @swagger
+ * /api/courses/{id}:
+ *   get:
+ *     tags:
+ *       - Course Management
+ *     summary: 取得課程詳細資訊
+ *     description: |
+ *       取得指定課程的詳細資訊。根據使用者身份和課程狀態決定存取權限。
+ *       
+ *       **存取權限規則**：
+ *       - 未登入：只能查看已發布 (published) 的課程
+ *       - 課程擁有者：可以查看自己的所有課程 (包含草稿、審核中等)
+ *       - 其他教師：只能查看已發布的課程
+ *       - 一般使用者：只能查看已發布的課程
+ *       
+ *       **業務邏輯**：
+ *       - 查詢指定 ID 的課程
+ *       - 檢查課程是否存在
+ *       - 根據使用者身份驗證存取權限
+ *       - 回傳完整的課程資訊
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: 課程 ID (數字)
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: 成功取得課程資訊
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GetCourseSuccessResponse'
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       403:
+ *         description: 禁止存取 - 只能查看自己的課程或已發布的公開課程
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GetCoursePermissionErrorResponse'
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GetCourseNotFoundErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
 // Get course by ID
 router.get('/:id', authenticateToken, createSchemasMiddleware({ params: courseIdSchema }), courseController.getCourse)
 
+/**
+ * @swagger
+ * /api/courses:
+ *   get:
+ *     tags:
+ *       - Course Management
+ *     summary: 取得教師課程列表
+ *     description: |
+ *       取得目前登入教師的所有課程列表，支援分頁查詢。需要教師身份認證。
+ *       
+ *       **業務邏輯**：
+ *       - 驗證使用者具有教師權限
+ *       - 查詢該教師的所有課程 (所有狀態：草稿、審核中、已發布、已封存)
+ *       - 依建立時間降序排列 (最新的在前)
+ *       - 支援分頁查詢，預設每頁 20 筆
+ *       - 回傳課程列表和分頁資訊
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: 頁碼 (預設為 1)
+ *         example: 1
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *         description: 每頁數量 (預設為 20，最大 100)
+ *         example: 20
+ *     responses:
+ *       200:
+ *         description: 成功取得教師課程列表
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GetCourseListSuccessResponse'
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       403:
+ *         description: 禁止存取 - 需要教師權限
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GetCourseListPermissionErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
 // Get teacher's course list
 router.get('/', authenticateToken, createSchemasMiddleware({ query: courseListQuerySchema }), courseController.getCourseList)
 
+/**
+ * @swagger
+ * /api/courses/{id}:
+ *   delete:
+ *     tags:
+ *       - Course Management
+ *     summary: 刪除課程
+ *     description: |
+ *       刪除指定的課程，需要教師身份認證。只能刪除自己的課程且有狀態限制。
+ *       
+ *       **業務邏輯**：
+ *       - 驗證使用者具有教師權限
+ *       - 驗證課程存在且為使用者所擁有
+ *       - 檢查課程狀態：已發布的課程不能直接刪除
+ *       - 只能刪除草稿、審核中、已拒絕或已封存的課程
+ *       - 執行硬刪除操作 (從資料庫移除)
+ *       
+ *       **注意事項**：
+ *       - 已發布的課程請先封存後再刪除
+ *       - 刪除操作無法復原，請謹慎使用
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: 課程 ID (數字)
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: 課程刪除成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DeleteCourseSuccessResponse'
+ *       400:
+ *         description: 業務邏輯錯誤 - 已發布的課程不能直接刪除
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DeleteCourseBusinessErrorResponse'
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       403:
+ *         description: 禁止存取 - 只能刪除自己的課程
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DeleteCoursePermissionErrorResponse'
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DeleteCourseNotFoundErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
 // Delete course
 router.delete('/:id', authenticateToken, createSchemasMiddleware({ params: courseIdSchema }), courseController.deleteCourse)
 
+/**
+ * @swagger
+ * /api/courses/{id}/submit:
+ *   post:
+ *     tags:
+ *       - Course Status Management
+ *     summary: 提交課程審核
+ *     description: |
+ *       提交課程給管理員進行審核。需要教師身份認證且課程必須符合提交條件。
+ *       
+ *       **業務邏輯**：
+ *       - 驗證使用者具有教師權限和課程所有權
+ *       - 檢查課程狀態：只有草稿 (draft) 且未在審核中的課程可以提交
+ *       - 將課程審核狀態設為待審核 (pending)
+ *       - 可選擇性添加提交備註供審核者參考
+ *       - 提交後等待管理員審核 (核准/拒絕)
+ *       
+ *       **前置條件**：
+ *       - 課程狀態必須為 draft
+ *       - 課程審核狀態不能是 pending
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: 課程 ID (數字)
+ *         example: 1
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/SubmitCourseRequest'
+ *     responses:
+ *       200:
+ *         description: 課程提交審核成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SubmitCourseSuccessResponse'
+ *       400:
+ *         description: 業務邏輯錯誤 - 課程狀態不允許提交
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SubmitCourseBusinessErrorResponse'
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       403:
+ *         description: 禁止存取 - 只能管理自己的課程
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CourseStatusPermissionErrorResponse'
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CourseStatusNotFoundErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
 // Submit course for review
 router.post('/:id/submit', authenticateToken, createSchemasMiddleware({ params: courseIdSchema }), courseController.submitCourse)
 
+/**
+ * @swagger
+ * /api/courses/{id}/resubmit:
+ *   post:
+ *     tags:
+ *       - Course Status Management
+ *     summary: 重新提交課程審核
+ *     description: |
+ *       重新提交被拒絕的課程給管理員進行審核。需要教師身份認證且課程必須是被拒絕狀態。
+ *       
+ *       **業務邏輯**：
+ *       - 驗證使用者具有教師權限和課程所有權
+ *       - 檢查課程審核狀態：只有被拒絕 (rejected) 的課程可以重新提交
+ *       - 將課程審核狀態重新設為待審核 (pending)
+ *       - 建議添加重新提交備註說明修正的內容
+ *       - 重新提交後等待管理員重新審核
+ *       
+ *       **前置條件**：
+ *       - 課程審核狀態必須為 rejected
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: 課程 ID (數字)
+ *         example: 1
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ResubmitCourseRequest'
+ *     responses:
+ *       200:
+ *         description: 課程重新提交審核成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ResubmitCourseSuccessResponse'
+ *       400:
+ *         description: 業務邏輯錯誤 - 只有被拒絕的課程可以重新提交
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ResubmitCourseBusinessErrorResponse'
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       403:
+ *         description: 禁止存取 - 只能管理自己的課程
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CourseStatusPermissionErrorResponse'
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CourseStatusNotFoundErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
 // Resubmit course for review
 router.post('/:id/resubmit', authenticateToken, createSchemasMiddleware({ params: courseIdSchema }), courseController.resubmitCourse)
 
+/**
+ * @swagger
+ * /api/courses/{id}/publish:
+ *   post:
+ *     tags:
+ *       - Course Status Management
+ *     summary: 發布課程
+ *     description: |
+ *       將審核通過的課程發布到平台上，讓學生可以瀏覽和購買。需要教師身份認證。
+ *       
+ *       **業務邏輯**：
+ *       - 驗證使用者具有教師權限和課程所有權
+ *       - 檢查課程狀態：必須是草稿 (draft) 且審核通過 (approved)
+ *       - 將課程狀態設為已發布 (published)
+ *       - 發布後課程將在公開平台上可見
+ *       - 學生可以搜尋、瀏覽和購買該課程
+ *       
+ *       **前置條件**：
+ *       - 課程狀態必須為 draft
+ *       - 課程審核狀態必須為 approved
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: 課程 ID (數字)
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: 課程發布成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PublishCourseSuccessResponse'
+ *       400:
+ *         description: 業務邏輯錯誤 - 課程狀態不允許發布
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PublishCourseBusinessErrorResponse'
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       403:
+ *         description: 禁止存取 - 只能管理自己的課程
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CourseStatusPermissionErrorResponse'
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CourseStatusNotFoundErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
 // Publish course
 router.post('/:id/publish', authenticateToken, createSchemasMiddleware({ params: courseIdSchema }), courseController.publishCourse)
 
+/**
+ * @swagger
+ * /api/courses/{id}/archive:
+ *   post:
+ *     tags:
+ *       - Course Status Management
+ *     summary: 封存課程
+ *     description: |
+ *       將已發布的課程封存，讓課程從公開平台下架但保留資料。需要教師身份認證。
+ *       
+ *       **業務邏輯**：
+ *       - 驗證使用者具有教師權限和課程所有權
+ *       - 檢查課程狀態：只有已發布 (published) 的課程可以封存
+ *       - 將課程狀態設為已封存 (archived)
+ *       - 封存後課程將從公開平台移除，學生無法搜尋或購買
+ *       - 可選擇性添加封存原因說明
+ *       - 封存的課程可以透過重新審核流程再次發布
+ *       
+ *       **前置條件**：
+ *       - 課程狀態必須為 published
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: 課程 ID (數字)
+ *         example: 1
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ArchiveCourseRequest'
+ *     responses:
+ *       200:
+ *         description: 課程封存成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ArchiveCourseSuccessResponse'
+ *       400:
+ *         description: 業務邏輯錯誤 - 只有已發布的課程可以封存
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ArchiveCourseBusinessErrorResponse'
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       403:
+ *         description: 禁止存取 - 只能管理自己的課程
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CourseStatusPermissionErrorResponse'
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CourseStatusNotFoundErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
 // Archive course
 router.post('/:id/archive', authenticateToken, createSchemasMiddleware({ params: courseIdSchema }), courseController.archiveCourse)
 
