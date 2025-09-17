@@ -14,6 +14,22 @@ import { Errors } from '@utils/errors'
 import { ERROR_CODES } from '@constants/ErrorCode'
 
 /**
+ * 清理課程圖片暫存檔案的輔助函式
+ * @param filePath 檔案路徑
+ * @param context 清理的上下文（用於記錄）
+ */
+const cleanupTempFile = (filePath: string, context: string = ''): void => {
+  try {
+    if (filePath && fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath)
+      console.log(`已清理暫存課程圖片檔案 ${context}:`, filePath)
+    }
+  } catch (error) {
+    console.warn(`清理暫存課程圖片檔案失敗 ${context}:`, filePath, error)
+  }
+}
+
+/**
  * 課程圖片允許的 MIME 類型
  */
 export const COURSE_IMAGE_ALLOWED_MIME_TYPES = [
@@ -49,6 +65,8 @@ export const parseCourseImageFile = async (
   res: Response, 
   next: NextFunction
 ): Promise<void> => {
+  let tempFilePath: string | null = null
+  
   try {
     // 確保上傳目錄存在
     if (!fs.existsSync(COURSE_IMAGE_FORMIDABLE_CONFIG.uploadDir)) {
@@ -61,6 +79,12 @@ export const parseCourseImageFile = async (
     
     // 檢查是否有課程圖片檔案（可選）
     const courseImageFile = files.courseImage
+    
+    // 記錄暫存檔案路徑以便錯誤時清理
+    if (courseImageFile) {
+      const file = Array.isArray(courseImageFile) ? courseImageFile[0] : courseImageFile
+      tempFilePath = (file as any).filepath
+    }
     
     // 解析課程資料和方案資料
     let courseData = {}
@@ -77,6 +101,11 @@ export const parseCourseImageFile = async (
         priceOptions = JSON.parse(priceOptionsString as string)
       }
     } catch (parseError) {
+      // JSON 解析錯誤時清理暫存檔案
+      if (tempFilePath) {
+        cleanupTempFile(tempFilePath, '(JSON 解析錯誤)')
+      }
+      
       throw Errors.validationWithCode(
         ERROR_CODES.INVALID_JSON_FORMAT,
         { 
@@ -96,6 +125,11 @@ export const parseCourseImageFile = async (
 
     next()
   } catch (error) {
+    // 任何錯誤發生時都要清理暫存檔案
+    if (tempFilePath) {
+      cleanupTempFile(tempFilePath, '(解析錯誤)')
+    }
+    
     next(error)
   }
 }
@@ -123,6 +157,11 @@ export const validateCourseImageFileMiddleware = (
     if (!COURSE_IMAGE_ALLOWED_MIME_TYPES.includes(file.mimetype as any)) {
       const detailedMessage = `不支援的檔案格式 "${file.mimetype}"。僅支援: JPEG, JPG, PNG, WebP`
       
+      // 檔案格式錯誤時清理暫存檔案
+      if ((file as any).filepath) {
+        cleanupTempFile((file as any).filepath, '(檔案格式錯誤)')
+      }
+      
       throw Errors.validationWithCode(
         ERROR_CODES.COURSE_IMAGE_FORMAT_INVALID,
         { 
@@ -139,6 +178,11 @@ export const validateCourseImageFileMiddleware = (
       const maxSizeMB = (COURSE_IMAGE_MAX_FILE_SIZE / (1024 * 1024)).toFixed(1)
       const currentSizeMB = (file.size / (1024 * 1024)).toFixed(1)
       const detailedMessage = `檔案大小超過限制。當前大小: ${currentSizeMB}MB，最大允許: ${maxSizeMB}MB`
+      
+      // 檔案大小超過限制時清理暫存檔案
+      if ((file as any).filepath) {
+        cleanupTempFile((file as any).filepath, '(檔案大小超過限制)')
+      }
       
       throw Errors.validationWithCode(
         ERROR_CODES.COURSE_IMAGE_TOO_LARGE,
@@ -163,14 +207,10 @@ export const validateCourseImageFileMiddleware = (
     // 檔案驗證通過，繼續處理
     next()
   } catch (error) {
-    // 清理上傳的檔案（如果存在）
+    // 發生任何驗證錯誤時清理暫存檔案
     const file = (req as any).courseImage
     if (file && (file as any).filepath) {
-      try {
-        fs.unlinkSync((file as any).filepath)
-      } catch (cleanupError) {
-        console.warn('Failed to cleanup temp course image file after validation error:', (file as any).filepath)
-      }
+      cleanupTempFile((file as any).filepath, '(驗證失敗)')
     }
     
     next(error)
@@ -190,14 +230,10 @@ export const cleanupTempCourseImageFile = (
   const originalSend = res.send
 
   res.send = function(body) {
-    // 清理臨時檔案
+    // 清理暫存檔案
     const file = (req as any).courseImage
     if (file && (file as any).filepath) {
-      try {
-        fs.unlinkSync((file as any).filepath)
-      } catch (error) {
-        console.warn('Failed to cleanup temp course image file:', (file as any).filepath)
-      }
+      cleanupTempFile((file as any).filepath, '(請求完成)')
     }
     
     return originalSend.call(this, body)

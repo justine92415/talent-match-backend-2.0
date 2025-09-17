@@ -10,6 +10,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express'
+import * as fs from 'fs'
 import { courseService } from '@services/CourseService'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 import { MESSAGES, SUCCESS } from '@constants/Message'
@@ -20,24 +21,42 @@ export class CourseController {
    * 建立新課程（支援圖片上傳和價格方案）
    * POST /api/courses
    */
-  createCourse = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.user!.userId
-    const courseData = req.body
-    const courseImageFile = (req as any).courseImage // 來自 courseImageUpload middleware
+  createCourse = async (req: Request, res: Response, next: NextFunction) => {
+    const courseImageFile = (req as any).courseImage
+    
+    try {
+      const userId = req.user!.userId
+      const courseData = req.body
 
-    // 準備完整的課程建立資料
-    const createCourseData = {
-      ...courseData,
-      courseImageFile // 檔案物件，由 Service 層處理上傳
+      // 準備完整的課程建立資料
+      const createCourseData = {
+        ...courseData,
+        courseImageFile // 檔案物件，由 Service 層處理上傳
+      }
+
+      // 呼叫服務層建立課程（包含圖片上傳和價格方案建立）
+      const course = await courseService.createCourseWithImageAndPrices(userId, createCourseData)
+
+      res.status(201).json(handleCreated({
+        course
+      }, SUCCESS.COURSE_CREATED))
+
+    } catch (error) {
+      // 發生錯誤時清理暫存圖片檔案
+      if (courseImageFile && (courseImageFile as any).filepath) {
+        try {
+          if (fs.existsSync((courseImageFile as any).filepath)) {
+            fs.unlinkSync((courseImageFile as any).filepath)
+            console.log('已清理暫存課程圖片檔案:', (courseImageFile as any).filepath)
+          }
+        } catch (cleanupError) {
+          console.error('清理暫存課程圖片檔案時發生錯誤:', (courseImageFile as any).filepath, cleanupError)
+        }
+      }
+      
+      next(error)
     }
-
-    // 呼叫服務層建立課程（包含圖片上傳和價格方案建立）
-    const course = await courseService.createCourseWithImageAndPrices(userId, createCourseData)
-
-    res.status(201).json(handleCreated({
-      course
-    }, SUCCESS.COURSE_CREATED))
-  })
+  }
 
   /**
    * 更新課程
