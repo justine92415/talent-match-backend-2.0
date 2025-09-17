@@ -190,15 +190,22 @@ router.post('/',
  *   put:
  *     tags:
  *       - Course Management
- *     summary: 更新課程資訊
+ *     summary: 更新課程資訊（支援圖片上傳和價格方案編輯）
  *     description: |
  *       更新指定的課程資訊，需要教師身份認證。只能更新自己的課程。
  *       
+ *       **功能特性**：
+ *       - 支援課程基本資料更新
+ *       - 支援課程圖片上傳和替換（自動清理舊圖片）
+ *       - 支援價格方案的完整替換（新增、修改、刪除）
+ *       - 使用 multipart/form-data 格式上傳
+ *       
  *       **業務邏輯**：
- *       - 驗證使用者具有教師權限
+ *       - 驗證使用者具有教師權限且已通過審核
  *       - 驗證課程存在且為使用者所擁有
- *       - 驗證請求參數 (所有參數皆為選填)
- *       - 更新課程資料並回傳完整課程資訊
+ *       - 如有上傳新圖片，會自動替換並清理舊圖片
+ *       - 價格方案會完全替換（不是增量更新）
+ *       - 所有參數皆為選填，未提供的欄位保持原值
  *       - 自動更新 updated_at 時間戳
  *     security:
  *       - bearerAuth: []
@@ -214,24 +221,24 @@ router.post('/',
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
- *             $ref: '#/components/schemas/UpdateCourseRequest'
+ *             $ref: '#/components/schemas/IntegratedCourseCreateRequest'
  *     responses:
  *       200:
  *         description: 課程更新成功
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UpdateCourseSuccessResponse'
+ *               $ref: '#/components/schemas/CreateCourseSuccessResponse'
  *       400:
  *         description: 請求參數錯誤或業務邏輯錯誤
  *         content:
  *           application/json:
  *             schema:
  *               oneOf:
- *                 - $ref: '#/components/schemas/UpdateCourseValidationErrorResponse'
- *                 - $ref: '#/components/schemas/UpdateCourseBusinessErrorResponse'
+ *                 - $ref: '#/components/schemas/CreateCourseValidationErrorResponse'
+ *                 - $ref: '#/components/schemas/CreateCourseBusinessErrorResponse'
  *             examples:
  *               validation_error:
  *                 summary: 參數驗證錯誤
@@ -239,8 +246,8 @@ router.post('/',
  *                   status: "error"
  *                   message: "參數驗證失敗"
  *                   errors:
- *                     name: ["課程名稱長度不能超過255字元"]
- *                     main_category_id: ["主分類 ID 必須為正整數"]
+ *                     courseData: ["課程資料格式錯誤"]
+ *                     priceOptions: ["價格方案至少需要一個"]
  *               business_error:
  *                 summary: 業務邏輯錯誤
  *                 value:
@@ -271,8 +278,15 @@ router.post('/',
  *             schema:
  *               $ref: '#/components/schemas/ServerErrorResponse'
  */
-// Update course
-router.put('/:id', authenticateToken, createSchemasMiddleware({ params: courseIdSchema, body: updateCourseSchema }), courseController.updateCourse)
+// Update course with integrated multipart data support (similar to create)
+router.put('/:id', 
+  authenticateToken, 
+  parseCourseImageFile,
+  validateCourseImageFileMiddleware,
+  createSchemasMiddleware({ params: courseIdSchema, body: integratedCourseCreateSchema }),
+  cleanupTempCourseImageFile,
+  courseController.updateCourse
+)
 
 /**
  * @swagger

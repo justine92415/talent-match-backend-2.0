@@ -9,6 +9,7 @@
 
 import { Repository } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
+import * as fs from 'fs'
 import { dataSource } from '@db/data-source'
 import { Course } from '@entities/Course'
 import { CoursePriceOption } from '@entities/CoursePriceOption'
@@ -401,6 +402,125 @@ export class CourseService {
 
     const savedCourse = await this.courseRepository.save(course)
     return this.mapToBasicInfo(savedCourse)
+  }
+
+  /**
+   * 更新課程（包含圖片上傳和價格方案編輯）
+   * @param courseId 課程ID
+   * @param userId 使用者ID
+   * @param updateData 更新資料
+   * @returns 更新後的課程
+   */
+  async updateCourseWithImageAndPrices(courseId: number, userId: number, updateData: any): Promise<CourseBasicInfo> {
+    // 驗證教師權限和課程擁有權
+    const teacher = await this.validateTeacher(userId)
+    const course = await this.validateCourseOwnership(courseId, teacher.id)
+
+    const { courseImageFile, priceOptions, ...courseData } = updateData
+
+    // 開始資料庫交易
+    const queryRunner = dataSource.createQueryRunner()
+    await queryRunner.connect()
+    await queryRunner.startTransaction()
+
+    let newImageUrl: string | null = course.main_image // 預設使用現有圖片
+
+    try {
+      // 1. 處理圖片更新（如果有提供新圖片）
+      if (courseImageFile) {
+        try {
+          // 儲存舊圖片 URL 以便後續清理
+          const oldImageUrl = course.main_image
+
+          // 上傳新圖片到 Storage
+          const uploadedFile = await this.uploadCourseImageToStorage(courseImageFile, userId)
+          newImageUrl = uploadedFile.downloadURL
+
+          // 清理舊圖片（如果存在）
+          if (oldImageUrl) {
+            console.log(`準備清理舊課程圖片: ${oldImageUrl}`)
+            try {
+              const firebaseUrl = this.extractFirebaseUrlFromDownloadUrl(oldImageUrl)
+              console.log(`解析出的 Firebase URL: ${firebaseUrl}`)
+              await this.fileUploadService.deleteFile(firebaseUrl)
+              console.log('✅ 舊課程圖片已清理:', oldImageUrl)
+            } catch (error) {
+              console.error('❌ 清理舊課程圖片失敗:', error)
+              // 不拋出錯誤，避免影響主要流程
+            }
+          }
+        } catch (error) {
+          console.error('課程圖片上傳失敗:', error)
+          throw new BusinessError(
+            ERROR_CODES.COURSE_IMAGE_UPLOAD_FAILED,
+            '課程圖片上傳失敗',
+            500
+          )
+        }
+      }
+
+      // 2. 更新課程基本資料
+      Object.assign(course, {
+        name: courseData.name || course.name,
+        content: courseData.content || course.content,
+        main_image: newImageUrl,
+        main_category_id: courseData.main_category_id || course.main_category_id,
+        sub_category_id: courseData.sub_category_id || course.sub_category_id,
+        city_id: courseData.city_id || course.city_id,
+        survey_url: courseData.survey_url !== undefined ? courseData.survey_url : course.survey_url,
+        purchase_message: courseData.purchase_message !== undefined ? courseData.purchase_message : course.purchase_message,
+        updated_at: new Date()
+      })
+
+      // 儲存課程
+      const savedCourse = await queryRunner.manager.save(Course, course)
+
+      // 3. 處理價格方案更新（如果有提供）
+      if (priceOptions) {
+        // 先刪除所有現有的價格方案
+        await queryRunner.manager.delete(CoursePriceOption, { course_id: savedCourse.id })
+
+        // 新增新的價格方案
+        if (priceOptions.length > 0) {
+          const priceOptionEntities = priceOptions.map((option: any) => {
+            const priceOption = new CoursePriceOption()
+            priceOption.uuid = uuidv4()
+            priceOption.course_id = savedCourse.id
+            priceOption.price = option.price
+            priceOption.quantity = option.quantity
+            priceOption.is_active = true
+            return priceOption
+          })
+
+          await queryRunner.manager.save(CoursePriceOption, priceOptionEntities)
+        }
+      }
+
+      // 提交交易
+      await queryRunner.commitTransaction()
+
+      return this.mapToBasicInfo(savedCourse)
+
+    } catch (error) {
+      // 回滾交易
+      await queryRunner.rollbackTransaction()
+      
+      // 清理暫存檔案（如果有）
+      if (courseImageFile && (courseImageFile as any).filepath) {
+        try {
+          if (fs.existsSync((courseImageFile as any).filepath)) {
+            fs.unlinkSync((courseImageFile as any).filepath)
+            console.log('已清理暫存課程圖片檔案:', (courseImageFile as any).filepath)
+          }
+        } catch (cleanupError) {
+          console.error('清理暫存檔案失敗:', cleanupError)
+        }
+      }
+      
+      throw error
+    } finally {
+      await queryRunner.release()
+    }
   }
 
   /**

@@ -59,20 +59,45 @@ export class CourseController {
   }
 
   /**
-   * 更新課程
+   * 更新課程（支援圖片上傳和價格方案編輯）
    * PUT /api/courses/:id
    */
-  updateCourse = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.user!.userId
-    const courseId = parseInt(req.params.id)
-    const updateData = req.body
+  updateCourse = async (req: Request, res: Response, next: NextFunction) => {
+    const courseImageFile = (req as any).courseImage
+    
+    try {
+      const userId = req.user!.userId
+      const courseId = parseInt(req.params.id)
+      const courseData = req.body
 
-    const course = await courseService.updateCourse(courseId, userId, updateData)
+      // 準備完整的課程更新資料
+      const updateCourseData = {
+        ...courseData,
+        courseImageFile // 檔案物件，由 Service 層處理上傳
+      }
 
-    res.status(200).json(handleSuccess({
-      course
-    }, SUCCESS.COURSE_UPDATED))
-  })
+      // 呼叫服務層更新課程（包含圖片上傳和價格方案更新）
+      const course = await courseService.updateCourseWithImageAndPrices(courseId, userId, updateCourseData)
+
+      res.status(200).json(handleSuccess({
+        course
+      }, SUCCESS.COURSE_UPDATED))
+
+    } catch (error) {
+      // 發生錯誤時清理暫存圖片檔案
+      if (courseImageFile && (courseImageFile as any).filepath) {
+        try {
+          if (fs.existsSync((courseImageFile as any).filepath)) {
+            fs.unlinkSync((courseImageFile as any).filepath)
+            console.log('已清理暫存課程圖片檔案:', (courseImageFile as any).filepath)
+          }
+        } catch (cleanupError) {
+          console.error('清理暫存檔案失敗:', cleanupError)
+        }
+      }
+      next(error)
+    }
+  }
 
   /**
    * 取得課程詳情
