@@ -39,6 +39,11 @@ export interface CourseBasicInfo {
   updated_at: Date
 }
 
+/** 包含價格方案的課程資訊（供編輯使用） */
+export interface CourseWithPriceOptions extends CourseBasicInfo {
+  price_options: PriceOption[]
+}
+
 /** 課程建立請求參數 */
 export interface CreateCourseRequest {
   name: string

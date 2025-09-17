@@ -115,6 +115,21 @@ export class CourseController {
     res.status(200).json(handleSuccess(null, SUCCESS.COURSE_DELETED))
   })
 
+  /**
+   * 取得課程編輯資料
+   * GET /api/courses/:id/edit
+   */
+  getCourseForEdit = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user!.userId
+    const courseId = parseInt(req.params.id)
+
+    const courseWithPriceOptions = await courseService.getCourseForEdit(courseId, userId)
+
+    res.status(200).json(handleSuccess({
+      course: courseWithPriceOptions
+    }))
+  })
+
   // ==================== 課程狀態管理方法 ====================
 
   /**

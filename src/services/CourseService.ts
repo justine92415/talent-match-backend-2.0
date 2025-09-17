@@ -16,7 +16,7 @@ import { Teacher } from '@entities/Teacher'
 import { BusinessError } from '@utils/errors'
 import { MESSAGES } from '@constants/Message'
 import { ERROR_CODES } from '@constants/ErrorCode'
-import type { CreateCourseRequest, UpdateCourseRequest, CourseListQuery, CourseBasicInfo, SubmitCourseRequest, ResubmitCourseRequest, ArchiveCourseRequest } from '@models/index'
+import type { CreateCourseRequest, UpdateCourseRequest, CourseListQuery, CourseBasicInfo, CourseWithPriceOptions, SubmitCourseRequest, ResubmitCourseRequest, ArchiveCourseRequest } from '@models/index'
 import { CourseStatus, ApplicationStatus } from '@entities/enums'
 import { FileUploadService } from './fileUploadService'
 
@@ -444,6 +444,56 @@ export class CourseService {
     }
 
     return this.mapToBasicInfo(course)
+  }
+
+  /**
+   * 取得課程編輯資料（包含價格方案）
+   * 專門供編輯頁面使用，只有課程擁有者可以存取
+   * @param courseId 課程ID
+   * @param userId 使用者ID（來自JWT）
+   * @returns 包含價格方案的完整課程資料
+   */
+  async getCourseForEdit(courseId: number, userId: number): Promise<CourseWithPriceOptions> {
+    // 驗證教師權限和課程所有權
+    const { course } = await this.validateTeacherAndCourseOwnership(userId, courseId)
+
+    // 查詢完整課程資料
+    const fullCourse = await this.courseRepository.findOne({
+      where: { id: courseId },
+      select: [
+        'id', 'uuid', 'name', 'content', 'main_image', 'rate', 'review_count',
+        'status', 'teacher_id', 'created_at', 'updated_at', 'view_count', 'purchase_count',
+        'student_count', 'main_category_id', 'sub_category_id', 'city_id', 'dist_id',
+        'survey_url', 'purchase_message', 'application_status', 'submission_notes', 'archive_reason'
+      ]
+    })
+
+    if (!fullCourse) {
+      throw new BusinessError(ERROR_CODES.COURSE_NOT_FOUND, MESSAGES.BUSINESS.COURSE_NOT_FOUND, 404)
+    }
+
+    // 查詢價格方案
+    const priceOptions = await this.coursePriceOptionRepository.find({
+      where: { course_id: courseId },
+      order: { price: 'ASC' }
+    })
+
+    // 組合完整資料
+    const courseWithPriceOptions: CourseWithPriceOptions = {
+      ...this.mapToBasicInfo(fullCourse),
+      price_options: priceOptions.map(option => ({
+        id: option.id,
+        uuid: option.uuid,
+        course_id: option.course_id,
+        price: Number(option.price), // 確保價格以數字格式回傳
+        quantity: option.quantity,
+        is_active: option.is_active,
+        created_at: option.created_at,
+        updated_at: option.updated_at
+      }))
+    }
+
+    return courseWithPriceOptions
   }
 
   /**

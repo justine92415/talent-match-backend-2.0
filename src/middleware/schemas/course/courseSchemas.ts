@@ -67,7 +67,7 @@ export const createCourseSchema = Joi.object({
 
   survey_url: Joi.string()
     .uri()
-    .allow('')
+    .allow('', null)
     .optional()
     .messages({
       'string.uri': ValidationMessages.SURVEY_URL_INVALID
@@ -75,7 +75,7 @@ export const createCourseSchema = Joi.object({
 
   purchase_message: Joi.string()
     .max(500)
-    .allow('')
+    .allow('', null)
     .optional()
     .messages({
       'string.max': ValidationMessages.PURCHASE_MESSAGE_TOO_LONG
@@ -136,7 +136,7 @@ export const updateCourseSchema = Joi.object({
 
   survey_url: Joi.string()
     .uri()
-    .allow('')
+    .allow('', null)
     .optional()
     .messages({
       'string.uri': ValidationMessages.SURVEY_URL_INVALID
@@ -144,7 +144,7 @@ export const updateCourseSchema = Joi.object({
 
   purchase_message: Joi.string()
     .max(500)
-    .allow('')
+    .allow('', null)
     .optional()
     .messages({
       'string.max': ValidationMessages.PURCHASE_MESSAGE_TOO_LONG

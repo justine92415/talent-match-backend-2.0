@@ -285,6 +285,25 @@ export const courseSchemas = {
     }
   },
 
+  // 包含價格方案的課程詳細資訊 Schema (供編輯使用)
+  CourseWithPriceOptions: {
+    allOf: [
+      { $ref: '#/components/schemas/CourseBasicInfo' },
+      {
+        type: 'object',
+        properties: {
+          price_options: {
+            type: 'array',
+            items: {
+              $ref: '#/components/schemas/PriceOption'
+            },
+            description: '課程價格方案列表'
+          }
+        }
+      }
+    ]
+  },
+
   // ==================== 成功回應 Schema ====================
 
   // 課程建立成功回應 Schema
@@ -367,6 +386,34 @@ export const courseSchemas = {
           }
         },
         description: '課程詳細資料'
+      }
+    }
+  },
+
+  // 課程編輯資料成功回應 Schema
+  GetCourseForEditSuccessResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        enum: ['success'],
+        description: '回應狀態 (取得成功固定為 success)',
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        nullable: true,
+        description: '回應訊息 (可能為空)',
+        example: null
+      },
+      data: {
+        type: 'object',
+        properties: {
+          course: {
+            $ref: '#/components/schemas/CourseWithPriceOptions'
+          }
+        },
+        description: '包含價格方案的完整課程資料'
       }
     }
   },
@@ -1139,6 +1186,38 @@ export const courseSchemas = {
 
   // 課程更新不存在錯誤回應 Schema
   UpdateCourseNotFoundErrorResponse: {
+    allOf: [
+      { $ref: '#/components/schemas/NotFoundErrorResponse' },
+      {
+        type: 'object',
+        properties: {
+          message: {
+            example: '課程不存在'
+          }
+        }
+      }
+    ]
+  },
+
+  // ==================== 錯誤回應 Schema (取得編輯資料) ====================
+
+  // 課程編輯權限錯誤回應 Schema
+  GetCourseEditPermissionErrorResponse: {
+    allOf: [
+      { $ref: '#/components/schemas/ForbiddenErrorResponse' },
+      {
+        type: 'object',
+        properties: {
+          message: {
+            example: '只能編輯自己的課程'
+          }
+        }
+      }
+    ]
+  },
+
+  // 課程編輯不存在錯誤回應 Schema
+  GetCourseEditNotFoundErrorResponse: {
     allOf: [
       { $ref: '#/components/schemas/NotFoundErrorResponse' },
       {

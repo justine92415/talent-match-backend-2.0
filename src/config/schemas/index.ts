@@ -10,6 +10,7 @@ import { teacherSchemas } from './teacher'
 import { tagsSchemas } from './tags'
 import { courseSchemas } from './course'
 import { videoSchemas } from './video'
+import { priceOptionSchemas } from './priceOption'
 
 // 合併所有 Schema
 export const allSchemas = {
@@ -19,8 +20,9 @@ export const allSchemas = {
   ...teacherSchemas,
   ...tagsSchemas,
   ...courseSchemas,
-  ...videoSchemas
+  ...videoSchemas,
+  ...priceOptionSchemas
 }
 
 // 也可以分別匯出，供特定需求使用
-export { commonSchemas, authSchemas, userAvatarSchemas, teacherSchemas, tagsSchemas, courseSchemas, videoSchemas }
+export { commonSchemas, authSchemas, userAvatarSchemas, teacherSchemas, tagsSchemas, courseSchemas, videoSchemas, priceOptionSchemas }

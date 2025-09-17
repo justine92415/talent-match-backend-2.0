@@ -480,6 +480,78 @@ router.delete('/:id', authenticateToken, createSchemasMiddleware({ params: cours
 
 /**
  * @swagger
+ * /api/courses/{id}/edit:
+ *   get:
+ *     tags:
+ *       - Course Management
+ *     summary: 取得課程編輯資料
+ *     description: |
+ *       取得課程的完整編輯資料，包含基本資訊和價格方案。專門供編輯頁面使用。
+ *       
+ *       **權限限制**：
+ *       - 只有課程擁有者可以存取
+ *       - 需要教師身份認證
+ *       - 不限課程狀態（可編輯任何狀態的自有課程）
+ *       
+ *       **回應資料**：
+ *       - 完整的課程基本資訊
+ *       - 所有價格方案列表（按價格排序）
+ *       - 供前端編輯表單初始化使用
+ *       
+ *       **業務邏輯**：
+ *       - 驗證使用者具有教師權限
+ *       - 驗證課程所有權
+ *       - 查詢完整課程資料
+ *       - 查詢關聯的價格方案
+ *       - 回傳整合資料
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: 課程 ID (數字)
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: 成功取得課程編輯資料
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GetCourseForEditSuccessResponse'
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       403:
+ *         description: 禁止存取 - 只能編輯自己的課程
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GetCourseEditPermissionErrorResponse'
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GetCourseEditNotFoundErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
+// Get course edit data
+router.get('/:id/edit', authenticateToken, createSchemasMiddleware({ params: courseIdSchema }), courseController.getCourseForEdit)
+
+/**
+ * @swagger
  * /api/courses/{id}/submit:
  *   post:
  *     tags:
