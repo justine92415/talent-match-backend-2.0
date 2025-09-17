@@ -1938,5 +1938,767 @@ export const teacherSchemas = {
         }
       }
     ]
+  },
+
+  // ==================== 管理員功能相關 Schema ==================== 
+
+  // 教師申請資訊 Schema
+  TeacherApplicationInfo: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '申請 ID',
+        example: 1
+      },
+      teacher_id: {
+        type: 'integer',
+        description: '教師 ID',
+        example: 1
+      },
+      name: {
+        type: 'string',
+        description: '教師姓名',
+        example: '王小明'
+      },
+      email: {
+        type: 'string',
+        description: '教師電子郵件',
+        example: 'teacher@example.com'
+      },
+      nationality: {
+        type: 'string',
+        description: '國籍',
+        example: '台灣'
+      },
+      introduction: {
+        type: 'string',
+        description: '自我介紹',
+        example: '我是一位經驗豐富的程式設計講師'
+      },
+      teaching_experience: {
+        type: 'string',
+        description: '教學經驗',
+        example: '5年以上教學經驗'
+      },
+      application_status: {
+        type: 'string',
+        enum: ['pending', 'approved', 'rejected'],
+        description: '申請狀態',
+        example: 'pending'
+      },
+      created_at: {
+        type: 'string',
+        format: 'date-time',
+        description: '申請時間',
+        example: '2024-01-15T10:30:00.000Z'
+      }
+    }
+  },
+
+  // ==================== 教師後台相關 Schema ==================== 
+
+  // 教師儀表板總覽 Schema
+  TeacherDashboardOverview: {
+    type: 'object',
+    properties: {
+      total_students: {
+        type: 'integer',
+        description: '總學生數',
+        example: 25
+      },
+      active_courses: {
+        type: 'integer',
+        description: '活躍課程數',
+        example: 3
+      },
+      total_earnings: {
+        type: 'number',
+        format: 'float',
+        description: '總收入',
+        example: 15000.50
+      },
+      pending_reservations: {
+        type: 'integer',
+        description: '待確認預約數',
+        example: 2
+      },
+      average_rating: {
+        type: 'number',
+        format: 'float',
+        description: '平均評分',
+        example: 4.8
+      },
+      total_reviews: {
+        type: 'integer',
+        description: '總評價數',
+        example: 45
+      }
+    }
+  },
+
+  // 教師詳細統計 Schema
+  TeacherDetailedStatistics: {
+    type: 'object',
+    properties: {
+      monthly_earnings: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            month: {
+              type: 'string',
+              description: '月份',
+              example: '2024-01'
+            },
+            amount: {
+              type: 'number',
+              format: 'float',
+              description: '金額',
+              example: 2500.00
+            }
+          }
+        }
+      },
+      course_performance: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            course_name: {
+              type: 'string',
+              description: '課程名稱',
+              example: 'JavaScript 基礎'
+            },
+            student_count: {
+              type: 'integer',
+              description: '學生數',
+              example: 12
+            },
+            rating: {
+              type: 'number',
+              format: 'float',
+              description: '評分',
+              example: 4.7
+            }
+          }
+        }
+      },
+      teaching_hours: {
+        type: 'object',
+        properties: {
+          this_month: {
+            type: 'integer',
+            description: '本月教學時數',
+            example: 40
+          },
+          last_month: {
+            type: 'integer',
+            description: '上月教學時數',
+            example: 35
+          }
+        }
+      }
+    }
+  },
+
+  // 教師學生資訊 Schema
+  TeacherStudentInfo: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '學生 ID',
+        example: 1
+      },
+      name: {
+        type: 'string',
+        description: '學生姓名',
+        example: '李小華'
+      },
+      email: {
+        type: 'string',
+        description: '學生電子郵件',
+        example: 'student@example.com'
+      },
+      avatar: {
+        type: 'string',
+        nullable: true,
+        description: '學生頭像',
+        example: 'https://example.com/avatar.jpg'
+      },
+      enrolled_courses: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            course_name: {
+              type: 'string',
+              description: '課程名稱',
+              example: 'JavaScript 基礎'
+            },
+            progress: {
+              type: 'number',
+              format: 'float',
+              description: '學習進度 (0-100%)',
+              example: 75.5
+            }
+          }
+        }
+      },
+      total_lessons: {
+        type: 'integer',
+        description: '總課堂數',
+        example: 10
+      },
+      completed_lessons: {
+        type: 'integer',
+        description: '已完成課堂數',
+        example: 7
+      }
+    }
+  },
+
+  // 教師預約資訊 Schema
+  TeacherReservationInfo: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '預約 ID',
+        example: 1
+      },
+      student_name: {
+        type: 'string',
+        description: '學生姓名',
+        example: '張小明'
+      },
+      course_name: {
+        type: 'string',
+        description: '課程名稱',
+        example: 'Python 基礎'
+      },
+      reservation_date: {
+        type: 'string',
+        format: 'date',
+        description: '預約日期',
+        example: '2024-01-20'
+      },
+      reservation_time: {
+        type: 'string',
+        description: '預約時間',
+        example: '14:00-15:00'
+      },
+      status: {
+        type: 'string',
+        enum: ['pending', 'confirmed', 'completed', 'cancelled'],
+        description: '預約狀態',
+        example: 'pending'
+      },
+      notes: {
+        type: 'string',
+        nullable: true,
+        description: '備註',
+        example: '學生希望複習迴圈概念'
+      }
+    }
+  },
+
+  // 教師收入資訊 Schema
+  TeacherEarningInfo: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '收入記錄 ID',
+        example: 1
+      },
+      source_type: {
+        type: 'string',
+        enum: ['course_sale', 'lesson_fee', 'bonus'],
+        description: '收入來源類型',
+        example: 'course_sale'
+      },
+      amount: {
+        type: 'number',
+        format: 'float',
+        description: '收入金額',
+        example: 1500.00
+      },
+      description: {
+        type: 'string',
+        description: '收入描述',
+        example: 'JavaScript 基礎課程銷售'
+      },
+      earned_date: {
+        type: 'string',
+        format: 'date',
+        description: '收入日期',
+        example: '2024-01-15'
+      },
+      status: {
+        type: 'string',
+        enum: ['pending', 'confirmed', 'paid'],
+        description: '收入狀態',
+        example: 'confirmed'
+      }
+    }
+  },
+
+  // 收入摘要 Schema
+  EarningSummary: {
+    type: 'object',
+    properties: {
+      total_earnings: {
+        type: 'number',
+        format: 'float',
+        description: '總收入',
+        example: 25000.00
+      },
+      this_month_earnings: {
+        type: 'number',
+        format: 'float',
+        description: '本月收入',
+        example: 3500.00
+      },
+      last_month_earnings: {
+        type: 'number',
+        format: 'float',
+        description: '上月收入',
+        example: 2800.00
+      },
+      pending_amount: {
+        type: 'number',
+        format: 'float',
+        description: '待結算金額',
+        example: 800.00
+      },
+      growth_rate: {
+        type: 'number',
+        format: 'float',
+        description: '成長率 (%)',
+        example: 25.0
+      }
+    }
+  },
+
+  // 教師結算資訊 Schema
+  TeacherSettlementInfo: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '結算 ID',
+        example: 1
+      },
+      period_start: {
+        type: 'string',
+        format: 'date',
+        description: '結算期間開始',
+        example: '2024-01-01'
+      },
+      period_end: {
+        type: 'string',
+        format: 'date',
+        description: '結算期間結束',
+        example: '2024-01-31'
+      },
+      total_amount: {
+        type: 'number',
+        format: 'float',
+        description: '結算總金額',
+        example: 5000.00
+      },
+      platform_fee: {
+        type: 'number',
+        format: 'float',
+        description: '平台手續費',
+        example: 500.00
+      },
+      net_amount: {
+        type: 'number',
+        format: 'float',
+        description: '實際收入',
+        example: 4500.00
+      },
+      status: {
+        type: 'string',
+        enum: ['pending', 'processing', 'completed'],
+        description: '結算狀態',
+        example: 'completed'
+      },
+      settled_at: {
+        type: 'string',
+        format: 'date-time',
+        nullable: true,
+        description: '結算時間',
+        example: '2024-02-01T10:00:00.000Z'
+      }
+    }
+  },
+
+  // 結算詳細資訊 Schema
+  SettlementDetailInfo: {
+    type: 'object',
+    properties: {
+      settlement_id: {
+        type: 'integer',
+        description: '結算 ID',
+        example: 1
+      },
+      period_info: {
+        type: 'object',
+        properties: {
+          start_date: {
+            type: 'string',
+            format: 'date',
+            description: '期間開始日',
+            example: '2024-01-01'
+          },
+          end_date: {
+            type: 'string',
+            format: 'date',
+            description: '期間結束日',
+            example: '2024-01-31'
+          }
+        }
+      },
+      earnings_breakdown: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            source: {
+              type: 'string',
+              description: '收入來源',
+              example: 'JavaScript 基礎課程'
+            },
+            amount: {
+              type: 'number',
+              format: 'float',
+              description: '金額',
+              example: 1500.00
+            },
+            date: {
+              type: 'string',
+              format: 'date',
+              description: '收入日期',
+              example: '2024-01-15'
+            }
+          }
+        }
+      },
+      deductions: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            type: {
+              type: 'string',
+              description: '扣款類型',
+              example: '平台手續費'
+            },
+            amount: {
+              type: 'number',
+              format: 'float',
+              description: '扣款金額',
+              example: 150.00
+            },
+            rate: {
+              type: 'number',
+              format: 'float',
+              description: '扣款比例 (%)',
+              example: 10.0
+            }
+          }
+        }
+      },
+      final_amount: {
+        type: 'number',
+        format: 'float',
+        description: '最終結算金額',
+        example: 4500.00
+      }
+    }
+  },
+
+  // 收入統計 Schema
+  EarningsStatistics: {
+    type: 'object',
+    properties: {
+      overview: {
+        type: 'object',
+        properties: {
+          total_revenue: {
+            type: 'number',
+            format: 'float',
+            description: '總營收',
+            example: 50000.00
+          },
+          average_monthly: {
+            type: 'number',
+            format: 'float',
+            description: '月均收入',
+            example: 4166.67
+          },
+          best_month: {
+            type: 'object',
+            properties: {
+              month: {
+                type: 'string',
+                description: '最佳月份',
+                example: '2024-03'
+              },
+              amount: {
+                type: 'number',
+                format: 'float',
+                description: '收入金額',
+                example: 6500.00
+              }
+            }
+          }
+        }
+      },
+      trends: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            month: {
+              type: 'string',
+              description: '月份',
+              example: '2024-01'
+            },
+            earnings: {
+              type: 'number',
+              format: 'float',
+              description: '收入',
+              example: 3500.00
+            },
+            growth: {
+              type: 'number',
+              format: 'float',
+              description: '成長率 (%)',
+              example: 12.5
+            }
+          }
+        }
+      },
+      by_source: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            source_type: {
+              type: 'string',
+              description: '收入來源',
+              example: '課程銷售'
+            },
+            amount: {
+              type: 'number',
+              format: 'float',
+              description: '金額',
+              example: 35000.00
+            },
+            percentage: {
+              type: 'number',
+              format: 'float',
+              description: '佔比 (%)',
+              example: 70.0
+            }
+          }
+        }
+      }
+    }
+  },
+
+  // 學生詳細資訊 Schema
+  StudentDetailInfo: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '學生 ID',
+        example: 1
+      },
+      name: {
+        type: 'string',
+        description: '學生姓名',
+        example: '李小華'
+      },
+      email: {
+        type: 'string',
+        format: 'email',
+        description: '學生電子郵件',
+        example: 'student@example.com'
+      },
+      avatar: {
+        type: 'string',
+        nullable: true,
+        description: '學生頭像 URL',
+        example: 'https://example.com/avatars/student.jpg'
+      },
+      phone: {
+        type: 'string',
+        nullable: true,
+        description: '聯絡電話',
+        example: '0912345678'
+      },
+      registration_date: {
+        type: 'string',
+        format: 'date-time',
+        description: '註冊日期',
+        example: '2024-01-15T10:30:00.000Z'
+      },
+      learning_status: {
+        type: 'string',
+        enum: ['active', 'inactive', 'suspended'],
+        description: '學習狀態',
+        example: 'active'
+      },
+      enrolled_courses: {
+        type: 'array',
+        description: '已報名課程',
+        items: {
+          type: 'object',
+          properties: {
+            course_id: {
+              type: 'integer',
+              description: '課程 ID',
+              example: 1
+            },
+            course_name: {
+              type: 'string',
+              description: '課程名稱',
+              example: 'JavaScript 基礎入門'
+            },
+            enrollment_date: {
+              type: 'string',
+              format: 'date-time',
+              description: '報名日期',
+              example: '2024-01-20T14:00:00.000Z'
+            },
+            progress: {
+              type: 'number',
+              format: 'float',
+              description: '學習進度 (0-100)',
+              example: 75.5
+            },
+            status: {
+              type: 'string',
+              enum: ['enrolled', 'in_progress', 'completed', 'dropped'],
+              description: '課程狀態',
+              example: 'in_progress'
+            }
+          }
+        }
+      },
+      lesson_history: {
+        type: 'array',
+        description: '上課記錄',
+        items: {
+          type: 'object',
+          properties: {
+            lesson_date: {
+              type: 'string',
+              format: 'date',
+              description: '上課日期',
+              example: '2024-01-25'
+            },
+            lesson_time: {
+              type: 'string',
+              description: '上課時間',
+              example: '14:00-15:00'
+            },
+            course_name: {
+              type: 'string',
+              description: '課程名稱',
+              example: 'JavaScript 基礎入門'
+            },
+            status: {
+              type: 'string',
+              enum: ['attended', 'absent', 'cancelled'],
+              description: '出席狀態',
+              example: 'attended'
+            },
+            notes: {
+              type: 'string',
+              nullable: true,
+              description: '課堂筆記',
+              example: '學生對迴圈概念掌握良好'
+            }
+          }
+        }
+      },
+      payment_history: {
+        type: 'array',
+        description: '付款記錄',
+        items: {
+          type: 'object',
+          properties: {
+            payment_date: {
+              type: 'string',
+              format: 'date-time',
+              description: '付款日期',
+              example: '2024-01-20T10:00:00.000Z'
+            },
+            amount: {
+              type: 'number',
+              format: 'float',
+              description: '付款金額',
+              example: 2000.00
+            },
+            course_name: {
+              type: 'string',
+              description: '課程名稱',
+              example: 'JavaScript 基礎入門'
+            },
+            payment_method: {
+              type: 'string',
+              description: '付款方式',
+              example: '信用卡'
+            },
+            status: {
+              type: 'string',
+              enum: ['pending', 'completed', 'failed', 'refunded'],
+              description: '付款狀態',
+              example: 'completed'
+            }
+          }
+        }
+      },
+      total_paid: {
+        type: 'number',
+        format: 'float',
+        description: '總付款金額',
+        example: 5000.00
+      },
+      learning_preferences: {
+        type: 'object',
+        nullable: true,
+        description: '學習偏好',
+        properties: {
+          preferred_time: {
+            type: 'array',
+            items: {
+              type: 'string'
+            },
+            description: '偏好上課時間',
+            example: ['週二 14:00-16:00', '週四 19:00-21:00']
+          },
+          learning_style: {
+            type: 'string',
+            description: '學習風格',
+            example: '視覺型學習者'
+          },
+          special_requirements: {
+            type: 'string',
+            nullable: true,
+            description: '特殊需求',
+            example: '需要中文字幕'
+          }
+        }
+      }
+    }
   }
 }

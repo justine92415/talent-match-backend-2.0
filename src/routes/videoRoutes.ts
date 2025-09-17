@@ -44,7 +44,8 @@ const router = Router()
  *       **權限要求：**
  *       - 需要教師身份認證
  *       - 只能為自己的課程上傳影片
- *     tags: [影片管理]
+ *     tags:
+ *       - Video Management
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -193,7 +194,8 @@ router.post('/', ...authMiddlewareChains.teacherAuth, validateRequest(uploadVide
  *       **權限要求：**
  *       - 需要教師身份認證
  *       - 只能查看自己的影片
- *     tags: [影片管理]
+ *     tags:
+ *       - Video Management
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -307,7 +309,8 @@ router.get('/', ...authMiddlewareChains.teacherAuth, validateRequest(videoListQu
  *       **權限要求：**
  *       - 需要教師身份認證
  *       - 只能查看自己的影片
- *     tags: [影片管理]
+ *     tags:
+ *       - Video Management
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -420,7 +423,8 @@ router.get('/:id', ...authMiddlewareChains.teacherAuth, videoController.getVideo
  *       **權限要求：**
  *       - 需要教師身份認證
  *       - 只能更新自己的影片
- *     tags: [影片管理]
+ *     tags:
+ *       - Video Management
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -524,7 +528,8 @@ router.put('/:id', ...authMiddlewareChains.teacherAuth, validateRequest(updateVi
  *       **權限要求：**
  *       - 需要教師身份認證
  *       - 只能刪除自己的影片
- *     tags: [影片管理]
+ *     tags:
+ *       - Video Management
  *     security:
  *       - bearerAuth: []
  *     parameters:

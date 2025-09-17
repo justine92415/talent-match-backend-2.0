@@ -23,6 +23,12 @@ import {
   courseIdSchema,
   courseListQuerySchema
 } from '@middleware/schemas/course/courseSchemas'
+import { integratedCourseCreateSchema } from '@middleware/schemas/course/integratedCourseSchemas'
+import {
+  parseCourseImageFile,
+  validateCourseImageFileMiddleware,
+  cleanupTempCourseImageFile
+} from '@middleware/upload/courseImageUpload'
 import {
   linkVideosToCourseBodySchema,
   updateVideoOrderBodySchema,
@@ -53,24 +59,57 @@ const courseFileController = new CourseFileController()
  *   post:
  *     tags:
  *       - Course Management
- *     summary: 建立新課程
+ *     summary: 建立新課程 (支援圖片上傳)
  *     description: |
- *       建立新的課程，需要教師身份認證。成功建立後回傳課程基本資訊。
+ *       建立新的課程，需要教師身份認證。支援同時上傳課程圖片、設定課程資訊和價格方案。
  *       
  *       **業務邏輯**：
  *       - 驗證使用者具有教師權限且審核通過
- *       - 驗證請求參數 (課程名稱、內容、分類、城市等)
+ *       - 處理 multipart/form-data 格式請求 (courseData JSON + priceOptions JSON + courseImage 檔案)
+ *       - 驗證課程資料、價格方案和圖片檔案 (可選)
+ *       - 上傳課程圖片到 Firebase Storage (如有提供)
+ *       - 在資料庫交易中建立課程和所有價格方案
  *       - 自動生成課程 UUID 和設定預設值
  *       - 建立課程記錄，狀態為草稿 (draft)
  *       - 回傳建立的課程完整資訊
+ *       
+ *       **表單欄位**：
+ *       - courseData: JSON 字串，包含課程基本資訊
+ *       - priceOptions: JSON 陣列字串，包含價格方案列表
+ *       - courseImage: 圖片檔案 (可選，支援 JPEG/PNG/WebP，最大 10MB)
  *     security:
  *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
- *             $ref: '#/components/schemas/CreateCourseRequest'
+ *             type: object
+ *             required:
+ *               - courseData
+ *               - priceOptions
+ *             properties:
+ *               courseData:
+ *                 type: string
+ *                 format: json
+ *                 description: '課程基本資料 (JSON 字串格式)'
+ *                 example: '{"name":"JavaScript 基礎入門課程","content":"<p>完整的 JavaScript 基礎教學，適合初學者</p>","main_category_id":1,"sub_category_id":2,"city_id":1,"survey_url":"https://forms.google.com/survey123","purchase_message":"請準備筆記本，課程需要大量練習"}'
+ *               priceOptions:
+ *                 type: string
+ *                 format: json
+ *                 description: '價格方案陣列 (JSON 字串格式)'
+ *                 example: '[{"price":1500,"quantity":1},{"price":4200,"quantity":3},{"price":7500,"quantity":6}]'
+ *               courseImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: '課程主圖 (可選，支援 JPEG/PNG/WebP，最大 10MB)'
+ *           encoding:
+ *             courseData:
+ *               contentType: application/json
+ *             priceOptions:
+ *               contentType: application/json
+ *             courseImage:
+ *               contentType: image/*
  *     responses:
  *       201:
  *         description: 課程建立成功
@@ -95,7 +134,22 @@ const courseFileController = new CourseFileController()
  *                   errors:
  *                     name: ["課程名稱為必填欄位"]
  *                     content: ["課程內容為必填欄位"]
- *                     main_category_id: ["主分類 ID 為必填欄位"]
+ *                     priceOptions: ["課程必須至少有一個價格方案"]
+ *               image_validation_error:
+ *                 summary: 圖片驗證錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "圖片檔案驗證失敗"
+ *                   errors:
+ *                     courseImage: ["不支援的檔案格式 \"image/gif\"。僅支援: JPEG, JPG, PNG, WebP"]
+ *               json_format_error:
+ *                 summary: JSON 格式錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "表單資料格式錯誤"
+ *                   errors:
+ *                     courseData: ["課程資料格式錯誤，請確認 JSON 格式正確"]
+ *                     priceOptions: ["方案資料格式錯誤，請確認 JSON 格式正確"]
  *               business_error:
  *                 summary: 業務邏輯錯誤
  *                 value:
@@ -120,8 +174,15 @@ const courseFileController = new CourseFileController()
  *             schema:
  *               $ref: '#/components/schemas/ServerErrorResponse'
  */
-// Create course
-router.post('/', authenticateToken, createSchemasMiddleware({ body: createCourseSchema }), courseController.createCourse)
+// Create course with integrated multipart data support
+router.post('/', 
+  authenticateToken, 
+  parseCourseImageFile,
+  validateCourseImageFileMiddleware,
+  createSchemasMiddleware({ body: integratedCourseCreateSchema }),
+  cleanupTempCourseImageFile,
+  courseController.createCourse
+)
 
 /**
  * @swagger

@@ -33,7 +33,8 @@ const router = Router()
  *       **權限要求：**
  *       - 需要教師身份認證
  *       - 只能查看自己課程的價格方案
- *     tags: [價格方案管理]
+ *     tags:
+ *       - Price Options
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -131,7 +132,8 @@ router.get('/:courseId/price-options', authenticateToken, priceOptionController.
  *       **權限要求：**
  *       - 需要教師身份認證
  *       - 只能為自己的課程建立價格方案
- *     tags: [價格方案管理]
+ *     tags:
+ *       - Price Options
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -233,7 +235,8 @@ router.post(
  *       **權限要求：**
  *       - 需要教師身份認證
  *       - 只能更新自己課程的價格方案
- *     tags: [價格方案管理]
+ *     tags:
+ *       - Price Options
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -347,7 +350,8 @@ router.put(
  *       **權限要求：**
  *       - 需要教師身份認證
  *       - 只能刪除自己課程的價格方案
- *     tags: [價格方案管理]
+ *     tags:
+ *       - Price Options
  *     security:
  *       - bearerAuth: []
  *     parameters:

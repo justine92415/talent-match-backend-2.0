@@ -17,15 +17,22 @@ import { ERROR_CODES } from '@constants/ErrorCode'
 
 export class CourseController {
   /**
-   * 建立新課程
+   * 建立新課程（支援圖片上傳和價格方案）
    * POST /api/courses
    */
   createCourse = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user!.userId
     const courseData = req.body
+    const courseImageFile = (req as any).courseImage // 來自 courseImageUpload middleware
 
-    // 角色檢查由中間件或服務層處理
-    const course = await courseService.createCourse(userId, courseData)
+    // 準備完整的課程建立資料
+    const createCourseData = {
+      ...courseData,
+      courseImageFile // 檔案物件，由 Service 層處理上傳
+    }
+
+    // 呼叫服務層建立課程（包含圖片上傳和價格方案建立）
+    const course = await courseService.createCourseWithImageAndPrices(userId, createCourseData)
 
     res.status(201).json(handleCreated({
       course

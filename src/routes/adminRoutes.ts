@@ -31,7 +31,8 @@ const router = Router()
  *       - 密碼加密驗證
  *       - 登入失敗次數限制
  *       - IP 白名單檢查（如有設定）
- *     tags: [管理員功能]
+ *     tags:
+ *       - Admin Management
  *     requestBody:
  *       required: true
  *       content:
@@ -159,7 +160,8 @@ router.post(
  *       2. 將 Token 加入黑名單
  *       3. 清除相關會話資料
  *       4. 記錄登出日誌
- *     tags: [管理員功能]
+ *     tags:
+ *       - Admin Management
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -197,7 +199,8 @@ router.post('/logout', authenticateAdmin, adminController.logout)
  *       - 權限列表和角色資訊
  *       - 最後登入和活動記錄
  *       - 系統設定偏好
- *     tags: [管理員功能]
+ *     tags:
+ *       - Admin Management
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -283,7 +286,8 @@ router.get('/profile', authenticateAdmin, adminController.getProfile)
  *       **權限要求：**
  *       - 需要管理員身份認證
  *       - 需要教師管理權限
- *     tags: [管理員功能]
+ *     tags:
+ *       - Admin Management
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -363,7 +367,8 @@ router.get('/teacher-applications', authenticateAdmin, requireAdminPermission, a
  *       **權限要求：**
  *       - 需要管理員身份認證
  *       - 需要教師管理權限
- *     tags: [管理員功能]
+ *     tags:
+ *       - Admin Management
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -447,7 +452,8 @@ router.post(
  *       **權限要求：**
  *       - 需要管理員身份認證
  *       - 需要教師管理權限
- *     tags: [管理員功能]
+ *     tags:
+ *       - Admin Management
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -548,7 +554,8 @@ router.post(
  *       **權限要求：**
  *       - 需要管理員身份認證
  *       - 需要課程管理權限
- *     tags: [管理員功能]
+ *     tags:
+ *       - Admin Management
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -632,7 +639,8 @@ router.post(
  *       **權限要求：**
  *       - 需要管理員身份認證
  *       - 需要課程管理權限
- *     tags: [管理員功能]
+ *     tags:
+ *       - Admin Management
  *     security:
  *       - bearerAuth: []
  *     parameters:

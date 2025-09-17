@@ -60,6 +60,32 @@ export const courseSchemas = {
     }
   },
 
+  // 整合課程建立請求 Schema (multipart/form-data)
+  IntegratedCourseCreateRequest: {
+    type: 'object',
+    required: ['courseData', 'priceOptions'],
+    properties: {
+      courseData: {
+        type: 'string',
+        format: 'json',
+        description: '課程基本資料 (JSON 字串格式)',
+        example: '{"name":"JavaScript 基礎入門課程","content":"<p>完整的 JavaScript 基礎教學，適合初學者</p>","main_category_id":1,"sub_category_id":2,"city_id":1,"survey_url":"https://forms.google.com/survey123","purchase_message":"請準備筆記本，課程需要大量練習"}'
+      },
+      priceOptions: {
+        type: 'string', 
+        format: 'json',
+        description: '價格方案陣列 (JSON 字串格式)',
+        example: '[{"price":1500,"quantity":1},{"price":4200,"quantity":3},{"price":7500,"quantity":6}]'
+      },
+      courseImage: {
+        type: 'string',
+        format: 'binary',
+        description: '課程主圖 (可選，支援 JPEG/PNG/WebP，最大 10MB)',
+        nullable: true
+      }
+    }
+  },
+
   // ==================== 課程更新 API Schema ====================
   
   // 課程更新請求 Schema
@@ -449,6 +475,227 @@ export const courseSchemas = {
         }
       }
     ]
+  },
+
+  // ==================== 公開課程相關 Schema ====================
+
+  // 公開課程基本資訊 Schema
+  PublicCourseBasicInfo: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '課程 ID',
+        example: 1
+      },
+      uuid: {
+        type: 'string',
+        format: 'uuid',
+        description: '課程 UUID',
+        example: '123e4567-e89b-12d3-a456-426614174000'
+      },
+      name: {
+        type: 'string',
+        description: '課程名稱',
+        example: 'JavaScript 基礎入門課程'
+      },
+      main_image: {
+        type: 'string',
+        nullable: true,
+        description: '課程主圖 URL',
+        example: 'https://example.com/course-image.jpg'
+      },
+      rate: {
+        type: 'number',
+        format: 'float',
+        description: '課程評分 (0-5分)',
+        example: 4.5
+      },
+      review_count: {
+        type: 'integer',
+        description: '評價數量',
+        example: 25
+      },
+      teacher_name: {
+        type: 'string',
+        description: '教師姓名',
+        example: '王老師'
+      },
+      price_range: {
+        type: 'object',
+        properties: {
+          min: {
+            type: 'number',
+            description: '最低價格',
+            example: 1500
+          },
+          max: {
+            type: 'number',
+            description: '最高價格',
+            example: 7500
+          }
+        }
+      }
+    }
+  },
+
+  // 公開課程詳細資訊 Schema
+  PublicCourseDetailInfo: {
+    allOf: [
+      { $ref: '#/components/schemas/PublicCourseBasicInfo' },
+      {
+        type: 'object',
+        properties: {
+          content: {
+            type: 'string',
+            description: '課程內容描述',
+            example: '<p>完整的 JavaScript 基礎教學，適合初學者</p>'
+          },
+          teacher_info: {
+            type: 'object',
+            properties: {
+              id: {
+                type: 'integer',
+                description: '教師 ID',
+                example: 1
+              },
+              name: {
+                type: 'string',
+                description: '教師姓名',
+                example: '王老師'
+              },
+              avatar: {
+                type: 'string',
+                nullable: true,
+                description: '教師頭像',
+                example: 'https://example.com/teacher-avatar.jpg'
+              }
+            }
+          },
+          price_options: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'integer',
+                  description: '價格方案 ID',
+                  example: 1
+                },
+                price: {
+                  type: 'number',
+                  description: '價格',
+                  example: 1500
+                },
+                quantity: {
+                  type: 'integer',
+                  description: '堂數',
+                  example: 1
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+
+  // ==================== 價格方案相關 Schema ====================
+
+  // 價格方案建立請求 Schema
+  PriceOptionCreateRequest: {
+    type: 'object',
+    required: ['price', 'quantity'],
+    properties: {
+      price: {
+        type: 'number',
+        format: 'float',
+        minimum: 1,
+        maximum: 999999,
+        description: '價格 (必填，範圍 1-999999)',
+        example: 1500
+      },
+      quantity: {
+        type: 'integer',
+        minimum: 1,
+        maximum: 999,
+        description: '堂數 (必填，範圍 1-999)',
+        example: 1
+      }
+    }
+  },
+
+  // 價格方案更新請求 Schema
+  PriceOptionUpdateRequest: {
+    type: 'object',
+    properties: {
+      price: {
+        type: 'number',
+        format: 'float',
+        minimum: 1,
+        maximum: 999999,
+        description: '價格 (選填，範圍 1-999999)',
+        example: 1800
+      },
+      quantity: {
+        type: 'integer',
+        minimum: 1,
+        maximum: 999,
+        description: '堂數 (選填，範圍 1-999)',
+        example: 1
+      }
+    }
+  },
+
+  // 價格方案資訊 Schema
+  PriceOptionInfo: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '價格方案 ID',
+        example: 1
+      },
+      uuid: {
+        type: 'string',
+        format: 'uuid',
+        description: '價格方案 UUID',
+        example: '123e4567-e89b-12d3-a456-426614174000'
+      },
+      course_id: {
+        type: 'integer',
+        description: '所屬課程 ID',
+        example: 1
+      },
+      price: {
+        type: 'number',
+        format: 'float',
+        description: '價格',
+        example: 1500
+      },
+      quantity: {
+        type: 'integer',
+        description: '堂數',
+        example: 1
+      },
+      is_active: {
+        type: 'boolean',
+        description: '是否啟用',
+        example: true
+      },
+      created_at: {
+        type: 'string',
+        format: 'date-time',
+        description: '建立時間',
+        example: '2024-01-15T10:30:00.000Z'
+      },
+      updated_at: {
+        type: 'string',
+        format: 'date-time',
+        description: '更新時間',
+        example: '2024-01-15T10:30:00.000Z'
+      }
+    }
   },
 
   // ==================== 刪除課程 API Schema ====================

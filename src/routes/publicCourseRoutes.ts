@@ -35,7 +35,8 @@ const router = Router()
  *       - popular：熱門程度排序（依據瀏覽次數和評價）
  *       - price_low：價格由低到高
  *       - price_high：價格由高到低
- *     tags: [公開課程]
+ *     tags:
+ *       - Public Courses
  *     parameters:
  *       - in: query
  *         name: keyword
@@ -156,7 +157,8 @@ router.get('/public', validateQuery(publicCourseQuerySchema), publicCourseContro
  *       - 只能瀏覽已發布狀態的課程
  *       - 包含教師公開資訊和課程價格方案
  *       - 提供評價統計資料
- *     tags: [公開課程]
+ *     tags:
+ *       - Public Courses
  *     parameters:
  *       - in: path
  *         name: id

@@ -11,12 +11,14 @@ import { Repository } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
 import { dataSource } from '@db/data-source'
 import { Course } from '@entities/Course'
+import { CoursePriceOption } from '@entities/CoursePriceOption'
 import { Teacher } from '@entities/Teacher'
 import { BusinessError } from '@utils/errors'
 import { MESSAGES } from '@constants/Message'
 import { ERROR_CODES } from '@constants/ErrorCode'
 import type { CreateCourseRequest, UpdateCourseRequest, CourseListQuery, CourseBasicInfo, SubmitCourseRequest, ResubmitCourseRequest, ArchiveCourseRequest } from '@models/index'
 import { CourseStatus, ApplicationStatus } from '@entities/enums'
+import { FileUploadService } from './fileUploadService'
 
 // 抽取常數以提高程式碼可維護性
 const COURSE_PERMISSIONS = {
@@ -47,11 +49,15 @@ const PAGINATION_DEFAULTS = {
 
 export class CourseService {
   private courseRepository: Repository<Course>
+  private coursePriceOptionRepository: Repository<CoursePriceOption>
   private teacherRepository: Repository<Teacher>
+  private fileUploadService: FileUploadService
 
   constructor() {
     this.courseRepository = dataSource.getRepository(Course)
+    this.coursePriceOptionRepository = dataSource.getRepository(CoursePriceOption)
     this.teacherRepository = dataSource.getRepository(Teacher)
+    this.fileUploadService = new FileUploadService()
   }
 
   /**
@@ -183,6 +189,196 @@ export class CourseService {
       archive_reason: savedCourse.archive_reason,
       created_at: savedCourse.created_at,
       updated_at: savedCourse.updated_at
+    }
+  }
+
+  /**
+   * 建立課程（支援圖片上傳和價格方案）
+   * 
+   * @param userId 使用者 ID
+   * @param createData 課程建立資料（包含圖片檔案和價格方案）
+   * @returns 建立的課程
+   */
+  async createCourseWithImageAndPrices(userId: number, createData: any): Promise<CourseBasicInfo> {
+    // 驗證教師權限
+    const teacher = await this.validateTeacher(userId)
+
+    if (teacher.application_status !== ApplicationStatus.APPROVED) {
+      throw new BusinessError(ERROR_CODES.TEACHER_NOT_APPROVED, MESSAGES.BUSINESS.TEACHER_NOT_APPROVED, COURSE_PERMISSIONS.TEACHER_REQUIRED)
+    }
+
+    const { courseImageFile, priceOptions, ...courseData } = createData
+
+    // 開始資料庫交易
+    const queryRunner = dataSource.createQueryRunner()
+    await queryRunner.connect()
+    await queryRunner.startTransaction()
+
+    let mainImageUrl: string | null = null // 移到外層作用域
+
+    try {
+      // 1. 上傳課程圖片（如果有提供）
+      if (courseImageFile) {
+        try {
+          const uploadedFile = await this.uploadCourseImageToStorage(courseImageFile, userId)
+          mainImageUrl = uploadedFile.downloadURL
+        } catch (error) {
+          console.error('課程圖片上傳失敗:', error)
+          throw new BusinessError(
+            ERROR_CODES.COURSE_IMAGE_UPLOAD_FAILED,
+            '課程圖片上傳失敗',
+            500
+          )
+        }
+      }
+
+      // 2. 建立課程
+      const course = new Course()
+      course.uuid = uuidv4()
+      course.teacher_id = teacher.id
+      course.name = courseData.name
+      course.content = courseData.content
+      course.main_image = mainImageUrl as any
+      course.main_category_id = courseData.main_category_id
+      course.sub_category_id = courseData.sub_category_id
+      course.city_id = courseData.city_id
+      course.survey_url = courseData.survey_url || DEFAULT_COURSE_VALUES.SURVEY_URL
+      course.purchase_message = courseData.purchase_message || DEFAULT_COURSE_VALUES.PURCHASE_MESSAGE
+      course.status = CourseStatus.DRAFT
+      course.application_status = null
+
+      // 儲存課程
+      const savedCourse = await queryRunner.manager.save(Course, course)
+
+      // 3. 建立價格方案
+      if (priceOptions && priceOptions.length > 0) {
+        const priceOptionEntities = priceOptions.map((option: any) => {
+          const priceOption = new CoursePriceOption()
+          priceOption.uuid = uuidv4()
+          priceOption.course_id = savedCourse.id
+          priceOption.price = option.price
+          priceOption.quantity = option.quantity
+          priceOption.is_active = true
+          return priceOption
+        })
+
+        await queryRunner.manager.save(CoursePriceOption, priceOptionEntities)
+      }
+
+      // 提交交易
+      await queryRunner.commitTransaction()
+
+      return {
+        id: savedCourse.id,
+        uuid: savedCourse.uuid,
+        teacher_id: savedCourse.teacher_id,
+        name: savedCourse.name,
+        content: savedCourse.content,
+        main_image: savedCourse.main_image,
+        rate: savedCourse.rate || DEFAULT_COURSE_VALUES.RATE,
+        review_count: savedCourse.review_count || DEFAULT_COURSE_VALUES.REVIEW_COUNT,
+        view_count: savedCourse.view_count || DEFAULT_COURSE_VALUES.VIEW_COUNT,
+        purchase_count: savedCourse.purchase_count || DEFAULT_COURSE_VALUES.PURCHASE_COUNT,
+        student_count: savedCourse.student_count || DEFAULT_COURSE_VALUES.STUDENT_COUNT,
+        main_category_id: savedCourse.main_category_id,
+        sub_category_id: savedCourse.sub_category_id,
+        city_id: savedCourse.city_id,
+        dist_id: savedCourse.dist_id,
+        survey_url: savedCourse.survey_url,
+        purchase_message: savedCourse.purchase_message,
+        status: savedCourse.status,
+        application_status: savedCourse.application_status,
+        submission_notes: savedCourse.submission_notes,
+        archive_reason: savedCourse.archive_reason,
+        created_at: savedCourse.created_at,
+        updated_at: savedCourse.updated_at
+      }
+    } catch (error) {
+      // 回滾交易
+      await queryRunner.rollbackTransaction()
+      
+      // 如果已上傳圖片但交易失敗，清理上傳的圖片
+      if (mainImageUrl) {
+        try {
+          const firebaseUrl = this.extractFirebaseUrlFromDownloadUrl(mainImageUrl)
+          await this.fileUploadService.deleteFile(firebaseUrl)
+          console.log('✅ 交易失敗，已清理上傳的課程圖片')
+        } catch (cleanupError) {
+          console.error('⚠️ 清理上傳圖片失敗:', cleanupError)
+        }
+      }
+      
+      throw error
+    } finally {
+      // 釋放查詢執行器
+      await queryRunner.release()
+    }
+  }
+
+  /**
+   * 上傳課程圖片到儲存服務
+   * 
+   * @param file 檔案物件
+   * @param userId 使用者 ID
+   * @returns 上傳檔案資訊
+   */
+  private async uploadCourseImageToStorage(file: any, userId: number): Promise<any> {
+    try {
+      const uploadedFile = await this.fileUploadService.uploadFile(
+        file.filepath,
+        file.originalFilename || `course_image_${Date.now()}`,
+        file.mimetype,
+        {
+          destination: `course_images/teacher_${userId}`,
+          public: true,
+          metadata: {
+            customMetadata: {
+              teacherId: userId.toString(),
+              uploadType: 'course_image'
+            }
+          }
+        }
+      )
+
+      return {
+        originalName: uploadedFile.originalName,
+        fileName: uploadedFile.fileName,
+        mimeType: uploadedFile.mimeType,
+        size: uploadedFile.size,
+        downloadURL: uploadedFile.downloadURL,
+        firebaseUrl: uploadedFile.firebaseUrl,
+        uploadedAt: uploadedFile.uploadedAt
+      }
+    } catch (error) {
+      throw new BusinessError(
+        ERROR_CODES.COURSE_IMAGE_UPLOAD_FAILED,
+        '課程圖片處理失敗',
+        500
+      )
+    }
+  }
+
+  /**
+   * 從下載 URL 中解析 Firebase 檔案路徑
+   * 
+   * @param downloadUrl 下載 URL
+   * @returns Firebase 檔案路徑
+   */
+  private extractFirebaseUrlFromDownloadUrl(downloadUrl: string): string {
+    try {
+      const url = new URL(downloadUrl)
+      const pathParts = url.pathname.split('/')
+      
+      // Firebase Storage URL 格式: /v0/b/{bucket}/o/{path}
+      const bucketIndex = pathParts.indexOf('o')
+      if (bucketIndex !== -1 && bucketIndex + 1 < pathParts.length) {
+        return decodeURIComponent(pathParts[bucketIndex + 1])
+      }
+      
+      throw new Error('無法解析 Firebase URL')
+    } catch (error) {
+      console.error('解析 Firebase URL 失敗:', error)
+      throw error
     }
   }
 

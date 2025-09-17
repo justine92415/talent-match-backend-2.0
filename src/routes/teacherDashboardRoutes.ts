@@ -65,7 +65,8 @@ const requireTeacherOwnership = requireOwnership(
  *       **權限要求：**
  *       - 需要教師身份認證
  *       - 只能查看自己的儀表板資料
- *     tags: [教師儀表板]
+ *     tags:
+ *       - Teacher Dashboard
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -175,7 +176,8 @@ router.get(
  *       **權限要求：**
  *       - 需要教師身份認證
  *       - 只能查看自己的統計資料
- *     tags: [教師儀表板]
+ *     tags:
+ *       - Teacher Dashboard
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -254,7 +256,8 @@ router.get(
  *       **權限要求：**
  *       - 需要教師身份認證
  *       - 只能查看自己的學生
- *     tags: [教師儀表板]
+ *     tags:
+ *       - Teacher Dashboard
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -348,7 +351,8 @@ router.get(
  *       **權限要求：**
  *       - 需要教師身份認證
  *       - 只能查看自己學生的詳細資訊
- *     tags: [教師儀表板]
+ *     tags:
+ *       - Teacher Dashboard
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -419,7 +423,8 @@ router.get(
  *       **權限要求：**
  *       - 需要教師身份認證
  *       - 只能查看自己的預約記錄
- *     tags: [教師儀表板]
+ *     tags:
+ *       - Teacher Dashboard
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -516,7 +521,8 @@ router.get(
  *       **權限要求：**
  *       - 需要教師身份認證
  *       - 只能更新自己的預約狀態
- *     tags: [教師儀表板]
+ *     tags:
+ *       - Teacher Dashboard
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -617,7 +623,8 @@ router.put(
  *       **權限要求：**
  *       - 需要教師身份認證
  *       - 只能查看自己的收入記錄
- *     tags: [教師儀表板]
+ *     tags:
+ *       - Teacher Dashboard
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -716,7 +723,8 @@ router.get(
  *       **權限要求：**
  *       - 需要教師身份認證
  *       - 只能查看自己的結算記錄
- *     tags: [教師儀表板]
+ *     tags:
+ *       - Teacher Dashboard
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -808,7 +816,8 @@ router.get(
  *       **權限要求：**
  *       - 需要教師身份認證
  *       - 只能查看自己的結算詳情
- *     tags: [教師儀表板]
+ *     tags:
+ *       - Teacher Dashboard
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -879,7 +888,8 @@ router.get(
  *       **權限要求：**
  *       - 需要教師身份認證
  *       - 只能查看自己的收入統計
- *     tags: [教師儀表板]
+ *     tags:
+ *       - Teacher Dashboard
  *     security:
  *       - bearerAuth: []
  *     parameters:

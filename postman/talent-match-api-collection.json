@@ -1,8 +1,8 @@
 {
   "info": {
     "name": "Talent Match API 2.0",
-    "description": "Talent Match 後端 API 完整集合 - 包含所有認證、課程、教師、購物車、訂單等功能的 API 端點",
-    "version": "2.0.0",
+    "description": "Talent Match 後端 API 完整集合 - 包含所有認證、課程、教師、購物車、訂單等功能的 API 端點\n\n🆕 **v2.1 新功能**：\n- 整合式課程建立 API (支援同時上傳圖片和設定價格方案)\n- multipart/form-data 支援檔案上傳\n- 資料庫交易確保原子性操作\n- 自動錯誤恢復和資源清理",
+    "version": "2.1.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -1268,7 +1268,43 @@
           }
         },
         {
-          "name": "新增課程",
+          "name": "新增課程 (支援圖片上傳)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "courseData",
+                  "value": "{\n  \"name\": \"JavaScript 基礎入門課程\",\n  \"content\": \"<p>完整的 JavaScript 基礎教學，適合初學者學習程式設計</p>\",\n  \"main_category_id\": 1,\n  \"sub_category_id\": 2,\n  \"city_id\": 1,\n  \"survey_url\": \"https://forms.google.com/survey123\",\n  \"purchase_message\": \"請準備筆記本，課程需要大量練習\"\n}",
+                  "type": "text",
+                  "description": "課程基本資料 (JSON 格式)"
+                },
+                {
+                  "key": "priceOptions",
+                  "value": "[\n  {\n    \"price\": 1500,\n    \"quantity\": 1\n  },\n  {\n    \"price\": 4200,\n    \"quantity\": 3\n  },\n  {\n    \"price\": 7500,\n    \"quantity\": 6\n  }\n]",
+                  "type": "text",
+                  "description": "價格方案陣列 (JSON 格式)"
+                },
+                {
+                  "key": "courseImage",
+                  "type": "file",
+                  "src": [],
+                  "description": "課程主圖 (可選，支援 JPEG/PNG/WebP，最大 10MB)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/courses",
+              "host": ["{{base_url}}"],
+              "path": ["api", "courses"]
+            },
+            "description": "建立新課程 (支援同時上傳圖片和設定價格方案)\n\n**新功能特色：**\n- 支援 multipart/form-data 格式\n- 可同時上傳課程圖片 (最大 10MB)\n- 可同時建立多個價格方案\n- 原子性操作，確保資料一致性\n\n**表單欄位說明：**\n- courseData: 課程基本資料 (JSON 字串)\n- priceOptions: 價格方案陣列 (JSON 字串)\n- courseImage: 課程主圖檔案 (可選)\n\n**注意事項：**\n- 需要教師身份認證\n- 教師必須已通過審核\n- 圖片格式支援: JPEG, PNG, WebP\n- 建立失敗時會自動清理已上傳的圖片"
+          }
+        },
+        {
+          "name": "新增課程 (僅基本資料)",
           "request": {
             "method": "POST",
             "header": [
@@ -1279,14 +1315,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Python 程式設計基礎\",\n  \"content\": \"完整的Python程式設計入門課程，從基礎語法開始教學\",\n  \"main_category_id\": 1,\n  \"sub_category_id\": 2,\n  \"city_id\": 1,\n  \"status\": \"draft\"\n}"
+              "raw": "{\n  \"name\": \"Python 程式設計基礎\",\n  \"content\": \"完整的Python程式設計入門課程，從基礎語法開始教學\",\n  \"main_category_id\": 1,\n  \"sub_category_id\": 2,\n  \"city_id\": 1,\n  \"survey_url\": \"https://forms.google.com/python-survey\",\n  \"purchase_message\": \"課程提供完整程式碼範例和練習題\",\n  \"priceOptions\": [\n    {\n      \"price\": 2000,\n      \"quantity\": 1\n    },\n    {\n      \"price\": 5500,\n      \"quantity\": 3\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/courses",
               "host": ["{{base_url}}"],
               "path": ["api", "courses"]
             },
-            "description": "建立新課程"
+            "description": "建立新課程 (傳統 JSON 格式，不包含圖片上傳)\n\n**適用情境：**\n- 僅需要建立課程基本資料和價格方案\n- 不需要上傳課程圖片\n- 使用傳統的 JSON API 格式\n\n**注意事項：**\n- 仍需要教師身份認證\n- 教師必須已通過審核\n- 價格方案直接包含在 JSON 中\n- 圖片可以稍後透過更新 API 或其他方式上傳"
           }
         },
         {
@@ -1542,7 +1578,7 @@
           }
         }
       ],
-      "description": "課程管理相關 API，包含課程 CRUD、狀態管理、價格方案等功能\n\n**教師課程管理功能**：\n- POST /api/courses - 建立課程\n- PUT /api/courses/:id - 更新課程\n- GET /api/courses/:id - 取得課程詳情\n- GET /api/courses - 教師課程列表\n- DELETE /api/courses/:id - 刪除課程\n\n**課程狀態管理**：\n- POST /api/courses/:id/submit - 提交審核\n- POST /api/courses/:id/resubmit - 重新提交審核\n- POST /api/courses/:id/publish - 發布課程\n- POST /api/courses/:id/archive - 封存課程\n\n**價格方案管理**：\n- GET /api/courses/:courseId/price-options - 取得價格方案\n- POST /api/courses/:courseId/price-options - 新增價格方案\n- PUT /api/courses/:courseId/price-options/:id - 更新價格方案\n- DELETE /api/courses/:courseId/price-options/:id - 刪除價格方案\n\n**注意事項**：\n- 所有端點都需要教師身份認證\n- 使用 :id 參數（數字），不是 :uuid\n- 狀態管理遵循特定業務規則"
+      "description": "課程管理相關 API，包含課程 CRUD、狀態管理、價格方案等功能\n\n**🆕 整合式課程建立 API**：\n- POST /api/courses (multipart/form-data) - 建立課程 + 圖片上傳 + 價格方案 (一次完成)\n- POST /api/courses (application/json) - 建立課程 (傳統格式，僅基本資料)\n\n**教師課程管理功能**：\n- PUT /api/courses/:id - 更新課程\n- GET /api/courses/:id - 取得課程詳情\n- GET /api/courses - 教師課程列表\n- DELETE /api/courses/:id - 刪除課程\n\n**課程狀態管理**：\n- POST /api/courses/:id/submit - 提交審核\n- POST /api/courses/:id/resubmit - 重新提交審核\n- POST /api/courses/:id/publish - 發布課程\n- POST /api/courses/:id/archive - 封存課程\n\n**價格方案管理**：\n- GET /api/courses/:courseId/price-options - 取得價格方案\n- POST /api/courses/:courseId/price-options - 新增價格方案\n- PUT /api/courses/:courseId/price-options/:id - 更新價格方案\n- DELETE /api/courses/:courseId/price-options/:id - 刪除價格方案\n\n**✨ 新功能特色**：\n- 支援 multipart/form-data 格式同時處理課程資料、圖片上傳和價格方案\n- 原子性操作確保資料一致性\n- 自動錯誤恢復和資源清理\n- 支援課程圖片上傳 (JPEG/PNG/WebP，最大 10MB)\n\n**注意事項**：\n- 所有端點都需要教師身份認證\n- 使用 :id 參數（數字），不是 :uuid\n- 狀態管理遵循特定業務規則"
     },
     {
       "name": "公開課程瀏覽 (Public Courses)",
