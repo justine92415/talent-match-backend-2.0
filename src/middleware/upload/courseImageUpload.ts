@@ -220,7 +220,7 @@ export const validateCourseImageFileMiddleware = (
 /**
  * 清理課程圖片臨時檔案中間件
  * 
- * 在處理完成後清理臨時檔案
+ * 在處理完成後清理臨時檔案（包括成功和錯誤情況）
  */
 export const cleanupTempCourseImageFile = (
   req: Request, 
@@ -228,16 +228,37 @@ export const cleanupTempCourseImageFile = (
   next: NextFunction
 ): void => {
   const originalSend = res.send
+  const originalJson = res.json
 
-  res.send = function(body) {
-    // 清理暫存檔案
+  // 清理檔案的函式
+  const cleanupFile = () => {
     const file = (req as any).courseImage
     if (file && (file as any).filepath) {
       cleanupTempFile((file as any).filepath, '(請求完成)')
     }
-    
+  }
+
+  // 覆蓋 res.send
+  res.send = function(body) {
+    cleanupFile()
     return originalSend.call(this, body)
   }
+
+  // 覆蓋 res.json  
+  res.json = function(body) {
+    cleanupFile()
+    return originalJson.call(this, body)
+  }
+
+  // 監聽 finish 事件（確保所有情況都會清理）
+  res.on('finish', () => {
+    cleanupFile()
+  })
+
+  // 監聽 close 事件（連線中斷時清理）
+  res.on('close', () => {
+    cleanupFile()
+  })
 
   next()
 }

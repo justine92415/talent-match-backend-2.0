@@ -535,18 +535,7 @@ export class CourseService {
         }
       }
       
-      // 清理暫存檔案（如果有）
-      if (courseImageFile && (courseImageFile as any).filepath) {
-        try {
-          if (fs.existsSync((courseImageFile as any).filepath)) {
-            fs.unlinkSync((courseImageFile as any).filepath)
-            console.log('已清理暫存課程圖片檔案:', (courseImageFile as any).filepath)
-          }
-        } catch (cleanupError) {
-          console.error('清理暫存檔案失敗:', cleanupError)
-        }
-      }
-      
+      // 暫存檔案清理由中間件統一處理
       throw error
     } finally {
       await queryRunner.release()

@@ -42,18 +42,7 @@ export class CourseController {
       }, SUCCESS.COURSE_CREATED))
 
     } catch (error) {
-      // 發生錯誤時清理暫存圖片檔案
-      if (courseImageFile && (courseImageFile as any).filepath) {
-        try {
-          if (fs.existsSync((courseImageFile as any).filepath)) {
-            fs.unlinkSync((courseImageFile as any).filepath)
-            console.log('已清理暫存課程圖片檔案:', (courseImageFile as any).filepath)
-          }
-        } catch (cleanupError) {
-          console.error('清理暫存課程圖片檔案時發生錯誤:', (courseImageFile as any).filepath, cleanupError)
-        }
-      }
-      
+      // 錯誤處理交給中間件處理暫存檔案清理
       next(error)
     }
   }
@@ -84,17 +73,7 @@ export class CourseController {
       }, SUCCESS.COURSE_UPDATED))
 
     } catch (error) {
-      // 發生錯誤時清理暫存圖片檔案
-      if (courseImageFile && (courseImageFile as any).filepath) {
-        try {
-          if (fs.existsSync((courseImageFile as any).filepath)) {
-            fs.unlinkSync((courseImageFile as any).filepath)
-            console.log('已清理暫存課程圖片檔案:', (courseImageFile as any).filepath)
-          }
-        } catch (cleanupError) {
-          console.error('清理暫存檔案失敗:', cleanupError)
-        }
-      }
+      // 錯誤處理交給中間件處理暫存檔案清理
       next(error)
     }
   }
