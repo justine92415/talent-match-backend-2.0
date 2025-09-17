@@ -87,8 +87,8 @@ export class CourseService {
    */
   private async validateCourseOwnership(courseId: number, teacherId: number): Promise<Course> {
     const course = await this.courseRepository.findOne({
-      where: { id: courseId },
-      select: ['id', 'teacher_id', 'status', 'application_status', 'submission_notes', 'archive_reason', 'updated_at'] // 只選擇必要欄位
+      where: { id: courseId }
+      // 不限制 select，查詢完整的課程記錄以便更新操作使用
     })
 
     if (!course) {
@@ -366,21 +366,38 @@ export class CourseService {
    * @returns Firebase 檔案路徑
    */
   private extractFirebaseUrlFromDownloadUrl(downloadUrl: string): string {
-    try {
-      const url = new URL(downloadUrl)
-      const pathParts = url.pathname.split('/')
+    // 支援多種 Firebase Storage URL 格式
+    
+    // 格式 1: https://firebasestorage.googleapis.com/v0/b/bucket-name.firebasestorage.app/o/path?alt=media&token=xxx
+    // 格式 1b: https://firebasestorage.googleapis.com/v0/b/bucket-name/o/path?alt=media&token=xxx
+    let match = downloadUrl.match(/\/b\/([^\/]+)\/o\/([^?]+)/)
+    if (match) {
+      const [, bucketName, encodedPath] = match
+      const filePath = decodeURIComponent(encodedPath)
       
-      // Firebase Storage URL 格式: /v0/b/{bucket}/o/{path}
-      const bucketIndex = pathParts.indexOf('o')
-      if (bucketIndex !== -1 && bucketIndex + 1 < pathParts.length) {
-        return decodeURIComponent(pathParts[bucketIndex + 1])
-      }
-      
-      throw new Error('無法解析 Firebase URL')
-    } catch (error) {
-      console.error('解析 Firebase URL 失敗:', error)
-      throw error
+      // 如果 bucketName 包含 .firebasestorage.app，需要保留完整名稱
+      const result = `gs://${bucketName}/${filePath}`
+      return result
     }
+
+    // 格式 2: https://storage.googleapis.com/bucket/path/file.ext
+    match = downloadUrl.match(/https:\/\/storage\.googleapis\.com\/([^\/]+)\/(.+)/)
+    if (match) {
+      const [, bucketName, filePath] = match
+      const result = `gs://${bucketName}/${filePath}`
+      return result
+    }
+
+    // 格式 3: https://bucket.storage.googleapis.com/path/file.ext
+    match = downloadUrl.match(/https:\/\/([^\.]+)\.storage\.googleapis\.com\/(.+)/)
+    if (match) {
+      const [, bucketName, filePath] = match
+      const result = `gs://${bucketName}/${filePath}`
+      return result
+    }
+
+    console.error(`無法解析的課程圖片 URL 格式: ${downloadUrl}`)
+    throw new Error(`無法解析 Firebase URL 格式: ${downloadUrl}`)
   }
 
   /**
@@ -424,31 +441,19 @@ export class CourseService {
     await queryRunner.startTransaction()
 
     let newImageUrl: string | null = course.main_image // 預設使用現有圖片
+    let oldImageUrl: string | null = null // 用於後續清理
 
     try {
       // 1. 處理圖片更新（如果有提供新圖片）
       if (courseImageFile) {
         try {
           // 儲存舊圖片 URL 以便後續清理
-          const oldImageUrl = course.main_image
+          oldImageUrl = course.main_image
 
           // 上傳新圖片到 Storage
           const uploadedFile = await this.uploadCourseImageToStorage(courseImageFile, userId)
           newImageUrl = uploadedFile.downloadURL
-
-          // 清理舊圖片（如果存在）
-          if (oldImageUrl) {
-            console.log(`準備清理舊課程圖片: ${oldImageUrl}`)
-            try {
-              const firebaseUrl = this.extractFirebaseUrlFromDownloadUrl(oldImageUrl)
-              console.log(`解析出的 Firebase URL: ${firebaseUrl}`)
-              await this.fileUploadService.deleteFile(firebaseUrl)
-              console.log('✅ 舊課程圖片已清理:', oldImageUrl)
-            } catch (error) {
-              console.error('❌ 清理舊課程圖片失敗:', error)
-              // 不拋出錯誤，避免影響主要流程
-            }
-          }
+          
         } catch (error) {
           console.error('課程圖片上傳失敗:', error)
           throw new BusinessError(
@@ -498,12 +503,37 @@ export class CourseService {
 
       // 提交交易
       await queryRunner.commitTransaction()
+      
+      // 4. 交易成功後清理舊圖片（避免資料不一致）
+      if (courseImageFile && oldImageUrl && oldImageUrl.trim() !== '') {
+        console.log(`準備清理舊課程圖片: ${oldImageUrl}`)
+        try {
+          const firebaseUrl = this.extractFirebaseUrlFromDownloadUrl(oldImageUrl)
+          await this.fileUploadService.deleteFile(firebaseUrl)
+          console.log('✅ 舊課程圖片已清理:', oldImageUrl)
+        } catch (error) {
+          console.error('❌ 清理舊課程圖片失敗:', error)
+          // 不拋出錯誤，避免影響主要流程
+        }
+      }
 
       return this.mapToBasicInfo(savedCourse)
 
     } catch (error) {
       // 回滾交易
       await queryRunner.rollbackTransaction()
+      
+      // 如果新圖片已上傳但交易失敗，清理新上傳的圖片
+      if (courseImageFile && newImageUrl && newImageUrl !== course.main_image) {
+        console.log(`清理失敗交易的新圖片: ${newImageUrl}`)
+        try {
+          const firebaseUrl = this.extractFirebaseUrlFromDownloadUrl(newImageUrl)
+          await this.fileUploadService.deleteFile(firebaseUrl)
+          console.log('已清理失敗交易的新圖片')
+        } catch (cleanupError) {
+          console.error('清理失敗交易的新圖片失敗:', cleanupError)
+        }
+      }
       
       // 清理暫存檔案（如果有）
       if (courseImageFile && (courseImageFile as any).filepath) {
