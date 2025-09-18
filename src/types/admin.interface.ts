@@ -146,7 +146,7 @@ export type AdminProfile = Omit<AdminUser, 'password'>
 export type TeacherReviewUpdate = Pick<Teacher, 'application_status' | 'application_reviewed_at' | 'reviewer_id' | 'review_notes'>
 
 /** 從 Course 實體衍生的審核操作型別 */
-export type CourseReviewUpdate = Pick<Course, 'status' | 'application_status'>
+export type CourseReviewUpdate = Pick<Course, 'status'>
 
 // === JWT Token 相關型別 ===
 

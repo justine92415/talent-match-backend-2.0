@@ -5,7 +5,7 @@
  */
 
 import bcrypt from 'bcrypt'
-import jwt from 'jsonwebtoken'
+import { sign } from 'jsonwebtoken'
 import { dataSource } from '@db/data-source'
 import { AdminUser } from '@entities/AdminUser'
 import { Teacher } from '@entities/Teacher'
@@ -23,7 +23,7 @@ import {
   TeacherApplicationRejectionResponse,
   CourseApplicationApprovalResponse,
   RejectionRequest
-} from '@/types'
+} from '../types'
 
 export class AdminService {
   private adminUserRepository = dataSource.getRepository(AdminUser)
@@ -75,16 +75,12 @@ export class AdminService {
     await this.adminUserRepository.save(admin)
 
     // 產生 JWT Token
-    const token = jwt.sign(
-      {
-        adminId: admin.id,
-        username: admin.username,
-        role: admin.role,
-        type: 'access' // 修正：使用 'access' 而非 'admin'
-      },
-      JWT_CONFIG.SECRET,
-      { expiresIn: JWT_CONFIG.ACCESS_TOKEN_EXPIRES_IN }
-    )
+    const token = sign({ 
+      adminId: admin.id,
+      username: admin.username,
+      role: admin.role,
+      type: 'access'
+    }, JWT_CONFIG.SECRET, { expiresIn: '1h' })
 
     return {
       admin: {

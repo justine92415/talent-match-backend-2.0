@@ -5,7 +5,8 @@
  */
 
 import request from 'supertest'
-import jwt from 'jsonwebtoken'
+import bcrypt from 'bcrypt'
+import { sign } from 'jsonwebtoken'
 import { dataSource } from '@db/data-source'
 import { User } from '@entities/User'
 import { Teacher } from '@entities/Teacher'
@@ -133,7 +134,8 @@ class UserTestHelpers {
    */
   static generateAuthToken(user: { id: number; roles?: { role: UserRole }[]; uuid: string }, tokenType: 'access' | 'refresh' = 'access', expiresIn: string = '1h'): string {
     const roles = user.roles?.map(r => r.role) || []
-    return jwt.sign(
+    const expirationTime = tokenType === 'access' ? '1h' : '7d'
+    return sign(
       {
         userId: user.id,
         roles: roles,
@@ -141,7 +143,7 @@ class UserTestHelpers {
         type: tokenType
       },
       ConfigManager.get<string>('secret.jwtSecret'),
-      { expiresIn }
+      { expiresIn: expirationTime }
     )
   }
 
@@ -152,7 +154,7 @@ class UserTestHelpers {
    */
   static generateExpiredToken(user: { id: number; roles?: { role: UserRole }[]; uuid: string }): string {
     const roles = user.roles?.map(r => r.role) || []
-    return jwt.sign(
+    return sign(
       {
         userId: user.id,
         roles: roles,

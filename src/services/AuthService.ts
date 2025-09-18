@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt'
-import jwt from 'jsonwebtoken'
+import { sign, verify, SignOptions } from 'jsonwebtoken'
 import { v4 as uuidv4 } from 'uuid'
 import { dataSource } from '@db/data-source'
 import { User } from '@entities/User'
@@ -114,7 +114,7 @@ export class AuthService {
   async refreshToken(tokenData: RefreshTokenData): Promise<AuthResponse> {
     try {
       // 驗證 refresh token
-      const decoded = jwt.verify(tokenData.refresh_token, JWT_CONFIG.SECRET) as JwtTokenPayload
+      const decoded = verify(tokenData.refresh_token, JWT_CONFIG.SECRET) as JwtTokenPayload
 
       // 檢查 token 型別
       if (decoded.type !== 'refresh') {
@@ -357,19 +357,25 @@ export class AuthService {
     // 獲取使用者的所有有效角色
     const roles = await this.userRoleService.getUserRoles(userId)
     
-    const accessToken = jwt.sign({ 
+    // 生成 JWT Tokens
+    const payload = { 
       userId, 
       roles,  // 只使用角色陣列
       type: 'access',
       timestamp: accessTokenTime
-    }, JWT_CONFIG.SECRET, { expiresIn: JWT_CONFIG.ACCESS_TOKEN_EXPIRES_IN })
+    }
+    const secret = JWT_CONFIG.SECRET
+    
+    const accessToken = sign(payload, secret, { expiresIn: '1h' })
 
-    const refreshToken = jwt.sign({ 
+    const refreshPayload = { 
       userId, 
       roles,  // 只使用角色陣列
       type: 'refresh',
       timestamp: refreshTokenTime
-    }, JWT_CONFIG.SECRET, { expiresIn: JWT_CONFIG.REFRESH_TOKEN_EXPIRES_IN })
+    }
+    
+    const refreshToken = sign(refreshPayload, secret, { expiresIn: '7d' })
 
     return {
       access_token: accessToken,
