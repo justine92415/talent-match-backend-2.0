@@ -116,7 +116,8 @@ export class CourseService {
       }),
       this.courseRepository.findOne({
         where: { id: courseId },
-        select: ['id', 'teacher_id', 'status', 'application_status', 'submission_notes', 'archive_reason', 'updated_at']
+        select: ['id', 'teacher_id', 'status', 'submission_notes', 'archive_reason', 'updated_at']
+        // TODO: Phase 2 - 移除 application_status 相關邏輯
       })
     ])
 
@@ -161,7 +162,6 @@ export class CourseService {
     course.survey_url = courseData.survey_url || DEFAULT_COURSE_VALUES.SURVEY_URL
     course.purchase_message = courseData.purchase_message || DEFAULT_COURSE_VALUES.PURCHASE_MESSAGE
     course.status = CourseStatus.DRAFT
-    course.application_status = null
 
     // 儲存課程
     const savedCourse = await this.courseRepository.save(course)
@@ -185,7 +185,6 @@ export class CourseService {
       survey_url: savedCourse.survey_url,
       purchase_message: savedCourse.purchase_message,
       status: savedCourse.status,
-      application_status: savedCourse.application_status,
       submission_notes: savedCourse.submission_notes,
       archive_reason: savedCourse.archive_reason,
       created_at: savedCourse.created_at,
@@ -246,7 +245,6 @@ export class CourseService {
       course.survey_url = courseData.survey_url || DEFAULT_COURSE_VALUES.SURVEY_URL
       course.purchase_message = courseData.purchase_message || DEFAULT_COURSE_VALUES.PURCHASE_MESSAGE
       course.status = CourseStatus.DRAFT
-      course.application_status = null
 
       // 儲存課程
       const savedCourse = await queryRunner.manager.save(Course, course)
@@ -288,7 +286,6 @@ export class CourseService {
         survey_url: savedCourse.survey_url,
         purchase_message: savedCourse.purchase_message,
         status: savedCourse.status,
-        application_status: savedCourse.application_status,
         submission_notes: savedCourse.submission_notes,
         archive_reason: savedCourse.archive_reason,
         created_at: savedCourse.created_at,
@@ -603,7 +600,7 @@ export class CourseService {
         'id', 'uuid', 'name', 'content', 'main_image', 'rate', 'review_count',
         'status', 'teacher_id', 'created_at', 'updated_at', 'view_count', 'purchase_count',
         'student_count', 'main_category_id', 'sub_category_id', 'city_id', 'dist_id',
-        'survey_url', 'purchase_message', 'application_status', 'submission_notes', 'archive_reason'
+        'survey_url', 'purchase_message', 'submission_notes', 'archive_reason'
       ]
     })
 
@@ -714,7 +711,6 @@ export class CourseService {
       survey_url: course.survey_url,
       purchase_message: course.purchase_message,
       status: course.status,
-      application_status: course.application_status,
       submission_notes: course.submission_notes,
       archive_reason: course.archive_reason,
       created_at: course.created_at,
@@ -733,17 +729,13 @@ export class CourseService {
   async submitCourse(courseId: number, userId: number, submitData: SubmitCourseRequest = {}): Promise<void> {
     const { course } = await this.validateTeacherAndCourseOwnership(userId, courseId)
 
-    // 檢查課程狀態 - 只有草稿且未在審核中的課程可以提交
+    // 檢查課程狀態 - 只有草稿狀態的課程可以提交
     if (course.status !== CourseStatus.DRAFT) {
-      throw new BusinessError(ERROR_CODES.COURSE_CANNOT_SUBMIT, MESSAGES.BUSINESS.COURSE_CANNOT_SUBMIT, COURSE_VALIDATION_ERRORS.UNPROCESSABLE_ENTITY)
+      throw new BusinessError(ERROR_CODES.COURSE_CANNOT_SUBMIT, '只有草稿狀態的課程可以提交審核', COURSE_VALIDATION_ERRORS.UNPROCESSABLE_ENTITY)
     }
 
-    if (course.application_status === ApplicationStatus.PENDING) {
-      throw new BusinessError(ERROR_CODES.COURSE_CANNOT_SUBMIT, MESSAGES.BUSINESS.COURSE_CANNOT_SUBMIT, COURSE_VALIDATION_ERRORS.UNPROCESSABLE_ENTITY)
-    }
-
-    // 更新課程狀態為待審核
-    course.application_status = ApplicationStatus.PENDING
+    // 更新課程狀態為已提交審核
+    course.status = CourseStatus.SUBMITTED
     course.submission_notes = submitData.submission_notes || null
     course.updated_at = new Date()
 
@@ -760,12 +752,12 @@ export class CourseService {
     const { course } = await this.validateTeacherAndCourseOwnership(userId, courseId)
 
     // 檢查課程狀態 - 只有被拒絕的課程可以重新提交
-    if (course.application_status !== ApplicationStatus.REJECTED) {
-      throw new BusinessError(ERROR_CODES.COURSE_CANNOT_RESUBMIT, MESSAGES.BUSINESS.COURSE_CANNOT_RESUBMIT, COURSE_VALIDATION_ERRORS.UNPROCESSABLE_ENTITY)
+    if (course.status !== CourseStatus.REJECTED) {
+      throw new BusinessError(ERROR_CODES.COURSE_CANNOT_RESUBMIT, '只有審核被拒絕的課程可以重新提交', COURSE_VALIDATION_ERRORS.UNPROCESSABLE_ENTITY)
     }
 
-    // 更新課程狀態為待審核
-    course.application_status = ApplicationStatus.PENDING
+    // 更新課程狀態為已提交審核
+    course.status = CourseStatus.SUBMITTED
     course.submission_notes = resubmitData.submission_notes || null
     course.updated_at = new Date()
 
@@ -780,9 +772,9 @@ export class CourseService {
   async publishCourse(courseId: number, userId: number): Promise<void> {
     const { course } = await this.validateTeacherAndCourseOwnership(userId, courseId)
 
-    // 檢查課程狀態 - 只有草稿且審核通過的課程可以發布
-    if (course.status !== CourseStatus.DRAFT || course.application_status !== ApplicationStatus.APPROVED) {
-      throw new BusinessError(ERROR_CODES.COURSE_CANNOT_PUBLISH, MESSAGES.BUSINESS.COURSE_CANNOT_PUBLISH, COURSE_VALIDATION_ERRORS.UNPROCESSABLE_ENTITY)
+    // 檢查課程狀態 - 只有審核通過的課程可以發布
+    if (course.status !== CourseStatus.APPROVED) {
+      throw new BusinessError(ERROR_CODES.COURSE_CANNOT_PUBLISH, '只有審核通過的課程可以發布', COURSE_VALIDATION_ERRORS.UNPROCESSABLE_ENTITY)
     }
 
     // 更新課程狀態為已發布

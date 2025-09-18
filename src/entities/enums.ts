@@ -23,6 +23,9 @@ export enum ApplicationStatus {
 
 export enum CourseStatus {
   DRAFT = 'draft',
+  SUBMITTED = 'submitted',
+  APPROVED = 'approved', 
+  REJECTED = 'rejected',
   PUBLISHED = 'published',
   ARCHIVED = 'archived'
 }

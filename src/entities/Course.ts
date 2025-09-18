@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm'
-import { CourseStatus, ApplicationStatus } from './enums'
+import { CourseStatus } from './enums'
 
 @Entity('courses')
 export class Course {
@@ -74,10 +74,6 @@ export class Course {
   /** 課程狀態 */
   @Column({ type: 'enum', enum: CourseStatus })
   status!: CourseStatus
-
-  /** 申請審核狀態（上架時使用） */
-  @Column({ type: 'enum', enum: ApplicationStatus, nullable: true })
-  application_status!: ApplicationStatus | null
 
   /** 提交審核時的備註 */
   @Column({ type: 'text', nullable: true })

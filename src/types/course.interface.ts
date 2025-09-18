@@ -7,7 +7,7 @@
  * 注意：價格方案相關型別已遷移至 priceOption.interface.ts
  */
 
-import { CourseStatus, ApplicationStatus } from '@entities/enums'
+import { CourseStatus } from '@entities/enums'
 import { PriceOption, PriceOptionSummary } from './priceOption.interface'
 
 // ==================== 課程相關介面 ====================
@@ -32,7 +32,6 @@ export interface CourseBasicInfo {
   survey_url: string | null
   purchase_message: string | null
   status: CourseStatus
-  application_status: ApplicationStatus | null
   submission_notes: string | null
   archive_reason: string | null
   created_at: Date
@@ -133,7 +132,7 @@ export interface CourseDetailResponse {
 /** 課程列表回應 */
 export interface CourseListResponse {
   courses: Array<Pick<CourseBasicInfo, 
-    'id' | 'uuid' | 'name' | 'main_image' | 'status' | 'application_status' | 
+    'id' | 'uuid' | 'name' | 'main_image' | 'status' | 
     'student_count' | 'rate' | 'review_count' | 'created_at' | 'updated_at'
   >>
   pagination: {

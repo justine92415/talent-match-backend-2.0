@@ -247,16 +247,9 @@ export const courseSchemas = {
       },
       status: {
         type: 'string',
-        enum: ['draft', 'published', 'archived'],
-        description: '課程狀態 (draft: 草稿, published: 已發布, archived: 已封存)',
+        enum: ['draft', 'submitted', 'approved', 'rejected', 'published', 'archived'],
+        description: '課程狀態 (draft: 草稿, submitted: 已提交審核, approved: 審核通過, rejected: 審核拒絕, published: 已發布, archived: 已封存)',
         example: 'draft'
-      },
-      application_status: {
-        type: 'string',
-        enum: ['pending', 'approved', 'rejected'],
-        nullable: true,
-        description: '審核狀態 (pending: 待審核, approved: 已通過, rejected: 已拒絕)',
-        example: null
       },
       submission_notes: {
         type: 'string',
@@ -1229,5 +1222,116 @@ export const courseSchemas = {
         }
       }
     ]
+  },
+
+  // ==================== 管理員課程審核相關 Schema ====================
+
+  // 課程審核資訊 Schema
+  CourseApplicationInfo: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '課程 ID',
+        example: 1
+      },
+      uuid: {
+        type: 'string',
+        format: 'uuid',
+        description: '課程 UUID',
+        example: '123e4567-e89b-12d3-a456-426614174000'
+      },
+      name: {
+        type: 'string',
+        description: '課程名稱',
+        example: 'JavaScript 基礎入門課程'
+      },
+      content: {
+        type: 'string',
+        description: '課程內容描述（截取前200字）',
+        example: '本課程將帶領學生了解程式設計的基本概念，包含變數、函式、迴圈等重要主題。透過實際範例和練習，幫助學生建立扎實的程式設計基礎...'
+      },
+      main_image: {
+        type: 'string',
+        nullable: true,
+        description: '課程主圖 URL',
+        example: 'https://example.com/course-image.jpg'
+      },
+      status: {
+        type: 'string',
+        enum: ['draft', 'submitted', 'approved', 'rejected', 'published', 'archived'],
+        description: '課程狀態',
+        example: 'submitted'
+      },
+      submission_notes: {
+        type: 'string',
+        nullable: true,
+        description: '提交審核備註',
+        example: '課程內容已準備完成，請協助審核'
+      },
+      archive_reason: {
+        type: 'string',
+        nullable: true,
+        description: '封存原因',
+        example: null
+      },
+      teacher: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '教師 ID',
+            example: 1
+          },
+          uuid: {
+            type: 'string',
+            format: 'uuid',
+            description: '教師 UUID',
+            example: '987fcdeb-51a2-43d1-b456-123456789abc'
+          },
+          name: {
+            type: 'string',
+            description: '教師姓名',
+            example: '王老師'
+          },
+          email: {
+            type: 'string',
+            format: 'email',
+            description: '教師信箱',
+            example: 'teacher@example.com'
+          }
+        }
+      },
+      main_category_id: {
+        type: 'integer',
+        nullable: true,
+        description: '主分類 ID',
+        example: 1
+      },
+      sub_category_id: {
+        type: 'integer',
+        nullable: true,
+        description: '次分類 ID',
+        example: 2
+      },
+      city_id: {
+        type: 'integer',
+        nullable: true,
+        description: '城市 ID',
+        example: 1
+      },
+      created_at: {
+        type: 'string',
+        format: 'date-time',
+        description: '建立時間',
+        example: '2024-01-15T10:30:00.000Z'
+      },
+      updated_at: {
+        type: 'string',
+        format: 'date-time',
+        description: '更新時間',
+        example: '2024-01-20T14:25:00.000Z'
+      }
+    }
   }
 }
