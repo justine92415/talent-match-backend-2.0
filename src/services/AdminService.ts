@@ -478,6 +478,80 @@ export class AdminService {
       }
     }
   }
+
+  /**
+   * 獲取課程申請列表
+   * @param status 課程狀態篩選
+   * @param page 頁碼
+   * @param limit 每頁數量
+   * @returns 分頁的課程申請列表
+   */
+  async getCourseApplications(status?: CourseStatus, page = 1, limit = 20) {
+    // 建立基本查詢
+    const queryBuilder = this.courseRepository
+      .createQueryBuilder('course')
+      .orderBy('course.created_at', 'DESC')
+
+    // 狀態篩選
+    if (status) {
+      queryBuilder.where('course.status = :status', { status })
+    } else {
+      // 預設只顯示需要審核的課程（已提交審核的課程）
+      queryBuilder.where('course.status IN (:...statuses)', { 
+        statuses: [CourseStatus.SUBMITTED, CourseStatus.APPROVED, CourseStatus.REJECTED] 
+      })
+    }
+
+    // 分頁
+    const skip = (page - 1) * limit
+    queryBuilder.skip(skip).take(limit)
+
+    const [courses, total] = await queryBuilder.getManyAndCount()
+
+    // 獲取教師資訊
+    const teacherIds = Array.from(new Set(courses.map(course => course.teacher_id).filter(id => id)))
+    let teacherMap = new Map()
+    
+    if (teacherIds.length > 0) {
+      const teachers = await this.teacherRepository
+        .createQueryBuilder('teacher')
+        .leftJoinAndSelect('teacher.user', 'user')
+        .where('teacher.id IN (:...teacherIds)', { teacherIds })
+        .getMany()
+      
+      teacherMap = new Map(teachers.map(teacher => [teacher.id, teacher]))
+    }
+
+    return {
+      applications: courses.map(course => {
+        const teacher = teacherMap.get(course.teacher_id)
+        return {
+          id: course.id,
+          uuid: course.uuid,
+          name: course.name,
+          teacher_id: course.teacher_id,
+          teacher: {
+            id: course.teacher_id,
+            name: teacher?.user?.name || '未知教師',
+            email: teacher?.user?.email || null
+          },
+          content: course.content,
+          main_category_id: course.main_category_id,
+          sub_category_id: course.sub_category_id,
+          status: course.status,
+          submission_notes: course.submission_notes,
+          created_at: course.created_at,
+          updated_at: course.updated_at
+        }
+      }),
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    }
+  }
 }
 
 // 匯出服務實例

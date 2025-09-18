@@ -351,6 +351,122 @@ router.get('/teacher-applications', authenticateAdmin, requireAdminPermission, a
 
 /**
  * @swagger
+ * /api/admin/course-applications:
+ *   get:
+ *     summary: 取得課程申請列表
+ *     description: |
+ *       取得所有課程申請的列表，包含待審核、已通過、已拒絕等各種狀態的課程。
+ *       管理員可以透過此 API 查看和管理所有課程申請案。
+ *       
+ *       **功能特色：**
+ *       - 支援課程狀態篩選
+ *       - 支援申請時間排序
+ *       - 顯示課程和教師基本資訊
+ *       - 支援分頁瀏覽
+ *       
+ *       **權限要求：**
+ *       - 需要管理員身份認證
+ *       - 需要課程管理權限
+ *     tags:
+ *       - Admin Management
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [submitted, approved, rejected, draft, published, archived]
+ *         description: |
+ *           課程狀態篩選：
+ *           - submitted: 待審核（已提交）
+ *           - approved: 已核准
+ *           - rejected: 已拒絕
+ *           - draft: 草稿
+ *           - published: 已發布
+ *           - archived: 已封存
+ *         example: "submitted"
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: 頁碼
+ *       - in: query
+ *         name: per_page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
+ *         description: 每頁顯示數量
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [newest, oldest]
+ *           default: newest
+ *         description: 排序方式
+ *     responses:
+ *       200:
+ *         description: 成功取得課程申請列表
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         applications:
+ *                           type: array
+ *                           items:
+ *                             $ref: '#/components/schemas/CourseApplicationInfo'
+ *                         pagination:
+ *                           $ref: '#/components/schemas/PaginationInfo'
+ *             examples:
+ *               success:
+ *                 summary: 成功回應範例
+ *                 value:
+ *                   status: "success"
+ *                   message: "成功獲取課程申請列表"
+ *                   data:
+ *                     applications:
+ *                       - id: 1
+ *                         uuid: "550e8400-e29b-41d4-a716-446655440001"
+ *                         name: "Python 程式設計基礎"
+ *                         teacher_id: 1
+ *                         teacher:
+ *                           id: 1
+ *                           name: "王老師"
+ *                           email: "teacher@example.com"
+ *                         content: "適合初學者的 Python 程式設計課程..."
+ *                         main_category_id: 1
+ *                         sub_category_id: 1
+ *                         status: "submitted"
+ *                         submission_notes: "課程內容已準備完成，請審核"
+ *                         created_at: "2024-01-20T10:30:00Z"
+ *                         updated_at: "2024-01-20T14:15:00Z"
+ *                     pagination:
+ *                       page: 1
+ *                       limit: 20
+ *                       total: 5
+ *                       pages: 1
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/AccessDeniedError'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ */
+// Get course applications list
+router.get('/course-applications', authenticateAdmin, requireAdminPermission, adminController.getCourseApplications)
+
+/**
+ * @swagger
  * /api/admin/teachers/{teacherId}/approve:
  *   post:
  *     summary: 核准教師申請

@@ -1,8 +1,8 @@
 {
   "info": {
     "name": "Talent Match API 2.0",
-    "description": "Talent Match 後端 API 完整集合 - 包含所有認證、課程、教師、購物車、訂單等功能的 API 端點\n\n🆕 **v2.1 新功能**：\n- 整合式課程建立 API (支援同時上傳圖片和設定價格方案)\n- multipart/form-data 支援檔案上傳\n- 資料庫交易確保原子性操作\n- 自動錯誤恢復和資源清理",
-    "version": "2.1.0",
+    "description": "Talent Match 後端 API 完整集合 - 包含所有認證、課程、教師、購物車、訂單等功能的 API 端點\n\n🆕 **v2.2 新功能**：\n- 管理員課程申請列表 API\n- 課程狀態篩選（submitted, approved, rejected, draft, published, archived）\n- 管理員 token 自動保存\n- 增強的測試腳本和變數管理\n\n🔧 **v2.1 功能**：\n- 整合式課程建立 API (支援同時上傳圖片和設定價格方案)\n- multipart/form-data 支援檔案上傳\n- 資料庫交易確保原子性操作\n- 自動錯誤恢復和資源清理",
+    "version": "2.2.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -141,7 +141,13 @@
                   "pm.globals.unset('user_role');",
                   "pm.globals.unset('token_expires_at');",
                   "",
-                  "console.log('🧹 已清理所有認證資料');",
+                  "// 清理管理員相關變數",
+                  "pm.globals.unset('admin_token');",
+                  "pm.globals.unset('admin_id');",
+                  "pm.globals.unset('admin_username');",
+                  "pm.collectionVariables.unset('admin_token');",
+                  "",
+                  "console.log('🧹 已清理所有認證資料（包含管理員）');",
                   "console.log('現在可以重新登入或註冊');"
                 ]
               }
@@ -2558,6 +2564,37 @@
           "item": [
             {
               "name": "管理員登入",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "// 測試回應格式",
+                      "pm.test('管理員登入成功', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "// 自動儲存管理員 token",
+                      "if (pm.response.code === 200) {",
+                      "    const response = pm.response.json();",
+                      "    if (response.data && response.data.access_token) {",
+                      "        pm.globals.set('admin_token', response.data.access_token);",
+                      "        pm.collectionVariables.set('admin_token', response.data.access_token);",
+                      "        console.log('✅ 管理員 token 已自動儲存');",
+                      "        ",
+                      "        // 儲存管理員資訊",
+                      "        if (response.data.admin) {",
+                      "            pm.globals.set('admin_id', response.data.admin.id);",
+                      "            pm.globals.set('admin_username', response.data.admin.username);",
+                      "            console.log('✅ 管理員資訊已儲存');",
+                      "        }",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "method": "POST",
                 "header": [
@@ -2729,6 +2766,119 @@
         {
           "name": "課程申請管理",
           "item": [
+            {
+              "name": "獲取課程申請列表",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/admin/course-applications?status=submitted&page=1&per_page=20",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "course-applications"],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "submitted",
+                      "description": "篩選狀態：submitted(待審核), approved(已核准), rejected(已拒絕), draft(草稿), published(已發布), archived(已封存) (可選)"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "頁碼，預設 1"
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "20",
+                      "description": "每頁數量，預設 20，最大 100"
+                    },
+                    {
+                      "key": "sort",
+                      "value": "newest",
+                      "description": "排序方式：newest(最新), oldest(最舊)，預設 newest",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "獲取課程申請列表，支援課程狀態篩選和分頁。預設顯示需要審核的課程（submitted, approved, rejected 狀態）。"
+              }
+            },
+            {
+              "name": "獲取課程申請列表 - 待審核",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/admin/course-applications?status=submitted",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "course-applications"],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "submitted"
+                    }
+                  ]
+                },
+                "description": "獲取所有待審核的課程申請"
+              }
+            },
+            {
+              "name": "獲取課程申請列表 - 已核准",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/admin/course-applications?status=approved",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "course-applications"],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "approved"
+                    }
+                  ]
+                },
+                "description": "獲取所有已核准的課程申請"
+              }
+            },
+            {
+              "name": "獲取課程申請列表 - 已拒絕",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/admin/course-applications?status=rejected",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "course-applications"],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "rejected"
+                    }
+                  ]
+                },
+                "description": "獲取所有已拒絕的課程申請"
+              }
+            },
             {
               "name": "核准課程申請",
               "request": {
