@@ -11,7 +11,7 @@ export const courseSchemas = {
   // 課程建立請求 Schema
   CreateCourseRequest: {
     type: 'object',
-    required: ['name', 'content', 'main_category_id', 'sub_category_id', 'city_id'],
+    required: ['name'],
     properties: {
       name: {
         type: 'string',
@@ -23,26 +23,41 @@ export const courseSchemas = {
       content: {
         type: 'string',
         minLength: 1,
-        description: '課程內容描述 (必填，HTML格式)',
+        nullable: true,
+        description: '課程內容描述 (選填，HTML格式)',
         example: '<p>完整的 JavaScript 基礎教學，適合初學者</p>'
       },
       main_category_id: {
         type: 'integer',
         minimum: 1,
-        description: '主分類 ID (必填，對應程式設計、語言學習等主分類)',
+        nullable: true,
+        description: '主分類 ID (選填，對應程式設計、語言學習等主分類)',
         example: 1
       },
       sub_category_id: {
         type: 'integer',
         minimum: 1,
-        description: '次分類 ID (必填，對應前端、後端等次分類)',
+        nullable: true,
+        description: '次分類 ID (選填，對應前端、後端等次分類)',
         example: 2
       },
-      city_id: {
-        type: 'integer',
-        minimum: 1,
-        description: '城市 ID (必填，對應課程授課城市)',
-        example: 1
+      city: {
+        type: 'string',
+        nullable: true,
+        description: '城市 (選填，課程授課城市名稱)',
+        example: '台北市'
+      },
+      district: {
+        type: 'string',
+        nullable: true,
+        description: '區域 (選填，課程授課區域名稱)',
+        example: '信義區'
+      },
+      address: {
+        type: 'string',
+        nullable: true,
+        description: '地址 (選填，課程授課詳細地址)',
+        example: '台北市信義區信義路五段7號'
       },
       survey_url: {
         type: 'string',
@@ -69,7 +84,7 @@ export const courseSchemas = {
         type: 'string',
         format: 'json',
         description: '課程基本資料 (JSON 字串格式)',
-        example: '{"name":"JavaScript 基礎入門課程","content":"<p>完整的 JavaScript 基礎教學，適合初學者</p>","main_category_id":1,"sub_category_id":2,"city_id":1,"survey_url":"https://forms.google.com/survey123","purchase_message":"請準備筆記本，課程需要大量練習"}'
+        example: '{"name":"JavaScript 基礎入門課程","content":"<p>完整的 JavaScript 基礎教學，適合初學者</p>","main_category_id":1,"sub_category_id":2,"city":"台北市","district":"信義區","address":"台北市信義區信義路五段7號","survey_url":"https://forms.google.com/survey123","purchase_message":"請準備筆記本，課程需要大量練習"}'
       },
       priceOptions: {
         type: 'string', 
@@ -117,11 +132,23 @@ export const courseSchemas = {
         description: '次分類 ID (選填，對應前端、後端等次分類)',
         example: 2
       },
-      city_id: {
-        type: 'integer',
-        minimum: 1,
-        description: '城市 ID (選填，對應課程授課城市)',
-        example: 1
+      city: {
+        type: 'string',
+        nullable: true,
+        description: '城市 (選填，課程授課城市名稱)',
+        example: '新北市'
+      },
+      district: {
+        type: 'string',
+        nullable: true,
+        description: '區域 (選填，課程授課區域名稱)',
+        example: '板橋區'
+      },
+      address: {
+        type: 'string',
+        nullable: true,
+        description: '地址 (選填，課程授課詳細地址)',
+        example: '新北市板橋區文化路一段188號'
       },
       survey_url: {
         type: 'string',
@@ -221,17 +248,23 @@ export const courseSchemas = {
         description: '次分類 ID',
         example: 2
       },
-      city_id: {
-        type: 'integer',
-        nullable: true,
-        description: '城市 ID',
-        example: 1
-      },
-      dist_id: {
+      city: {
         type: 'string',
         nullable: true,
-        description: '區域 ID',
-        example: null
+        description: '城市',
+        example: '台北市'
+      },
+      district: {
+        type: 'string',
+        nullable: true,
+        description: '區域',
+        example: '信義區'
+      },
+      address: {
+        type: 'string',
+        nullable: true,
+        description: '地址',
+        example: '台北市信義區信義路五段7號'
       },
       survey_url: {
         type: 'string',
@@ -1084,8 +1117,7 @@ export const courseSchemas = {
               name: ['課程名稱為必填欄位'],
               content: ['課程內容為必填欄位'],
               main_category_id: ['主分類 ID 為必填欄位'],
-              sub_category_id: ['次分類 ID 為必填欄位'],
-              city_id: ['城市 ID 為必填欄位']
+              sub_category_id: ['次分類 ID 為必填欄位']
             }
           }
         }
@@ -1138,8 +1170,7 @@ export const courseSchemas = {
           errors: {
             example: {
               name: ['課程名稱長度不能超過255字元'],
-              main_category_id: ['主分類 ID 必須為正整數'],
-              city_id: ['城市 ID 必須為正整數']
+              main_category_id: ['主分類 ID 必須為正整數']
             }
           }
         }
@@ -1314,11 +1345,23 @@ export const courseSchemas = {
         description: '次分類 ID',
         example: 2
       },
-      city_id: {
-        type: 'integer',
+      city: {
+        type: 'string',
         nullable: true,
-        description: '城市 ID',
-        example: 1
+        description: '城市',
+        example: '台北市'
+      },
+      district: {
+        type: 'string',
+        nullable: true,
+        description: '區域',
+        example: '信義區'
+      },
+      address: {
+        type: 'string',
+        nullable: true,
+        description: '地址',
+        example: '台北市信義區信義路五段7號'
       },
       created_at: {
         type: 'string',

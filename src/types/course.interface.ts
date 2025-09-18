@@ -27,8 +27,9 @@ export interface CourseBasicInfo {
   student_count: number
   main_category_id: number | null
   sub_category_id: number | null
-  city_id: number | null
-  dist_id: string | null
+  city: string | null
+  district: string | null
+  address: string | null
   survey_url: string | null
   purchase_message: string | null
   status: CourseStatus
@@ -46,10 +47,12 @@ export interface CourseWithPriceOptions extends CourseBasicInfo {
 /** 課程建立請求參數 */
 export interface CreateCourseRequest {
   name: string
-  content: string
-  main_category_id: number
-  sub_category_id: number
-  city_id: number
+  content?: string
+  main_category_id?: number
+  sub_category_id?: number
+  city?: string
+  district?: string
+  address?: string
   survey_url?: string
   purchase_message?: string
 }
@@ -60,7 +63,9 @@ export interface UpdateCourseRequest {
   content?: string
   main_category_id?: number
   sub_category_id?: number
-  city_id?: number
+  city?: string
+  district?: string
+  address?: string
   survey_url?: string
   purchase_message?: string
   price_options?: string  // JSON 字串格式
@@ -157,7 +162,9 @@ export interface CourseSubmissionValidation {
   content: string
   main_category_id: number
   sub_category_id: number
-  city_id: number
+  city?: string
+  district?: string
+  address?: string
   price_options: PriceOptionData[]
 }
 

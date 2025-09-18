@@ -60,12 +60,11 @@ const router = Router()
  *         description: 次分類 ID
  *         example: 2
  *       - in: query
- *         name: city_id
+ *         name: city
  *         schema:
- *           type: integer
- *           minimum: 1
- *         description: 城市 ID，用於地區篩選
- *         example: 1
+ *           type: string
+ *         description: 城市名稱，用於地區篩選
+ *         example: '台北市'
  *       - in: query
  *         name: sort
  *         schema:

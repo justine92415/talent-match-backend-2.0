@@ -155,12 +155,14 @@ export class CourseService {
     course.uuid = uuidv4()
     course.teacher_id = teacher.id  // 使用 Teacher 表的 ID
     course.name = courseData.name
-    course.content = courseData.content
-    course.main_category_id = courseData.main_category_id
-    course.sub_category_id = courseData.sub_category_id
-    course.city_id = courseData.city_id
-    course.survey_url = courseData.survey_url || DEFAULT_COURSE_VALUES.SURVEY_URL
-    course.purchase_message = courseData.purchase_message || DEFAULT_COURSE_VALUES.PURCHASE_MESSAGE
+    course.content = courseData.content || null
+    course.main_category_id = courseData.main_category_id || null
+    course.sub_category_id = courseData.sub_category_id || null
+    course.city = courseData.city || null
+    course.district = courseData.district || null
+    course.address = courseData.address || null
+    course.survey_url = courseData.survey_url || null
+    course.purchase_message = courseData.purchase_message || null
     course.status = CourseStatus.DRAFT
 
     // 儲存課程
@@ -180,8 +182,9 @@ export class CourseService {
       student_count: savedCourse.student_count || DEFAULT_COURSE_VALUES.STUDENT_COUNT,
       main_category_id: savedCourse.main_category_id,
       sub_category_id: savedCourse.sub_category_id,
-      city_id: savedCourse.city_id,
-      dist_id: savedCourse.dist_id,
+      city: savedCourse.city,
+      district: savedCourse.district,
+      address: savedCourse.address,
       survey_url: savedCourse.survey_url,
       purchase_message: savedCourse.purchase_message,
       status: savedCourse.status,
@@ -237,13 +240,15 @@ export class CourseService {
       course.uuid = uuidv4()
       course.teacher_id = teacher.id
       course.name = courseData.name
-      course.content = courseData.content
+      course.content = courseData.content || null
       course.main_image = mainImageUrl as any
-      course.main_category_id = courseData.main_category_id
-      course.sub_category_id = courseData.sub_category_id
-      course.city_id = courseData.city_id
-      course.survey_url = courseData.survey_url || DEFAULT_COURSE_VALUES.SURVEY_URL
-      course.purchase_message = courseData.purchase_message || DEFAULT_COURSE_VALUES.PURCHASE_MESSAGE
+      course.main_category_id = courseData.main_category_id || null
+      course.sub_category_id = courseData.sub_category_id || null
+      course.city = courseData.city || null
+      course.district = courseData.district || null
+      course.address = courseData.address || null
+      course.survey_url = courseData.survey_url || null
+      course.purchase_message = courseData.purchase_message || null
       course.status = CourseStatus.DRAFT
 
       // 儲存課程
@@ -281,8 +286,9 @@ export class CourseService {
         student_count: savedCourse.student_count || DEFAULT_COURSE_VALUES.STUDENT_COUNT,
         main_category_id: savedCourse.main_category_id,
         sub_category_id: savedCourse.sub_category_id,
-        city_id: savedCourse.city_id,
-        dist_id: savedCourse.dist_id,
+        city: savedCourse.city,
+        district: savedCourse.district,
+        address: savedCourse.address,
         survey_url: savedCourse.survey_url,
         purchase_message: savedCourse.purchase_message,
         status: savedCourse.status,
@@ -468,7 +474,9 @@ export class CourseService {
         main_image: newImageUrl,
         main_category_id: courseData.main_category_id || course.main_category_id,
         sub_category_id: courseData.sub_category_id || course.sub_category_id,
-        city_id: courseData.city_id || course.city_id,
+        city: courseData.city !== undefined ? (courseData.city || null) : course.city,
+        district: courseData.district !== undefined ? (courseData.district || null) : course.district,
+        address: courseData.address !== undefined ? (courseData.address || null) : course.address,
         survey_url: courseData.survey_url !== undefined ? courseData.survey_url : course.survey_url,
         purchase_message: courseData.purchase_message !== undefined ? courseData.purchase_message : course.purchase_message,
         updated_at: new Date()
@@ -599,7 +607,7 @@ export class CourseService {
       select: [
         'id', 'uuid', 'name', 'content', 'main_image', 'rate', 'review_count',
         'status', 'teacher_id', 'created_at', 'updated_at', 'view_count', 'purchase_count',
-        'student_count', 'main_category_id', 'sub_category_id', 'city_id', 'dist_id',
+        'student_count', 'main_category_id', 'sub_category_id', 'city', 'district', 'address',
         'survey_url', 'purchase_message', 'submission_notes', 'archive_reason'
       ]
     })
@@ -706,8 +714,9 @@ export class CourseService {
       student_count: course.student_count,
       main_category_id: course.main_category_id,
       sub_category_id: course.sub_category_id,
-      city_id: course.city_id,
-      dist_id: course.dist_id,
+      city: course.city,
+      district: course.district,
+      address: course.address,
       survey_url: course.survey_url,
       purchase_message: course.purchase_message,
       status: course.status,

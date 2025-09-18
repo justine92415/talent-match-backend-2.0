@@ -15,7 +15,7 @@ export interface PublicCourseQuery {
   sub_category_id?: number      // 次分類ID
 
   // 篩選條件
-  city_id?: number             // 城市篩選
+  city?: string                // 城市篩選
 
   // 排序方式
   sort?: 'newest' | 'popular' | 'price_low' | 'price_high'
@@ -30,7 +30,7 @@ export interface PublicCourseFilters {
   keyword?: string
   main_category_id?: number
   sub_category_id?: number
-  city_id?: number
+  city?: string
   sort: string
 }
 
@@ -66,7 +66,7 @@ export interface PublicCourseItem {
   id: number
   uuid: string
   name: string
-  main_image?: string
+  main_image?: string | null
   rate: number
   review_count: number
   student_count: number
@@ -74,7 +74,9 @@ export interface PublicCourseItem {
   max_price: number
   main_category: CategorySummary
   sub_category: CategorySummary
-  city: CitySummary
+  city?: string | null
+  district?: string | null
+  address?: string | null
   teacher: TeacherSummary
   created_at: string
 }
@@ -212,17 +214,19 @@ export interface PublicCourseDetail {
   id: number
   uuid: string
   name: string
-  content?: string
-  main_image?: string
+  content?: string | null
+  main_image?: string | null
   rate: number
   review_count: number
   student_count: number
   purchase_count: number
-  survey_url?: string
-  purchase_message?: string
+  survey_url?: string | null
+  purchase_message?: string | null
+  city?: string | null
+  district?: string | null
+  address?: string | null
   main_category: CategorySummary
   sub_category: CategorySummary
-  city: CitySummary
   created_at: string
 }
 

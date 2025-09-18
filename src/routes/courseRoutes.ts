@@ -93,7 +93,7 @@ const courseFileController = new CourseFileController()
  *                 type: string
  *                 format: json
  *                 description: '課程基本資料 (JSON 字串格式)'
- *                 example: '{"name":"JavaScript 基礎入門課程","content":"<p>完整的 JavaScript 基礎教學，適合初學者</p>","main_category_id":1,"sub_category_id":2,"city_id":1,"survey_url":"https://forms.google.com/survey123","purchase_message":"請準備筆記本，課程需要大量練習"}'
+ *                 example: '{"name":"JavaScript 基礎入門課程","content":"<p>完整的 JavaScript 基礎教學，適合初學者</p>","main_category_id":1,"sub_category_id":2,"city":"台北市","district":"信義區","address":"台北市信義區信義路五段7號","survey_url":"https://forms.google.com/survey123","purchase_message":"請準備筆記本，課程需要大量練習"}'
  *               priceOptions:
  *                 type: string
  *                 format: json

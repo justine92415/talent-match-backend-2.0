@@ -21,20 +21,22 @@ import { initTestDatabase, closeTestDatabase, clearDatabase } from '@tests/helpe
 import { UserTestHelpers, TeacherTestHelpers } from '@tests/helpers/testHelpers'
 import { ERROR_MESSAGES } from '@constants/Message'
 import { ERROR_CODES } from '@constants/ErrorCode'
-import { ApplicationStatus, CourseStatus } from '@entities/enums'
+import { CourseStatus } from '@entities/enums'
 import { Course } from '@entities/Course'
 import { dataSource } from '@db/data-source'
 import type { CreateCourseRequest, SubmitCourseRequest, ResubmitCourseRequest, ArchiveCourseRequest } from '@models/index'
 
 // 課程測試資料
 const validCourseData: CreateCourseRequest = {
-  name: '測試程式設計基礎課程',
-  content: '本課程將帶領學生了解程式設計的基本概念，包含變數、函式、迴圈等重要主題。透過實際範例和練習，幫助學生建立扎實的程式設計基礎。',
+  name: 'Test Course',
+  content: 'Test course content',
   main_category_id: 1,
   sub_category_id: 1,
-  city_id: 1,
-  survey_url: 'https://survey.example.com/course-feedback',
-  purchase_message: '感謝購買本課程，請查收課程相關資訊'
+  city: '台北市',
+  district: '信義區', 
+  address: '台北市信義區信義路五段7號',
+  survey_url: 'https://example.com/survey',
+  purchase_message: 'Test message'
 }
 
 describe('課程狀態管理 API', () => {
@@ -61,9 +63,7 @@ describe('課程狀態管理 API', () => {
       email: 'teacher@test.com',
       nick_name: 'TestTeacher'
     })
-    const teacher = await TeacherTestHelpers.createTeacherApplication(user.id, {
-      application_status: ApplicationStatus.APPROVED
-    })
+    const teacher = await TeacherTestHelpers.createTeacherApplication(user.id, {})
     
     teacherId = teacher.id
     teacherToken = UserTestHelpers.generateAuthToken(user)
@@ -106,8 +106,7 @@ describe('課程狀態管理 API', () => {
       // 驗證資料庫狀態
       const updatedCourse = await courseRepository.findOne({ where: { id: courseId } })
       expect(updatedCourse).toBeTruthy()
-      expect(updatedCourse!.status).toBe(CourseStatus.DRAFT)
-      expect(updatedCourse!.application_status).toBe(ApplicationStatus.PENDING)
+      expect(updatedCourse!.status).toBe(CourseStatus.SUBMITTED)
       expect(updatedCourse!.submission_notes).toBe(submitData.submission_notes)
     })
 
@@ -126,7 +125,7 @@ describe('課程狀態管理 API', () => {
 
       const updatedCourse = await courseRepository.findOne({ where: { id: courseId } })
       expect(updatedCourse).toBeTruthy()
-      expect(updatedCourse!.application_status).toBe(ApplicationStatus.PENDING)
+      expect(updatedCourse!.status).toBe(CourseStatus.SUBMITTED)
       expect(updatedCourse!.submission_notes).toBeNull()
     })
 
@@ -154,8 +153,7 @@ describe('課程狀態管理 API', () => {
     it('應該拒絕提交已發布的課程', async () => {
       // 先將課程設為已發布
       await courseRepository.update(courseId, {
-        status: CourseStatus.PUBLISHED,
-        application_status: ApplicationStatus.APPROVED
+        status: CourseStatus.PUBLISHED
       })
 
       const response = await request(app)
@@ -217,8 +215,7 @@ describe('課程狀態管理 API', () => {
     beforeEach(async () => {
       // 將課程設為被拒絕狀態
       await courseRepository.update(courseId, {
-        status: CourseStatus.DRAFT,
-        application_status: ApplicationStatus.REJECTED
+        status: CourseStatus.REJECTED
       })
     })
 
@@ -242,15 +239,14 @@ describe('課程狀態管理 API', () => {
       // 驗證資料庫狀態
       const updatedCourse = await courseRepository.findOne({ where: { id: courseId } })
       expect(updatedCourse).toBeTruthy()
-      expect(updatedCourse!.status).toBe(CourseStatus.DRAFT)
-      expect(updatedCourse!.application_status).toBe(ApplicationStatus.PENDING)
+      expect(updatedCourse!.status).toBe(CourseStatus.SUBMITTED)
       expect(updatedCourse!.submission_notes).toBe(resubmitData.submission_notes)
     })
 
     it('應該拒絕重新提交非拒絕狀態的課程', async () => {
       // 將課程改為其他狀態
       await courseRepository.update(courseId, {
-        application_status: ApplicationStatus.PENDING
+        status: CourseStatus.SUBMITTED
       })
 
       const response = await request(app)
@@ -285,8 +281,7 @@ describe('課程狀態管理 API', () => {
     beforeEach(async () => {
       // 將課程設為審核通過狀態
       await courseRepository.update(courseId, {
-        status: CourseStatus.DRAFT,
-        application_status: ApplicationStatus.APPROVED
+        status: CourseStatus.APPROVED
       })
     })
 
@@ -307,12 +302,11 @@ describe('課程狀態管理 API', () => {
       const updatedCourse = await courseRepository.findOne({ where: { id: courseId } })
       expect(updatedCourse).toBeTruthy()
       expect(updatedCourse!.status).toBe(CourseStatus.PUBLISHED)
-      expect(updatedCourse!.application_status).toBe(ApplicationStatus.APPROVED)
     })
 
     it('應該拒絕發布未審核通過的課程', async () => {
       await courseRepository.update(courseId, {
-        application_status: ApplicationStatus.PENDING
+        status: CourseStatus.SUBMITTED
       })
 
       const response = await request(app)
@@ -366,8 +360,7 @@ describe('課程狀態管理 API', () => {
     beforeEach(async () => {
       // 將課程設為已發布狀態
       await courseRepository.update(courseId, {
-        status: CourseStatus.PUBLISHED,
-        application_status: ApplicationStatus.APPROVED
+        status: CourseStatus.PUBLISHED
       })
     })
 

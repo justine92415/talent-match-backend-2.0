@@ -22,47 +22,57 @@ export const createCourseSchema = Joi.object({
     }),
   
   content: Joi.string()
-    .required()
     .min(1)
     .max(5000)
+    .optional()
+    .allow('', null)
     .messages({
-      'string.empty': ValidationMessages.COURSE_CONTENT_REQUIRED,
       'string.min': ValidationMessages.COURSE_CONTENT_REQUIRED,
-      'string.max': ValidationMessages.COURSE_CONTENT_TOO_LONG,
-      'any.required': ValidationMessages.COURSE_CONTENT_REQUIRED
+      'string.max': ValidationMessages.COURSE_CONTENT_TOO_LONG
     }),
 
   main_category_id: Joi.number()
     .integer()
     .positive()
-    .required()
+    .optional()
     .messages({
       'number.base': ValidationMessages.MAIN_CATEGORY_INVALID,
       'number.integer': ValidationMessages.MAIN_CATEGORY_INVALID,
-      'number.positive': ValidationMessages.MAIN_CATEGORY_INVALID,
-      'any.required': ValidationMessages.MAIN_CATEGORY_REQUIRED
+      'number.positive': ValidationMessages.MAIN_CATEGORY_INVALID
     }),
 
   sub_category_id: Joi.number()
     .integer()
     .positive()
-    .required()
+    .optional()
     .messages({
       'number.base': ValidationMessages.SUB_CATEGORY_INVALID,
       'number.integer': ValidationMessages.SUB_CATEGORY_INVALID,
-      'number.positive': ValidationMessages.SUB_CATEGORY_INVALID,
-      'any.required': ValidationMessages.SUB_CATEGORY_REQUIRED
+      'number.positive': ValidationMessages.SUB_CATEGORY_INVALID
     }),
 
-  city_id: Joi.number()
-    .integer()
-    .positive()
-    .required()
+  city: Joi.string()
+    .max(100)
+    .optional()
+    .allow('', null)
     .messages({
-      'number.base': ValidationMessages.CITY_INVALID,
-      'number.integer': ValidationMessages.CITY_INVALID,
-      'number.positive': ValidationMessages.CITY_INVALID,
-      'any.required': ValidationMessages.CITY_REQUIRED
+      'string.max': '城市名稱長度不能超過100字元'
+    }),
+
+  district: Joi.string()
+    .max(100)
+    .optional()
+    .allow('', null)
+    .messages({
+      'string.max': '區域名稱長度不能超過100字元'
+    }),
+
+  address: Joi.string()
+    .max(500)
+    .optional()
+    .allow('', null)
+    .messages({
+      'string.max': '地址長度不能超過500字元'
     }),
 
   survey_url: Joi.string()
@@ -124,14 +134,28 @@ export const updateCourseSchema = Joi.object({
       'number.positive': ValidationMessages.SUB_CATEGORY_INVALID
     }),
 
-  city_id: Joi.number()
-    .integer()
-    .positive()
+  city: Joi.string()
+    .max(100)
     .optional()
+    .allow('', null)
     .messages({
-      'number.base': ValidationMessages.CITY_INVALID,
-      'number.integer': ValidationMessages.CITY_INVALID,
-      'number.positive': ValidationMessages.CITY_INVALID
+      'string.max': '城市名稱長度不能超過100字元'
+    }),
+
+  district: Joi.string()
+    .max(100)
+    .optional()
+    .allow('', null)
+    .messages({
+      'string.max': '區域名稱長度不能超過100字元'
+    }),
+
+  address: Joi.string()
+    .max(500)
+    .optional()
+    .allow('', null)
+    .messages({
+      'string.max': '地址長度不能超過500字元'
     }),
 
   survey_url: Joi.string()

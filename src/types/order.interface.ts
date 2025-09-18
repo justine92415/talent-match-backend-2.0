@@ -30,7 +30,7 @@ export interface OrderItemWithDetails {
     id: number
     uuid: string
     name: string
-    main_image: string
+    main_image: string | null
     teacher: {
       user: {
         nick_name: string

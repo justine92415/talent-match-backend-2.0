@@ -11,7 +11,7 @@
  * 4. 建議資料庫索引：
  *    - courses: (status, created_at, student_count)
  *    - courses: (name, content) - 全文搜索索引
- *    - courses: (main_category_id, sub_category_id, city_id)
+ *    - courses: (main_category_id, sub_category_id, city, district, address)
  *    - course_price_options: (course_id, is_active, price)
  */
 
@@ -36,7 +36,7 @@ export interface SimpleCourseQuery {
   keyword?: string
   main_category_id?: number
   sub_category_id?: number
-  city_id?: number
+  city?: string
   sort?: 'newest' | 'popular' | 'price_low' | 'price_high'
   page?: number
   per_page?: number
@@ -108,7 +108,7 @@ export class PublicCourseService {
       keyword,
       main_category_id,
       sub_category_id,
-      city_id,
+      city,
       sort = 'newest',
       page = DEFAULT_PAGINATION.PAGE,
       per_page = DEFAULT_PAGINATION.PER_PAGE
@@ -134,7 +134,7 @@ export class PublicCourseService {
    * 私有方法：建構查詢建構器與篩選條件
    */
   private buildQueryBuilder(query: SimpleCourseQuery) {
-    const { keyword, main_category_id, sub_category_id, city_id } = query
+    const { keyword, main_category_id, sub_category_id, city } = query
     
     // 建立基本查詢條件
     const whereConditions: Record<string, string | number> = { status: CourseStatus.PUBLISHED }
@@ -142,11 +142,15 @@ export class PublicCourseService {
     // 分類篩選
     if (main_category_id) whereConditions.main_category_id = main_category_id
     if (sub_category_id) whereConditions.sub_category_id = sub_category_id
-    if (city_id) whereConditions.city_id = city_id
 
     // 建立查詢建構器
     let queryBuilder = this.courseRepository.createQueryBuilder('course')
       .where(whereConditions)
+
+    // 城市篩選
+    if (city) {
+      queryBuilder = queryBuilder.andWhere('course.city ILIKE :city', { city: `%${city}%` })
+    }
 
     // 關鍵字搜尋
     if (keyword) {
@@ -201,7 +205,7 @@ export class PublicCourseService {
         sort: query.sort || 'newest',
         main_category_id: query.main_category_id,
         sub_category_id: query.sub_category_id,
-        city_id: query.city_id,
+        city: query.city,
         keyword: query.keyword
       }
     }
@@ -218,18 +222,17 @@ export class PublicCourseService {
     this.courseRepository.increment({ id: courseId }, 'view_count', 1).catch(console.error)
 
     // 並行查詢相關資訊和價格選項
-    const [teacher, mainCategory, subCategory, city, priceOptions] = await Promise.all([
+    const [teacher, mainCategory, subCategory, priceOptions] = await Promise.all([
       this.getTeacherByCourseId(course.teacher_id),
       this.getMainCategoryById(course.main_category_id),
       this.getSubCategoryById(course.sub_category_id),
-      this.getCityById(course.city_id),
       this.coursePriceOptionRepository.find({
         where: { course_id: courseId, is_active: true },
         order: { price: 'ASC' }
       })
     ])
 
-    return this.buildCourseDetailResponse(course, teacher, mainCategory, subCategory, city, priceOptions)
+    return this.buildCourseDetailResponse(course, teacher, mainCategory, subCategory, priceOptions)
   }
 
   /**
@@ -306,7 +309,6 @@ export class PublicCourseService {
     teacher: Teacher & { user?: User } | null, 
     mainCategory: MainCategory | null, 
     subCategory: SubCategory | null, 
-    city: City | null, 
     priceOptions: CoursePriceOption[] = []
   ): PublicCourseDetailResponse {
     return {
@@ -314,14 +316,17 @@ export class PublicCourseService {
         id: course.id,
         uuid: course.uuid,
         name: course.name,
-        content: course.content || '',
-        main_image: course.main_image,
+        content: course.content || undefined,
+        main_image: course.main_image || undefined,
         rate: course.rate,
         review_count: course.review_count,
         student_count: course.student_count,
         purchase_count: course.purchase_count || 0,
-        survey_url: course.survey_url,
-        purchase_message: course.purchase_message,
+        survey_url: course.survey_url || undefined,
+        purchase_message: course.purchase_message || undefined,
+        city: course.city || undefined,
+        district: course.district || undefined,
+        address: course.address || undefined,
         main_category: mainCategory ? {
           id: mainCategory.id,
           name: mainCategory.name
@@ -330,10 +335,6 @@ export class PublicCourseService {
           id: subCategory.id,
           name: subCategory.name
         } : { id: 0, name: DEFAULT_CATEGORY.NAME },
-        city: city ? {
-          id: city.id,
-          city_name: city.city_name
-        } : { id: 0, city_name: DEFAULT_CITY.NAME },
         created_at: course.created_at.toISOString()
       },
       teacher: teacher && teacher.user ? {
@@ -487,10 +488,9 @@ export class PublicCourseService {
     const teacherIds = courses.map(c => c.teacher_id).filter(Boolean)
     const mainCategoryIds = courses.map(c => c.main_category_id).filter(Boolean)
     const subCategoryIds = courses.map(c => c.sub_category_id).filter(Boolean)
-    const cityIds = courses.map(c => c.city_id).filter(Boolean)
 
     // 批次查詢相關資料和價格選項
-    const [teachers, mainCategories, subCategories, cities, priceOptions] = await Promise.all([
+    const [teachers, mainCategories, subCategories, priceOptions] = await Promise.all([
       teacherIds.length > 0 
         ? this.teacherRepository
             .createQueryBuilder('teacher')
@@ -500,7 +500,6 @@ export class PublicCourseService {
         : [],
       mainCategoryIds.length > 0 ? this.mainCategoryRepository.findByIds(mainCategoryIds) : [],
       subCategoryIds.length > 0 ? this.subCategoryRepository.findByIds(subCategoryIds) : [],
-      cityIds.length > 0 ? this.cityRepository.findByIds(cityIds) : [],
       this.coursePriceOptionRepository
         .createQueryBuilder('cpo')
         .select([
@@ -528,19 +527,21 @@ export class PublicCourseService {
       const teacher = teachers.find(t => t.id === course.teacher_id)
       const mainCategory = mainCategories.find(c => c.id === course.main_category_id)
       const subCategory = subCategories.find(c => c.id === course.sub_category_id)
-      const city = cities.find(c => c.id === course.city_id)
       const priceInfo = priceMap.get(course.id) || { min_price: 0, max_price: 0 }
 
       return {
         id: course.id,
         uuid: course.uuid,
         name: course.name,
-        main_image: course.main_image,
+        main_image: course.main_image || undefined,
         min_price: priceInfo.min_price,
         max_price: priceInfo.max_price,
         rate: course.rate,
         review_count: course.review_count,
         student_count: course.student_count,
+        city: course.city || undefined,
+        district: course.district || undefined,
+        address: course.address || undefined,
         main_category: mainCategory ? {
           id: mainCategory.id,
           name: mainCategory.name
@@ -549,10 +550,6 @@ export class PublicCourseService {
           id: subCategory.id,
           name: subCategory.name
         } : { id: 0, name: DEFAULT_CATEGORY.NAME },
-        city: city ? {
-          id: city.id,
-          city_name: city.city_name
-        } : { id: 0, city_name: DEFAULT_CITY.NAME },
         teacher: teacher && teacher.user ? {
           id: teacher.id,
           user: {
