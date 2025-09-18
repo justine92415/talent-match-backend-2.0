@@ -286,12 +286,15 @@ export class AdminService {
       )
     }
 
-    // 注意：目前 Course entity 沒有審核相關欄位
-    // 以下程式碼是預期的實作，等 Course entity 更新後可以使用
-    /*
     // 檢查課程狀態
-    if (course.status !== CourseStatus.PENDING) {
-      if (course.status === CourseStatus.APPROVED || course.status === CourseStatus.REJECTED) {
+    if (course.status !== CourseStatus.SUBMITTED) {
+      if (course.status === CourseStatus.APPROVED) {
+        throw new BusinessError(
+          ERROR_CODES.APPLICATION_ALREADY_REVIEWED,
+          MESSAGES.BUSINESS.APPLICATION_ALREADY_REVIEWED,
+          409
+        )
+      } else if (course.status === CourseStatus.REJECTED) {
         throw new BusinessError(
           ERROR_CODES.APPLICATION_ALREADY_REVIEWED,
           MESSAGES.BUSINESS.APPLICATION_ALREADY_REVIEWED,
@@ -308,24 +311,20 @@ export class AdminService {
 
     // 更新課程申請狀態
     course.status = CourseStatus.APPROVED
-    course.reviewed_at = new Date()
-    course.reviewer_id = adminId
-    course.rejection_reason = null
+    course.updated_at = new Date()
 
     const updatedCourse = await this.courseRepository.save(course)
-    */
 
-    // 暫時返回基本課程資訊
     return {
       course: {
-        id: course.id,
-        uuid: course.uuid,
-        name: course.name,
-        teacher_id: course.teacher_id,
-        status: 'approved', // 暫時固定值
-        application_status: 'approved', // 暫時固定值
-        created_at: course.created_at.toISOString(),
-        updated_at: course.updated_at.toISOString()
+        id: updatedCourse.id,
+        uuid: updatedCourse.uuid,
+        name: updatedCourse.name,
+        teacher_id: updatedCourse.teacher_id,
+        status: updatedCourse.status,
+        application_status: updatedCourse.status, // 使用相同的狀態
+        created_at: updatedCourse.created_at.toISOString(),
+        updated_at: updatedCourse.updated_at.toISOString()
       }
     }
   }
@@ -355,12 +354,15 @@ export class AdminService {
       )
     }
 
-    // 注意：目前 Course entity 沒有審核相關欄位
-    // 以下程式碼是預期的實作，等 Course entity 更新後可以使用
-    /*
     // 檢查課程狀態
-    if (course.status !== CourseStatus.PENDING) {
-      if (course.status === CourseStatus.APPROVED || course.status === CourseStatus.REJECTED) {
+    if (course.status !== CourseStatus.SUBMITTED) {
+      if (course.status === CourseStatus.APPROVED) {
+        throw new BusinessError(
+          ERROR_CODES.APPLICATION_ALREADY_REVIEWED,
+          MESSAGES.BUSINESS.APPLICATION_ALREADY_REVIEWED,
+          409
+        )
+      } else if (course.status === CourseStatus.REJECTED) {
         throw new BusinessError(
           ERROR_CODES.APPLICATION_ALREADY_REVIEWED,
           MESSAGES.BUSINESS.APPLICATION_ALREADY_REVIEWED,
@@ -377,24 +379,22 @@ export class AdminService {
 
     // 更新課程申請狀態
     course.status = CourseStatus.REJECTED
-    course.reviewed_at = new Date()
-    course.reviewer_id = adminId
-    course.rejection_reason = rejectionData.rejectionReason
+    course.updated_at = new Date()
+    // 注意：拒絕原因目前無法儲存，因為 Course entity 沒有相關欄位
+    // 如果需要儲存拒絕原因，需要在 Course entity 新增欄位
 
     const updatedCourse = await this.courseRepository.save(course)
-    */
 
-    // 暫時返回基本課程資訊
     return {
       course: {
-        id: course.id,
-        uuid: course.uuid,
-        name: course.name,
-        teacher_id: course.teacher_id,
-        status: 'rejected', // 暫時固定值
-        application_status: 'rejected', // 暫時固定值
-        created_at: course.created_at.toISOString(),
-        updated_at: course.updated_at.toISOString()
+        id: updatedCourse.id,
+        uuid: updatedCourse.uuid,
+        name: updatedCourse.name,
+        teacher_id: updatedCourse.teacher_id,
+        status: updatedCourse.status,
+        application_status: updatedCourse.status, // 使用相同的狀態
+        created_at: updatedCourse.created_at.toISOString(),
+        updated_at: updatedCourse.updated_at.toISOString()
       }
     }
   }
