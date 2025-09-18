@@ -1,0 +1,730 @@
+/**
+ * 公開課程模組 Schema
+ * 
+ * 包含公開課程 API 相關的請求和回應 Schema
+ * 完全基於 PublicCourseController 和 PublicCourseService 的實際實作
+ */
+
+export const publicCourseSchemas = {
+  // ==================== 公開課程列表 API Schema ====================
+
+  // 公開課程查詢參數 Schema
+  PublicCourseQueryParams: {
+    type: 'object',
+    properties: {
+      keyword: {
+        type: 'string',
+        maxLength: 200,
+        description: '搜尋關鍵字 (選填，在課程名稱和內容中搜尋，最大200字元)',
+        example: 'Python'
+      },
+      main_category_id: {
+        type: 'integer',
+        minimum: 1,
+        description: '主分類 ID (選填，篩選指定主分類的課程)',
+        example: 1
+      },
+      sub_category_id: {
+        type: 'integer',
+        minimum: 1,
+        description: '次分類 ID (選填，篩選指定次分類的課程)',
+        example: 2
+      },
+      city: {
+        type: 'string',
+        description: '城市名稱 (選填，地區篩選)',
+        example: '台北市'
+      },
+      sort: {
+        type: 'string',
+        enum: ['newest', 'popular', 'price_low', 'price_high'],
+        description: '排序方式 (選填，newest: 最新發布, popular: 熱門程度, price_low: 價格由低到高, price_high: 價格由高到低)',
+        example: 'newest'
+      },
+      page: {
+        type: 'integer',
+        minimum: 1,
+        description: '頁碼 (選填，預設為 1)',
+        example: 1
+      },
+      per_page: {
+        type: 'integer',
+        minimum: 1,
+        maximum: 100,
+        description: '每頁顯示數量 (選填，預設為 12，最大 100)',
+        example: 12
+      }
+    }
+  },
+
+  // 公開課程列表項目 Schema
+  PublicCourseListItem: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '課程 ID',
+        example: 2
+      },
+      uuid: {
+        type: 'string',
+        format: 'uuid',
+        description: '課程 UUID (系統生成的唯一識別碼)',
+        example: '2728eb42-48d8-4356-9091-39e971ebce0c'
+      },
+      name: {
+        type: 'string',
+        description: '課程名稱',
+        example: '測試課程2'
+      },
+      main_image: {
+        type: 'string',
+        nullable: true,
+        description: '課程主圖 URL',
+        example: 'https://firebasestorage.googleapis.com/v0/b/talent-match-2.firebasestorage.app/o/course_images%2Fteacher_4%2F83a3ac18-5be7-46bc-820f-8b3ca67e16dd.jpeg?alt=media'
+      },
+      min_price: {
+        type: 'number',
+        description: '最低價格',
+        example: 200
+      },
+      max_price: {
+        type: 'number',
+        description: '最高價格',
+        example: 1000
+      },
+      rate: {
+        type: 'string',
+        description: '課程評分 (字串格式的數字)',
+        example: '0.00'
+      },
+      review_count: {
+        type: 'integer',
+        description: '評價數量',
+        example: 0
+      },
+      student_count: {
+        type: 'integer',
+        description: '學生人數',
+        example: 0
+      },
+      city: {
+        type: 'string',
+        nullable: true,
+        description: '城市',
+        example: '臺北市'
+      },
+      district: {
+        type: 'string',
+        nullable: true,
+        description: '區域',
+        example: '中正區'
+      },
+      address: {
+        type: 'string',
+        nullable: true,
+        description: '地址',
+        example: 'qweqwe'
+      },
+      main_category: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '主分類 ID',
+            example: 2
+          },
+          name: {
+            type: 'string',
+            description: '主分類名稱',
+            example: '藝術創作'
+          }
+        },
+        description: '主分類資訊'
+      },
+      sub_category: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '次分類 ID',
+            example: 12
+          },
+          name: {
+            type: 'string',
+            description: '次分類名稱',
+            example: '插畫'
+          }
+        },
+        description: '次分類資訊'
+      },
+      teacher: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '教師 ID',
+            example: 5
+          },
+          user: {
+            type: 'object',
+            properties: {
+              name: {
+                type: 'string',
+                description: '教師姓名',
+                example: ''
+              },
+              nick_name: {
+                type: 'string',
+                description: '教師暱稱',
+                example: '小明劍魔'
+              },
+              avatar_image: {
+                type: 'string',
+                description: '教師頭像 URL',
+                example: 'https://firebasestorage.googleapis.com/v0/b/talent-match-2.firebasestorage.app/o/avatars%2Fuser_4%2Fc4853549-5487-4e2f-be17-1d09697c4d57.png?alt=media'
+              }
+            },
+            description: '教師使用者資訊'
+          }
+        },
+        description: '教師資訊'
+      },
+      created_at: {
+        type: 'string',
+        format: 'date-time',
+        description: '建立時間',
+        example: '2025-09-17T13:01:10.284Z'
+      },
+      updated_at: {
+        type: 'string',
+        format: 'date-time',
+        description: '更新時間',
+        example: '2025-09-18T08:27:58.537Z'
+      }
+    }
+  },
+
+  // 公開課程分頁資訊 Schema
+  PublicCoursePaginationInfo: {
+    type: 'object',
+    properties: {
+      current_page: {
+        type: 'integer',
+        description: '目前頁碼',
+        example: 1
+      },
+      per_page: {
+        type: 'integer',
+        description: '每頁數量',
+        example: 12
+      },
+      total: {
+        type: 'integer',
+        description: '總筆數',
+        example: 1
+      },
+      total_pages: {
+        type: 'integer',
+        description: '總頁數',
+        example: 1
+      }
+    }
+  },
+
+  // 公開課程篩選條件 Schema
+  PublicCourseFilters: {
+    type: 'object',
+    properties: {
+      sort: {
+        type: 'string',
+        description: '排序方式',
+        example: 'newest'
+      },
+      main_category_id: {
+        type: 'integer',
+        nullable: true,
+        description: '主分類 ID',
+        example: null
+      },
+      sub_category_id: {
+        type: 'integer',
+        nullable: true,
+        description: '次分類 ID',
+        example: null
+      },
+      city: {
+        type: 'string',
+        nullable: true,
+        description: '城市',
+        example: null
+      },
+      keyword: {
+        type: 'string',
+        nullable: true,
+        description: '搜尋關鍵字',
+        example: null
+      }
+    }
+  },
+
+  // 公開課程列表成功回應 Schema
+  PublicCourseListSuccessResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        enum: ['success'],
+        description: '回應狀態 (取得成功固定為 success)',
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        description: '成功訊息',
+        example: '取得公開課程列表成功'
+      },
+      data: {
+        type: 'object',
+        properties: {
+          courses: {
+            type: 'array',
+            items: {
+              $ref: '#/components/schemas/PublicCourseListItem'
+            },
+            description: '公開課程列表'
+          },
+          pagination: {
+            $ref: '#/components/schemas/PublicCoursePaginationInfo'
+          },
+          filters: {
+            $ref: '#/components/schemas/PublicCourseFilters'
+          }
+        },
+        description: '公開課程列表資料、分頁資訊和篩選條件'
+      }
+    }
+  },
+
+  // ==================== 公開課程詳情 API Schema ====================
+
+  // 公開課程詳情 Schema
+  PublicCourseDetail: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '課程 ID',
+        example: 2
+      },
+      uuid: {
+        type: 'string',
+        format: 'uuid',
+        description: '課程 UUID (系統生成的唯一識別碼)',
+        example: '2728eb42-48d8-4356-9091-39e971ebce0c'
+      },
+      name: {
+        type: 'string',
+        description: '課程名稱',
+        example: '測試課程2'
+      },
+      content: {
+        type: 'string',
+        nullable: true,
+        description: '課程內容描述',
+        example: '測試課程2內容'
+      },
+      main_image: {
+        type: 'string',
+        nullable: true,
+        description: '課程主圖 URL',
+        example: 'https://firebasestorage.googleapis.com/v0/b/talent-match-2.firebasestorage.app/o/course_images%2Fteacher_4%2F83a3ac18-5be7-46bc-820f-8b3ca67e16dd.jpeg?alt=media'
+      },
+      rate: {
+        type: 'string',
+        description: '課程評分 (字串格式的數字)',
+        example: '0.00'
+      },
+      review_count: {
+        type: 'integer',
+        description: '評價數量',
+        example: 0
+      },
+      student_count: {
+        type: 'integer',
+        description: '學生人數',
+        example: 0
+      },
+      purchase_count: {
+        type: 'integer',
+        description: '購買次數',
+        example: 0
+      },
+      survey_url: {
+        type: 'string',
+        nullable: true,
+        description: '問卷調查連結',
+        example: null
+      },
+      purchase_message: {
+        type: 'string',
+        nullable: true,
+        description: '購買備註訊息',
+        example: '恭喜購買課程'
+      },
+      city: {
+        type: 'string',
+        nullable: true,
+        description: '城市',
+        example: null
+      },
+      district: {
+        type: 'string',
+        nullable: true,
+        description: '區域',
+        example: null
+      },
+      address: {
+        type: 'string',
+        nullable: true,
+        description: '地址',
+        example: null
+      },
+      main_category: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '主分類 ID',
+            example: 2
+          },
+          name: {
+            type: 'string',
+            description: '主分類名稱',
+            example: '藝術創作'
+          }
+        },
+        description: '主分類資訊'
+      },
+      sub_category: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '次分類 ID',
+            example: 12
+          },
+          name: {
+            type: 'string',
+            description: '次分類名稱',
+            example: '插畫'
+          }
+        },
+        description: '次分類資訊'
+      },
+      created_at: {
+        type: 'string',
+        format: 'date-time',
+        description: '建立時間',
+        example: '2025-09-17T13:01:10.284Z'
+      }
+    }
+  },
+
+  // 公開課程教師資訊 Schema
+  PublicCourseTeacherInfo: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '教師 ID',
+        example: 5
+      },
+      user: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: '教師姓名',
+            example: ''
+          },
+          nick_name: {
+            type: 'string',
+            description: '教師暱稱',
+            example: '小明劍魔'
+          },
+          avatar_image: {
+            type: 'string',
+            description: '教師頭像 URL',
+            example: 'https://firebasestorage.googleapis.com/v0/b/talent-match-2.firebasestorage.app/o/avatars%2Fuser_4%2Fc4853549-5487-4e2f-be17-1d09697c4d57.png?alt=media'
+          }
+        },
+        description: '教師使用者資訊'
+      },
+      city: {
+        type: 'string',
+        nullable: true,
+        description: '教師所在城市',
+        example: '臺北市'
+      },
+      district: {
+        type: 'string',
+        nullable: true,
+        description: '教師所在區域',
+        example: '中正區'
+      },
+      address: {
+        type: 'string',
+        nullable: true,
+        description: '教師地址',
+        example: 'qweqwe'
+      },
+      introduction: {
+        type: 'string',
+        nullable: true,
+        description: '教師介紹',
+        example: '資深教師介紹內容'
+      },
+      total_students: {
+        type: 'integer',
+        description: '教師總學生數',
+        example: 0
+      },
+      total_courses: {
+        type: 'integer',
+        description: '教師總課程數',
+        example: 0
+      },
+      average_rating: {
+        type: 'integer',
+        description: '教師平均評分',
+        example: 0
+      }
+    }
+  },
+
+  // 公開課程價格方案 Schema
+  PublicCoursePriceOption: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '價格方案 ID',
+        example: 25
+      },
+      uuid: {
+        type: 'string',
+        format: 'uuid',
+        description: '價格方案 UUID',
+        example: '670a79ae-fee5-4036-ae24-7a7f6f5c157b'
+      },
+      price: {
+        type: 'number',
+        description: '價格',
+        example: 200
+      },
+      quantity: {
+        type: 'integer',
+        description: '堂數',
+        example: 1
+      }
+    }
+  },
+
+  // ==================== 教師詳細資訊相關 Schema ====================
+
+  // 公開課程教師證書 Schema
+  PublicTeacherCertificate: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '證書 ID',
+        example: 26
+      },
+      license_name: {
+        type: 'string',
+        description: '證書名稱',
+        example: 'Google Cloud Professional'
+      }
+    }
+  },
+
+  // 公開課程教師工作經驗 Schema
+  PublicTeacherWorkExperience: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '工作經驗 ID',
+        example: 29
+      },
+      company_name: {
+        type: 'string',
+        description: '公司名稱',
+        example: 'Google Taiwan'
+      },
+      job_title: {
+        type: 'string',
+        description: '職位名稱',
+        example: '軟體工程師'
+      },
+      start_year: {
+        type: 'integer',
+        description: '開始年份',
+        example: 2020
+      },
+      end_year: {
+        type: 'integer',
+        nullable: true,
+        description: '結束年份 (null 表示目前在職)',
+        example: 2023
+      }
+    }
+  },
+
+  // 公開課程教師學習經歷 Schema
+  PublicTeacherLearningExperience: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '學習經歷 ID',
+        example: 22
+      },
+      school_name: {
+        type: 'string',
+        description: '學校名稱',
+        example: '國立台灣大學'
+      },
+      department: {
+        type: 'string',
+        description: '科系/部門',
+        example: '資訊工程學系'
+      },
+      degree: {
+        type: 'string',
+        description: '學位類型',
+        example: 'bachelor'
+      },
+      start_year: {
+        type: 'integer',
+        description: '開始年份',
+        example: 2018
+      },
+      end_year: {
+        type: 'integer',
+        nullable: true,
+        description: '結束年份 (null 表示目前在學)',
+        example: 2022
+      }
+    }
+  },
+
+  // 公開課程詳情成功回應 Schema
+  PublicCourseDetailSuccessResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        enum: ['success'],
+        description: '回應狀態 (取得成功固定為 success)',
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        description: '成功訊息',
+        example: '取得課程詳情成功'
+      },
+      data: {
+        type: 'object',
+        properties: {
+          course: {
+            $ref: '#/components/schemas/PublicCourseDetail'
+          },
+          teacher: {
+            $ref: '#/components/schemas/PublicCourseTeacherInfo'
+          },
+          price_options: {
+            type: 'array',
+            items: {
+              $ref: '#/components/schemas/PublicCoursePriceOption'
+            },
+            description: '課程價格方案列表'
+          },
+          videos: {
+            type: 'array',
+            items: {},
+            description: '課程影片列表 (目前為空陣列)',
+            example: []
+          },
+          files: {
+            type: 'array',
+            items: {},
+            description: '課程檔案列表 (目前為空陣列)',
+            example: []
+          },
+          available_slots: {
+            type: 'array',
+            items: {},
+            description: '可預約時段列表 (目前為空陣列)',
+            example: []
+          },
+          recent_reviews: {
+            type: 'array',
+            items: {},
+            description: '最近評價列表 (目前為空陣列)',
+            example: []
+          },
+          recommended_courses: {
+            type: 'array',
+            items: {},
+            description: '推薦課程列表 (目前為空陣列)',
+            example: []
+          },
+          teacher_certificates: {
+            type: 'array',
+            items: {
+              $ref: '#/components/schemas/PublicTeacherCertificate'
+            },
+            description: '教師證書列表'
+          },
+          teacher_work_experiences: {
+            type: 'array',
+            items: {
+              $ref: '#/components/schemas/PublicTeacherWorkExperience'
+            },
+            description: '教師工作經驗列表'
+          },
+          teacher_learning_experiences: {
+            type: 'array',
+            items: {
+              $ref: '#/components/schemas/PublicTeacherLearningExperience'
+            },
+            description: '教師學習經歷列表'
+          }
+        },
+        description: '公開課程完整詳情資料'
+      }
+    }
+  },
+
+  // ==================== 錯誤回應 Schema ====================
+
+  // 公開課程詳情不存在錯誤回應 Schema
+  PublicCourseNotFoundErrorResponse: {
+    allOf: [
+      { $ref: '#/components/schemas/NotFoundErrorResponse' },
+      {
+        type: 'object',
+        properties: {
+          code: {
+            example: 'COURSE_NOT_PUBLISHED'
+          },
+          message: {
+            example: '課程未發布或不存在'
+          }
+        }
+      }
+    ]
+  }
+}

@@ -143,37 +143,26 @@ export interface PublicTeacherDetail {
 /** 教師工作經驗（公開版） */
 export interface PublicWorkExperience {
   id: number
-  is_working: boolean
   company_name: string
-  workplace: string
-  job_category: string
   job_title: string
   start_year: number
-  start_month: number
-  end_year?: number
-  end_month?: number
+  end_year: number | null
 }
 
 /** 教師學習經歷（公開版） */
 export interface PublicLearningExperience {
   id: number
-  is_in_school: boolean
-  degree: string
   school_name: string
   department: string
-  region: boolean
+  degree: string
   start_year: number
-  start_month: number
-  end_year?: number
-  end_month?: number
+  end_year: number | null
 }
 
 /** 教師證書（公開版） */
 export interface PublicTeacherCertificate {
   id: number
-  verifying_institution: string
   license_name: string
-  subject: string
 }
 
 /** 教師可預約時段 */

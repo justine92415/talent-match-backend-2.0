@@ -25,6 +25,9 @@ import { MainCategory } from '@entities/MainCategory'
 import { SubCategory } from '@entities/SubCategory'
 import { City } from '@entities/City'
 import { CoursePriceOption } from '@entities/CoursePriceOption'
+import { TeacherCertificate } from '@entities/TeacherCertificate'
+import { TeacherWorkExperience } from '@entities/TeacherWorkExperience'
+import { TeacherLearningExperience } from '@entities/TeacherLearningExperience'
 import { BusinessError } from '@utils/errors'
 import { ERROR_CODES } from '@constants/ErrorCode'
 import { MESSAGES } from '@constants/Message'
@@ -88,6 +91,9 @@ export class PublicCourseService {
   private subCategoryRepository: Repository<SubCategory>
   private cityRepository: Repository<City>
   private coursePriceOptionRepository: Repository<CoursePriceOption>
+  private teacherCertificateRepository: Repository<TeacherCertificate>
+  private teacherWorkExperienceRepository: Repository<TeacherWorkExperience>
+  private teacherLearningExperienceRepository: Repository<TeacherLearningExperience>
 
   constructor() {
     this.courseRepository = dataSource.getRepository(Course)
@@ -98,6 +104,9 @@ export class PublicCourseService {
     this.subCategoryRepository = dataSource.getRepository(SubCategory)
     this.cityRepository = dataSource.getRepository(City)
     this.coursePriceOptionRepository = dataSource.getRepository(CoursePriceOption)
+    this.teacherCertificateRepository = dataSource.getRepository(TeacherCertificate)
+    this.teacherWorkExperienceRepository = dataSource.getRepository(TeacherWorkExperience)
+    this.teacherLearningExperienceRepository = dataSource.getRepository(TeacherLearningExperience)
   }
 
   /**
@@ -222,17 +231,32 @@ export class PublicCourseService {
     this.courseRepository.increment({ id: courseId }, 'view_count', 1).catch(console.error)
 
     // 並行查詢相關資訊和價格選項
-    const [teacher, mainCategory, subCategory, priceOptions] = await Promise.all([
+    const [teacher, mainCategory, subCategory, priceOptions, teacherCertificates, teacherWorkExperiences, teacherLearningExperiences] = await Promise.all([
       this.getTeacherByCourseId(course.teacher_id),
       this.getMainCategoryById(course.main_category_id),
       this.getSubCategoryById(course.sub_category_id),
       this.coursePriceOptionRepository.find({
         where: { course_id: courseId, is_active: true },
         order: { price: 'ASC' }
+      }),
+      // 查詢教師證書
+      this.teacherCertificateRepository.find({
+        where: { teacher_id: course.teacher_id },
+        order: { created_at: 'DESC' }
+      }),
+      // 查詢教師工作經驗
+      this.teacherWorkExperienceRepository.find({
+        where: { teacher_id: course.teacher_id },
+        order: { start_year: 'DESC', start_month: 'DESC' }
+      }),
+      // 查詢教師學習經歷
+      this.teacherLearningExperienceRepository.find({
+        where: { teacher_id: course.teacher_id },
+        order: { start_year: 'DESC', start_month: 'DESC' }
       })
     ])
 
-    return this.buildCourseDetailResponse(course, teacher, mainCategory, subCategory, priceOptions)
+    return this.buildCourseDetailResponse(course, teacher, mainCategory, subCategory, priceOptions, teacherCertificates, teacherWorkExperiences, teacherLearningExperiences)
   }
 
   /**
@@ -309,7 +333,10 @@ export class PublicCourseService {
     teacher: Teacher & { user?: User } | null, 
     mainCategory: MainCategory | null, 
     subCategory: SubCategory | null, 
-    priceOptions: CoursePriceOption[] = []
+    priceOptions: CoursePriceOption[] = [],
+    teacherCertificates: TeacherCertificate[] = [],
+    teacherWorkExperiences: TeacherWorkExperience[] = [],
+    teacherLearningExperiences: TeacherLearningExperience[] = []
   ): PublicCourseDetailResponse {
     return {
       course: {
@@ -377,9 +404,25 @@ export class PublicCourseService {
       available_slots: [], // TODO: 查詢可預約時段
       recent_reviews: [], // TODO: 查詢最近評價
       recommended_courses: [], // TODO: 查詢推薦課程
-      teacher_certificates: [], // TODO: 查詢教師證書
-      teacher_work_experiences: [], // TODO: 查詢教師工作經驗
-      teacher_learning_experiences: [] // TODO: 查詢教師學習經歷
+      teacher_certificates: teacherCertificates.map(cert => ({
+        id: cert.id,
+        license_name: cert.license_name
+      })),
+      teacher_work_experiences: teacherWorkExperiences.map(exp => ({
+        id: exp.id,
+        company_name: exp.company_name,
+        job_title: exp.job_title,
+        start_year: exp.start_year,
+        end_year: exp.end_year ?? null
+      })),
+      teacher_learning_experiences: teacherLearningExperiences.map(exp => ({
+        id: exp.id,
+        school_name: exp.school_name,
+        department: exp.department,
+        degree: exp.degree,
+        start_year: exp.start_year,
+        end_year: exp.end_year ?? null
+      }))
     }
   }
 
