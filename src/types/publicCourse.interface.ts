@@ -172,6 +172,22 @@ export interface TeacherAvailableSlot {
   end_time: string
 }
 
+/** 時段狀態 */
+export type SlotStatus = 'unavailable' | 'available' | 'reserved'
+
+/** 課程時段 */
+export interface CourseSlot {
+  time: string
+  status: SlotStatus
+}
+
+/** 每日課程表 */
+export interface DaySchedule {
+  week: string
+  date: string
+  slots: CourseSlot[]
+}
+
 /** 課程評價（公開版） */
 export interface PublicReview {
   id: number
@@ -229,7 +245,7 @@ export interface PublicCourseDetailResponse {
   teacher_work_experiences: PublicWorkExperience[]
   teacher_learning_experiences: PublicLearningExperience[]
   teacher_certificates: PublicTeacherCertificate[]
-  available_slots: TeacherAvailableSlot[]
+  schedule: DaySchedule[]
   recent_reviews: PublicReview[]
   recommended_courses: RecommendedCourse[]
 }

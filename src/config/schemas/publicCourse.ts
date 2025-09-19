@@ -6,6 +6,67 @@
  */
 
 export const publicCourseSchemas = {
+  // ==================== 課程時段相關 Schema ====================
+
+  // 課程時段 Schema
+  CourseSlot: {
+    type: 'object',
+    properties: {
+      time: {
+        type: 'string',
+        description: '時段時間 (HH:MM 格式)',
+        example: '09:00'
+      },
+      status: {
+        type: 'string',
+        enum: ['unavailable', 'available', 'reserved'],
+        description: '時段狀態 (unavailable: 教師未開放, available: 可預約, reserved: 已預約)',
+        example: 'available'
+      }
+    },
+    required: ['time', 'status'],
+    description: '單一課程時段資訊'
+  },
+
+  // 每日課程表 Schema
+  DaySchedule: {
+    type: 'object',
+    properties: {
+      week: {
+        type: 'string',
+        description: '星期幾',
+        example: '週一'
+      },
+      date: {
+        type: 'string',
+        format: 'date',
+        description: '日期 (YYYY-MM-DD 格式)',
+        example: '2024-09-20'
+      },
+      slots: {
+        type: 'array',
+        items: {
+          $ref: '#/components/schemas/CourseSlot'
+        },
+        description: '該日的時段列表',
+        example: [
+          { time: '09:00', status: 'unavailable' },
+          { time: '10:00', status: 'available' },
+          { time: '11:00', status: 'available' },
+          { time: '13:00', status: 'available' },
+          { time: '14:00', status: 'available' },
+          { time: '15:00', status: 'available' },
+          { time: '16:00', status: 'available' },
+          { time: '17:00', status: 'available' },
+          { time: '19:00', status: 'unavailable' },
+          { time: '20:00', status: 'unavailable' }
+        ]
+      }
+    },
+    required: ['week', 'date', 'slots'],
+    description: '單日完整課程表'
+  },
+
   // ==================== 公開課程列表 API Schema ====================
 
   // 公開課程查詢參數 Schema
@@ -663,11 +724,30 @@ export const publicCourseSchemas = {
             description: '課程檔案列表 (目前為空陣列)',
             example: []
           },
-          available_slots: {
+          schedule: {
             type: 'array',
-            items: {},
-            description: '可預約時段列表 (目前為空陣列)',
-            example: []
+            items: {
+              $ref: '#/components/schemas/DaySchedule'
+            },
+            description: '7天課程表 (從明天開始的連續7天，顯示每日時段狀態)',
+            example: [
+              {
+                week: '週日',
+                date: '2024-09-20',
+                slots: [
+                  { time: '09:00', status: 'unavailable' },
+                  { time: '10:00', status: 'available' },
+                  { time: '11:00', status: 'available' },
+                  { time: '13:00', status: 'available' },
+                  { time: '14:00', status: 'available' },
+                  { time: '15:00', status: 'available' },
+                  { time: '16:00', status: 'available' },
+                  { time: '17:00', status: 'available' },
+                  { time: '19:00', status: 'unavailable' },
+                  { time: '20:00', status: 'unavailable' }
+                ]
+              }
+            ]
           },
           recent_reviews: {
             type: 'array',

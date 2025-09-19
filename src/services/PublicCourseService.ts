@@ -33,6 +33,7 @@ import { ERROR_CODES } from '@constants/ErrorCode'
 import { MESSAGES } from '@constants/Message'
 import { CourseStatus } from '@entities/enums'
 import { PublicCourseListResponse, PublicCourseDetailResponse, CourseReviewListResponse, PublicCourseItem } from '../types/publicCourse.interface'
+import { scheduleService } from './ScheduleService'
 
 // 簡化的查詢介面
 export interface SimpleCourseQuery {
@@ -230,8 +231,16 @@ export class PublicCourseService {
     // 增加瀏覽次數（異步執行，不影響回應時間）
     this.courseRepository.increment({ id: courseId }, 'view_count', 1).catch(console.error)
 
+    // 計算 7 天課程表的日期範圍（從明天開始）
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setHours(0, 0, 0, 0)
+    
+    const endDate = new Date(tomorrow)
+    endDate.setDate(endDate.getDate() + 6) // 7天後
+
     // 並行查詢相關資訊和價格選項
-    const [teacher, mainCategory, subCategory, priceOptions, teacherCertificates, teacherWorkExperiences, teacherLearningExperiences] = await Promise.all([
+    const [teacher, mainCategory, subCategory, priceOptions, teacherCertificates, teacherWorkExperiences, teacherLearningExperiences, schedule] = await Promise.all([
       this.getTeacherByCourseId(course.teacher_id),
       this.getMainCategoryById(course.main_category_id),
       this.getSubCategoryById(course.sub_category_id),
@@ -253,10 +262,12 @@ export class PublicCourseService {
       this.teacherLearningExperienceRepository.find({
         where: { teacher_id: course.teacher_id },
         order: { start_year: 'DESC', start_month: 'DESC' }
-      })
+      }),
+      // 查詢 7 天課程表
+      scheduleService.getDayScheduleForDateRange(course.teacher_id, tomorrow, endDate)
     ])
 
-    return this.buildCourseDetailResponse(course, teacher, mainCategory, subCategory, priceOptions, teacherCertificates, teacherWorkExperiences, teacherLearningExperiences)
+    return this.buildCourseDetailResponse(course, teacher, mainCategory, subCategory, priceOptions, teacherCertificates, teacherWorkExperiences, teacherLearningExperiences, schedule)
   }
 
   /**
@@ -336,7 +347,8 @@ export class PublicCourseService {
     priceOptions: CoursePriceOption[] = [],
     teacherCertificates: TeacherCertificate[] = [],
     teacherWorkExperiences: TeacherWorkExperience[] = [],
-    teacherLearningExperiences: TeacherLearningExperience[] = []
+    teacherLearningExperiences: TeacherLearningExperience[] = [],
+    schedule: any[] = []
   ): PublicCourseDetailResponse {
     return {
       course: {
@@ -401,7 +413,7 @@ export class PublicCourseService {
       })),
       videos: [], // TODO: 查詢課程影片
       files: [], // TODO: 查詢課程檔案
-      available_slots: [], // TODO: 查詢可預約時段
+      schedule: schedule,
       recent_reviews: [], // TODO: 查詢最近評價
       recommended_courses: [], // TODO: 查詢推薦課程
       teacher_certificates: teacherCertificates.map(cert => ({

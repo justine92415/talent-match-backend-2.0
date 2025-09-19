@@ -712,6 +712,84 @@ export class ScheduleService {
 
     return slotsByDay
   }
+
+  /**
+   * 取得教師在指定日期範圍內的 7 天完整課程表
+   */
+  async getDayScheduleForDateRange(teacherId: number, startDate: Date, endDate: Date): Promise<any[]> {
+    // 標準時段定義
+    const standardSlots = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00', '19:00', '20:00']
+    
+    // 週次名稱對應
+    const weekNames = ['週日', '週一', '週二', '週三', '週四', '週五', '週六']
+    
+    // 取得教師的週次時段設定
+    const teacherSlots = await this.teacherAvailableSlotRepo.find({
+      where: { teacher_id: teacherId, is_active: true },
+      order: { weekday: 'ASC', start_time: 'ASC' }
+    })
+
+    // 取得該日期範圍內已被預約的時段
+    const existingReservations = await this.reservationRepo.createQueryBuilder('reservation')
+      .where('reservation.teacher_id = :teacherId', { teacherId })
+      .andWhere('DATE(reservation.reserve_time) BETWEEN :startDate AND :endDate', {
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0]
+      })
+      .getMany()
+
+    // 建立已預約時段的 Map（以日期+時間為 key）
+    const reservedSlots = new Set()
+    existingReservations.forEach(reservation => {
+      const reservedDate = new Date(reservation.reserve_time).toISOString().split('T')[0]
+      const reservedTime = new Date(reservation.reserve_time).toTimeString().substring(0, 5)
+      reservedSlots.add(`${reservedDate}_${reservedTime}`)
+    })
+
+    // 建立教師可預約時段的 Map（以weekday+time為 key）
+    const teacherAvailableSlots = new Set()
+    teacherSlots.forEach(slot => {
+      const timeStr = this.formatTime(slot.start_time)
+      teacherAvailableSlots.add(`${slot.weekday}_${timeStr}`)
+    })
+
+    const daySchedules: any[] = []
+    
+    // 遍歷日期範圍內的每一天
+    for (let currentDate = new Date(startDate); currentDate <= endDate; currentDate.setDate(currentDate.getDate() + 1)) {
+      const weekday = currentDate.getDay() // 0 = 週日, 1 = 週一, ...
+      const dateStr = currentDate.toISOString().split('T')[0]
+      const weekName = weekNames[weekday]
+      
+      const slots = standardSlots.map(time => {
+        const slotKey = `${dateStr}_${time}`
+        const teacherSlotKey = `${weekday}_${time}`
+        
+        let status: 'unavailable' | 'available' | 'reserved'
+        
+        if (!teacherAvailableSlots.has(teacherSlotKey)) {
+          // 教師未設定此時段為可預約
+          status = 'unavailable'
+        } else if (reservedSlots.has(slotKey)) {
+          // 已被預約
+          status = 'reserved'
+        } else {
+          // 可預約
+          status = 'available'
+        }
+        
+        return { time, status }
+      })
+
+      daySchedules.push({
+        week: weekName,
+        date: dateStr,
+        slots
+      })
+    }
+
+    return daySchedules
+  }
 }
 
 export const scheduleService = new ScheduleService()
