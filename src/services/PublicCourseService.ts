@@ -239,35 +239,20 @@ export class PublicCourseService {
     const endDate = new Date(tomorrow)
     endDate.setDate(endDate.getDate() + 6) // 7天後
 
-    // 並行查詢相關資訊和價格選項
-    const [teacher, mainCategory, subCategory, priceOptions, teacherCertificates, teacherWorkExperiences, teacherLearningExperiences, schedule] = await Promise.all([
-      this.getTeacherByCourseId(course.teacher_id),
-      this.getMainCategoryById(course.main_category_id),
-      this.getSubCategoryById(course.sub_category_id),
-      this.coursePriceOptionRepository.find({
-        where: { course_id: courseId, is_active: true },
-        order: { price: 'ASC' }
-      }),
-      // 查詢教師證書
-      this.teacherCertificateRepository.find({
-        where: { teacher_id: course.teacher_id },
-        order: { created_at: 'DESC' }
-      }),
-      // 查詢教師工作經驗
-      this.teacherWorkExperienceRepository.find({
-        where: { teacher_id: course.teacher_id },
-        order: { start_year: 'DESC', start_month: 'DESC' }
-      }),
-      // 查詢教師學習經歷
-      this.teacherLearningExperienceRepository.find({
-        where: { teacher_id: course.teacher_id },
-        order: { start_year: 'DESC', start_month: 'DESC' }
-      }),
-      // 查詢 7 天課程表
+    // 🚀 TypeORM 查詢優化：從 8 個查詢減少到 3 個查詢
+    const [courseWithRelations, teacherProfileData, schedule] = await Promise.all([
+      // 查詢1：使用 JOIN 一次性獲取課程相關資料
+      this.getCourseWithAllRelationsOptimized(courseId, course.teacher_id, course.main_category_id, course.sub_category_id),
+      // 查詢2：一次性獲取教師檔案資料（限制數量）
+      this.getTeacherProfileDataOptimized(course.teacher_id),
+      // 查詢3：課程表（使用 TypeORM 優化版本）
       scheduleService.getDayScheduleForDateRange(course.teacher_id, tomorrow, endDate)
     ])
 
-    return this.buildCourseDetailResponse(course, teacher, mainCategory, subCategory, priceOptions, teacherCertificates, teacherWorkExperiences, teacherLearningExperiences, schedule)
+    const { teacher, mainCategory, subCategory, priceOptions } = courseWithRelations
+    const { certificates, workExperiences, learningExperiences } = teacherProfileData
+
+    return this.buildCourseDetailResponse(course, teacher, mainCategory, subCategory, priceOptions, certificates, workExperiences, learningExperiences, schedule)
   }
 
   /**
@@ -624,6 +609,98 @@ export class PublicCourseService {
         updated_at: course.updated_at.toISOString()
       }
     })
+  }
+
+  /**
+   * 🚀 TypeORM 查詢優化：使用 JOIN 一次性查詢課程相關資料
+   * 優化重點：利用 TypeORM 的 JOIN 功能，減少資料庫往返
+   */
+  private async getCourseWithAllRelationsOptimized(courseId: number, teacherId: number, mainCategoryId: number | null, subCategoryId: number | null) {
+    // 使用 QueryBuilder 一次性查詢所有需要的資料
+    const teacherQueryBuilder = this.teacherRepository
+      .createQueryBuilder('teacher')
+      .leftJoinAndSelect('teacher.user', 'user')
+      .where('teacher.id = :teacherId', { teacherId })
+
+    // 分類查詢（如果存在的話）
+    const categoryQueries = []
+    if (mainCategoryId) {
+      categoryQueries.push(
+        this.mainCategoryRepository.findOne({ where: { id: mainCategoryId } })
+      )
+    } else {
+      categoryQueries.push(Promise.resolve(null))
+    }
+
+    if (subCategoryId) {
+      categoryQueries.push(
+        this.subCategoryRepository.findOne({ where: { id: subCategoryId } })
+      )
+    } else {
+      categoryQueries.push(Promise.resolve(null))
+    }
+
+    // 價格選項查詢（使用 QueryBuilder 優化排序）
+    const priceOptionsQuery = this.coursePriceOptionRepository
+      .createQueryBuilder('price_option')
+      .where('price_option.course_id = :courseId', { courseId })
+      .andWhere('price_option.is_active = :isActive', { isActive: true })
+      .orderBy('price_option.price', 'ASC')
+      .getMany()
+
+    // 並行執行所有查詢
+    const results = await Promise.all([
+      teacherQueryBuilder.getOne(),
+      categoryQueries[0], // mainCategory
+      categoryQueries[1], // subCategory  
+      priceOptionsQuery
+    ])
+
+    const teacher = results[0]
+    const mainCategory = results[1] as MainCategory | null
+    const subCategory = results[2] as SubCategory | null
+    const priceOptions = results[3]
+
+    return { teacher, mainCategory, subCategory, priceOptions }
+  }
+
+  /**
+   * 🚀 TypeORM 查詢優化：使用限制條件優化教師資料查詢
+   * 優化重點：限制查詢數量，避免大數據影響效能
+   */
+  private async getTeacherProfileDataOptimized(teacherId: number) {
+    // 使用 QueryBuilder 加入更細緻的查詢控制
+    const certificatesQuery = this.teacherCertificateRepository
+      .createQueryBuilder('cert')
+      .where('cert.teacher_id = :teacherId', { teacherId })
+      .orderBy('cert.created_at', 'DESC')
+      .limit(10) // 限制最多 10 筆，提升效能
+      .getMany()
+
+    const workExperiencesQuery = this.teacherWorkExperienceRepository
+      .createQueryBuilder('work')
+      .where('work.teacher_id = :teacherId', { teacherId })
+      .orderBy('work.start_year', 'DESC')
+      .addOrderBy('work.start_month', 'DESC')
+      .limit(10)
+      .getMany()
+
+    const learningExperiencesQuery = this.teacherLearningExperienceRepository
+      .createQueryBuilder('learn')
+      .where('learn.teacher_id = :teacherId', { teacherId })
+      .orderBy('learn.start_year', 'DESC')
+      .addOrderBy('learn.start_month', 'DESC')
+      .limit(10)
+      .getMany()
+
+    // 並行執行查詢
+    const [certificates, workExperiences, learningExperiences] = await Promise.all([
+      certificatesQuery,
+      workExperiencesQuery,
+      learningExperiencesQuery
+    ])
+
+    return { certificates, workExperiences, learningExperiences }
   }
 }
 

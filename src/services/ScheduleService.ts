@@ -790,6 +790,93 @@ export class ScheduleService {
 
     return daySchedules
   }
+
+  /**
+   * 🚀 TypeORM 查詢優化版本：使用 QueryBuilder 優化預約查詢
+   * 避免原生 SQL，保持 TypeORM 一致性
+   */
+  async getDayScheduleForDateRangeOptimized(teacherId: number, startDate: Date, endDate: Date): Promise<any[]> {
+    // 標準時段定義
+    const standardSlots = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00', '19:00', '20:00']
+    const weekNames = ['週日', '週一', '週二', '週三', '週四', '週五', '週六']
+    
+    // 使用 TypeORM QueryBuilder 優化查詢
+    const [teacherSlots, reservations] = await Promise.all([
+      // 查詢教師可預約時段（已優化）
+      this.teacherAvailableSlotRepo
+        .createQueryBuilder('slot')
+        .where('slot.teacher_id = :teacherId', { teacherId })
+        .andWhere('slot.is_active = :isActive', { isActive: true })
+        .orderBy('slot.weekday', 'ASC')
+        .addOrderBy('slot.start_time', 'ASC')
+        .getMany(),
+      
+      // 使用 QueryBuilder 查詢預約資料（比原本的方式更有效率）
+      this.reservationRepo
+        .createQueryBuilder('reservation')
+        .select(['reservation.reserve_time'])
+        .where('reservation.teacher_id = :teacherId', { teacherId })
+        .andWhere('DATE(reservation.reserve_time) >= :startDate', { 
+          startDate: startDate.toISOString().split('T')[0] 
+        })
+        .andWhere('DATE(reservation.reserve_time) <= :endDate', { 
+          endDate: endDate.toISOString().split('T')[0] 
+        })
+        .getMany()
+    ])
+
+    // 建立已預約時段的 Set（使用 Map 提升查詢效能）
+    const reservedSlots = new Set<string>()
+    reservations.forEach(reservation => {
+      const reservedDate = new Date(reservation.reserve_time).toISOString().split('T')[0]
+      const reservedTime = new Date(reservation.reserve_time).toTimeString().substring(0, 5)
+      reservedSlots.add(`${reservedDate}_${reservedTime}`)
+    })
+
+    // 建立教師可預約時段的 Set
+    const teacherAvailableSlots = new Set<string>()
+    teacherSlots.forEach(slot => {
+      const timeStr = this.formatTime(slot.start_time)
+      teacherAvailableSlots.add(`${slot.weekday}_${timeStr}`)
+    })
+
+    const daySchedules: any[] = []
+    
+    // 遍歷日期範圍內的每一天
+    for (let currentDate = new Date(startDate); currentDate <= endDate; currentDate.setDate(currentDate.getDate() + 1)) {
+      const weekday = currentDate.getDay() // 0 = 週日, 1 = 週一, ...
+      const dateStr = currentDate.toISOString().split('T')[0]
+      const weekName = weekNames[weekday]
+      
+      const slots = standardSlots.map(time => {
+        const slotKey = `${dateStr}_${time}`
+        const teacherSlotKey = `${weekday}_${time}`
+        
+        let status: 'unavailable' | 'available' | 'reserved'
+        
+        if (!teacherAvailableSlots.has(teacherSlotKey)) {
+          // 教師未設定此時段為可預約
+          status = 'unavailable'
+        } else if (reservedSlots.has(slotKey)) {
+          // 已被預約
+          status = 'reserved'
+        } else {
+          // 可預約
+          status = 'available'
+        }
+        
+        return { time, status }
+      })
+
+      daySchedules.push({
+        week: weekName,
+        date: dateStr,
+        slots
+      })
+    }
+
+    return daySchedules
+  }
 }
 
 export const scheduleService = new ScheduleService()
