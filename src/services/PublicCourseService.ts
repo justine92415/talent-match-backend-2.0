@@ -184,14 +184,24 @@ export class PublicCourseService {
         return queryBuilder.orderBy('course.student_count', 'DESC')
       case SORT_OPTIONS.PRICE_LOW:
         return queryBuilder
-          .leftJoin('course_price_options', 'cpo', 'cpo.course_id = course.id AND cpo.is_active = true')
-          .orderBy('MIN(cpo.price)', 'ASC', 'NULLS LAST')
-          .groupBy('course.id')
+          .addSelect(subQuery => {
+            return subQuery
+              .select('MIN(cpo.price)', 'min_price')
+              .from('course_price_options', 'cpo')
+              .where('cpo.course_id = course.id')
+              .andWhere('cpo.is_active = true')
+          }, 'course_min_price')
+          .orderBy('course_min_price', 'ASC', 'NULLS LAST')
       case SORT_OPTIONS.PRICE_HIGH:
         return queryBuilder
-          .leftJoin('course_price_options', 'cpo', 'cpo.course_id = course.id AND cpo.is_active = true')
-          .orderBy('MAX(cpo.price)', 'DESC', 'NULLS LAST')
-          .groupBy('course.id')
+          .addSelect(subQuery => {
+            return subQuery
+              .select('MAX(cpo.price)', 'max_price')
+              .from('course_price_options', 'cpo')
+              .where('cpo.course_id = course.id')
+              .andWhere('cpo.is_active = true')
+          }, 'course_max_price')
+          .orderBy('course_max_price', 'DESC', 'NULLS LAST')
       default:
         return queryBuilder.orderBy('course.created_at', 'DESC')
     }
@@ -555,8 +565,8 @@ export class PublicCourseService {
 
     // 建構價格對應表
     const priceMap = new Map<number, { min_price: number; max_price: number }>()
-    priceOptions.forEach((price: { course_id: number; min_price: string; max_price: string }) => {
-      priceMap.set(price.course_id, {
+    priceOptions.forEach((price: { cpo_course_id: number; min_price: string; max_price: string }) => {
+      priceMap.set(price.cpo_course_id, {
         min_price: parseFloat(price.min_price) || 0,
         max_price: parseFloat(price.max_price) || 0
       })
