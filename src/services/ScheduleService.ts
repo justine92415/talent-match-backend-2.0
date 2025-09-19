@@ -9,7 +9,10 @@ import {
   WEEKDAYS, 
   DATE_LIMITS, 
   SCHEDULE_ERRORS, 
-  SCHEDULE_ERROR_CODES 
+  SCHEDULE_ERROR_CODES,
+  WEEKLY_WEEKDAYS,
+  STANDARD_SLOTS,
+  SLOT_RULES
 } from '@constants/schedule'
 import type {
   GetScheduleResponse,
@@ -19,7 +22,12 @@ import type {
   CheckConflictsResponse,
   AvailableSlotData,
   SlotValidationError,
-  ConflictInfo
+  ConflictInfo,
+  WeeklyScheduleRequest,
+  WeeklyScheduleResponse,
+  StandardSlot,
+  WeekdayString,
+  WeeklySlotValidationError
 } from '@models/index'
 import { ReservationStatus } from '@entities/enums'
 
@@ -431,6 +439,278 @@ export class ScheduleService {
     const endMinutes = endHour * 60 + endMinute
 
     return endMinutes > startMinutes
+  }
+
+  // ==================== 台灣週次時段系統方法 ====================
+
+  /**
+   * 通過userId更新教師的台灣週次時段設定
+   */
+
+  /**
+   * 更新教師的台灣週次時段設定
+   */
+  async updateWeeklySchedule(teacherId: number, data: WeeklyScheduleRequest): Promise<WeeklyScheduleResponse> {
+    // 驗證教師是否存在
+    await this.validateTeacher(teacherId)
+
+    // 驗證週次時段資料
+    const validationErrors: SlotValidationError[] = []
+    
+    // 基本格式驗證
+    if (!data.weekly_schedule || typeof data.weekly_schedule !== 'object') {
+      validationErrors.push({
+        field: 'weekly_schedule',
+        message: SCHEDULE_ERRORS.WEEKLY_SCHEDULE_REQUIRED
+      })
+    } else {
+      // 驗證每個週次的時段
+      for (const [weekDay, timeSlots] of Object.entries(data.weekly_schedule)) {
+        if (!SLOT_RULES.VALID_WEEK_DAYS.includes(weekDay as WeekdayString)) {
+          validationErrors.push({
+            field: `weekly_schedule.${weekDay}`,
+            message: SCHEDULE_ERRORS.WEEKLY_WEEKDAY_INVALID
+          })
+          continue
+        }
+        
+        if (!Array.isArray(timeSlots)) continue
+        
+        // 檢查時段有效性
+        const uniqueSlots = new Set()
+        for (const timeSlot of timeSlots) {
+          if (uniqueSlots.has(timeSlot)) {
+            validationErrors.push({
+              field: `weekly_schedule.${weekDay}`,
+              message: `${weekDay}有重複的時段: ${timeSlot}`
+            })
+          } else {
+            uniqueSlots.add(timeSlot)
+          }
+          
+          if (!STANDARD_SLOTS.includes(timeSlot)) {
+            validationErrors.push({
+              field: `weekly_schedule.${weekDay}`,
+              message: `無效的時段: ${timeSlot}，必須為標準時段`
+            })
+          }
+        }
+      }
+    }
+    if (validationErrors.length > 0) {
+      const errorMessages: Record<string, string[]> = {}
+      validationErrors.forEach(error => {
+        const key = error.field || 'weekly_schedule'
+        if (!errorMessages[key]) errorMessages[key] = []
+        errorMessages[key].push(error.message)
+      })
+      
+      throw new ValidationError(
+        SCHEDULE_ERROR_CODES.VALIDATION_ERROR,
+        SCHEDULE_ERRORS.VALIDATION_FAILED,
+        errorMessages
+      )
+    }
+
+    return await dataSource.transaction(async manager => {
+      const slotRepo = manager.getRepository(TeacherAvailableSlot)
+      
+      // 刪除現有的時段
+      const existingSlots = await slotRepo.find({
+        where: { teacher_id: teacherId }
+      })
+      
+      let deletedCount = 0
+      if (existingSlots.length > 0) {
+        await slotRepo.remove(existingSlots)
+        deletedCount = existingSlots.length
+      }
+
+      // 轉換台灣週次時段為資料庫格式並建立新時段
+      const newSlots = this.convertScheduleToSlots(teacherId, data.weekly_schedule)
+      const savedSlots = newSlots.length > 0 ? await slotRepo.save(newSlots) : []
+
+      // 統計資料
+      const weeklySchedule = this.convertSlotsToSchedule(savedSlots)
+      const slotsByDay = this.calculateSlotsByDay(weeklySchedule)
+      const totalSlots = Object.values(slotsByDay).reduce((sum, count) => (sum || 0) + (count || 0), 0)
+
+      return {
+        weekly_schedule: weeklySchedule,
+        total_slots: totalSlots,
+        slots_by_day: slotsByDay,
+        updated_count: 0, // 全部重建，所以沒有更新
+        created_count: savedSlots.length,
+        deleted_count: deletedCount
+      }
+    })
+  }
+
+  /**
+   * 通過userId取得教師的台灣週次時段設定
+   */
+  async getWeeklyScheduleByUserId(userId: number): Promise<WeeklyScheduleResponse> {
+    const teacher = await this.getTeacherByUserId(userId)
+    return this.getWeeklySchedule(teacher.id)
+  }
+
+  /**
+   * 通過userId更新教師的週次時段設定
+   */
+  async updateWeeklyScheduleByUserId(userId: number, data: WeeklyScheduleRequest): Promise<WeeklyScheduleResponse> {
+    const teacher = await this.getTeacherByUserId(userId)
+    return this.updateWeeklySchedule(teacher.id, data)
+  }
+
+  /**
+   * 取得教師的週次時段設定
+   */
+  async getWeeklySchedule(teacherId: number): Promise<WeeklyScheduleResponse> {
+    // 驗證教師是否存在
+    await this.validateTeacher(teacherId)
+
+    // 取得時段資料
+    const slots = await this.teacherAvailableSlotRepo.find({
+      where: { teacher_id: teacherId },
+      order: {
+        weekday: 'ASC',
+        start_time: 'ASC'
+      }
+    })
+
+    // 轉換為台灣週次格式
+    const weeklySchedule = this.convertSlotsToSchedule(slots)
+    const slotsByDay = this.calculateSlotsByDay(weeklySchedule)
+    const totalSlots = Object.values(slotsByDay).reduce((sum, count) => (sum || 0) + (count || 0), 0)
+
+    return {
+      weekly_schedule: weeklySchedule,
+      total_slots: totalSlots,
+      slots_by_day: slotsByDay,
+      updated_count: 0,
+      created_count: 0,
+      deleted_count: 0
+    }
+  }
+
+  /**
+   * 驗證週次時段資料
+   */
+  private validateWeeklySchedule(weeklySchedule: { [key: string]: StandardSlot[] }): WeeklySlotValidationError[] {
+    const errors: WeeklySlotValidationError[] = []
+
+    for (const [weekDay, timeSlots] of Object.entries(weeklySchedule)) {
+      // 驗證週次
+      if (!SLOT_RULES.VALID_WEEK_DAYS.includes(weekDay as WeekdayString)) {
+        errors.push({
+          week_day: weekDay as WeekdayString,
+          error_type: 'INVALID_WEEK_DAY',
+          message: SCHEDULE_ERRORS.WEEKLY_WEEKDAY_INVALID
+        })
+        continue
+      }
+
+      if (!Array.isArray(timeSlots)) continue
+
+      // 檢查重複時段
+      const uniqueSlots = new Set()
+      for (const timeSlot of timeSlots) {
+        if (uniqueSlots.has(timeSlot)) {
+          errors.push({
+            week_day: weekDay as WeekdayString,
+            time_slot: timeSlot,
+            error_type: 'DUPLICATE_TIME_SLOT',
+            message: SCHEDULE_ERRORS.DUPLICATE_TIME_SLOT
+          })
+        }
+        uniqueSlots.add(timeSlot)
+
+        // 驗證時間是否為標準時段
+        if (!STANDARD_SLOTS.includes(timeSlot)) {
+          errors.push({
+            week_day: weekDay as WeekdayString,
+            time_slot: timeSlot,
+            error_type: 'INVALID_TIME_SLOT',
+            message: SCHEDULE_ERRORS.INVALID_TIME_SLOT
+          })
+        }
+      }
+    }
+
+    return errors
+  }
+
+  /**
+   * 將週次時段轉換為資料庫時段格式
+   */
+  private convertScheduleToSlots(teacherId: number, weeklySchedule: { [key: string]: StandardSlot[] }): TeacherAvailableSlot[] {
+    const slots: TeacherAvailableSlot[] = []
+
+    for (const [weekDayStr, timeSlots] of Object.entries(weeklySchedule)) {
+      const weekDay = parseInt(weekDayStr) // 週次 1-7
+      const legacyWeekday = weekDay === 7 ? 0 : weekDay // 轉換為傳統格式 (週日=0)
+
+      for (const timeSlot of timeSlots) {
+        // 計算結束時間（+1小時）
+        const [hour, minute] = timeSlot.split(':').map(Number)
+        const endHour = hour + 1
+        const endTime = `${endHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
+
+        const slot = this.teacherAvailableSlotRepo.create({
+          teacher_id: teacherId,
+          weekday: legacyWeekday,
+          start_time: timeSlot,
+          end_time: endTime,
+          is_active: true
+        })
+        slots.push(slot)
+      }
+    }
+
+    return slots
+  }
+
+  /**
+   * 將資料庫時段格式轉換為週次時段
+   */
+  private convertSlotsToSchedule(slots: TeacherAvailableSlot[]): { [K in WeekdayString]?: StandardSlot[] } {
+    const schedule: { [K in WeekdayString]?: StandardSlot[] } = {}
+
+    for (const slot of slots) {
+      // 轉換傳統週次為週次格式
+      const weekday = slot.weekday === 0 ? 7 : slot.weekday // 週日=0 → 週日=7
+      const weekDayStr = weekday.toString() as WeekdayString
+
+      // 格式化時間
+      const startTime = this.formatTime(slot.start_time) as StandardSlot
+
+      if (!schedule[weekDayStr]) {
+        schedule[weekDayStr] = []
+      }
+      schedule[weekDayStr]!.push(startTime)
+    }
+
+    // 排序每天的時段
+    for (const timeSlots of Object.values(schedule)) {
+      if (timeSlots) {
+        timeSlots.sort()
+      }
+    }
+
+    return schedule
+  }
+
+  /**
+   * 計算各天的時段數量
+   */
+  private calculateSlotsByDay(weeklySchedule: { [K in WeekdayString]?: StandardSlot[] }): { [K in WeekdayString]?: number } {
+    const slotsByDay: { [K in WeekdayString]?: number } = {}
+
+    for (const [weekDay, timeSlots] of Object.entries(weeklySchedule)) {
+      slotsByDay[weekDay as WeekdayString] = timeSlots?.length || 0
+    }
+
+    return slotsByDay
   }
 }
 

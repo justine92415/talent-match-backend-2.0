@@ -21,7 +21,7 @@ import {
   certificateUpsertSchema,
   certificateFrontendUpsertBatchSchema
 } from '@middleware/schemas/user/certificateSchemas'
-import { scheduleUpdateSchema, conflictsQuerySchema } from '@middleware/schemas/system/scheduleSchemas'
+import { conflictsQuerySchema, weeklyScheduleSchema } from '@middleware/schemas/system/scheduleSchemas'
 import { certificateController } from '@controllers/CertificateController'
 
 const router = Router()
@@ -1583,11 +1583,11 @@ router.delete('/certificates/:id', authenticateToken, certificateController.dele
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: 成功取得教師時間表
+ *         description: 成功取得教師週次時間表
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ScheduleGetSuccessResponse'
+ *               $ref: '#/components/schemas/WeeklyScheduleResponse'
  *       401:
  *         description: 未授權 - Token 無效或過期
  *         content:
@@ -1632,14 +1632,14 @@ router.get('/schedule', authenticateToken, scheduleController.getSchedule)
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/ScheduleUpdateRequest'
+ *             $ref: '#/components/schemas/WeeklyScheduleRequest'
  *     responses:
  *       200:
- *         description: 教師時間表更新成功
+ *         description: 台灣週次時間表更新成功
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ScheduleUpdateSuccessResponse'
+ *               $ref: '#/components/schemas/WeeklyScheduleResponse'
  *       400:
  *         description: 請求參數錯誤
  *         content:
@@ -1665,7 +1665,7 @@ router.get('/schedule', authenticateToken, scheduleController.getSchedule)
  *             schema:
  *               $ref: '#/components/schemas/ServerErrorResponse'
  */
-router.put('/schedule', authenticateToken, validateRequest(scheduleUpdateSchema), scheduleController.updateSchedule)
+router.put('/schedule', authenticateToken, validateRequest(weeklyScheduleSchema), scheduleController.updateSchedule)
 
 /**
  * @swagger

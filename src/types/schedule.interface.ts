@@ -5,7 +5,7 @@ import { Reservation } from '@entities/Reservation'
  * 教師可預約時段相關介面
  */
 
-/** 星期幾枚舉 */
+/** 週次枚舉 */
 export enum Weekday {
   SUNDAY = 0,
   MONDAY = 1,
@@ -15,6 +15,26 @@ export enum Weekday {
   FRIDAY = 5,
   SATURDAY = 6
 }
+
+/** 週次枚舉 (週一=1, 週日=7) */
+export enum WeeklyWeekday {
+  MONDAY = 1,
+  TUESDAY = 2,
+  WEDNESDAY = 3,
+  THURSDAY = 4,
+  FRIDAY = 5,
+  SATURDAY = 6,
+  SUNDAY = 7
+}
+
+/** 時段類別 */
+export type SlotCategory = 'MORNING' | 'AFTERNOON' | 'EVENING'
+
+/** 標準時段 */
+export type StandardSlot = '09:00' | '10:00' | '11:00' | '13:00' | '14:00' | '15:00' | '16:00' | '17:00' | '19:00' | '20:00'
+
+/** 週次字串 */
+export type WeekdayString = '1' | '2' | '3' | '4' | '5' | '6' | '7'
 
 /** 可預約時段基本資料 */
 export interface AvailableSlotData {
@@ -173,4 +193,56 @@ export interface ScheduleQueryOptions {
   order_by?: 'weekday' | 'start_time' | 'created_at'
   /** 排序方向 */
   order_direction?: 'ASC' | 'DESC'
+}
+
+// ==================== 台灣週次時段系統介面 ====================
+
+/** 單一時段資訊 */
+export interface TimeSlot {
+  /** 週次 (1=週一, 7=週日) */
+  day: WeeklyWeekday
+  /** 時間 (標準時段) */
+  time: StandardSlot
+  /** 時段類別 */
+  category: SlotCategory
+}
+
+/** 週次時段設定請求 */
+export interface WeeklyScheduleRequest {
+  /** 週次時段設定 */
+  weekly_schedule: {
+    [K in WeekdayString]?: StandardSlot[]
+  }
+}
+
+/** 週次時段設定回應 */
+export interface WeeklyScheduleResponse {
+  /** 週次時段設定 */
+  weekly_schedule: {
+    [K in WeekdayString]?: StandardSlot[]
+  }
+  /** 總時段數 */
+  total_slots: number
+  /** 各天時段數量統計 */
+  slots_by_day: {
+    [K in WeekdayString]?: number
+  }
+  /** 更新統計 */
+  updated_count: number
+  /** 建立統計 */
+  created_count: number
+  /** 刪除統計 */
+  deleted_count: number
+}
+
+/** 週次時段驗證錯誤 */
+export interface WeeklySlotValidationError {
+  /** 週次 */
+  week_day?: WeekdayString
+  /** 時間點 */
+  time_slot?: StandardSlot
+  /** 錯誤類型 */
+  error_type: 'INVALID_WEEK_DAY' | 'INVALID_TIME_SLOT' | 'DUPLICATE_TIME_SLOT' | 'FORMAT_ERROR'
+  /** 錯誤訊息 */
+  message: string
 }
