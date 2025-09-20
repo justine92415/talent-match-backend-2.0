@@ -6,6 +6,7 @@ import {
 } from '@middleware/schemas'
 import { 
   adminLoginSchema,
+  adminCreateSchema,
   rejectionRequestSchema
 } from '@middleware/schemas/auth'
 import { MESSAGES } from '@constants/Message'
@@ -144,6 +145,161 @@ router.post(
   '/login',
   validateRequest(adminLoginSchema, MESSAGES.BUSINESS.LOGIN_FAILED),
   adminController.login
+)
+
+/**
+ * @swagger
+ * /api/admin/create:
+ *   post:
+ *     summary: 建立管理員帳號
+ *     description: |
+ *       建立新的管理員帳號，用於平台管理和審核操作。
+ *       此功能通常由超級管理員或系統初始化時使用。
+ *       
+ *       **建立流程：**
+ *       1. 驗證帳號和電子郵件唯一性
+ *       2. 加密密碼並儲存
+ *       3. 設定管理員角色和權限
+ *       4. 記錄建立日誌
+ *       
+ *       **安全機制：**
+ *       - 密碼加密儲存
+ *       - 帳號唯一性檢查
+ *       - 強密碼要求
+ *       - 建立日誌記錄
+ *     tags:
+ *       - Admin Management
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *               - name
+ *               - email
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 minLength: 3
+ *                 maxLength: 50
+ *                 pattern: "^[a-zA-Z0-9_]+$"
+ *                 description: 管理員帳號（只能包含英文字母、數字和底線）
+ *                 example: "admin"
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *                 maxLength: 128
+ *                 description: 管理員密碼（至少8個字元）
+ *                 example: "admin123456"
+ *               name:
+ *                 type: string
+ *                 minLength: 1
+ *                 maxLength: 100
+ *                 description: 管理員姓名
+ *                 example: "系統管理員"
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 maxLength: 255
+ *                 description: 管理員電子郵件
+ *                 example: "admin@example.com"
+ *               role:
+ *                 type: string
+ *                 enum: [super_admin, admin]
+ *                 description: 管理員角色（預設為 admin）
+ *                 default: admin
+ *                 example: "admin"
+ *           examples:
+ *             admin_create:
+ *               summary: 建立管理員範例
+ *               value:
+ *                 username: "admin"
+ *                 password: "admin123456"
+ *                 name: "系統管理員"
+ *                 email: "admin@example.com"
+ *                 role: "admin"
+ *     responses:
+ *       201:
+ *         description: 管理員帳號建立成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         admin:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: integer
+ *                               description: 管理員 ID
+ *                             username:
+ *                               type: string
+ *                               description: 管理員帳號
+ *                             name:
+ *                               type: string
+ *                               description: 管理員姓名
+ *                             email:
+ *                               type: string
+ *                               format: email
+ *                               description: 管理員電子郵件
+ *                             role:
+ *                               type: string
+ *                               description: 管理員角色
+ *                             last_login_at:
+ *                               type: string
+ *                               nullable: true
+ *                               description: 最後登入時間（新帳號為 null）
+ *             examples:
+ *               success:
+ *                 summary: 建立成功回應
+ *                 value:
+ *                   status: "success"
+ *                   message: "管理員帳號建立成功"
+ *                   data:
+ *                     admin:
+ *                       id: 1
+ *                       username: "admin"
+ *                       name: "系統管理員"
+ *                       email: "admin@example.com"
+ *                       role: "admin"
+ *                       last_login_at: null
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       409:
+ *         description: 管理員帳號或電子郵件已存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               username_exists:
+ *                 summary: 帳號已存在
+ *                 value:
+ *                   status: "error"
+ *                   message: "管理員帳號已存在"
+ *                   error_code: "ADMIN_USERNAME_EXISTS"
+ *               email_exists:
+ *                 summary: 電子郵件已存在
+ *                 value:
+ *                   status: "error"
+ *                   message: "管理員電子郵件已存在"
+ *                   error_code: "ADMIN_EMAIL_EXISTS"
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ */
+// Create admin account route
+router.post(
+  '/create',
+  validateRequest(adminCreateSchema, MESSAGES.AUTH.ADMIN_CREATED_SUCCESS),
+  adminController.createAdmin
 )
 
 /**
