@@ -2700,6 +2700,66 @@
               }
             },
             {
+              "name": "建立管理員帳號",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "// 檢查回應狀態",
+                      "pm.test('Status code is 201', function () {",
+                      "  pm.response.to.have.status(201);",
+                      "});",
+                      "",
+                      "// 檢查回應格式",
+                      "pm.test('Response has admin data', function () {",
+                      "  const jsonData = pm.response.json();",
+                      "  pm.expect(jsonData).to.have.property('status', 'success');",
+                      "  pm.expect(jsonData).to.have.property('data');",
+                      "  pm.expect(jsonData.data).to.have.property('admin');",
+                      "  pm.expect(jsonData.data.admin).to.have.property('id');",
+                      "  pm.expect(jsonData.data.admin).to.have.property('username');",
+                      "  pm.expect(jsonData.data.admin).to.have.property('name');",
+                      "  pm.expect(jsonData.data.admin).to.have.property('email');",
+                      "  pm.expect(jsonData.data.admin).to.have.property('role');",
+                      "});",
+                      "",
+                      "// 檢查是否正確設置管理員資料",
+                      "pm.test('Admin data is correct', function () {",
+                      "  const jsonData = pm.response.json();",
+                      "  const admin = jsonData.data.admin;",
+                      "  pm.expect(admin.username).to.equal('admin');",
+                      "  pm.expect(admin.name).to.equal('系統管理員');",
+                      "  pm.expect(admin.email).to.equal('admin@example.com');",
+                      "  pm.expect(admin.role).to.equal('admin');",
+                      "  pm.expect(admin.last_login_at).to.be.null;",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123456\",\n  \"name\": \"系統管理員\",\n  \"email\": \"admin@example.com\",\n  \"role\": \"admin\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/admin/create",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "admin", "create"]
+                },
+                "description": "建立新的管理員帳號 - 用於系統初始化或建立新管理員"
+              }
+            },
+            {
               "name": "管理員登出",
               "request": {
                 "method": "POST",
@@ -3032,7 +3092,7 @@
           ]
         }
       ],
-      "description": "管理員功能相關 API，需要管理員權限\n\n**實際實作的 API 路由：**\n- POST /api/admin/login - 管理員登入\n- POST /api/admin/logout - 管理員登出\n- GET /api/admin/profile - 獲取管理員資訊\n- GET /api/admin/teacher-applications - 獲取教師申請列表\n- POST /api/admin/teachers/:teacherId/approve - 核准教師申請\n- POST /api/admin/teachers/:teacherId/reject - 拒絕教師申請\n- POST /api/admin/courses/:courseId/approve - 核准課程申請\n- POST /api/admin/courses/:courseId/reject - 拒絕課程申請\n\n**注意事項：**\n- 所有 API 都需要 admin 身份認證\n- 管理員登入使用 username/password，不是 email/password\n- 審核教師申請會自動處理角色升級（TEACHER_PENDING → TEACHER）"
+      "description": "管理員功能相關 API，需要管理員權限\n\n**實際實作的 API 路由：**\n- POST /api/admin/login - 管理員登入\n- POST /api/admin/create - 建立管理員帳號\n- POST /api/admin/logout - 管理員登出\n- GET /api/admin/profile - 獲取管理員資訊\n- GET /api/admin/teacher-applications - 獲取教師申請列表\n- POST /api/admin/teachers/:teacherId/approve - 核准教師申請\n- POST /api/admin/teachers/:teacherId/reject - 拒絕教師申請\n- POST /api/admin/courses/:courseId/approve - 核准課程申請\n- POST /api/admin/courses/:courseId/reject - 拒絕課程申請\n\n**注意事項：**\n- 建立管理員不需要認證（系統初始化用）\n- 其他 API 都需要 admin 身份認證\n- 管理員登入使用 username/password，不是 email/password\n- 審核教師申請會自動處理角色升級（TEACHER_PENDING → TEACHER）"
     },
     {
       "name": "� 使用者頭像 (User Avatar)",
