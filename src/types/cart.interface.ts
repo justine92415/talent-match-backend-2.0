@@ -49,6 +49,14 @@ export interface CartItemWithDetails {
     name: string
     main_image: string | null
     status: string
+    main_category: {
+      id: number
+      name: string
+    } | null
+    sub_category: {
+      id: number
+      name: string
+    } | null
     teacher: {
       id: number
       user: {

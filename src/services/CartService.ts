@@ -11,6 +11,8 @@ import { Course } from '@entities/Course'
 import { CoursePriceOption } from '@entities/CoursePriceOption'
 import { Teacher } from '@entities/Teacher'
 import { User } from '@entities/User'
+import { MainCategory } from '@entities/MainCategory'
+import { SubCategory } from '@entities/SubCategory'
 import { CourseStatus, ApplicationStatus } from '@entities/enums'
 import { BusinessError, ValidationError } from '@utils/errors'
 import { ERROR_CODES, MESSAGES } from '@constants/index'
@@ -28,6 +30,8 @@ export class CartService {
   private priceOptionRepository: Repository<CoursePriceOption>
   private teacherRepository: Repository<Teacher>
   private userRepository: Repository<User>
+  private mainCategoryRepository: Repository<MainCategory>
+  private subCategoryRepository: Repository<SubCategory>
 
   constructor() {
     this.cartRepository = dataSource.getRepository(UserCartItem)
@@ -35,6 +39,8 @@ export class CartService {
     this.priceOptionRepository = dataSource.getRepository(CoursePriceOption)
     this.teacherRepository = dataSource.getRepository(Teacher)
     this.userRepository = dataSource.getRepository(User)
+    this.mainCategoryRepository = dataSource.getRepository(MainCategory)
+    this.subCategoryRepository = dataSource.getRepository(SubCategory)
   }
 
   /**
@@ -322,11 +328,28 @@ export class CartService {
     })
 
     let teacher = null
+    let mainCategory = null
+    let subCategory = null
+    
     if (course) {
       teacher = await this.teacherRepository.findOne({
         where: { id: course.teacher_id },
         relations: ['user']
       })
+      
+      // 查詢主分類
+      if (course.main_category_id) {
+        mainCategory = await this.mainCategoryRepository.findOne({
+          where: { id: course.main_category_id }
+        })
+      }
+      
+      // 查詢次分類
+      if (course.sub_category_id) {
+        subCategory = await this.subCategoryRepository.findOne({
+          where: { id: course.sub_category_id }
+        })
+      }
     }
 
     const priceOption = await this.priceOptionRepository.findOne({
@@ -362,6 +385,14 @@ export class CartService {
         name: course.name,
         main_image: course.main_image,
         status: course.status.toString(),
+        main_category: mainCategory ? {
+          id: mainCategory.id,
+          name: mainCategory.name
+        } : null,
+        sub_category: subCategory ? {
+          id: subCategory.id,
+          name: subCategory.name
+        } : null,
         teacher: {
           id: teacher.id,
           user: {

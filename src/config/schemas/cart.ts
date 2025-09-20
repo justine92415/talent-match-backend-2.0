@@ -81,6 +81,40 @@ export const cartSchemas = {
         description: '課程狀態',
         example: 'published'
       },
+      main_category: {
+        type: 'object',
+        nullable: true,
+        description: '主分類資料',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '主分類 ID',
+            example: 1
+          },
+          name: {
+            type: 'string',
+            description: '主分類名稱',
+            example: '程式設計'
+          }
+        }
+      },
+      sub_category: {
+        type: 'object',
+        nullable: true,
+        description: '次分類資料',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '次分類 ID',
+            example: 1
+          },
+          name: {
+            type: 'string',
+            description: '次分類名稱',
+            example: 'JavaScript'
+          }
+        }
+      },
       teacher: {
         type: 'object',
         description: '授課教師資料',
