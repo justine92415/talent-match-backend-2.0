@@ -1,6 +1,7 @@
 import { AdminUser } from '@entities/AdminUser'
 import { Teacher } from '@entities/Teacher'
 import { Course } from '@entities/Course'
+import { AdminRole } from '@entities/enums'
 
 /**
  * 管理員相關型別定義
@@ -17,6 +18,20 @@ export interface AdminLoginRequest {
   password: string
 }
 
+/** 管理員建立請求資料 */
+export interface AdminCreateRequest {
+  /** 管理員帳號 */
+  username: string
+  /** 管理員密碼 */
+  password: string
+  /** 管理員姓名 */
+  name: string
+  /** 管理員電子郵件 */
+  email: string
+  /** 管理員角色 */
+  role?: AdminRole
+}
+
 /** 管理員登入回應資料 */
 export interface AdminLoginResponse {
   /** 管理員資訊 */
@@ -25,6 +40,12 @@ export interface AdminLoginResponse {
   access_token: string
   /** 刷新令牌 */
   refresh_token: string
+}
+
+/** 管理員建立回應資料 */
+export interface AdminCreateResponse {
+  /** 管理員資訊 */
+  admin: AdminUserInfo
 }
 
 /** 管理員基本資訊 */

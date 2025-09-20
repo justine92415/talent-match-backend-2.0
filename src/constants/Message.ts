@@ -29,6 +29,7 @@ export const MESSAGES = {
     // 管理員成功訊息
     ADMIN_LOGIN_SUCCESS: '管理員登入成功',
     ADMIN_LOGOUT_SUCCESS: '管理員登出成功',
+    ADMIN_CREATED_SUCCESS: '管理員帳號建立成功',
 
     // 錯誤訊息
     EMAIL_EXISTS: '此電子郵件已被註冊',
@@ -90,6 +91,10 @@ export const MESSAGES = {
     // 管理員驗證
     ADMIN_USERNAME_REQUIRED: '管理員帳號為必填欄位',
     ADMIN_USERNAME_EMPTY: '管理員帳號不能為空',
+    ADMIN_USERNAME_EXISTS: '管理員帳號已存在',
+    ADMIN_EMAIL_EXISTS: '管理員電子郵件已存在',
+    ADMIN_NAME_REQUIRED: '管理員姓名為必填欄位',
+    ADMIN_NAME_EMPTY: '管理員姓名不能為空',
     ADMIN_PASSWORD_REQUIRED: '管理員密碼為必填欄位',
     ADMIN_PASSWORD_EMPTY: '管理員密碼不能為空',
     REJECTION_REASON_REQUIRED: '拒絕原因為必填欄位',
