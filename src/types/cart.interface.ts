@@ -47,7 +47,7 @@ export interface CartItemWithDetails {
     id: number
     uuid: string
     name: string
-    main_image: string
+    main_image: string | null
     status: string
     teacher: {
       id: number

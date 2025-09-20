@@ -8,7 +8,13 @@ const secretConfig = {
 }
 
 // JWT 相關設定
-export const JWT_CONFIG = {
+export const JWT_CONFIG: {
+  readonly SECRET: string
+  readonly ACCESS_TOKEN_EXPIRES_IN: string
+  readonly REFRESH_TOKEN_EXPIRES_IN: string
+  readonly TOKEN_TYPE: string
+  readonly ACCESS_TOKEN_EXPIRES_SECONDS: number
+} = {
   SECRET: secretConfig.jwtSecret,
   ACCESS_TOKEN_EXPIRES_IN: '1h',
   REFRESH_TOKEN_EXPIRES_IN: secretConfig.jwtExpiresDay,

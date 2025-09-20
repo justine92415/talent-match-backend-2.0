@@ -5,7 +5,7 @@
  */
 
 import request from 'supertest'
-import jwt from 'jsonwebtoken'
+import jwt, { sign } from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import app from '../app'
 import { clearDatabase, initTestDatabase } from '@tests/helpers/database'
@@ -104,15 +104,12 @@ describe('管理員功能整合測試', () => {
       content: '測試課程內容',
       main_category_id: 1,
       sub_category_id: 1,
-      status: CourseStatus.DRAFT, // 必填欄位：課程狀態
-      application_status: ApplicationStatus.PENDING, // 申請審核狀態
-      created_at: new Date(),
-      updated_at: new Date()
+      status: CourseStatus.SUBMITTED // 使用實際存在的 CourseStatus
     })
     await courseRepo.save(testCourse)
 
     // 產生管理員 JWT Token
-    activeAdminToken = jwt.sign(
+    activeAdminToken = sign(
       { 
         adminId: activeAdminUser.id,
         username: activeAdminUser.username,
@@ -120,7 +117,7 @@ describe('管理員功能整合測試', () => {
         type: 'access' // 修正：使用 'access' 而非 'admin'
       },
       JWT_CONFIG.SECRET,
-      { expiresIn: JWT_CONFIG.ACCESS_TOKEN_EXPIRES_IN }
+      { expiresIn: '1h' }
     )
   })
 

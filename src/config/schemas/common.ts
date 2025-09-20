@@ -4,6 +4,30 @@
  */
 
 export const commonSchemas = {
+  // === 標準化成功回應 Schema ===
+  
+  // 基本成功回應 Schema
+  SuccessResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        description: '回應狀態',
+        enum: ['success'],
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        description: '成功訊息',
+        example: '操作成功'
+      },
+      data: {
+        description: '回傳資料',
+        example: null
+      }
+    }
+  },
+
   // 使用者基本資料 Schema（Auth API 實際使用）
   UserProfile: {
     type: 'object',
@@ -221,6 +245,24 @@ export const commonSchemas = {
         type: 'string',
         description: '錯誤訊息',
         example: '系統錯誤，請稍後再試'
+      }
+    }
+  },
+
+  // 通用錯誤回應 Schema (向後相容)
+  ErrorResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        description: '回應狀態',
+        enum: ['error'],
+        example: 'error'
+      },
+      message: {
+        type: 'string',
+        description: '錯誤訊息',
+        example: '操作失敗'
       }
     }
   }

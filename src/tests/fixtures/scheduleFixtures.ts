@@ -1,5 +1,14 @@
-import type { AvailableSlotData, AvailableSlotInfo, UpdateScheduleRequest, CheckConflictsRequest } from '@models/index'
-import { Weekday } from '@models/index'
+import type { 
+  AvailableSlotData, 
+  AvailableSlotInfo, 
+  UpdateScheduleRequest, 
+  CheckConflictsRequest,
+  WeeklyScheduleRequest,
+  WeeklyScheduleResponse,
+  StandardSlot,
+  WeekdayString
+} from '@models/index'
+import { Weekday, WeeklyWeekday } from '@models/index'
 
 /**
  * 教師時間管理測試資料
@@ -293,4 +302,123 @@ export default {
   scheduleUpdateScenarios,
   expectedApiResponses,
   expectedErrorResponses
+}
+
+// ==================== 台灣週次時段測試資料 ====================
+
+/** 台灣標準時段測試資料 */
+export const standardSlots: readonly StandardSlot[] = [
+  '09:00', '10:00', '11:00', '13:00', '14:00', 
+  '15:00', '16:00', '17:00', '19:00', '20:00'
+] as const
+
+/** 有效的台灣週次時段請求資料 */
+export const validWeeklyScheduleRequest: WeeklyScheduleRequest = {
+  weekly_schedule: {
+    '1': ['09:00', '10:00', '13:00', '14:00', '15:00', '16:00', '17:00'], // 週一
+    '2': ['09:00', '10:00', '13:00', '14:00'], // 週二
+    '4': ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00', '19:00'], // 週四
+    '5': ['09:00', '10:00', '11:00', '13:00', '14:00', '17:00', '19:00'], // 週五
+    '6': ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00', '19:00', '20:00'] // 週六
+  }
+}
+
+/** 空的台灣週次時段請求 */
+export const emptyWeeklyScheduleRequest: WeeklyScheduleRequest = {
+  weekly_schedule: {}
+}
+
+/** 單天台灣週次時段請求 */
+export const singleDayWeeklyScheduleRequest: WeeklyScheduleRequest = {
+  weekly_schedule: {
+    '1': ['09:00', '10:00', '13:00'] // 只設定週一
+  }
+}
+
+/** 無效的台灣週次時段請求 - 錯誤週次 */
+export const invalidWeekDayScheduleRequest = {
+  weekly_schedule: {
+    '8': ['09:00', '10:00'], // 不存在的週次
+    '0': ['13:00', '14:00']  // 錯誤的週次格式
+  }
+}
+
+/** 無效的台灣週次時段請求 - 錯誤時段 */
+export const invalidTimeSlotScheduleRequest = {
+  weekly_schedule: {
+    '1': ['08:00', '12:00', '18:00'], // 非標準時段
+    '2': ['09:30', '14:30']          // 非標準時段
+  }
+}
+
+/** 重複時段的台灣週次時段請求 */
+export const duplicateTimeSlotScheduleRequest = {
+  weekly_schedule: {
+    '1': ['09:00', '10:00', '09:00'], // 重複 09:00
+    '2': ['13:00', '13:00', '14:00']  // 重複 13:00
+  }
+}
+
+/** 預期的台灣週次時段回應 */
+export const expectedWeeklyScheduleResponse: WeeklyScheduleResponse = {
+  weekly_schedule: {
+    '1': ['09:00', '10:00', '13:00', '14:00', '15:00', '16:00', '17:00'],
+    '2': ['09:00', '10:00', '13:00', '14:00'],
+    '4': ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00', '19:00'],
+    '5': ['09:00', '10:00', '11:00', '13:00', '14:00', '17:00', '19:00'],
+    '6': ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00', '19:00', '20:00']
+  },
+  total_slots: 37,
+  slots_by_day: {
+    '1': 7, '2': 4, '4': 9, '5': 7, '6': 10
+  },
+  updated_count: 0,
+  created_count: 37,
+  deleted_count: 0
+}
+
+/** 台灣週次時段測試場景 */
+export const scheduleTestScenarios = {
+  validUpdate: {
+    description: '成功更新台灣週次時段設定',
+    request: validWeeklyScheduleRequest,
+    expectedResponse: expectedWeeklyScheduleResponse
+  },
+  emptySchedule: {
+    description: '清空所有時段設定',
+    request: emptyWeeklyScheduleRequest,
+    expectedResponse: {
+      weekly_schedule: {},
+      total_slots: 0,
+      slots_by_day: {},
+      updated_count: 0,
+      created_count: 0,
+      deleted_count: 0
+    }
+  },
+  singleDay: {
+    description: '只設定單天時段',
+    request: singleDayWeeklyScheduleRequest,
+    expectedResponse: {
+      weekly_schedule: { '1': ['09:00', '10:00', '13:00'] },
+      total_slots: 3,
+      slots_by_day: { '1': 3 },
+      updated_count: 0,
+      created_count: 3,
+      deleted_count: 0
+    }
+  }
+}
+
+// 匯出台灣週次時段相關測試資料
+export const taiwanScheduleFixtures = {
+  standardSlots,
+  validWeeklyScheduleRequest,
+  emptyWeeklyScheduleRequest,
+  singleDayWeeklyScheduleRequest,
+  invalidWeekDayScheduleRequest,
+  invalidTimeSlotScheduleRequest,
+  duplicateTimeSlotScheduleRequest,
+  expectedWeeklyScheduleResponse,
+  scheduleTestScenarios
 }

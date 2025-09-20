@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm'
-import { CourseStatus, ApplicationStatus } from './enums'
+import { CourseStatus } from './enums'
 
 @Entity('courses')
 export class Course {
@@ -21,11 +21,11 @@ export class Course {
 
   /** 課程封面圖片路徑 */
   @Column({ type: 'text', nullable: true })
-  main_image!: string
+  main_image!: string | null
 
   /** 課程詳細描述 */
   @Column({ type: 'text', nullable: true })
-  content!: string
+  content!: string | null
 
   /** 課程平均評分（0-5分） */
   @Column({ type: 'decimal', precision: 3, scale: 2, default: 0 })
@@ -49,35 +49,35 @@ export class Course {
 
   /** 主分類ID */
   @Column({ type: 'integer', nullable: true })
-  main_category_id!: number
+  main_category_id!: number | null
 
   /** 次分類ID */
   @Column({ type: 'integer', nullable: true })
-  sub_category_id!: number
+  sub_category_id!: number | null
 
-  /** 城市ID */
-  @Column({ type: 'integer', nullable: true })
-  city_id!: number
+  /** 城市 */
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  city!: string | null
 
-  /** 區域代碼（保留彈性使用） */
-  @Column({ length: 10, nullable: true })
-  dist_id!: string
+  /** 區域 */
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  district!: string | null
+
+  /** 地址 */
+  @Column({ type: 'text', nullable: true })
+  address!: string | null
 
   /** 問卷調查網址 */
   @Column({ type: 'text', nullable: true })
-  survey_url!: string
+  survey_url!: string | null
 
   /** 購買後顯示的訊息 */
   @Column({ type: 'text', nullable: true })
-  purchase_message!: string
+  purchase_message!: string | null
 
   /** 課程狀態 */
   @Column({ type: 'enum', enum: CourseStatus })
   status!: CourseStatus
-
-  /** 申請審核狀態（上架時使用） */
-  @Column({ type: 'enum', enum: ApplicationStatus, nullable: true })
-  application_status!: ApplicationStatus | null
 
   /** 提交審核時的備註 */
   @Column({ type: 'text', nullable: true })
@@ -97,5 +97,5 @@ export class Course {
 
   /** 軟刪除時間 */
   @Column({ type: 'timestamp', nullable: true })
-  deleted_at!: Date
+  deleted_at!: Date | null
 }

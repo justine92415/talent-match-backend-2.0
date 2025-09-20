@@ -66,16 +66,7 @@ export const errorHandler = (
   next: NextFunction
 ): void => {
   // 記錄錯誤資訊供調試使用
-  logger.error('Request failed:', {
-    error: error.message,
-    code: error.code || 'UNKNOWN',
-    type: error.type || 'UNKNOWN',
-    stack: error.stack,
-    method: req.method,
-    url: req.url,
-    body: req.body,
-    userId: req.user?.userId
-  })
+  logger.error('Request failed:', undefined)
 
   // 處理非 AppError：轉換為系統錯誤
   if (!isAppError(error)) {

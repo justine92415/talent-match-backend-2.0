@@ -134,6 +134,43 @@ export interface CourseApprovalInfo {
 /** 課程審核拒絕資訊 */
 export type CourseRejectionInfo = CourseApprovalInfo
 
+// === 課程申請列表相關型別 ===
+
+/** 課程申請資訊（用於列表顯示） */
+export interface CourseApplicationInfo {
+  /** 課程ID */
+  id: number
+  /** 課程唯一識別碼 */
+  uuid: string
+  /** 課程名稱 */
+  name: string
+  /** 開課教師ID */
+  teacher_id: number
+  /** 教師資訊 */
+  teacher: {
+    /** 教師ID */
+    id: number
+    /** 教師姓名 */
+    name: string
+    /** 教師信箱 */
+    email: string | null
+  }
+  /** 課程詳細描述 */
+  content: string | null
+  /** 主分類ID */
+  main_category_id: number | null
+  /** 次分類ID */
+  sub_category_id: number | null
+  /** 課程狀態 */
+  status: string
+  /** 提交審核時的備註 */
+  submission_notes: string | null
+  /** 建立時間 */
+  created_at: string
+  /** 更新時間 */
+  updated_at: string
+}
+
 // === 基於實體衍生的業務型別 ===
 
 /** 從 AdminUser 實體衍生的登入驗證型別 */
@@ -146,7 +183,7 @@ export type AdminProfile = Omit<AdminUser, 'password'>
 export type TeacherReviewUpdate = Pick<Teacher, 'application_status' | 'application_reviewed_at' | 'reviewer_id' | 'review_notes'>
 
 /** 從 Course 實體衍生的審核操作型別 */
-export type CourseReviewUpdate = Pick<Course, 'status' | 'application_status'>
+export type CourseReviewUpdate = Pick<Course, 'status'>
 
 // === JWT Token 相關型別 ===
 

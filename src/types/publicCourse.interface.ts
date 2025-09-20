@@ -15,7 +15,7 @@ export interface PublicCourseQuery {
   sub_category_id?: number      // 次分類ID
 
   // 篩選條件
-  city_id?: number             // 城市篩選
+  city?: string                // 城市篩選
 
   // 排序方式
   sort?: 'newest' | 'popular' | 'price_low' | 'price_high'
@@ -30,7 +30,7 @@ export interface PublicCourseFilters {
   keyword?: string
   main_category_id?: number
   sub_category_id?: number
-  city_id?: number
+  city?: string
   sort: string
 }
 
@@ -66,7 +66,7 @@ export interface PublicCourseItem {
   id: number
   uuid: string
   name: string
-  main_image?: string
+  main_image?: string | null
   rate: number
   review_count: number
   student_count: number
@@ -74,7 +74,9 @@ export interface PublicCourseItem {
   max_price: number
   main_category: CategorySummary
   sub_category: CategorySummary
-  city: CitySummary
+  city?: string | null
+  district?: string | null
+  address?: string | null
   teacher: TeacherSummary
   created_at: string
 }
@@ -141,37 +143,26 @@ export interface PublicTeacherDetail {
 /** 教師工作經驗（公開版） */
 export interface PublicWorkExperience {
   id: number
-  is_working: boolean
   company_name: string
-  workplace: string
-  job_category: string
   job_title: string
   start_year: number
-  start_month: number
-  end_year?: number
-  end_month?: number
+  end_year: number | null
 }
 
 /** 教師學習經歷（公開版） */
 export interface PublicLearningExperience {
   id: number
-  is_in_school: boolean
-  degree: string
   school_name: string
   department: string
-  region: boolean
+  degree: string
   start_year: number
-  start_month: number
-  end_year?: number
-  end_month?: number
+  end_year: number | null
 }
 
 /** 教師證書（公開版） */
 export interface PublicTeacherCertificate {
   id: number
-  verifying_institution: string
   license_name: string
-  subject: string
 }
 
 /** 教師可預約時段 */
@@ -179,6 +170,22 @@ export interface TeacherAvailableSlot {
   weekday: number
   start_time: string
   end_time: string
+}
+
+/** 時段狀態 */
+export type SlotStatus = 'unavailable' | 'available' | 'reserved'
+
+/** 課程時段 */
+export interface CourseSlot {
+  time: string
+  status: SlotStatus
+}
+
+/** 每日課程表 */
+export interface DaySchedule {
+  week: string
+  date: string
+  slots: CourseSlot[]
 }
 
 /** 課程評價（公開版） */
@@ -212,17 +219,19 @@ export interface PublicCourseDetail {
   id: number
   uuid: string
   name: string
-  content?: string
-  main_image?: string
+  content?: string | null
+  main_image?: string | null
   rate: number
   review_count: number
   student_count: number
   purchase_count: number
-  survey_url?: string
-  purchase_message?: string
+  survey_url?: string | null
+  purchase_message?: string | null
+  city?: string | null
+  district?: string | null
+  address?: string | null
   main_category: CategorySummary
   sub_category: CategorySummary
-  city: CitySummary
   created_at: string
 }
 
@@ -236,7 +245,7 @@ export interface PublicCourseDetailResponse {
   teacher_work_experiences: PublicWorkExperience[]
   teacher_learning_experiences: PublicLearningExperience[]
   teacher_certificates: PublicTeacherCertificate[]
-  available_slots: TeacherAvailableSlot[]
+  schedule: DaySchedule[]
   recent_reviews: PublicReview[]
   recommended_courses: RecommendedCourse[]
 }
