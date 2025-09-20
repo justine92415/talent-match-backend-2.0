@@ -4,104 +4,9 @@
  */
 
 import Joi from 'joi'
-import { WEEKDAYS, SLOT_LIMITS, DATE_LIMITS } from '@constants/schedule'
+import { WEEKDAYS, SLOT_LIMITS, DATE_LIMITS, WEEKLY_WEEKDAYS, STANDARD_SLOTS, SLOT_RULES } from '@constants/schedule'
 
 // 時段資料驗證 Schema
-const availableSlotSchema = Joi.object({
-  weekday: Joi.number()
-    .integer()
-    .min(WEEKDAYS.MIN)  // 週日 = 0
-    .max(WEEKDAYS.MAX)  // 週六 = 6
-    .required()
-    .messages({
-      'number.base': 'weekday 必須為數字',
-      'number.integer': 'weekday 必須為整數',
-      'number.min': `weekday 最小值為 ${WEEKDAYS.MIN} (週日)`,
-      'number.max': `weekday 最大值為 ${WEEKDAYS.MAX} (週六)`,
-      'any.required': 'weekday 為必填欄位'
-    }),
-
-  start_time: Joi.string()
-    .pattern(/^([0-9]|0[0-9]|1[0-9]|2[0-3]):([0-5][0-9])$/)
-    .required()
-    .messages({
-      'string.pattern.base': 'start_time 格式必須為 H:MM 或 HH:MM (如: 9:00 或 09:00)',
-      'any.required': 'start_time 為必填欄位'
-    }),
-
-  end_time: Joi.string()
-    .pattern(/^([0-9]|0[0-9]|1[0-9]|2[0-3]):([0-5][0-9])$/)
-    .required()
-    .messages({
-      'string.pattern.base': 'end_time 格式必須為 H:MM 或 HH:MM (如: 10:00 或 10:00)',
-      'any.required': 'end_time 為必填欄位'
-    }),
-
-  is_active: Joi.boolean()
-    .default(true)
-    .messages({
-      'boolean.base': 'is_active 必須為布林值 (true/false)'
-    })
-}).custom((value, helpers) => {
-  // 自定義驗證：結束時間必須晚於開始時間
-  const startTime = value.start_time;
-  const endTime = value.end_time;
-  
-  if (startTime && endTime) {
-    const [startHour, startMin] = startTime.split(':').map(Number);
-    const [endHour, endMin] = endTime.split(':').map(Number);
-    
-    const startMinutes = startHour * 60 + startMin;
-    const endMinutes = endHour * 60 + endMin;
-    
-    if (endMinutes <= startMinutes) {
-      return helpers.error('custom.timeRange');
-    }
-  }
-  
-  return value;
-}, '時間範圍驗證').messages({
-  'custom.timeRange': '結束時間必須晚於開始時間'
-});
-
-// 更新時段請求驗證 Schema
-export const scheduleUpdateSchema = Joi.object({
-  available_slots: Joi.array()
-    .items(availableSlotSchema)
-    .min(0)
-    .max(SLOT_LIMITS.MAX_SLOTS_PER_TEACHER)  // 限制最多時段數，避免資源濫用
-    .required()
-    .messages({
-      'array.base': 'available_slots 必須為陣列',
-      'array.max': `時段數量不得超過 ${SLOT_LIMITS.MAX_SLOTS_PER_TEACHER} 個`,
-      'any.required': 'available_slots 為必填欄位'
-    })
-}).custom((value, helpers) => {
-  // 自定義驗證：檢查時段重複
-  const slots = value.available_slots;
-  const slotMap = new Map();
-  
-  for (let i = 0; i < slots.length; i++) {
-    const slot = slots[i];
-    const key = `${slot.weekday}-${slot.start_time}-${slot.end_time}`;
-    
-    if (slotMap.has(key)) {
-      return helpers.error('custom.duplicateSlot', { 
-        index: i,
-        weekday: slot.weekday,
-        start_time: slot.start_time,
-        end_time: slot.end_time
-      });
-    }
-    
-    slotMap.set(key, true);
-  }
-  
-  return value;
-}, '重複時段檢查').messages({
-  'custom.duplicateSlot': '發現重複的時段設定：星期{{#weekday}} {{#start_time}}-{{#end_time}}'
-});
-
 // 衝突檢查查詢參數驗證 Schema
 export const conflictsQuerySchema = Joi.object({
   slot_ids: Joi.string()
@@ -165,4 +70,59 @@ export const conflictsQuerySchema = Joi.object({
 }, '日期範圍驗證').messages({
   'custom.dateRange': '開始日期必須早於結束日期',
   'custom.dateRangeTooLarge': `日期範圍不得超過 ${DATE_LIMITS.MAX_RANGE_DAYS} 天`
+});
+
+// ==================== 週次時段驗證 Schema ====================
+
+// 週次時段設定請求驗證 Schema
+export const weeklyScheduleSchema = Joi.object({
+  weekly_schedule: Joi.object()
+    .pattern(
+      // 週次 key 驗證 (1-7)
+      Joi.string().valid(...SLOT_RULES.VALID_WEEK_DAYS),
+      // 時段陣列驗證
+      Joi.array()
+        .items(
+          Joi.string()
+            .valid(...STANDARD_SLOTS)
+            .messages({
+              'any.only': `時段必須為標準時段: ${STANDARD_SLOTS.join(', ')}`
+            })
+        )
+        .max(SLOT_LIMITS.MAX_SLOTS_PER_DAY)
+        .unique()
+        .messages({
+          'array.max': `每天最多只能設定 ${SLOT_LIMITS.MAX_SLOTS_PER_DAY} 個時段`,
+          'array.unique': '同一天不能有重複的時段'
+        })
+    )
+    .min(0)
+    .max(7)
+    .required()
+    .messages({
+      'object.base': 'weekly_schedule 必須為物件格式',
+      'object.max': '最多只能設定7天的時段',
+      'any.required': 'weekly_schedule 為必填欄位'
+    })
+}).custom((value, helpers) => {
+  // 自定義驗證：檢查總時段數量
+  const weeklySchedule = value.weekly_schedule;
+  let totalSlots = 0;
+  
+  for (const [weekDay, timeSlots] of Object.entries(weeklySchedule)) {
+    if (Array.isArray(timeSlots)) {
+      totalSlots += timeSlots.length;
+    }
+  }
+  
+  if (totalSlots > SLOT_LIMITS.MAX_SLOTS_PER_WEEK) {
+    return helpers.error('custom.tooManySlots', { 
+      total: totalSlots,
+      max: SLOT_LIMITS.MAX_SLOTS_PER_WEEK 
+    });
+  }
+  
+  return value;
+}, '週次時段總量檢查').messages({
+  'custom.tooManySlots': `每週總時段數不得超過 ${SLOT_LIMITS.MAX_SLOTS_PER_WEEK} 個，目前設定了 {{#total}} 個時段`
 });

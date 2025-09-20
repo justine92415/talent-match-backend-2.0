@@ -190,7 +190,32 @@ export class AdminController {
       limit
     )
 
-    res.status(200).json(handleSuccess(result, '成功獲取教師申請列表'))
+    res.status(200).json(handleSuccess(result, MESSAGES.ADMIN.TEACHER_APPLICATIONS_RETRIEVED))
+  })
+
+  /**
+   * 獲取課程申請列表
+   * GET /api/admin/course-applications
+   * 需要管理員認證
+   */
+  getCourseApplications = handleErrorAsync(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const adminId = this.getAdminId(req)
+    
+    // 驗證管理員權限
+    await this.adminService.validateAdminPermission(adminId)
+
+    // 獲取查詢參數
+    const status = req.query.status as string
+    const page = parseInt(req.query.page as string) || 1
+    const limit = Math.min(parseInt(req.query.limit as string) || 20, 100) // 限制最大100
+
+    const result = await this.adminService.getCourseApplications(
+      status as any, // 類型轉換，AdminService 會驗證
+      page,
+      limit
+    )
+
+    res.status(200).json(handleSuccess(result, MESSAGES.ADMIN.COURSE_APPLICATIONS_RETRIEVED))
   })
 }
 

@@ -6,31 +6,33 @@ import { ValidationError } from '@utils/errors'
 import { ERROR_CODES } from '@constants/ErrorCode'
 import type {
   UpdateScheduleRequest,
-  CheckConflictsRequest
+  CheckConflictsRequest,
+  WeeklyScheduleRequest,
+  WeeklyScheduleResponse
 } from '@models/index'
 
 export class ScheduleController {
   /**
    * GET /api/teachers/schedule
-   * 取得教師可預約時段設定
+   * 取得教師台灣週次時段設定
    */
   getSchedule = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user!.userId
 
-    const result = await scheduleService.getScheduleByUserId(userId)
+    const result = await scheduleService.getWeeklyScheduleByUserId(userId)
 
     res.json(handleSuccess(result, SUCCESS.SCHEDULE_SETTINGS_GET_SUCCESS))
   })
 
   /**
    * PUT /api/teachers/schedule
-   * 更新教師可預約時段設定
+   * 更新教師可預約時段設定 (台灣週次格式)
    */
   updateSchedule = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user!.userId
-    const requestData: UpdateScheduleRequest = req.body
+    const requestData: WeeklyScheduleRequest = req.body
 
-    const result = await scheduleService.updateScheduleByUserId(userId, requestData)
+    const result = await scheduleService.updateWeeklyScheduleByUserId(userId, requestData)
 
     res.json(handleSuccess(result, SUCCESS.SCHEDULE_SETTINGS_UPDATE_SUCCESS))
   })

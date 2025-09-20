@@ -443,6 +443,8 @@ export const MESSAGES = {
     TEACHER_APPLICATION_REJECTED: '教師申請已拒絕',
     COURSE_APPLICATION_APPROVED: '課程申請已核准',
     COURSE_APPLICATION_REJECTED: '課程申請已拒絕',
+    TEACHER_APPLICATIONS_RETRIEVED: '成功獲取教師申請列表',
+    COURSE_APPLICATIONS_RETRIEVED: '成功獲取課程申請列表',
 
     // 錯誤訊息
     APPROVAL_FAILED: '核准操作失敗',

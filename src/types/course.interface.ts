@@ -7,7 +7,7 @@
  * 注意：價格方案相關型別已遷移至 priceOption.interface.ts
  */
 
-import { CourseStatus, ApplicationStatus } from '@entities/enums'
+import { CourseStatus } from '@entities/enums'
 import { PriceOption, PriceOptionSummary } from './priceOption.interface'
 
 // ==================== 課程相關介面 ====================
@@ -27,25 +27,32 @@ export interface CourseBasicInfo {
   student_count: number
   main_category_id: number | null
   sub_category_id: number | null
-  city_id: number | null
-  dist_id: string | null
+  city: string | null
+  district: string | null
+  address: string | null
   survey_url: string | null
   purchase_message: string | null
   status: CourseStatus
-  application_status: ApplicationStatus | null
   submission_notes: string | null
   archive_reason: string | null
   created_at: Date
   updated_at: Date
 }
 
+/** 包含價格方案的課程資訊（供編輯使用） */
+export interface CourseWithPriceOptions extends CourseBasicInfo {
+  price_options: PriceOption[]
+}
+
 /** 課程建立請求參數 */
 export interface CreateCourseRequest {
   name: string
-  content: string
-  main_category_id: number
-  sub_category_id: number
-  city_id: number
+  content?: string
+  main_category_id?: number
+  sub_category_id?: number
+  city?: string
+  district?: string
+  address?: string
   survey_url?: string
   purchase_message?: string
 }
@@ -56,7 +63,9 @@ export interface UpdateCourseRequest {
   content?: string
   main_category_id?: number
   sub_category_id?: number
-  city_id?: number
+  city?: string
+  district?: string
+  address?: string
   survey_url?: string
   purchase_message?: string
   price_options?: string  // JSON 字串格式
@@ -128,7 +137,7 @@ export interface CourseDetailResponse {
 /** 課程列表回應 */
 export interface CourseListResponse {
   courses: Array<Pick<CourseBasicInfo, 
-    'id' | 'uuid' | 'name' | 'main_image' | 'status' | 'application_status' | 
+    'id' | 'uuid' | 'name' | 'main_image' | 'status' | 
     'student_count' | 'rate' | 'review_count' | 'created_at' | 'updated_at'
   >>
   pagination: {
@@ -153,7 +162,9 @@ export interface CourseSubmissionValidation {
   content: string
   main_category_id: number
   sub_category_id: number
-  city_id: number
+  city?: string
+  district?: string
+  address?: string
   price_options: PriceOptionData[]
 }
 

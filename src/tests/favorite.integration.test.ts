@@ -100,8 +100,7 @@ describe('收藏功能 API', () => {
       teacher_id: teacher.id,
       name: '另一門課程',
       content: '另一門課程的內容',
-      status: CourseStatus.PUBLISHED,
-      application_status: ApplicationStatus.APPROVED
+      status: CourseStatus.PUBLISHED
     })
     await courseRepository.save(course2)
   })

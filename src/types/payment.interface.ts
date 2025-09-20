@@ -62,7 +62,7 @@ export interface PurchaseRecordWithDetails {
     id: number
     uuid: string
     name: string
-    main_image: string
+    main_image: string | null
     teacher: {
       id: number
       user: {

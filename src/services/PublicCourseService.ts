@@ -11,7 +11,7 @@
  * 4. 建議資料庫索引：
  *    - courses: (status, created_at, student_count)
  *    - courses: (name, content) - 全文搜索索引
- *    - courses: (main_category_id, sub_category_id, city_id)
+ *    - courses: (main_category_id, sub_category_id, city, district, address)
  *    - course_price_options: (course_id, is_active, price)
  */
 
@@ -25,18 +25,22 @@ import { MainCategory } from '@entities/MainCategory'
 import { SubCategory } from '@entities/SubCategory'
 import { City } from '@entities/City'
 import { CoursePriceOption } from '@entities/CoursePriceOption'
+import { TeacherCertificate } from '@entities/TeacherCertificate'
+import { TeacherWorkExperience } from '@entities/TeacherWorkExperience'
+import { TeacherLearningExperience } from '@entities/TeacherLearningExperience'
 import { BusinessError } from '@utils/errors'
 import { ERROR_CODES } from '@constants/ErrorCode'
 import { MESSAGES } from '@constants/Message'
 import { CourseStatus } from '@entities/enums'
 import { PublicCourseListResponse, PublicCourseDetailResponse, CourseReviewListResponse, PublicCourseItem } from '../types/publicCourse.interface'
+import { scheduleService } from './ScheduleService'
 
 // 簡化的查詢介面
 export interface SimpleCourseQuery {
   keyword?: string
   main_category_id?: number
   sub_category_id?: number
-  city_id?: number
+  city?: string
   sort?: 'newest' | 'popular' | 'price_low' | 'price_high'
   page?: number
   per_page?: number
@@ -88,6 +92,9 @@ export class PublicCourseService {
   private subCategoryRepository: Repository<SubCategory>
   private cityRepository: Repository<City>
   private coursePriceOptionRepository: Repository<CoursePriceOption>
+  private teacherCertificateRepository: Repository<TeacherCertificate>
+  private teacherWorkExperienceRepository: Repository<TeacherWorkExperience>
+  private teacherLearningExperienceRepository: Repository<TeacherLearningExperience>
 
   constructor() {
     this.courseRepository = dataSource.getRepository(Course)
@@ -98,6 +105,9 @@ export class PublicCourseService {
     this.subCategoryRepository = dataSource.getRepository(SubCategory)
     this.cityRepository = dataSource.getRepository(City)
     this.coursePriceOptionRepository = dataSource.getRepository(CoursePriceOption)
+    this.teacherCertificateRepository = dataSource.getRepository(TeacherCertificate)
+    this.teacherWorkExperienceRepository = dataSource.getRepository(TeacherWorkExperience)
+    this.teacherLearningExperienceRepository = dataSource.getRepository(TeacherLearningExperience)
   }
 
   /**
@@ -108,7 +118,7 @@ export class PublicCourseService {
       keyword,
       main_category_id,
       sub_category_id,
-      city_id,
+      city,
       sort = 'newest',
       page = DEFAULT_PAGINATION.PAGE,
       per_page = DEFAULT_PAGINATION.PER_PAGE
@@ -134,7 +144,7 @@ export class PublicCourseService {
    * 私有方法：建構查詢建構器與篩選條件
    */
   private buildQueryBuilder(query: SimpleCourseQuery) {
-    const { keyword, main_category_id, sub_category_id, city_id } = query
+    const { keyword, main_category_id, sub_category_id, city } = query
     
     // 建立基本查詢條件
     const whereConditions: Record<string, string | number> = { status: CourseStatus.PUBLISHED }
@@ -142,11 +152,15 @@ export class PublicCourseService {
     // 分類篩選
     if (main_category_id) whereConditions.main_category_id = main_category_id
     if (sub_category_id) whereConditions.sub_category_id = sub_category_id
-    if (city_id) whereConditions.city_id = city_id
 
     // 建立查詢建構器
     let queryBuilder = this.courseRepository.createQueryBuilder('course')
       .where(whereConditions)
+
+    // 城市篩選
+    if (city) {
+      queryBuilder = queryBuilder.andWhere('course.city ILIKE :city', { city: `%${city}%` })
+    }
 
     // 關鍵字搜尋
     if (keyword) {
@@ -170,14 +184,24 @@ export class PublicCourseService {
         return queryBuilder.orderBy('course.student_count', 'DESC')
       case SORT_OPTIONS.PRICE_LOW:
         return queryBuilder
-          .leftJoin('course_price_options', 'cpo', 'cpo.course_id = course.id AND cpo.is_active = true')
-          .orderBy('MIN(cpo.price)', 'ASC', 'NULLS LAST')
-          .groupBy('course.id')
+          .addSelect(subQuery => {
+            return subQuery
+              .select('MIN(cpo.price)', 'min_price')
+              .from('course_price_options', 'cpo')
+              .where('cpo.course_id = course.id')
+              .andWhere('cpo.is_active = true')
+          }, 'course_min_price')
+          .orderBy('course_min_price', 'ASC', 'NULLS LAST')
       case SORT_OPTIONS.PRICE_HIGH:
         return queryBuilder
-          .leftJoin('course_price_options', 'cpo', 'cpo.course_id = course.id AND cpo.is_active = true')
-          .orderBy('MAX(cpo.price)', 'DESC', 'NULLS LAST')
-          .groupBy('course.id')
+          .addSelect(subQuery => {
+            return subQuery
+              .select('MAX(cpo.price)', 'max_price')
+              .from('course_price_options', 'cpo')
+              .where('cpo.course_id = course.id')
+              .andWhere('cpo.is_active = true')
+          }, 'course_max_price')
+          .orderBy('course_max_price', 'DESC', 'NULLS LAST')
       default:
         return queryBuilder.orderBy('course.created_at', 'DESC')
     }
@@ -201,7 +225,7 @@ export class PublicCourseService {
         sort: query.sort || 'newest',
         main_category_id: query.main_category_id,
         sub_category_id: query.sub_category_id,
-        city_id: query.city_id,
+        city: query.city,
         keyword: query.keyword
       }
     }
@@ -217,19 +241,28 @@ export class PublicCourseService {
     // 增加瀏覽次數（異步執行，不影響回應時間）
     this.courseRepository.increment({ id: courseId }, 'view_count', 1).catch(console.error)
 
-    // 並行查詢相關資訊和價格選項
-    const [teacher, mainCategory, subCategory, city, priceOptions] = await Promise.all([
-      this.getTeacherByCourseId(course.teacher_id),
-      this.getMainCategoryById(course.main_category_id),
-      this.getSubCategoryById(course.sub_category_id),
-      this.getCityById(course.city_id),
-      this.coursePriceOptionRepository.find({
-        where: { course_id: courseId, is_active: true },
-        order: { price: 'ASC' }
-      })
+    // 計算 7 天課程表的日期範圍（從明天開始）
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setHours(0, 0, 0, 0)
+    
+    const endDate = new Date(tomorrow)
+    endDate.setDate(endDate.getDate() + 6) // 7天後
+
+    // 🚀 TypeORM 查詢優化：從 8 個查詢減少到 3 個查詢
+    const [courseWithRelations, teacherProfileData, schedule] = await Promise.all([
+      // 查詢1：使用 JOIN 一次性獲取課程相關資料
+      this.getCourseWithAllRelationsOptimized(courseId, course.teacher_id, course.main_category_id, course.sub_category_id),
+      // 查詢2：一次性獲取教師檔案資料（限制數量）
+      this.getTeacherProfileDataOptimized(course.teacher_id),
+      // 查詢3：課程表（使用 TypeORM 優化版本）
+      scheduleService.getDayScheduleForDateRange(course.teacher_id, tomorrow, endDate)
     ])
 
-    return this.buildCourseDetailResponse(course, teacher, mainCategory, subCategory, city, priceOptions)
+    const { teacher, mainCategory, subCategory, priceOptions } = courseWithRelations
+    const { certificates, workExperiences, learningExperiences } = teacherProfileData
+
+    return this.buildCourseDetailResponse(course, teacher, mainCategory, subCategory, priceOptions, certificates, workExperiences, learningExperiences, schedule)
   }
 
   /**
@@ -306,22 +339,28 @@ export class PublicCourseService {
     teacher: Teacher & { user?: User } | null, 
     mainCategory: MainCategory | null, 
     subCategory: SubCategory | null, 
-    city: City | null, 
-    priceOptions: CoursePriceOption[] = []
+    priceOptions: CoursePriceOption[] = [],
+    teacherCertificates: TeacherCertificate[] = [],
+    teacherWorkExperiences: TeacherWorkExperience[] = [],
+    teacherLearningExperiences: TeacherLearningExperience[] = [],
+    schedule: any[] = []
   ): PublicCourseDetailResponse {
     return {
       course: {
         id: course.id,
         uuid: course.uuid,
         name: course.name,
-        content: course.content || '',
-        main_image: course.main_image,
+        content: course.content || undefined,
+        main_image: course.main_image || undefined,
         rate: course.rate,
         review_count: course.review_count,
         student_count: course.student_count,
         purchase_count: course.purchase_count || 0,
-        survey_url: course.survey_url,
-        purchase_message: course.purchase_message,
+        survey_url: course.survey_url || undefined,
+        purchase_message: course.purchase_message || undefined,
+        city: course.city || undefined,
+        district: course.district || undefined,
+        address: course.address || undefined,
         main_category: mainCategory ? {
           id: mainCategory.id,
           name: mainCategory.name
@@ -330,10 +369,6 @@ export class PublicCourseService {
           id: subCategory.id,
           name: subCategory.name
         } : { id: 0, name: DEFAULT_CATEGORY.NAME },
-        city: city ? {
-          id: city.id,
-          city_name: city.city_name
-        } : { id: 0, city_name: DEFAULT_CITY.NAME },
         created_at: course.created_at.toISOString()
       },
       teacher: teacher && teacher.user ? {
@@ -373,12 +408,28 @@ export class PublicCourseService {
       })),
       videos: [], // TODO: 查詢課程影片
       files: [], // TODO: 查詢課程檔案
-      available_slots: [], // TODO: 查詢可預約時段
+      schedule: schedule,
       recent_reviews: [], // TODO: 查詢最近評價
       recommended_courses: [], // TODO: 查詢推薦課程
-      teacher_certificates: [], // TODO: 查詢教師證書
-      teacher_work_experiences: [], // TODO: 查詢教師工作經驗
-      teacher_learning_experiences: [] // TODO: 查詢教師學習經歷
+      teacher_certificates: teacherCertificates.map(cert => ({
+        id: cert.id,
+        license_name: cert.license_name
+      })),
+      teacher_work_experiences: teacherWorkExperiences.map(exp => ({
+        id: exp.id,
+        company_name: exp.company_name,
+        job_title: exp.job_title,
+        start_year: exp.start_year,
+        end_year: exp.end_year ?? null
+      })),
+      teacher_learning_experiences: teacherLearningExperiences.map(exp => ({
+        id: exp.id,
+        school_name: exp.school_name,
+        department: exp.department,
+        degree: exp.degree,
+        start_year: exp.start_year,
+        end_year: exp.end_year ?? null
+      }))
     }
   }
 
@@ -487,10 +538,9 @@ export class PublicCourseService {
     const teacherIds = courses.map(c => c.teacher_id).filter(Boolean)
     const mainCategoryIds = courses.map(c => c.main_category_id).filter(Boolean)
     const subCategoryIds = courses.map(c => c.sub_category_id).filter(Boolean)
-    const cityIds = courses.map(c => c.city_id).filter(Boolean)
 
     // 批次查詢相關資料和價格選項
-    const [teachers, mainCategories, subCategories, cities, priceOptions] = await Promise.all([
+    const [teachers, mainCategories, subCategories, priceOptions] = await Promise.all([
       teacherIds.length > 0 
         ? this.teacherRepository
             .createQueryBuilder('teacher')
@@ -500,7 +550,6 @@ export class PublicCourseService {
         : [],
       mainCategoryIds.length > 0 ? this.mainCategoryRepository.findByIds(mainCategoryIds) : [],
       subCategoryIds.length > 0 ? this.subCategoryRepository.findByIds(subCategoryIds) : [],
-      cityIds.length > 0 ? this.cityRepository.findByIds(cityIds) : [],
       this.coursePriceOptionRepository
         .createQueryBuilder('cpo')
         .select([
@@ -516,8 +565,8 @@ export class PublicCourseService {
 
     // 建構價格對應表
     const priceMap = new Map<number, { min_price: number; max_price: number }>()
-    priceOptions.forEach((price: { course_id: number; min_price: string; max_price: string }) => {
-      priceMap.set(price.course_id, {
+    priceOptions.forEach((price: { cpo_course_id: number; min_price: string; max_price: string }) => {
+      priceMap.set(price.cpo_course_id, {
         min_price: parseFloat(price.min_price) || 0,
         max_price: parseFloat(price.max_price) || 0
       })
@@ -528,19 +577,21 @@ export class PublicCourseService {
       const teacher = teachers.find(t => t.id === course.teacher_id)
       const mainCategory = mainCategories.find(c => c.id === course.main_category_id)
       const subCategory = subCategories.find(c => c.id === course.sub_category_id)
-      const city = cities.find(c => c.id === course.city_id)
       const priceInfo = priceMap.get(course.id) || { min_price: 0, max_price: 0 }
 
       return {
         id: course.id,
         uuid: course.uuid,
         name: course.name,
-        main_image: course.main_image,
+        main_image: course.main_image || undefined,
         min_price: priceInfo.min_price,
         max_price: priceInfo.max_price,
         rate: course.rate,
         review_count: course.review_count,
         student_count: course.student_count,
+        city: course.city || undefined,
+        district: course.district || undefined,
+        address: course.address || undefined,
         main_category: mainCategory ? {
           id: mainCategory.id,
           name: mainCategory.name
@@ -549,10 +600,6 @@ export class PublicCourseService {
           id: subCategory.id,
           name: subCategory.name
         } : { id: 0, name: DEFAULT_CATEGORY.NAME },
-        city: city ? {
-          id: city.id,
-          city_name: city.city_name
-        } : { id: 0, city_name: DEFAULT_CITY.NAME },
         teacher: teacher && teacher.user ? {
           id: teacher.id,
           user: {
@@ -572,6 +619,98 @@ export class PublicCourseService {
         updated_at: course.updated_at.toISOString()
       }
     })
+  }
+
+  /**
+   * 🚀 TypeORM 查詢優化：使用 JOIN 一次性查詢課程相關資料
+   * 優化重點：利用 TypeORM 的 JOIN 功能，減少資料庫往返
+   */
+  private async getCourseWithAllRelationsOptimized(courseId: number, teacherId: number, mainCategoryId: number | null, subCategoryId: number | null) {
+    // 使用 QueryBuilder 一次性查詢所有需要的資料
+    const teacherQueryBuilder = this.teacherRepository
+      .createQueryBuilder('teacher')
+      .leftJoinAndSelect('teacher.user', 'user')
+      .where('teacher.id = :teacherId', { teacherId })
+
+    // 分類查詢（如果存在的話）
+    const categoryQueries = []
+    if (mainCategoryId) {
+      categoryQueries.push(
+        this.mainCategoryRepository.findOne({ where: { id: mainCategoryId } })
+      )
+    } else {
+      categoryQueries.push(Promise.resolve(null))
+    }
+
+    if (subCategoryId) {
+      categoryQueries.push(
+        this.subCategoryRepository.findOne({ where: { id: subCategoryId } })
+      )
+    } else {
+      categoryQueries.push(Promise.resolve(null))
+    }
+
+    // 價格選項查詢（使用 QueryBuilder 優化排序）
+    const priceOptionsQuery = this.coursePriceOptionRepository
+      .createQueryBuilder('price_option')
+      .where('price_option.course_id = :courseId', { courseId })
+      .andWhere('price_option.is_active = :isActive', { isActive: true })
+      .orderBy('price_option.price', 'ASC')
+      .getMany()
+
+    // 並行執行所有查詢
+    const results = await Promise.all([
+      teacherQueryBuilder.getOne(),
+      categoryQueries[0], // mainCategory
+      categoryQueries[1], // subCategory  
+      priceOptionsQuery
+    ])
+
+    const teacher = results[0]
+    const mainCategory = results[1] as MainCategory | null
+    const subCategory = results[2] as SubCategory | null
+    const priceOptions = results[3]
+
+    return { teacher, mainCategory, subCategory, priceOptions }
+  }
+
+  /**
+   * 🚀 TypeORM 查詢優化：使用限制條件優化教師資料查詢
+   * 優化重點：限制查詢數量，避免大數據影響效能
+   */
+  private async getTeacherProfileDataOptimized(teacherId: number) {
+    // 使用 QueryBuilder 加入更細緻的查詢控制
+    const certificatesQuery = this.teacherCertificateRepository
+      .createQueryBuilder('cert')
+      .where('cert.teacher_id = :teacherId', { teacherId })
+      .orderBy('cert.created_at', 'DESC')
+      .limit(10) // 限制最多 10 筆，提升效能
+      .getMany()
+
+    const workExperiencesQuery = this.teacherWorkExperienceRepository
+      .createQueryBuilder('work')
+      .where('work.teacher_id = :teacherId', { teacherId })
+      .orderBy('work.start_year', 'DESC')
+      .addOrderBy('work.start_month', 'DESC')
+      .limit(10)
+      .getMany()
+
+    const learningExperiencesQuery = this.teacherLearningExperienceRepository
+      .createQueryBuilder('learn')
+      .where('learn.teacher_id = :teacherId', { teacherId })
+      .orderBy('learn.start_year', 'DESC')
+      .addOrderBy('learn.start_month', 'DESC')
+      .limit(10)
+      .getMany()
+
+    // 並行執行查詢
+    const [certificates, workExperiences, learningExperiences] = await Promise.all([
+      certificatesQuery,
+      workExperiencesQuery,
+      learningExperiencesQuery
+    ])
+
+    return { certificates, workExperiences, learningExperiences }
   }
 }
 

@@ -10,6 +10,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express'
+import * as fs from 'fs'
 import { courseService } from '@services/CourseService'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 import { MESSAGES, SUCCESS } from '@constants/Message'
@@ -17,36 +18,65 @@ import { ERROR_CODES } from '@constants/ErrorCode'
 
 export class CourseController {
   /**
-   * 建立新課程
+   * 建立新課程（支援圖片上傳和價格方案）
    * POST /api/courses
    */
-  createCourse = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.user!.userId
-    const courseData = req.body
+  createCourse = async (req: Request, res: Response, next: NextFunction) => {
+    const courseImageFile = (req as any).courseImage
+    
+    try {
+      const userId = req.user!.userId
+      const courseData = req.body
 
-    // 角色檢查由中間件或服務層處理
-    const course = await courseService.createCourse(userId, courseData)
+      // 準備完整的課程建立資料
+      const createCourseData = {
+        ...courseData,
+        courseImageFile // 檔案物件，由 Service 層處理上傳
+      }
 
-    res.status(201).json(handleCreated({
-      course
-    }, SUCCESS.COURSE_CREATED))
-  })
+      // 呼叫服務層建立課程（包含圖片上傳和價格方案建立）
+      const course = await courseService.createCourseWithImageAndPrices(userId, createCourseData)
+
+      res.status(201).json(handleCreated({
+        course
+      }, SUCCESS.COURSE_CREATED))
+
+    } catch (error) {
+      // 錯誤處理交給中間件處理暫存檔案清理
+      next(error)
+    }
+  }
 
   /**
-   * 更新課程
+   * 更新課程（支援圖片上傳和價格方案編輯）
    * PUT /api/courses/:id
    */
-  updateCourse = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.user!.userId
-    const courseId = parseInt(req.params.id)
-    const updateData = req.body
+  updateCourse = async (req: Request, res: Response, next: NextFunction) => {
+    const courseImageFile = (req as any).courseImage
+    
+    try {
+      const userId = req.user!.userId
+      const courseId = parseInt(req.params.id)
+      const courseData = req.body
 
-    const course = await courseService.updateCourse(courseId, userId, updateData)
+      // 準備完整的課程更新資料
+      const updateCourseData = {
+        ...courseData,
+        courseImageFile // 檔案物件，由 Service 層處理上傳
+      }
 
-    res.status(200).json(handleSuccess({
-      course
-    }, SUCCESS.COURSE_UPDATED))
-  })
+      // 呼叫服務層更新課程（包含圖片上傳和價格方案更新）
+      const course = await courseService.updateCourseWithImageAndPrices(courseId, userId, updateCourseData)
+
+      res.status(200).json(handleSuccess({
+        course
+      }, SUCCESS.COURSE_UPDATED))
+
+    } catch (error) {
+      // 錯誤處理交給中間件處理暫存檔案清理
+      next(error)
+    }
+  }
 
   /**
    * 取得課程詳情
@@ -87,6 +117,21 @@ export class CourseController {
     await courseService.deleteCourse(courseId, userId)
 
     res.status(200).json(handleSuccess(null, SUCCESS.COURSE_DELETED))
+  })
+
+  /**
+   * 取得課程編輯資料
+   * GET /api/courses/:id/edit
+   */
+  getCourseForEdit = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user!.userId
+    const courseId = parseInt(req.params.id)
+
+    const courseWithPriceOptions = await courseService.getCourseForEdit(courseId, userId)
+
+    res.status(200).json(handleSuccess({
+      course: courseWithPriceOptions
+    }))
   })
 
   // ==================== 課程狀態管理方法 ====================

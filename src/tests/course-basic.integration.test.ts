@@ -15,18 +15,20 @@ import { initTestDatabase, closeTestDatabase, clearDatabase } from '@tests/helpe
 import { UserTestHelpers, TeacherTestHelpers } from '@tests/helpers/testHelpers'
 import { ERROR_MESSAGES } from '@constants/Message'
 import { ERROR_CODES } from '@constants/ErrorCode'
-import { ApplicationStatus } from '@entities/enums'
+import { CourseStatus } from '@entities/enums'
 import type { CreateCourseRequest } from '@models/index'
 
 // 課程測試資料
 const validCourseData: CreateCourseRequest = {
-  name: '測試程式設計基礎課程',
-  content: '本課程將帶領學生了解程式設計的基本概念，包含變數、函式、迴圈等重要主題。透過實際範例和練習，幫助學生建立扎實的程式設計基礎。',
+  name: 'Test Course',
+  content: 'Test course content',
   main_category_id: 1,
   sub_category_id: 1,
-  city_id: 1,
-  survey_url: 'https://survey.example.com/course-feedback',
-  purchase_message: '感謝購買本課程，請查收課程相關資訊'
+  city: '台北市',
+  district: '信義區',
+  address: '台北市信義區信義路五段7號',
+  survey_url: 'https://example.com/survey',
+  purchase_message: 'Test message'
 }
 
 // 無效課程資料 - 缺少必填欄位
@@ -58,9 +60,7 @@ describe('課程基本管理 API', () => {
       email: 'teacher@test.com',
       nick_name: 'TestTeacher'
     })
-    const teacher = await TeacherTestHelpers.createTeacherApplication(user.id, {
-      application_status: ApplicationStatus.APPROVED
-    })
+    const teacher = await TeacherTestHelpers.createTeacherApplication(user.id, {})
     
     teacherId = teacher.id
     teacherToken = UserTestHelpers.generateAuthToken(user)
@@ -70,9 +70,7 @@ describe('課程基本管理 API', () => {
       email: 'another@test.com',
       nick_name: 'AnotherTeacher'
     })
-    const anotherTeacher = await TeacherTestHelpers.createTeacherApplication(anotherUser.id, {
-      application_status: ApplicationStatus.APPROVED
-    })
+    const anotherTeacher = await TeacherTestHelpers.createTeacherApplication(anotherUser.id, {})
     
     anotherTeacherId = anotherTeacher.id
     anotherTeacherToken = UserTestHelpers.generateAuthToken(anotherUser)
@@ -99,11 +97,12 @@ describe('課程基本管理 API', () => {
             content: validCourseData.content,
             main_category_id: validCourseData.main_category_id,
             sub_category_id: validCourseData.sub_category_id,
-            city_id: validCourseData.city_id,
+            city: validCourseData.city,
+            district: validCourseData.district,
+            address: validCourseData.address,
             survey_url: validCourseData.survey_url,
             purchase_message: validCourseData.purchase_message,
             status: 'draft',
-            application_status: null,
             rate: expect.any(String), // 資料庫回傳 "0.00" 字串格式
             review_count: 0,
             view_count: 0,

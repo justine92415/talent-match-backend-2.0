@@ -5,7 +5,7 @@
  */
 
 import bcrypt from 'bcrypt'
-import jwt from 'jsonwebtoken'
+import { sign } from 'jsonwebtoken'
 import { dataSource } from '@db/data-source'
 import { AdminUser } from '@entities/AdminUser'
 import { Teacher } from '@entities/Teacher'
@@ -23,7 +23,7 @@ import {
   TeacherApplicationRejectionResponse,
   CourseApplicationApprovalResponse,
   RejectionRequest
-} from '@/types'
+} from '../types'
 
 export class AdminService {
   private adminUserRepository = dataSource.getRepository(AdminUser)
@@ -75,16 +75,12 @@ export class AdminService {
     await this.adminUserRepository.save(admin)
 
     // 產生 JWT Token
-    const token = jwt.sign(
-      {
-        adminId: admin.id,
-        username: admin.username,
-        role: admin.role,
-        type: 'access' // 修正：使用 'access' 而非 'admin'
-      },
-      JWT_CONFIG.SECRET,
-      { expiresIn: JWT_CONFIG.ACCESS_TOKEN_EXPIRES_IN }
-    )
+    const token = sign({ 
+      adminId: admin.id,
+      username: admin.username,
+      role: admin.role,
+      type: 'access'
+    }, JWT_CONFIG.SECRET, { expiresIn: '1h' })
 
     return {
       admin: {
@@ -290,12 +286,15 @@ export class AdminService {
       )
     }
 
-    // 注意：目前 Course entity 沒有審核相關欄位
-    // 以下程式碼是預期的實作，等 Course entity 更新後可以使用
-    /*
     // 檢查課程狀態
-    if (course.status !== CourseStatus.PENDING) {
-      if (course.status === CourseStatus.APPROVED || course.status === CourseStatus.REJECTED) {
+    if (course.status !== CourseStatus.SUBMITTED) {
+      if (course.status === CourseStatus.APPROVED) {
+        throw new BusinessError(
+          ERROR_CODES.APPLICATION_ALREADY_REVIEWED,
+          MESSAGES.BUSINESS.APPLICATION_ALREADY_REVIEWED,
+          409
+        )
+      } else if (course.status === CourseStatus.REJECTED) {
         throw new BusinessError(
           ERROR_CODES.APPLICATION_ALREADY_REVIEWED,
           MESSAGES.BUSINESS.APPLICATION_ALREADY_REVIEWED,
@@ -312,24 +311,20 @@ export class AdminService {
 
     // 更新課程申請狀態
     course.status = CourseStatus.APPROVED
-    course.reviewed_at = new Date()
-    course.reviewer_id = adminId
-    course.rejection_reason = null
+    course.updated_at = new Date()
 
     const updatedCourse = await this.courseRepository.save(course)
-    */
 
-    // 暫時返回基本課程資訊
     return {
       course: {
-        id: course.id,
-        uuid: course.uuid,
-        name: course.name,
-        teacher_id: course.teacher_id,
-        status: 'approved', // 暫時固定值
-        application_status: 'approved', // 暫時固定值
-        created_at: course.created_at.toISOString(),
-        updated_at: course.updated_at.toISOString()
+        id: updatedCourse.id,
+        uuid: updatedCourse.uuid,
+        name: updatedCourse.name,
+        teacher_id: updatedCourse.teacher_id,
+        status: updatedCourse.status,
+        application_status: updatedCourse.status, // 使用相同的狀態
+        created_at: updatedCourse.created_at.toISOString(),
+        updated_at: updatedCourse.updated_at.toISOString()
       }
     }
   }
@@ -359,12 +354,15 @@ export class AdminService {
       )
     }
 
-    // 注意：目前 Course entity 沒有審核相關欄位
-    // 以下程式碼是預期的實作，等 Course entity 更新後可以使用
-    /*
     // 檢查課程狀態
-    if (course.status !== CourseStatus.PENDING) {
-      if (course.status === CourseStatus.APPROVED || course.status === CourseStatus.REJECTED) {
+    if (course.status !== CourseStatus.SUBMITTED) {
+      if (course.status === CourseStatus.APPROVED) {
+        throw new BusinessError(
+          ERROR_CODES.APPLICATION_ALREADY_REVIEWED,
+          MESSAGES.BUSINESS.APPLICATION_ALREADY_REVIEWED,
+          409
+        )
+      } else if (course.status === CourseStatus.REJECTED) {
         throw new BusinessError(
           ERROR_CODES.APPLICATION_ALREADY_REVIEWED,
           MESSAGES.BUSINESS.APPLICATION_ALREADY_REVIEWED,
@@ -381,24 +379,22 @@ export class AdminService {
 
     // 更新課程申請狀態
     course.status = CourseStatus.REJECTED
-    course.reviewed_at = new Date()
-    course.reviewer_id = adminId
-    course.rejection_reason = rejectionData.rejectionReason
+    course.updated_at = new Date()
+    // 注意：拒絕原因目前無法儲存，因為 Course entity 沒有相關欄位
+    // 如果需要儲存拒絕原因，需要在 Course entity 新增欄位
 
     const updatedCourse = await this.courseRepository.save(course)
-    */
 
-    // 暫時返回基本課程資訊
     return {
       course: {
-        id: course.id,
-        uuid: course.uuid,
-        name: course.name,
-        teacher_id: course.teacher_id,
-        status: 'rejected', // 暫時固定值
-        application_status: 'rejected', // 暫時固定值
-        created_at: course.created_at.toISOString(),
-        updated_at: course.updated_at.toISOString()
+        id: updatedCourse.id,
+        uuid: updatedCourse.uuid,
+        name: updatedCourse.name,
+        teacher_id: updatedCourse.teacher_id,
+        status: updatedCourse.status,
+        application_status: updatedCourse.status, // 使用相同的狀態
+        created_at: updatedCourse.created_at.toISOString(),
+        updated_at: updatedCourse.updated_at.toISOString()
       }
     }
   }
@@ -474,6 +470,80 @@ export class AdminService {
         application_reviewed_at: teacher.application_reviewed_at,
         review_notes: teacher.review_notes
       })),
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    }
+  }
+
+  /**
+   * 獲取課程申請列表
+   * @param status 課程狀態篩選
+   * @param page 頁碼
+   * @param limit 每頁數量
+   * @returns 分頁的課程申請列表
+   */
+  async getCourseApplications(status?: CourseStatus, page = 1, limit = 20) {
+    // 建立基本查詢
+    const queryBuilder = this.courseRepository
+      .createQueryBuilder('course')
+      .orderBy('course.created_at', 'DESC')
+
+    // 狀態篩選
+    if (status) {
+      queryBuilder.where('course.status = :status', { status })
+    } else {
+      // 預設只顯示需要審核的課程（已提交審核的課程）
+      queryBuilder.where('course.status IN (:...statuses)', { 
+        statuses: [CourseStatus.SUBMITTED, CourseStatus.APPROVED, CourseStatus.REJECTED] 
+      })
+    }
+
+    // 分頁
+    const skip = (page - 1) * limit
+    queryBuilder.skip(skip).take(limit)
+
+    const [courses, total] = await queryBuilder.getManyAndCount()
+
+    // 獲取教師資訊
+    const teacherIds = Array.from(new Set(courses.map(course => course.teacher_id).filter(id => id)))
+    let teacherMap = new Map()
+    
+    if (teacherIds.length > 0) {
+      const teachers = await this.teacherRepository
+        .createQueryBuilder('teacher')
+        .leftJoinAndSelect('teacher.user', 'user')
+        .where('teacher.id IN (:...teacherIds)', { teacherIds })
+        .getMany()
+      
+      teacherMap = new Map(teachers.map(teacher => [teacher.id, teacher]))
+    }
+
+    return {
+      applications: courses.map(course => {
+        const teacher = teacherMap.get(course.teacher_id)
+        return {
+          id: course.id,
+          uuid: course.uuid,
+          name: course.name,
+          teacher_id: course.teacher_id,
+          teacher: {
+            id: course.teacher_id,
+            name: teacher?.user?.name || '未知教師',
+            email: teacher?.user?.email || null
+          },
+          content: course.content,
+          main_category_id: course.main_category_id,
+          sub_category_id: course.sub_category_id,
+          status: course.status,
+          submission_notes: course.submission_notes,
+          created_at: course.created_at,
+          updated_at: course.updated_at
+        }
+      }),
       pagination: {
         page,
         limit,
