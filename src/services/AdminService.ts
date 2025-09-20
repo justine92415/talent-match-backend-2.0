@@ -32,69 +32,20 @@ export class AdminService {
   private teacherRepository = dataSource.getRepository(Teacher)
   private courseRepository = dataSource.getRepository(Course)
 
-  constructor() {
-    console.log('🏗️  [AdminService] 初始化 AdminService')
-    console.log('🔧 [AdminService] 環境資訊:', {
-      nodeEnv: process.env.NODE_ENV,
-      dbHost: process.env.DB_HOST,
-      dbPort: process.env.DB_PORT,
-      dbDatabase: process.env.DB_DATABASE,
-      dbUsername: process.env.DB_USERNAME,
-      hasDbPassword: !!process.env.DB_PASSWORD,
-      hasJwtSecret: !!process.env.JWT_SECRET
-    })
-  }
-
   /**
    * 管理員登入
    * @param loginData 登入資料
    * @returns 管理員資訊和 JWT Token
    */
   async login(loginData: AdminLoginRequest): Promise<AdminLoginResponse> {
-    console.log('🔍 [AdminService.login] 開始管理員登入流程')
-    console.log('📝 [AdminService.login] 登入資料:', { 
-      username: loginData.username,
-      passwordLength: loginData.password?.length || 0,
-      environment: process.env.NODE_ENV || 'unknown'
-    })
-    
     const { username, password } = loginData
 
     // 查找管理員帳號
-    console.log('🔎 [AdminService.login] 查詢管理員帳號:', username)
-    console.log('🗄️  [AdminService.login] 資料庫連線狀態:', {
-      isInitialized: dataSource.isInitialized,
-      databaseType: dataSource.options.type,
-      database: dataSource.options.database
-    })
-    
     const admin = await this.adminUserRepository.findOne({
       where: { username }
     })
 
-    console.log('👤 [AdminService.login] 管理員帳號查詢結果:', {
-      found: !!admin,
-      adminId: admin?.id,
-      isActive: admin?.is_active,
-      hasPassword: !!admin?.password,
-      passwordLength: admin?.password?.length || 0
-    })
-
     if (!admin) {
-      console.log('❌ [AdminService.login] 管理員帳號不存在:', username)
-      
-      // 在非 production 環境下，列出所有管理員帳號協助除錯
-      if (process.env.NODE_ENV !== 'production') {
-        try {
-          const allAdmins = await this.adminUserRepository.find({
-            select: ['id', 'username', 'is_active']
-          })
-          console.log('📋 [AdminService.login] 所有管理員帳號:', allAdmins)
-        } catch (error) {
-          console.log('⚠️  [AdminService.login] 無法查詢管理員列表:', error)
-        }
-      }
-      
       throw new BusinessError(
         ERROR_CODES.ADMIN_INVALID_CREDENTIALS,
         MESSAGES.AUTH.ADMIN_INVALID_CREDENTIALS,
@@ -103,19 +54,8 @@ export class AdminService {
     }
 
     // 驗證密碼
-    console.log('🔐 [AdminService.login] 開始驗證密碼')
-    console.log('🔐 [AdminService.login] 密碼比較資訊:', {
-      inputPasswordLength: password.length,
-      storedPasswordLength: admin.password.length,
-      inputPasswordStart: password.substring(0, 3) + '***',
-      storedPasswordStart: admin.password.substring(0, 10) + '***'
-    })
-    
     const isPasswordValid = await bcrypt.compare(password, admin.password)
-    console.log('✅ [AdminService.login] 密碼驗證結果:', isPasswordValid)
-    
     if (!isPasswordValid) {
-      console.log('❌ [AdminService.login] 密碼驗證失敗')
       throw new BusinessError(
         ERROR_CODES.ADMIN_INVALID_CREDENTIALS,
         MESSAGES.AUTH.ADMIN_INVALID_CREDENTIALS,
@@ -124,9 +64,7 @@ export class AdminService {
     }
 
     // 檢查帳號狀態
-    console.log('🔍 [AdminService.login] 檢查帳號狀態:', admin.is_active)
     if (!admin.is_active) {
-      console.log('❌ [AdminService.login] 管理員帳號已停用')
       throw new BusinessError(
         ERROR_CODES.ADMIN_ACCOUNT_INACTIVE,
         MESSAGES.AUTH.ADMIN_ACCOUNT_INACTIVE,
@@ -135,29 +73,18 @@ export class AdminService {
     }
 
     // 更新最後登入時間
-    console.log('🕐 [AdminService.login] 更新最後登入時間')
     admin.last_login_at = new Date()
     await this.adminUserRepository.save(admin)
 
     // 產生 JWT Token
-    console.log('🔑 [AdminService.login] 產生 JWT Token')
-    console.log('🔑 [AdminService.login] JWT 配置:', {
-      hasSecret: !!JWT_CONFIG.SECRET,
-      secretLength: JWT_CONFIG.SECRET?.length || 0
-    })
-    
-    const tokenPayload = { 
+    const token = sign({ 
       adminId: admin.id,
       username: admin.username,
       role: admin.role,
       type: 'access'
-    }
-    console.log('📋 [AdminService.login] Token payload:', tokenPayload)
-    
-    const token = sign(tokenPayload, JWT_CONFIG.SECRET, { expiresIn: '1h' })
-    console.log('🎫 [AdminService.login] Token 產生成功，長度:', token.length)
+    }, JWT_CONFIG.SECRET, { expiresIn: '1h' })
 
-    const response = {
+    return {
       admin: {
         id: admin.id,
         username: admin.username,
@@ -169,15 +96,6 @@ export class AdminService {
       access_token: token,
       refresh_token: token // 暫時使用相同 token，後續可優化
     }
-    
-    console.log('🎉 [AdminService.login] 登入成功，回傳資料:', {
-      adminId: response.admin.id,
-      username: response.admin.username,
-      role: response.admin.role,
-      hasToken: !!response.access_token
-    })
-
-    return response
   }
 
   /**
@@ -186,25 +104,14 @@ export class AdminService {
    * @returns 建立的管理員資訊
    */
   async createAdmin(createData: AdminCreateRequest): Promise<AdminCreateResponse> {
-    console.log('🏗️  [AdminService.createAdmin] 開始建立管理員帳號')
-    console.log('📝 [AdminService.createAdmin] 建立資料:', { 
-      username: createData.username,
-      name: createData.name,
-      email: createData.email,
-      role: createData.role || AdminRole.ADMIN,
-      passwordLength: createData.password?.length || 0
-    })
-
     const { username, password, name, email, role = AdminRole.ADMIN } = createData
 
     // 檢查帳號是否已存在
-    console.log('🔍 [AdminService.createAdmin] 檢查帳號是否已存在:', username)
     const existingAdmin = await this.adminUserRepository.findOne({
       where: { username }
     })
 
     if (existingAdmin) {
-      console.log('❌ [AdminService.createAdmin] 管理員帳號已存在:', username)
       throw new BusinessError(
         ERROR_CODES.ADMIN_USERNAME_EXISTS,
         MESSAGES.VALIDATION.ADMIN_USERNAME_EXISTS,
@@ -213,13 +120,11 @@ export class AdminService {
     }
 
     // 檢查電子郵件是否已存在
-    console.log('📧 [AdminService.createAdmin] 檢查電子郵件是否已存在:', email)
     const existingEmailAdmin = await this.adminUserRepository.findOne({
       where: { email }
     })
 
     if (existingEmailAdmin) {
-      console.log('❌ [AdminService.createAdmin] 管理員電子郵件已存在:', email)
       throw new BusinessError(
         ERROR_CODES.ADMIN_EMAIL_EXISTS,
         MESSAGES.VALIDATION.ADMIN_EMAIL_EXISTS,
@@ -228,13 +133,10 @@ export class AdminService {
     }
 
     // 加密密碼
-    console.log('🔐 [AdminService.createAdmin] 加密密碼')
     const saltRounds = 12 // 使用較高的安全等級
     const hashedPassword = await bcrypt.hash(password, saltRounds)
-    console.log('✅ [AdminService.createAdmin] 密碼加密完成，hash長度:', hashedPassword.length)
 
     // 建立管理員帳號
-    console.log('👤 [AdminService.createAdmin] 建立管理員帳號')
     const newAdmin = this.adminUserRepository.create({
       username,
       password: hashedPassword,
@@ -247,11 +149,6 @@ export class AdminService {
     })
 
     const savedAdmin = await this.adminUserRepository.save(newAdmin)
-    console.log('🎉 [AdminService.createAdmin] 管理員帳號建立成功:', {
-      id: savedAdmin.id,
-      username: savedAdmin.username,
-      role: savedAdmin.role
-    })
 
     return {
       admin: {
