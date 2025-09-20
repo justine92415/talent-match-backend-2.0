@@ -75,34 +75,11 @@ export class AdminController {
    * POST /api/admin/login
    */
   login = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
-    console.log('🚀 [AdminController.login] 收到管理員登入請求')
-    console.log('📨 [AdminController.login] 請求資料:', {
-      hasBody: !!req.body,
-      username: req.body?.username,
-      hasPassword: !!req.body?.password,
-      passwordLength: req.body?.password?.length || 0,
-      userAgent: req.headers['user-agent'],
-      ip: req.ip || req.connection.remoteAddress
-    })
-    
-    try {
-      const loginData: AdminLoginRequest = req.body
+    const loginData: AdminLoginRequest = req.body
 
-      console.log('⚡ [AdminController.login] 呼叫 AdminService.login')
-      const result = await this.adminService.login(loginData)
-      console.log('✅ [AdminController.login] AdminService.login 執行成功')
+    const result = await this.adminService.login(loginData)
 
-      res.status(200).json(handleSuccess(result, MESSAGES.AUTH.ADMIN_LOGIN_SUCCESS))
-      console.log('🎯 [AdminController.login] 回應已發送')
-    } catch (error: any) {
-      console.log('💥 [AdminController.login] 登入過程發生錯誤:', {
-        name: error?.name,
-        message: error?.message,
-        code: error?.code,
-        status: error?.status
-      })
-      throw error // 重新拋出錯誤，讓 handleErrorAsync 處理
-    }
+    res.status(200).json(handleSuccess(result, MESSAGES.AUTH.ADMIN_LOGIN_SUCCESS))
   })
 
   /**
@@ -110,37 +87,11 @@ export class AdminController {
    * POST /api/admin/create
    */
   createAdmin = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
-    console.log('🏗️  [AdminController.createAdmin] 收到建立管理員請求')
-    console.log('📨 [AdminController.createAdmin] 請求資料:', {
-      hasBody: !!req.body,
-      username: req.body?.username,
-      name: req.body?.name,
-      email: req.body?.email,
-      role: req.body?.role,
-      hasPassword: !!req.body?.password,
-      passwordLength: req.body?.password?.length || 0,
-      userAgent: req.headers['user-agent'],
-      ip: req.ip || req.connection.remoteAddress
-    })
-    
-    try {
-      const createData: AdminCreateRequest = req.body
+    const createData: AdminCreateRequest = req.body
 
-      console.log('⚡ [AdminController.createAdmin] 呼叫 AdminService.createAdmin')
-      const result = await this.adminService.createAdmin(createData)
-      console.log('✅ [AdminController.createAdmin] AdminService.createAdmin 執行成功')
+    const result = await this.adminService.createAdmin(createData)
 
-      res.status(201).json(handleSuccess(result, MESSAGES.AUTH.ADMIN_CREATED_SUCCESS))
-      console.log('🎯 [AdminController.createAdmin] 回應已發送')
-    } catch (error: any) {
-      console.log('💥 [AdminController.createAdmin] 建立過程發生錯誤:', {
-        name: error?.name,
-        message: error?.message,
-        code: error?.code,
-        status: error?.status
-      })
-      throw error // 重新拋出錯誤，讓 handleErrorAsync 處理
-    }
+    res.status(201).json(handleSuccess(result, MESSAGES.AUTH.ADMIN_CREATED_SUCCESS))
   })
 
   /**
