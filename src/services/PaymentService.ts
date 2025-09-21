@@ -104,7 +104,6 @@ export class PaymentService {
       ReturnURL: `${process.env.API_BASE_URL || 'http://localhost:3000'}/api/payments/ecpay/callback`,
       ClientBackURL: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment/result`,
       ChoosePayment: this.getChoosePayment(order.purchase_way),
-      OrderResultURL: `${process.env.API_BASE_URL || 'http://localhost:3000'}/api/payments/ecpay/callback`
     }
 
     // 使用官方 SDK 生成付款表單
