@@ -9,15 +9,22 @@ export class EcpayHelper {
   /**
    * 生成綠界 CheckMacValue
    * @param params 參數對象
-   * @returns MD5 雜湊值
+   * @returns SHA256 雜湊值
    */
   static generateCheckMacValue(params: Record<string, any>): string {
     const hashKey = process.env.ECPAY_HASH_KEY!
     const hashIV = process.env.ECPAY_HASH_IV!
 
-    // 1. 移除 CheckMacValue 參數（如果存在）
+    // 1. 移除 CheckMacValue 參數（如果存在）和空值參數
     const filteredParams = { ...params }
     delete filteredParams.CheckMacValue
+    
+    // 移除空字串參數
+    Object.keys(filteredParams).forEach(key => {
+      if (filteredParams[key] === '' || filteredParams[key] === null || filteredParams[key] === undefined) {
+        delete filteredParams[key]
+      }
+    })
 
     // 2. 按照 key 的字母順序排序
     const sortedKeys = Object.keys(filteredParams).sort()
@@ -40,11 +47,11 @@ export class EcpayHelper {
     // 6. 轉小寫
     const lowerCaseString = encodedString.toLowerCase()
 
-    // 7. MD5 雜湊
-    const md5Hash = crypto.createHash('md5').update(lowerCaseString).digest('hex')
+    // 7. SHA256 加密 (新版 ECPay 使用 SHA256)
+    const hash = crypto.createHash('sha256').update(lowerCaseString).digest('hex')
 
     // 8. 轉大寫
-    return md5Hash.toUpperCase()
+    return hash.toUpperCase()
   }
 
   /**
