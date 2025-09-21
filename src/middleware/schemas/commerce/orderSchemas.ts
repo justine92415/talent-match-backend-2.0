@@ -94,24 +94,3 @@ export const orderIdParamSchema = Joi.object({
       'any.required': '訂單 ID 為必填參數'
     })
 })
-
-// === 付款請求驗證 ===
-export const processPaymentBodySchema = Joi.object({
-  purchase_way: Joi.string()
-    .valid('line_pay', 'credit_card', 'bank_transfer')
-    .required()
-    .messages({
-      'string.empty': '付款方式不可為空',
-      'any.only': '付款方式必須是 line_pay, credit_card 或 bank_transfer 其中之一',
-      'any.required': '付款方式為必填欄位'
-    }),
-  amount: Joi.number()
-    .positive()
-    .precision(2)
-    .required()
-    .messages({
-      'number.base': '付款金額必須是數字',
-      'number.positive': '付款金額必須大於 0',
-      'any.required': '付款金額為必填欄位'
-    })
-})

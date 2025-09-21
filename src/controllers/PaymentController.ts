@@ -109,31 +109,6 @@ export class PaymentController {
       res.redirect(`${frontendUrl}/payment/failed?orderNo=${merchantTradeNo}&error=${req.query.RtnMsg || '付款失敗'}`)
     }
   })
-
-  /**
-   * POST /orders/:orderId/payment/check - 手動檢查付款狀態 (開發階段用)
-   */
-  checkPaymentManually = handleErrorAsync(async (req: Request, res: Response) => {
-    const orderId = parseInt(req.params.orderId)
-    const userId = req.user!.userId
-
-    if (!orderId || orderId <= 0) {
-      throw new BusinessError(
-        ERROR_CODES.FIELD_INVALID_TYPE,
-        '訂單 ID 格式錯誤',
-        400
-      )
-    }
-
-    // 這個方法在開發階段可以用來手動檢查付款狀態
-    // 實際上綠界會自動回調，這裡主要用於測試
-    const paymentStatus = await paymentService.getPaymentStatus(orderId, userId)
-
-    res.status(200).json(handleSuccess({
-      message: '這是手動檢查功能，實際付款狀態以綠界回調為準',
-      ...paymentStatus
-    }, '手動檢查完成'))
-  })
 }
 
 // 匯出控制器實例

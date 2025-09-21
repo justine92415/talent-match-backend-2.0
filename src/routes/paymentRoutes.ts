@@ -144,64 +144,6 @@ router.get('/orders/:orderId/payment/status', authenticateToken, paymentControll
 
 /**
  * @swagger
- * /api/orders/{orderId}/payment/check:
- *   post:
- *     tags:
- *       - Payment
- *     summary: 手動檢查付款狀態 (開發用)
- *     description: |
- *       手動檢查訂單付款狀態，主要用於開發階段測試。
- *       
- *       **注意**：正常情況下綠界會自動回調更新付款狀態，
- *       此 API 僅用於開發測試和異常狀況的手動檢查。
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - name: orderId
- *         in: path
- *         required: true
- *         description: 訂單 ID
- *         schema:
- *           type: integer
- *           minimum: 1
- *           example: 1
- *     responses:
- *       200:
- *         description: 手動檢查完成
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/PaymentStatusSuccessResponse'
- *       400:
- *         description: 請求參數錯誤
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/PaymentValidationErrorResponse'
- *       401:
- *         description: 未授權 - Token 無效或過期
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
- *       404:
- *         description: 訂單不存在
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/NotFoundErrorResponse'
- *       500:
- *         description: 伺服器內部錯誤
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ServerErrorResponse'
- */
-// 手動檢查付款狀態 (開發用)
-router.post('/orders/:orderId/payment/check', authenticateToken, paymentController.checkPaymentManually)
-
-/**
- * @swagger
  * /api/payments/ecpay/callback:
  *   post:
  *     tags:

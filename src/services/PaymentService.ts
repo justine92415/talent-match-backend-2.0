@@ -21,13 +21,6 @@ export interface PaymentUrlResponse {
   html_form?: string  // 官方 SDK 生成的 HTML 表單
 }
 
-export interface PaymentUrlResponse {
-  payment_url: string
-  form_data: Record<string, string>
-  merchant_trade_no: string
-  total_amount: number
-}
-
 export interface EcpayCallbackData {
   MerchantID: string
   MerchantTradeNo: string
@@ -124,9 +117,7 @@ export class PaymentService {
     })
 
     return {
-      payment_url: process.env.NODE_ENV === 'production' 
-        ? 'https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5'
-        : 'https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5',
+      payment_url: 'https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5', // 使用測試環境
       form_data: paymentParams,
       merchant_trade_no: merchantTradeNo,
       total_amount: Number(order.total_amount),
