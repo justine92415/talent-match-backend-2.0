@@ -52,12 +52,16 @@ export enum PaymentStatus {
   PROCESSING = 'processing',
   COMPLETED = 'completed',
   FAILED = 'failed',
+  EXPIRED = 'expired',
   REFUNDED = 'refunded'
 }
 
 export enum PurchaseWay {
+  ALL = 'all',
   LINE_PAY = 'line_pay',
-  CREDIT_CARD = 'credit_card'
+  CREDIT_CARD = 'credit_card',
+  ATM = 'atm',
+  CVS = 'cvs'
 }
 
 export enum EarningStatus {
