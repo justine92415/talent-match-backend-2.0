@@ -131,17 +131,23 @@ export class PaymentService {
    */
   async handlePaymentCallback(callbackData: EcpayCallbackData): Promise<void> {
     try {
-      // 使用 EcpayHelper 驗證回調資料
-      const isValid = EcpayHelper.verifyCheckMacValue(callbackData)
+      // 使用綠界官方 SDK 驗證回調資料
+      const data = { ...callbackData } as any
+      delete data.CheckMacValue
       
-      if (!isValid) {
-        console.warn('綠界回調驗證失敗，但仍會處理訂單更新:', {
+      const checkValue = this.ecpay.payment_client.helper.gen_chk_mac_value(data)
+      
+      if (callbackData.CheckMacValue !== checkValue) {
+        console.error('綠界回調驗證失敗:', {
           merchant_trade_no: callbackData.MerchantTradeNo,
-          generated_check_mac: EcpayHelper.generateCheckMacValue(callbackData),
+          generated_check_mac: checkValue,
           received_check_mac: callbackData.CheckMacValue
         })
-        // 注意：在測試環境中，驗證可能會失敗，但我們仍然處理回調
-        // 在正式環境中，應該更嚴格地處理驗證失敗的情況
+        throw new BusinessError(
+          ERROR_CODES.TOKEN_INVALID,
+          '付款回調驗證失敗',
+          400
+        )
       }
 
       // 查找對應的訂單
