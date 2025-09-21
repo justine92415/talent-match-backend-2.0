@@ -6,7 +6,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { orderService } from '@services/index'
 import { ERROR_CODES, MESSAGES } from '@constants/index'
-import { OrderStatus, PaymentStatus } from '@entities/enums'
+import { PaymentStatus } from '@entities/enums'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 import { ValidationError, BusinessError } from '@/utils/errors'
 
@@ -67,7 +67,7 @@ export class OrderController {
     // 呼叫服務層
     const orderList = await orderService.getOrderList(
       userId, 
-      status as OrderStatus | undefined, 
+      status as PaymentStatus | undefined, 
       Number(page), 
       Number(per_page)
     )
@@ -99,7 +99,7 @@ export class OrderController {
 
     res.status(200).json(handleSuccess({
       id: updatedOrder.id,
-      status: updatedOrder.status
+      payment_status: updatedOrder.payment_status
     }, MESSAGES.ORDER.CANCELLED))
   })
 

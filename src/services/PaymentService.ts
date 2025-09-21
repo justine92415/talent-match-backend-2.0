@@ -6,6 +6,8 @@
 import { Repository } from 'typeorm'
 import { dataSource } from '@db/data-source'
 import { Order } from '@entities/Order'
+import { OrderItem } from '@entities/OrderItem'
+import { Course } from '@entities/Course'
 import { PaymentStatus } from '@entities/enums'
 import { BusinessError } from '@utils/errors'
 import { ERROR_CODES, MESSAGES } from '@constants/index'
@@ -46,10 +48,14 @@ export interface EcpayCallbackData {
 
 export class PaymentService {
   private orderRepository: Repository<Order>
+  private orderItemRepository: Repository<OrderItem>
+  private courseRepository: Repository<Course>
   private ecpay: any
 
   constructor() {
     this.orderRepository = dataSource.getRepository(Order)
+    this.orderItemRepository = dataSource.getRepository(OrderItem)
+    this.courseRepository = dataSource.getRepository(Course)
     
     // 初始化綠界 SDK - 強制使用測試環境
     this.ecpay = new ecpay_payment({
@@ -92,6 +98,27 @@ export class PaymentService {
       )
     }
 
+    // 獲取訂單項目和課程資訊
+    const orderItems = await this.orderItemRepository.find({
+      where: { order_id: orderId }
+    })
+
+    if (orderItems.length === 0) {
+      throw new BusinessError(
+        ERROR_CODES.ORDER_NOT_FOUND,
+        '找不到訂單項目',
+        404
+      )
+    }
+
+    // 獲取課程資訊
+    const courseIds = orderItems.map(item => item.course_id)
+    const courses = await this.courseRepository.findByIds(courseIds)
+    const courseMap = new Map(courses.map(course => [course.id, course]))
+
+    // 生成動態的交易描述和商品名稱
+    const { tradeDesc, itemName } = this.generateTradeInfo(orderItems, courseMap)
+
     // 生成商店訂單編號
     const merchantTradeNo = EcpayHelper.generateMerchantTradeNo(orderId)
 
@@ -100,10 +127,10 @@ export class PaymentService {
       MerchantTradeNo: merchantTradeNo,
       MerchantTradeDate: EcpayHelper.formatDateTime(),
       TotalAmount: Math.round(Number(order.total_amount)).toString(),
-      TradeDesc: '線上課程購買',
-      ItemName: '線上課程',
+      TradeDesc: tradeDesc,
+      ItemName: itemName,
       ReturnURL: `${process.env.API_BASE_URL || 'http://localhost:3000'}/api/payments/ecpay/callback`,
-      ClientBackURL: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment/result`,
+      ClientBackURL: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment/${orderId}/result`,
       ChoosePayment: this.getChoosePayment(order.purchase_way),
     }
 
@@ -226,28 +253,6 @@ export class PaymentService {
     }
   }
 
-  /**
-   * 建立綠界表單資料
-   * @param order 訂單資訊
-   * @param merchantTradeNo 商店訂單編號
-   * @returns 表單資料
-   */
-  private buildEcpayFormData(order: Order, merchantTradeNo: string): Record<string, string> {
-    // 這個方法在使用官方 SDK 後已不需要，因為 SDK 會自動處理
-    // 保留是為了相容性，實際上建議直接使用 SDK 的 aio_check_out_all 方法
-    return {}
-  }
-
-  /**
-   * 生成商品名稱
-   * @param order 訂單資訊
-   * @returns 商品名稱字串
-   */
-  private generateItemName(order: Order): string {
-    // 簡化版：直接使用固定名稱
-    // 未來可以根據訂單項目生成更詳細的名稱
-    return '線上課程'
-  }
 
   /**
    * 根據付款方式取得綠界參數
@@ -264,6 +269,63 @@ export class PaymentService {
     }
 
     return paymentMap[purchaseWay] || 'ALL'
+  }
+
+  /**
+   * 生成動態的交易描述和商品名稱
+   * @param orderItems 訂單項目列表
+   * @param courseMap 課程映射表
+   * @returns 交易描述和商品名稱
+   */
+  private generateTradeInfo(orderItems: OrderItem[], courseMap: Map<number, Course>): {
+    tradeDesc: string
+    itemName: string
+  } {
+    if (orderItems.length === 0) {
+      return {
+        tradeDesc: '課程購買',
+        itemName: '線上課程'
+      }
+    }
+
+    // 單一課程的情況
+    if (orderItems.length === 1) {
+      const orderItem = orderItems[0]
+      const course = courseMap.get(orderItem.course_id)
+      
+      if (course) {
+        const tradeDesc = `課程購買：${course.name}`
+        const itemName = `${course.name}${orderItem.quantity > 1 ? ` x${orderItem.quantity}` : ''}`
+        
+        return {
+          tradeDesc: tradeDesc.length > 200 ? tradeDesc.substring(0, 197) + '...' : tradeDesc,
+          itemName: itemName.length > 200 ? itemName.substring(0, 197) + '...' : itemName
+        }
+      }
+    }
+
+    // 多課程的情況
+    const courseNames = orderItems.map(item => {
+      const course = courseMap.get(item.course_id)
+      return course ? course.name : '課程'
+    })
+
+    const totalItems = orderItems.reduce((sum, item) => sum + item.quantity, 0)
+    
+    let tradeDesc = `課程購買 (共${orderItems.length}門課程)`
+    let itemName = courseNames.length <= 2 
+      ? courseNames.join('、')
+      : `${courseNames[0]} 等 ${orderItems.length} 門課程`
+    
+    if (totalItems > orderItems.length) {
+      itemName += ` 共${totalItems}堂`
+    }
+
+    // 確保長度不超過綠界限制 (200字元)
+    return {
+      tradeDesc: tradeDesc.length > 200 ? tradeDesc.substring(0, 197) + '...' : tradeDesc,
+      itemName: itemName.length > 200 ? itemName.substring(0, 197) + '...' : itemName
+    }
   }
 
   /**

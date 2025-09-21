@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm'
-import { OrderStatus, PurchaseWay, PaymentStatus } from './enums'
+import { PurchaseWay, PaymentStatus } from './enums'
 
 @Entity('orders')
 export class Order {
@@ -14,10 +14,6 @@ export class Order {
   /** 購買者ID */
   @Column()
   buyer_id!: number
-
-  /** 訂單狀態 */
-  @Column({ type: 'enum', enum: OrderStatus })
-  status!: OrderStatus
 
   /** 付款方式 */
   @Column({ type: 'enum', enum: PurchaseWay })
