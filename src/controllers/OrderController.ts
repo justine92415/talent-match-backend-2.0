@@ -6,9 +6,9 @@
 import { Request, Response, NextFunction } from 'express'
 import { orderService } from '@services/index'
 import { ERROR_CODES, MESSAGES } from '@constants/index'
-import { OrderStatus } from '@entities/enums'
+import { OrderStatus, PaymentStatus } from '@entities/enums'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
-import { ValidationError } from '@/utils/errors'
+import { ValidationError, BusinessError } from '@/utils/errors'
 
 export class OrderController {
   /**
@@ -119,13 +119,30 @@ export class OrderController {
       )
     }
 
-    // 呼叫服務層處理付款
-    const paymentResult = await orderService.processPayment(orderId, userId, {
-      purchase_way,
-      amount
-    })
+    // 使用 PaymentService 建立付款連結
+    const { paymentService } = await import('@services/PaymentService')
+    
+    // 先驗證訂單
+    const order = await orderService.getOrderWithDetails(orderId, userId)
+    
+    if (order.payment_status !== PaymentStatus.PENDING) {
+      throw new BusinessError(
+        ERROR_CODES.FIELD_INVALID_TYPE,
+        '訂單已付款或無效',
+        400
+      )
+    }
 
-    res.status(200).json(handleSuccess(paymentResult, MESSAGES.PAYMENT.PROCESSING_SUCCESS))
+    // 建立付款連結
+    const paymentData = await paymentService.createPaymentUrl(orderId)
+
+    res.status(200).json(handleSuccess({
+      payment_url: paymentData.payment_url,
+      form_data: paymentData.form_data,
+      merchant_trade_no: paymentData.merchant_trade_no,
+      total_amount: paymentData.total_amount,
+      html_form: paymentData.html_form
+    }, '付款連結建立成功'))
   })
 }
 

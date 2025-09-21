@@ -18,8 +18,7 @@ import { createSchemasMiddleware } from '@middleware/schemas/core'
 import { 
   createOrderBodySchema,
   getOrderListQuerySchema,
-  orderIdParamSchema,
-  processPaymentBodySchema 
+  orderIdParamSchema
 } from '@middleware/schemas/commerce/orderSchemas'
 
 const router = Router()
@@ -164,8 +163,7 @@ router.put('/:orderId/cancel', authenticateToken, createSchemasMiddleware({ para
 router.post('/:orderId/cancel', authenticateToken, createSchemasMiddleware({ params: orderIdParamSchema }), orderController.cancelOrder)
 
 router.post('/:orderId/payment', authenticateToken, createSchemasMiddleware({ 
-  params: orderIdParamSchema, 
-  body: processPaymentBodySchema 
+  params: orderIdParamSchema
 }), orderController.processPayment)
 
 export default router
