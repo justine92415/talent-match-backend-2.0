@@ -47,6 +47,18 @@ export class Order {
   @Column({ type: 'timestamp', nullable: true })
   paid_at!: Date
 
+  /** 綠界商店訂單編號 */
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  merchant_trade_no?: string
+
+  /** 實際付款方式 (綠界回傳) */
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  actual_payment_method?: string
+
+  /** 綠界回傳資料 (簡單 JSON 儲存) */
+  @Column({ type: 'jsonb', nullable: true })
+  payment_response?: object
+
   /** 建立時間 */
   @CreateDateColumn({ type: 'timestamp' })
   created_at!: Date

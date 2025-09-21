@@ -15,6 +15,7 @@ import orderRoutes from '@routes/orderRoutes'
 import purchaseRoutes from '@routes/purchaseRoutes'
 import reservationRoutes from '@routes/reservationRoutes'
 import tagRoutes from '@routes/tagRoutes'
+import paymentRoutes from '@routes/paymentRoutes'
 import { fileUploadRoutes } from './fileUploadRoutes'
 import { uploadRoutes } from './uploadRoutes'
 
@@ -73,5 +74,8 @@ router.use('/files', fileUploadRoutes)
 
 // 掛載使用者頭像上傳路由
 router.use('/upload', uploadRoutes)
+
+// 掛載付款相關路由
+router.use('/', paymentRoutes)
 
 export default router
