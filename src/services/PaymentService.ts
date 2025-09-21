@@ -50,9 +50,9 @@ export class PaymentService {
   constructor() {
     this.orderRepository = dataSource.getRepository(Order)
     
-    // 初始化綠界 SDK - 修正格式
+    // 初始化綠界 SDK - 強制使用測試環境
     this.ecpay = new ecpay_payment({
-      OperationMode: process.env.NODE_ENV === 'production' ? 'Production' : 'Test',
+      OperationMode: 'Test', // 強制使用測試環境
       MercProfile: {
         MerchantID: process.env.ECPAY_MERCHANT_ID || '2000132',
         HashKey: process.env.ECPAY_HASH_KEY || '5294y06JbISpM5x9',
