@@ -33,7 +33,6 @@ export {
   createOrderBodySchema,
   getOrderListQuerySchema,
   orderIdParamSchema,
-  processPaymentBodySchema,
   
   // 購買記錄相關 schemas
   usePurchaseBodySchema,
