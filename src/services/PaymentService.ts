@@ -271,13 +271,14 @@ export class PaymentService {
       }
 
       if (callbackData.RtnCode === '1') {
-        // 付款成功
+        // 付款成功 - 先更新訂單狀態
         updateData.payment_status = PaymentStatus.COMPLETED
         updateData.paid_at = new Date()
-
+        
+        await this.orderRepository.update(order.id, updateData)
         console.log(`訂單 ${order.id} 付款成功`)
 
-        // 付款成功後建立課程購買記錄
+        // 訂單狀態更新後再建立課程購買記錄
         try {
           await purchaseService.createPurchaseFromOrder(order.id)
           console.log(`訂單 ${order.id} 課程購買記錄已建立`)
@@ -288,11 +289,9 @@ export class PaymentService {
       } else {
         // 付款失敗
         updateData.payment_status = PaymentStatus.FAILED
-
+        await this.orderRepository.update(order.id, updateData)
         console.log(`訂單 ${order.id} 付款失敗:`, callbackData.RtnMsg)
       }
-
-      await this.orderRepository.update(order.id, updateData)
 
     } catch (error) {
       console.error('處理付款回調時發生錯誤:', error)
