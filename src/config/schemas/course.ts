@@ -1255,6 +1255,133 @@ export const courseSchemas = {
     ]
   },
 
+  // ==================== 課程可預約時段查詢 API Schema ====================
+
+  // 可預約時段查詢參數 Schema
+  AvailableSlotsQueryParams: {
+    type: 'object',
+    required: ['date'],
+    properties: {
+      date: {
+        type: 'string',
+        pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+        description: '查詢日期 (必填，格式 YYYY-MM-DD)',
+        example: '2025-09-23'
+      }
+    }
+  },
+
+  // 可預約時段資訊 Schema
+  AvailableSlotInfo: {
+    type: 'object',
+    properties: {
+      slot_id: {
+        type: 'integer',
+        description: '時段 ID (預約時使用)',
+        example: 123
+      },
+      start_time: {
+        type: 'string',
+        pattern: '^\\d{2}:\\d{2}$',
+        description: '開始時間 (HH:mm 格式)',
+        example: '09:00'
+      },
+      end_time: {
+        type: 'string',
+        pattern: '^\\d{2}:\\d{2}$',
+        description: '結束時間 (HH:mm 格式)',
+        example: '10:00'
+      }
+    }
+  },
+
+  // 可預約時段成功回應 Schema
+  GetAvailableSlotsSuccessResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        enum: ['success'],
+        description: '回應狀態 (查詢成功固定為 success)',
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        description: '成功訊息',
+        example: '查詢可預約時段成功'
+      },
+      data: {
+        type: 'object',
+        properties: {
+          date: {
+            type: 'string',
+            pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+            description: '查詢日期',
+            example: '2025-09-23'
+          },
+          available_slots: {
+            type: 'array',
+            items: {
+              $ref: '#/components/schemas/AvailableSlotInfo'
+            },
+            description: '該日期可預約的時段列表 (已排除被預約的時段)'
+          }
+        },
+        description: '可預約時段查詢結果'
+      }
+    }
+  },
+
+  // 可預約時段查詢驗證錯誤回應 Schema
+  GetAvailableSlotsValidationErrorResponse: {
+    allOf: [
+      { $ref: '#/components/schemas/ValidationErrorResponse' },
+      {
+        type: 'object',
+        properties: {
+          message: {
+            example: '參數驗證失敗'
+          },
+          errors: {
+            example: {
+              date: ['日期格式不正確，請使用 YYYY-MM-DD 格式']
+            }
+          }
+        }
+      }
+    ]
+  },
+
+  // 可預約時段課程不存在錯誤回應 Schema
+  GetAvailableSlotsNotFoundErrorResponse: {
+    allOf: [
+      { $ref: '#/components/schemas/NotFoundErrorResponse' },
+      {
+        type: 'object',
+        properties: {
+          message: {
+            example: '課程不存在'
+          }
+        }
+      }
+    ]
+  },
+
+  // 可預約時段業務錯誤回應 Schema
+  GetAvailableSlotsBusinessErrorResponse: {
+    allOf: [
+      { $ref: '#/components/schemas/BusinessErrorResponse' },
+      {
+        type: 'object',
+        properties: {
+          message: {
+            example: '課程尚未發布，無法預約'
+          }
+        }
+      }
+    ]
+  },
+
   // ==================== 管理員課程審核相關 Schema ====================
 
   // 課程審核資訊 Schema

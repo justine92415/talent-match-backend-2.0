@@ -13,12 +13,14 @@ import * as fs from 'fs'
 import { dataSource } from '@db/data-source'
 import { Course } from '@entities/Course'
 import { CoursePriceOption } from '@entities/CoursePriceOption'
+import { TeacherAvailableSlot } from '@entities/TeacherAvailableSlot'
+import { Reservation } from '@entities/Reservation'
 import { Teacher } from '@entities/Teacher'
 import { BusinessError } from '@utils/errors'
 import { MESSAGES } from '@constants/Message'
 import { ERROR_CODES } from '@constants/ErrorCode'
-import type { CreateCourseRequest, UpdateCourseRequest, CourseListQuery, CourseBasicInfo, CourseWithPriceOptions, SubmitCourseRequest, ResubmitCourseRequest, ArchiveCourseRequest } from '@models/index'
-import { CourseStatus, ApplicationStatus } from '@entities/enums'
+import type { CreateCourseRequest, UpdateCourseRequest, CourseListQuery, CourseBasicInfo, CourseWithPriceOptions, SubmitCourseRequest, ResubmitCourseRequest, ArchiveCourseRequest, AvailableSlotsResponse } from '@models/index'
+import { CourseStatus, ApplicationStatus, ReservationStatus } from '@entities/enums'
 import { FileUploadService } from './fileUploadService'
 
 // 抽取常數以提高程式碼可維護性
@@ -51,12 +53,16 @@ const PAGINATION_DEFAULTS = {
 export class CourseService {
   private courseRepository: Repository<Course>
   private coursePriceOptionRepository: Repository<CoursePriceOption>
+  private teacherAvailableSlotRepository: Repository<TeacherAvailableSlot>
+  private reservationRepository: Repository<Reservation>
   private teacherRepository: Repository<Teacher>
   private fileUploadService: FileUploadService
 
   constructor() {
     this.courseRepository = dataSource.getRepository(Course)
     this.coursePriceOptionRepository = dataSource.getRepository(CoursePriceOption)
+    this.teacherAvailableSlotRepository = dataSource.getRepository(TeacherAvailableSlot)
+    this.reservationRepository = dataSource.getRepository(Reservation)
     this.teacherRepository = dataSource.getRepository(Teacher)
     this.fileUploadService = new FileUploadService()
   }
@@ -813,6 +819,97 @@ export class CourseService {
     course.updated_at = new Date()
 
     await this.courseRepository.save(course)
+  }
+
+  /**
+   * 查詢課程在特定日期的可預約時段
+   * @param courseId 課程ID
+   * @param date 查詢日期 (YYYY-MM-DD)
+   */
+  async getAvailableSlots(courseId: number, date: string): Promise<AvailableSlotsResponse> {
+    // 1. 驗證課程是否存在
+    const course = await this.courseRepository.findOne({
+      where: { id: courseId },
+      select: ['id', 'teacher_id', 'status']
+    })
+
+    if (!course) {
+      throw new BusinessError(
+        ERROR_CODES.COURSE_NOT_FOUND,
+        MESSAGES.BUSINESS.COURSE_NOT_FOUND,
+        404
+      )
+    }
+
+    // 2. 檢查課程狀態 - 只有已發布的課程可以預約
+    if (course.status !== CourseStatus.PUBLISHED) {
+      throw new BusinessError(
+        ERROR_CODES.UNAUTHORIZED_ACCESS,
+        '課程尚未發布，無法預約',
+        400
+      )
+    }
+
+    // 3. 計算查詢日期對應的星期幾 (0=週日, 1=週一, ..., 6=週六)
+    const targetDate = new Date(date + 'T00:00:00.000Z') // 確保使用 UTC 時區避免時區問題
+    const weekday = targetDate.getDay()
+
+    // 4. 查詢教師在該星期的可預約時段
+    const availableSlots = await this.teacherAvailableSlotRepository.find({
+      where: {
+        teacher_id: course.teacher_id,
+        weekday: weekday,
+        is_active: true
+      },
+      select: ['id', 'start_time', 'end_time'],
+      order: { start_time: 'ASC' }
+    })
+
+    if (availableSlots.length === 0) {
+      return {
+        date,
+        available_slots: []
+      }
+    }
+
+    // 5. 查詢該日期已有的預約記錄
+    const startOfDay = new Date(date + 'T00:00:00.000Z')
+    const endOfDay = new Date(date + 'T23:59:59.999Z')
+
+    const existingReservations = await this.reservationRepository
+      .createQueryBuilder('reservation')
+      .where('reservation.course_id = :courseId', { courseId })
+      .andWhere('reservation.reserve_time >= :startOfDay', { startOfDay })
+      .andWhere('reservation.reserve_time <= :endOfDay', { endOfDay })
+      .andWhere('reservation.student_status = :studentStatus', { studentStatus: ReservationStatus.RESERVED })
+      .andWhere('reservation.teacher_status = :teacherStatus', { teacherStatus: ReservationStatus.RESERVED })
+      .select(['reservation.reserve_time'])
+      .getMany()
+
+    // 6. 建立已預約時段的 Set 以快速查詢
+    const reservedTimeSlots = new Set(
+      existingReservations.map(reservation => {
+        const time = reservation.reserve_time
+        const hours = time.getHours().toString().padStart(2, '0')
+        const minutes = time.getMinutes().toString().padStart(2, '0')
+        return `${hours}:${minutes}`
+      })
+    )
+
+    // 7. 過濾出可預約的時段
+    const availableTimeslots = availableSlots.filter(slot => {
+      return !reservedTimeSlots.has(slot.start_time)
+    })
+
+    // 8. 格式化回應資料
+    return {
+      date,
+      available_slots: availableTimeslots.map(slot => ({
+        slot_id: slot.id,
+        start_time: slot.start_time.substring(0, 5), // HH:mm 格式
+        end_time: slot.end_time.substring(0, 5)       // HH:mm 格式
+      }))
+    }
   }
 }
 
