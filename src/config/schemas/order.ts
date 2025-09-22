@@ -74,12 +74,6 @@ export const orderSchemas = {
               id: { type: 'integer', description: '訂單ID', example: 123 },
               uuid: { type: 'string', description: '訂單UUID', example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' },
               buyer_id: { type: 'integer', description: '購買者用戶ID', example: 456 },
-              status: { 
-                type: 'string', 
-                enum: ['pending', 'confirmed', 'cancelled', 'completed'], 
-                description: '訂單狀態',
-                example: 'pending'
-              },
               purchase_way: { 
                 type: 'string', 
                 enum: ['line_pay', 'credit_card', 'bank_transfer'],
@@ -92,7 +86,7 @@ export const orderSchemas = {
               total_amount: { type: 'number', description: '訂單總金額', example: 2500 },
               payment_status: { 
                 type: 'string', 
-                enum: ['pending', 'paid', 'failed', 'refunded'], 
+                enum: ['pending', 'processing', 'completed', 'failed', 'cancelled', 'expired', 'refunded'], 
                 description: '付款狀態',
                 example: 'pending'
               },
@@ -218,12 +212,6 @@ export const orderSchemas = {
               id: { type: 'integer', description: '訂單ID', example: 123 },
               uuid: { type: 'string', description: '訂單UUID', example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' },
               buyer_id: { type: 'integer', description: '購買者用戶ID', example: 456 },
-              status: { 
-                type: 'string', 
-                enum: ['pending', 'confirmed', 'cancelled', 'completed'], 
-                description: '訂單狀態',
-                example: 'pending'
-              },
               purchase_way: { 
                 type: 'string', 
                 enum: ['line_pay', 'credit_card', 'bank_transfer'],
@@ -236,7 +224,7 @@ export const orderSchemas = {
               total_amount: { type: 'number', description: '訂單總金額', example: 2500 },
               payment_status: { 
                 type: 'string', 
-                enum: ['pending', 'paid', 'failed', 'refunded'], 
+                enum: ['pending', 'processing', 'completed', 'failed', 'cancelled', 'expired', 'refunded'], 
                 description: '付款狀態',
                 example: 'pending'
               },

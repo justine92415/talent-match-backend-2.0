@@ -6,10 +6,13 @@
 import { Repository } from 'typeorm'
 import { dataSource } from '@db/data-source'
 import { Order } from '@entities/Order'
+import { OrderItem } from '@entities/OrderItem'
+import { Course } from '@entities/Course'
 import { PaymentStatus } from '@entities/enums'
 import { BusinessError } from '@utils/errors'
 import { ERROR_CODES, MESSAGES } from '@constants/index'
 import { EcpayHelper } from '@utils/ecpayHelper'
+import { purchaseService } from './PurchaseService'
 
 // 綠界官方 SDK
 const ecpay_payment = require('ecpay_aio_nodejs')
@@ -46,22 +49,45 @@ export interface EcpayCallbackData {
 
 export class PaymentService {
   private orderRepository: Repository<Order>
+  private orderItemRepository: Repository<OrderItem>
+  private courseRepository: Repository<Course>
   private ecpay: any
+  private isProduction: boolean
 
   constructor() {
     this.orderRepository = dataSource.getRepository(Order)
+    this.orderItemRepository = dataSource.getRepository(OrderItem)
+    this.courseRepository = dataSource.getRepository(Course)
     
-    // 初始化綠界 SDK - 強制使用測試環境
-    this.ecpay = new ecpay_payment({
-      OperationMode: 'Test', // 強制使用測試環境
-      MercProfile: {
-        MerchantID: process.env.ECPAY_MERCHANT_ID || '2000132',
-        HashKey: process.env.ECPAY_HASH_KEY || '5294y06JbISpM5x9',
-        HashIV: process.env.ECPAY_HASH_IV || 'v77hoKGq4kWxNNIS'
-      },
-      IgnorePayment: [],
-      IsProjectContractor: false
-    })
+    // 判斷是否為正式環境
+    this.isProduction = process.env.NODE_ENV === 'production'
+    
+    // 只在正式環境初始化綠界 SDK
+    if (this.isProduction) {
+      this.ecpay = new ecpay_payment({
+        OperationMode: 'Production', // 正式環境
+        MercProfile: {
+          MerchantID: process.env.ECPAY_MERCHANT_ID || '2000132',
+          HashKey: process.env.ECPAY_HASH_KEY || '5294y06JbISpM5x9',
+          HashIV: process.env.ECPAY_HASH_IV || 'v77hoKGq4kWxNNIS'
+        },
+        IgnorePayment: [],
+        IsProjectContractor: false
+      })
+    } else {
+      // 開發環境初始化測試用 SDK
+      this.ecpay = new ecpay_payment({
+        OperationMode: 'Test', // 測試環境
+        MercProfile: {
+          MerchantID: process.env.ECPAY_MERCHANT_ID || '2000132',
+          HashKey: process.env.ECPAY_HASH_KEY || '5294y06JbISpM5x9',
+          HashIV: process.env.ECPAY_HASH_IV || 'v77hoKGq4kWxNNIS'
+        },
+        IgnorePayment: [],
+        IsProjectContractor: false
+      })
+      console.log('🔧 開發環境：綠界付款功能已啟用（測試模式）')
+    }
   }
 
   /**
@@ -92,18 +118,71 @@ export class PaymentService {
       )
     }
 
+
+
+    // 獲取訂單項目和課程資訊
+    const orderItems = await this.orderItemRepository.find({
+      where: { order_id: orderId }
+    })
+
+    if (orderItems.length === 0) {
+      throw new BusinessError(
+        ERROR_CODES.ORDER_NOT_FOUND,
+        '找不到訂單項目',
+        404
+      )
+    }
+
+    // 獲取課程資訊
+    const courseIds = orderItems.map(item => item.course_id)
+    const courses = await this.courseRepository.findByIds(courseIds)
+    const courseMap = new Map(courses.map(course => [course.id, course]))
+
+    // 生成動態的交易描述和商品名稱
+    const { tradeDesc, itemName } = this.generateTradeInfo(orderItems, courseMap)
+
     // 生成商店訂單編號
     const merchantTradeNo = EcpayHelper.generateMerchantTradeNo(orderId)
+
+    // 開發環境跳過綠界付款，直接完成訂單
+    if (!this.isProduction) {
+      console.log('🔧 開發環境：跳過綠界付款流程，直接更新訂單為已完成')
+      
+      // 更新訂單，記錄商店訂單編號並設為已完成
+      await this.orderRepository.update(orderId, {
+        merchant_trade_no: merchantTradeNo,
+        payment_status: PaymentStatus.COMPLETED,
+        paid_at: new Date(),
+        actual_payment_method: '開發環境模擬'
+      })
+
+      // 建立課程購買記錄
+      try {
+        await purchaseService.createPurchaseFromOrder(orderId)
+        console.log(`🔧 開發環境：訂單 ${orderId} 課程購買記錄已建立`)
+      } catch (purchaseError) {
+        console.error(`建立課程購買記錄失敗 (訂單 ${orderId}):`, purchaseError)
+      }
+
+      // 返回空的表單，前端可以直接導向成功頁面
+      return {
+        payment_url: '',
+        form_data: {},
+        html_form: '',
+        merchant_trade_no: merchantTradeNo,
+        total_amount: Number(order.total_amount)
+      }
+    }
 
     // 建立綠界付款參數
     const paymentParams = {
       MerchantTradeNo: merchantTradeNo,
       MerchantTradeDate: EcpayHelper.formatDateTime(),
       TotalAmount: Math.round(Number(order.total_amount)).toString(),
-      TradeDesc: '線上課程購買',
-      ItemName: '線上課程',
+      TradeDesc: tradeDesc,
+      ItemName: itemName,
       ReturnURL: `${process.env.API_BASE_URL || 'http://localhost:3000'}/api/payments/ecpay/callback`,
-      ClientBackURL: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment/result`,
+      ClientBackURL: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment/${orderId}/result`,
       ChoosePayment: this.getChoosePayment(order.purchase_way),
     }
 
@@ -131,7 +210,41 @@ export class PaymentService {
    */
   async handlePaymentCallback(callbackData: EcpayCallbackData): Promise<void> {
     try {
-      // 使用綠界官方 SDK 驗證回調資料
+      // 開發環境跳過驗證邏輯，直接處理為付款成功
+      if (!this.isProduction) {
+        console.log('🔧 開發環境：跳過綠界回調驗證')
+        
+        // 查找對應的訂單
+        const order = await this.orderRepository.findOne({
+          where: { merchant_trade_no: callbackData.MerchantTradeNo }
+        })
+
+        if (!order) {
+          console.error('找不到對應的訂單:', callbackData.MerchantTradeNo)
+          return
+        }
+
+        // 開發環境直接設定為付款成功
+        await this.orderRepository.update(order.id, {
+          payment_status: PaymentStatus.COMPLETED,
+          payment_response: { ...callbackData, dev_mode: true },
+          actual_payment_method: '開發環境模擬',
+          paid_at: new Date()
+        })
+
+        // 付款成功後建立課程購買記錄
+        try {
+          await purchaseService.createPurchaseFromOrder(order.id)
+          console.log(`🔧 開發環境：訂單 ${order.id} 課程購買記錄已建立`)
+        } catch (purchaseError) {
+          console.error(`建立課程購買記錄失敗 (訂單 ${order.id}):`, purchaseError)
+        }
+
+        console.log(`🔧 開發環境：訂單 ${order.id} 模擬付款成功`)
+        return
+      }
+
+      // 正式環境：使用綠界官方 SDK 驗證回調資料
       const data = { ...callbackData } as any
       delete data.CheckMacValue
       
@@ -172,6 +285,15 @@ export class PaymentService {
         updateData.paid_at = new Date()
 
         console.log(`訂單 ${order.id} 付款成功`)
+
+        // 付款成功後建立課程購買記錄
+        try {
+          await purchaseService.createPurchaseFromOrder(order.id)
+          console.log(`訂單 ${order.id} 課程購買記錄已建立`)
+        } catch (purchaseError) {
+          console.error(`建立課程購買記錄失敗 (訂單 ${order.id}):`, purchaseError)
+          // 這裡不拋出錯誤，因為付款已經成功，購買記錄可以後續手動修復
+        }
       } else {
         // 付款失敗
         updateData.payment_status = PaymentStatus.FAILED
@@ -226,28 +348,6 @@ export class PaymentService {
     }
   }
 
-  /**
-   * 建立綠界表單資料
-   * @param order 訂單資訊
-   * @param merchantTradeNo 商店訂單編號
-   * @returns 表單資料
-   */
-  private buildEcpayFormData(order: Order, merchantTradeNo: string): Record<string, string> {
-    // 這個方法在使用官方 SDK 後已不需要，因為 SDK 會自動處理
-    // 保留是為了相容性，實際上建議直接使用 SDK 的 aio_check_out_all 方法
-    return {}
-  }
-
-  /**
-   * 生成商品名稱
-   * @param order 訂單資訊
-   * @returns 商品名稱字串
-   */
-  private generateItemName(order: Order): string {
-    // 簡化版：直接使用固定名稱
-    // 未來可以根據訂單項目生成更詳細的名稱
-    return '線上課程'
-  }
 
   /**
    * 根據付款方式取得綠界參數
@@ -264,6 +364,63 @@ export class PaymentService {
     }
 
     return paymentMap[purchaseWay] || 'ALL'
+  }
+
+  /**
+   * 生成動態的交易描述和商品名稱
+   * @param orderItems 訂單項目列表
+   * @param courseMap 課程映射表
+   * @returns 交易描述和商品名稱
+   */
+  private generateTradeInfo(orderItems: OrderItem[], courseMap: Map<number, Course>): {
+    tradeDesc: string
+    itemName: string
+  } {
+    if (orderItems.length === 0) {
+      return {
+        tradeDesc: '課程購買',
+        itemName: '線上課程'
+      }
+    }
+
+    // 單一課程的情況
+    if (orderItems.length === 1) {
+      const orderItem = orderItems[0]
+      const course = courseMap.get(orderItem.course_id)
+      
+      if (course) {
+        const tradeDesc = `課程購買：${course.name}`
+        const itemName = `${course.name}${orderItem.quantity > 1 ? ` x${orderItem.quantity}` : ''}`
+        
+        return {
+          tradeDesc: tradeDesc.length > 200 ? tradeDesc.substring(0, 197) + '...' : tradeDesc,
+          itemName: itemName.length > 200 ? itemName.substring(0, 197) + '...' : itemName
+        }
+      }
+    }
+
+    // 多課程的情況
+    const courseNames = orderItems.map(item => {
+      const course = courseMap.get(item.course_id)
+      return course ? course.name : '課程'
+    })
+
+    const totalItems = orderItems.reduce((sum, item) => sum + item.quantity, 0)
+    
+    let tradeDesc = `課程購買 (共${orderItems.length}門課程)`
+    let itemName = courseNames.length <= 2 
+      ? courseNames.join('、')
+      : `${courseNames[0]} 等 ${orderItems.length} 門課程`
+    
+    if (totalItems > orderItems.length) {
+      itemName += ` 共${totalItems}堂`
+    }
+
+    // 確保長度不超過綠界限制 (200字元)
+    return {
+      tradeDesc: tradeDesc.length > 200 ? tradeDesc.substring(0, 197) + '...' : tradeDesc,
+      itemName: itemName.length > 200 ? itemName.substring(0, 197) + '...' : itemName
+    }
   }
 
   /**

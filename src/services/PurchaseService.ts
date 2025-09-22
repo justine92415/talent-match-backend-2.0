@@ -10,17 +10,13 @@ import { UserCoursePurchase } from '@entities/UserCoursePurchase'
 import { Order } from '@entities/Order'
 import { OrderItem } from '@entities/OrderItem'
 import { Course } from '@entities/Course'
+import { CoursePriceOption } from '@entities/CoursePriceOption'
 import { Teacher } from '@entities/Teacher'
 import { User } from '@entities/User'
-import { PaymentStatus, CourseStatus } from '@entities/enums'
-import { BusinessError, ValidationError } from '@utils/errors'
+import { PaymentStatus } from '@entities/enums';
+import { BusinessError } from '@utils/errors';
 import { ERROR_CODES, MESSAGES } from '@constants/index'
-import type { 
-  PurchaseRecord,
-  PurchaseRecordWithDetails,
-  CoursePurchaseDetail,
-  PurchaseResponse
-} from '../types'
+import type { PurchaseRecord, PurchaseRecordWithDetails, CoursePurchaseDetail } from '../types';
 
 /**
  * 購買統計資料介面
@@ -36,20 +32,22 @@ interface PurchaseSummary {
 }
 
 export class PurchaseService {
-  private purchaseRepository: Repository<UserCoursePurchase>
   private orderRepository: Repository<Order>
   private orderItemRepository: Repository<OrderItem>
   private courseRepository: Repository<Course>
+  private coursePriceOptionRepository: Repository<CoursePriceOption>
   private teacherRepository: Repository<Teacher>
   private userRepository: Repository<User>
+  private purchaseRepository: Repository<UserCoursePurchase>
 
   constructor() {
-    this.purchaseRepository = dataSource.getRepository(UserCoursePurchase)
     this.orderRepository = dataSource.getRepository(Order)
     this.orderItemRepository = dataSource.getRepository(OrderItem)
     this.courseRepository = dataSource.getRepository(Course)
+    this.coursePriceOptionRepository = dataSource.getRepository(CoursePriceOption)
     this.teacherRepository = dataSource.getRepository(Teacher)
     this.userRepository = dataSource.getRepository(User)
+    this.purchaseRepository = dataSource.getRepository(UserCoursePurchase)
   }
 
   /**
@@ -72,37 +70,87 @@ export class PurchaseService {
       )
     }
 
-    // 3. 批次查詢已存在的購買記錄以避免 N+1 問題
-    const courseIds = orderItems.map(item => item.course_id)
+    // 3. 查詢價格方案以取得實際的課程堂數
+    const priceOptionIds = orderItems.map(item => item.price_option_id)
+    const priceOptions = await this.coursePriceOptionRepository.find({
+      where: { id: In(priceOptionIds) }
+    })
+    
+    // 建立價格方案查找 Map
+    const priceOptionMap = new Map<number, CoursePriceOption>()
+    priceOptions.forEach(option => {
+      priceOptionMap.set(option.id, option)
+    })
+
+    // 4. 將同一課程的不同方案合併計算總堂數
+    const courseQuantityMap = new Map<number, number>()
+    orderItems.forEach(item => {
+      const priceOption = priceOptionMap.get(item.price_option_id)
+      if (!priceOption) {
+        throw new BusinessError(
+          ERROR_CODES.ORDER_NOT_FOUND,
+          `找不到價格方案 ID: ${item.price_option_id}`,
+          404
+        )
+      }
+      
+      // 實際堂數 = 價格方案的堂數 * 購買數量
+      const actualQuantity = priceOption.quantity * item.quantity
+      const currentQuantity = courseQuantityMap.get(item.course_id) || 0
+      courseQuantityMap.set(item.course_id, currentQuantity + actualQuantity)
+    })
+
+    // 5. 查詢用戶對這些課程的現有購買記錄（移除 order_id 限制）
+    const courseIds = Array.from(courseQuantityMap.keys())
     const existingPurchases = await this.purchaseRepository.find({
       where: {
         user_id: order.buyer_id,
-        course_id: In(courseIds),
-        order_id: orderId
+        course_id: In(courseIds)
+        // 移除 order_id: orderId 限制，查詢所有該用戶對這些課程的購買記錄
       }
     })
 
-    // 建構已存在購買記錄的快速查找 Map
-    const existingPurchaseMap = new Set(
-      existingPurchases.map(p => `${p.course_id}`)
-    )
+    // 建構現有購買記錄的快速查找 Map
+    const existingPurchaseMap = new Map<number, UserCoursePurchase>()
+    existingPurchases.forEach(purchase => {
+      existingPurchaseMap.set(purchase.course_id, purchase)
+    })
 
-    // 4. 建立購買記錄
+    // 6. 更新或建立購買記錄
     const purchases: PurchaseRecord[] = []
     const queryRunner = dataSource.createQueryRunner()
     await queryRunner.connect()
     await queryRunner.startTransaction()
 
     try {
-      for (const orderItem of orderItems) {
-        // 使用 Map 快速檢查是否已存在購買記錄
-        if (!existingPurchaseMap.has(`${orderItem.course_id}`)) {
+      for (const [courseId, totalQuantity] of courseQuantityMap) {
+        const existingPurchase = existingPurchaseMap.get(courseId)
+        
+        if (existingPurchase) {
+          // 更新現有記錄：累加數量
+          existingPurchase.quantity_total += totalQuantity
+          existingPurchase.updated_at = new Date()
+          
+          const updatedPurchase = await queryRunner.manager.save(existingPurchase)
+          
+          purchases.push({
+            id: updatedPurchase.id,
+            uuid: updatedPurchase.uuid,
+            user_id: updatedPurchase.user_id,
+            course_id: updatedPurchase.course_id,
+            order_id: updatedPurchase.order_id, // 保留原始訂單ID
+            quantity_total: updatedPurchase.quantity_total,
+            quantity_used: updatedPurchase.quantity_used,
+            created_at: updatedPurchase.created_at
+          })
+        } else {
+          // 建立新記錄
           const purchase = queryRunner.manager.create(UserCoursePurchase, {
             uuid: uuidv4(),
             user_id: order.buyer_id,
-            course_id: orderItem.course_id,
+            course_id: courseId,
             order_id: orderId,
-            quantity_total: orderItem.quantity,
+            quantity_total: totalQuantity,
             quantity_used: 0
           })
 
