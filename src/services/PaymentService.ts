@@ -59,33 +59,24 @@ export class PaymentService {
     this.orderItemRepository = dataSource.getRepository(OrderItem)
     this.courseRepository = dataSource.getRepository(Course)
     
-    // 判斷是否為正式環境
+    // 判斷是否為正式環境（決定是否跳過綠界付款流程）
     this.isProduction = process.env.NODE_ENV === 'production'
     
-    // 只在正式環境初始化綠界 SDK
+    // 初始化綠界 SDK - 統一使用測試環境
+    this.ecpay = new ecpay_payment({
+      OperationMode: 'Test', // 統一使用測試環境
+      MercProfile: {
+        MerchantID: process.env.ECPAY_MERCHANT_ID || '2000132',
+        HashKey: process.env.ECPAY_HASH_KEY || '5294y06JbISpM5x9',
+        HashIV: process.env.ECPAY_HASH_IV || 'v77hoKGq4kWxNNIS'
+      },
+      IgnorePayment: [],
+      IsProjectContractor: false
+    })
+    
     if (this.isProduction) {
-      this.ecpay = new ecpay_payment({
-        OperationMode: 'Production', // 正式環境
-        MercProfile: {
-          MerchantID: process.env.ECPAY_MERCHANT_ID || '2000132',
-          HashKey: process.env.ECPAY_HASH_KEY || '5294y06JbISpM5x9',
-          HashIV: process.env.ECPAY_HASH_IV || 'v77hoKGq4kWxNNIS'
-        },
-        IgnorePayment: [],
-        IsProjectContractor: false
-      })
+      console.log('🔧 正式環境：綠界付款功能已啟用（測試模式）')
     } else {
-      // 開發環境初始化測試用 SDK
-      this.ecpay = new ecpay_payment({
-        OperationMode: 'Test', // 測試環境
-        MercProfile: {
-          MerchantID: process.env.ECPAY_MERCHANT_ID || '2000132',
-          HashKey: process.env.ECPAY_HASH_KEY || '5294y06JbISpM5x9',
-          HashIV: process.env.ECPAY_HASH_IV || 'v77hoKGq4kWxNNIS'
-        },
-        IgnorePayment: [],
-        IsProjectContractor: false
-      })
       console.log('🔧 開發環境：綠界付款功能已啟用（測試模式）')
     }
   }
