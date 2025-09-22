@@ -48,12 +48,13 @@ export enum OrderStatus {
 }
 
 export enum PaymentStatus {
-  PENDING = 'pending',
-  PROCESSING = 'processing',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  EXPIRED = 'expired',
-  REFUNDED = 'refunded'
+  PENDING = 'pending',        // 待付款 (對應原 OrderStatus.PENDING)
+  PROCESSING = 'processing',  // 付款處理中
+  COMPLETED = 'completed',    // 付款完成 (對應原 OrderStatus.PAID)  
+  FAILED = 'failed',          // 付款失敗
+  CANCELLED = 'cancelled',    // 訂單取消 (對應原 OrderStatus.CANCELLED)
+  EXPIRED = 'expired',        // 付款過期
+  REFUNDED = 'refunded'       // 已退款
 }
 
 export enum PurchaseWay {

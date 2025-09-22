@@ -13,7 +13,7 @@ import { Course } from '@entities/Course'
 import { CoursePriceOption } from '@entities/CoursePriceOption'
 import { Teacher } from '@entities/Teacher'
 import { User } from '@entities/User'
-import { OrderStatus, PaymentStatus, CourseStatus, PurchaseWay } from '@entities/enums'
+import { PaymentStatus, CourseStatus, PurchaseWay } from '@entities/enums'
 import { BusinessError, ValidationError } from '@utils/errors'
 import { ERROR_CODES, MESSAGES } from '@constants/index'
 import type { 
@@ -68,7 +68,6 @@ export class OrderService {
       const order = orderQueryRunner.manager.create(Order, {
         uuid: uuidv4(),
         buyer_id: userId,
-        status: OrderStatus.PENDING,
         purchase_way: orderData.purchase_way,
         buyer_name: orderData.buyer_name,
         buyer_phone: orderData.buyer_phone,
@@ -161,7 +160,6 @@ export class OrderService {
       id: order.id,
       uuid: order.uuid,
       buyer_id: order.buyer_id,
-      status: order.status,
       purchase_way: order.purchase_way,
       buyer_name: order.buyer_name,
       buyer_phone: order.buyer_phone,
@@ -179,7 +177,7 @@ export class OrderService {
    */
   async getOrderList(
     userId: number,
-    status?: OrderStatus,
+    status?: PaymentStatus,
     page: number = 1,
     per_page: number = 10
   ): Promise<OrderPaginatedResponse> {
@@ -189,7 +187,7 @@ export class OrderService {
       .where('order.buyer_id = :userId', { userId })
 
     if (status) {
-      queryBuilder.andWhere('order.status = :status', { status })
+      queryBuilder.andWhere('order.payment_status = :status', { status })
     }
 
     queryBuilder
@@ -251,7 +249,6 @@ export class OrderService {
       return {
         id: order.id,
         uuid: order.uuid,
-        status: order.status,
         purchase_way: order.purchase_way,
         buyer_name: order.buyer_name,
         total_amount: order.total_amount,
@@ -301,7 +298,7 @@ export class OrderService {
     }
 
     // 檢查訂單狀態
-    if (order.status === OrderStatus.CANCELLED) {
+    if (order.payment_status === PaymentStatus.CANCELLED) {
       throw new BusinessError(
         ERROR_CODES.ORDER_ALREADY_CANCELLED,
         MESSAGES.BUSINESS.ORDER_ALREADY_CANCELLED,
@@ -309,7 +306,7 @@ export class OrderService {
       )
     }
 
-    if (order.status !== OrderStatus.PENDING) {
+    if (order.payment_status !== PaymentStatus.PENDING) {
       throw new BusinessError(
         ERROR_CODES.ORDER_STATUS_INVALID_FOR_CANCEL,
         MESSAGES.BUSINESS.ORDER_STATUS_INVALID_FOR_CANCEL,
@@ -318,7 +315,7 @@ export class OrderService {
     }
 
     await this.orderRepository.update(orderId, {
-      status: OrderStatus.CANCELLED
+      payment_status: PaymentStatus.CANCELLED
     })
   }
 

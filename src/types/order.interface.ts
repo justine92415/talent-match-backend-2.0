@@ -1,6 +1,6 @@
 import { Order } from '@entities/Order'
 import { OrderItem } from '@entities/OrderItem'
-import { OrderStatus, PurchaseWay, PaymentStatus } from '@entities/enums'
+import { PurchaseWay, PaymentStatus } from '@entities/enums'
 
 /**
  * 訂單建立請求型別
@@ -52,7 +52,6 @@ export interface OrderWithDetails {
   id: number
   uuid: string
   buyer_id: number
-  status: OrderStatus
   purchase_way: PurchaseWay
   buyer_name: string
   buyer_phone: string
@@ -78,7 +77,6 @@ export interface OrderCreateResponse {
 export interface OrderListItem {
   id: number
   uuid: string
-  status: OrderStatus
   purchase_way: PurchaseWay
   buyer_name: string
   total_amount: number
@@ -96,7 +94,7 @@ export interface OrderListItem {
  * 訂單查詢參數型別
  */
 export interface OrderQueryParams {
-  status?: OrderStatus
+  status?: PaymentStatus
   page?: number
   per_page?: number
 }
@@ -121,7 +119,7 @@ export interface OrderCancelResponse {
   order: {
     id: number
     uuid: string
-    status: OrderStatus
+    payment_status: PaymentStatus
     updated_at: Date
   }
 }
@@ -130,6 +128,6 @@ export interface OrderCancelResponse {
  * 基於實體的工具型別
  */
 export type OrderEntity = Omit<Order, 'created_at' | 'updated_at' | 'deleted_at'>
-export type OrderCreate = Omit<Order, 'id' | 'uuid' | 'status' | 'payment_status' | 'paid_at' | 'created_at' | 'updated_at' | 'deleted_at'>
+export type OrderCreate = Omit<Order, 'id' | 'uuid' | 'payment_status' | 'paid_at' | 'created_at' | 'updated_at' | 'deleted_at'>
 export type OrderItemEntity = Omit<OrderItem, 'created_at' | 'updated_at'>
 export type OrderItemCreate = Omit<OrderItem, 'id' | 'uuid' | 'created_at' | 'updated_at'>

@@ -5,7 +5,7 @@
 import { dataSource } from '@db/data-source'
 import { Order } from '@entities/Order'
 import { OrderItem } from '@entities/OrderItem'
-import { OrderStatus, PaymentStatus, PurchaseWay } from '@entities/enums'
+import { PaymentStatus, PurchaseWay } from '@entities/enums'
 
 /**
  * 訂單測試 Helper 函式
@@ -23,7 +23,6 @@ export class OrderTestHelpers {
       buyer_name: '測試購買者',
       buyer_phone: '0987654321',
       buyer_email: 'buyer@example.com',
-      status: OrderStatus.PENDING,
       payment_status: PaymentStatus.PENDING,
       total_amount: 1000,
       ...overrides
@@ -85,19 +84,16 @@ export class OrderTestHelpers {
    */
   static async createOrderVariations(buyerId: number) {
     const pending = await this.createOrder(buyerId, {
-      status: OrderStatus.PENDING,
       payment_status: PaymentStatus.PENDING
     })
 
     const paid = await this.createOrder(buyerId, {
-      status: OrderStatus.PAID,
       payment_status: PaymentStatus.COMPLETED,
       paid_at: new Date()
     })
 
     const cancelled = await this.createOrder(buyerId, {
-      status: OrderStatus.CANCELLED,
-      payment_status: PaymentStatus.PENDING
+      payment_status: PaymentStatus.CANCELLED
     })
 
     return { pending, paid, cancelled }
@@ -108,14 +104,12 @@ export class OrderTestHelpers {
    */
   static async updateOrderStatus(
     orderId: number, 
-    status: OrderStatus, 
-    paymentStatus?: PaymentStatus, 
+    paymentStatus: PaymentStatus, 
     paidAt?: Date
   ) {
     const orderRepository = dataSource.getRepository(Order)
-    const updateData: any = { status }
+    const updateData: any = { payment_status: paymentStatus }
     
-    if (paymentStatus) updateData.payment_status = paymentStatus
     if (paidAt) updateData.paid_at = paidAt
     
     await orderRepository.update(orderId, updateData)

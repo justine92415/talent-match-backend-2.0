@@ -1,4 +1,4 @@
-import { PaymentStatus, OrderStatus } from '@entities/enums'
+import { PaymentStatus } from '@entities/enums'
 
 /**
  * 付款建立請求型別
@@ -24,7 +24,6 @@ export interface PaymentCreateResponse {
   order: {
     id: number
     uuid: string
-    status: OrderStatus
     payment_status: PaymentStatus
     paid_at: Date
   }
