@@ -17,6 +17,7 @@ import { TeacherAvailableSlot } from '@entities/TeacherAvailableSlot'
 import { Reservation } from '@entities/Reservation'
 import { Teacher } from '@entities/Teacher'
 import { BusinessError } from '@utils/errors'
+import { TimeUtils } from '@utils/TimeUtils'
 import { MESSAGES } from '@constants/Message'
 import { ERROR_CODES } from '@constants/ErrorCode'
 import type { CreateCourseRequest, UpdateCourseRequest, CourseListQuery, CourseBasicInfo, CourseWithPriceOptions, SubmitCourseRequest, ResubmitCourseRequest, ArchiveCourseRequest, AvailableSlotsResponse } from '@models/index'
@@ -850,9 +851,8 @@ export class CourseService {
       )
     }
 
-    // 3. 計算查詢日期對應的星期幾 (0=週日, 1=週一, ..., 6=週六)
-    const targetDate = new Date(date + 'T00:00:00.000Z') // 確保使用 UTC 時區避免時區問題
-    const weekday = targetDate.getDay()
+    // 3. 計算查詢日期對應的星期幾 (使用 UTC 避免時區問題)
+    const weekday = TimeUtils.getUTCWeekday(date)
 
     // 4. 查詢教師在該星期的可預約時段
     const availableSlots = await this.teacherAvailableSlotRepository.find({
@@ -889,16 +889,16 @@ export class CourseService {
     // 6. 建立已預約時段的 Set 以快速查詢
     const reservedTimeSlots = new Set(
       existingReservations.map(reservation => {
-        const time = reservation.reserve_time
-        const hours = time.getHours().toString().padStart(2, '0')
-        const minutes = time.getMinutes().toString().padStart(2, '0')
-        return `${hours}:${minutes}:00` // 修正：加上秒數以符合 time 格式
+        // 使用統一的時間工具提取時間字串
+        return TimeUtils.extractUTCTimeString(reservation.reserve_time)
       })
     )
 
     // 7. 過濾出可預約的時段
     const availableTimeslots = availableSlots.filter(slot => {
-      return !reservedTimeSlots.has(slot.start_time)
+      // 正規化時間格式進行比較
+      const normalizedSlotTime = TimeUtils.normalizeTimeFormat(slot.start_time)
+      return !reservedTimeSlots.has(normalizedSlotTime)
     })
 
     // 8. 格式化回應資料

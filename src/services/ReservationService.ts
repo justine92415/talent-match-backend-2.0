@@ -20,6 +20,7 @@ import { ReservationStatus } from '@entities/enums'
 import { BusinessError, ValidationError } from '@utils/errors'
 import { ERROR_CODES } from '@constants/ErrorCode'
 import { MESSAGES } from '@constants/Message'
+import { TimeUtils } from '@utils/TimeUtils'
 import type {
   CreateReservationRequest,
   CreateReservationResponse,
@@ -360,12 +361,8 @@ export class ReservationService {
    * 驗證教師在指定時間是否可用
    */
   private async validateTeacherAvailability(teacherId: number, date: string, time: string): Promise<void> {
-    const reserveDate = new Date(date)
-    const weekday = reserveDate.getDay()
-
-    // 解析請求的時間
-    const [requestHour, requestMinute] = time.split(':').map(Number)
-    const requestTime = requestHour * 60 + requestMinute
+    // 使用統一的時間工具計算星期幾
+    const weekday = TimeUtils.getUTCWeekday(date)
 
     // 查找教師該週日的所有可用時段
     const availableSlots = await this.availableSlotRepository.find({
@@ -383,19 +380,12 @@ export class ReservationService {
       )
     }
 
-    // 檢查是否有時段包含請求的時間
-    const matchingSlot = availableSlots.find(slot => {
-      const [startHour, startMinute] = slot.start_time.split(':').map(Number)
-      const [endHour, endMinute] = slot.end_time.split(':').map(Number)
+    // 使用統一的時間比較邏輯檢查是否有匹配的時段
+    const hasMatchingSlot = availableSlots.some(slot => 
+      TimeUtils.isTimeInRange(time, slot.start_time, slot.end_time)
+    )
 
-      const startTime = startHour * 60 + startMinute
-      const endTime = endHour * 60 + endMinute
-
-      // 檢查請求時間是否在此時段範圍內
-      return requestTime >= startTime && requestTime < endTime
-    })
-
-    if (!matchingSlot) {
+    if (!hasMatchingSlot) {
       throw new BusinessError(
         ERROR_CODES.RESERVATION_TEACHER_UNAVAILABLE,
         MESSAGES.BUSINESS.RESERVATION_TEACHER_UNAVAILABLE
@@ -429,13 +419,10 @@ export class ReservationService {
   }
 
   /**
-   * 解析預約日期時間
+   * 解析預約日期時間（使用 UTC 避免時區問題）
    */
   private parseReserveDateTime(date: string, time: string): Date {
-    const [year, month, day] = date.split('-').map(Number)
-    const [hour, minute] = time.split(':').map(Number)
-    
-    return new Date(year, month - 1, day, hour, minute)
+    return TimeUtils.dateTimeToUTC(date, time)
   }
 
   /**
