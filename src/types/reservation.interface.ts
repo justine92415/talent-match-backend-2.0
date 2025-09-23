@@ -84,6 +84,8 @@ export interface ReservationListQuery {
   role?: 'teacher' | 'student'
   /** 狀態篩選 */
   status?: ReservationStatus
+  /** 課程篩選 */
+  course_id?: number
   /** 開始日期 (YYYY-MM-DD) */
   date_from?: string
   /** 結束日期 (YYYY-MM-DD) */

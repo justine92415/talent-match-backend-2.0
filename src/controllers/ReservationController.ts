@@ -72,14 +72,31 @@ export class ReservationController {
       // 從查詢參數取得使用者角色（預設為學生）
       const userRole = req.query.role as 'teacher' | 'student' || 'student'
 
+      // 輔助函數：處理空字串或無效值
+      const parseParam = (value: any): any => {
+        if (value === '' || value === null || value === undefined || value === 'undefined' || value === 'null') {
+          return undefined
+        }
+        return value
+      }
+
+      const parseIntParam = (value: any): number | undefined => {
+        if (value === '' || value === null || value === undefined || value === 'undefined' || value === 'null') {
+          return undefined
+        }
+        const parsed = parseInt(value as string, 10)
+        return isNaN(parsed) ? undefined : parsed
+      }
+
       // 解析查詢參數
       const query: ReservationListQuery = {
         role: req.query.role as 'teacher' | 'student',
-        status: req.query.status as any,
-        date_from: req.query.date_from as string,
-        date_to: req.query.date_to as string,
-        page: req.query.page ? parseInt(req.query.page as string, 10) : 1,
-        per_page: req.query.per_page ? parseInt(req.query.per_page as string, 10) : 10
+        status: parseParam(req.query.status) as any,
+        course_id: parseIntParam(req.query.course_id),
+        date_from: parseParam(req.query.date_from) as string,
+        date_to: parseParam(req.query.date_to) as string,
+        page: parseIntParam(req.query.page) || 1,
+        per_page: parseIntParam(req.query.per_page) || 10
       }
 
       const result = await this.reservationService.getReservations(

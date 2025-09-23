@@ -299,5 +299,140 @@ export const reservationSchemas = {
         }
       }
     ]
+  },
+
+  // === 預約列表相關 Schema ===
+
+  // 分頁資訊 Schema
+  PaginationInfo: {
+    type: 'object',
+    properties: {
+      current_page: {
+        type: 'integer',
+        description: '當前頁數',
+        example: 1
+      },
+      per_page: {
+        type: 'integer',
+        description: '每頁筆數',
+        example: 10
+      },
+      total: {
+        type: 'integer',
+        description: '總記錄數',
+        example: 50
+      },
+      total_pages: {
+        type: 'integer',
+        description: '總頁數',
+        example: 5
+      }
+    }
+  },
+
+  // 預約列表成功回應 Schema
+  ReservationListSuccessResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        description: '回應狀態',
+        enum: ['success'],
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        description: '成功訊息',
+        example: '預約列表查詢成功'
+      },
+      data: {
+        type: 'object',
+        description: '預約列表資料',
+        properties: {
+          reservations: {
+            type: 'array',
+            description: '預約記錄列表',
+            items: {
+              $ref: '#/components/schemas/ReservationDetail'
+            }
+          },
+          pagination: {
+            $ref: '#/components/schemas/PaginationInfo',
+            description: '分頁資訊'
+          }
+        }
+      }
+    }
+  },
+
+  // === 取消預約相關 Schema ===
+
+  // 取消後預約資訊 Schema
+  CancelledReservationInfo: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '預約 ID',
+        example: 1
+      },
+      uuid: {
+        type: 'string',
+        format: 'uuid',
+        description: '預約 UUID',
+        example: '550e8400-e29b-41d4-a716-446655440000'
+      },
+      teacher_status: {
+        type: 'string',
+        enum: ['cancelled'],
+        description: '教師端預約狀態（已取消）',
+        example: 'cancelled'
+      },
+      student_status: {
+        type: 'string',
+        enum: ['cancelled'],
+        description: '學生端預約狀態（已取消）',
+        example: 'cancelled'
+      },
+      updated_at: {
+        type: 'string',
+        format: 'date-time',
+        description: '預約更新時間',
+        example: '2025-09-23T15:30:00.000Z'
+      }
+    }
+  },
+
+  // 取消預約成功回應 Schema
+  CancelReservationSuccessResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        description: '回應狀態',
+        enum: ['success'],
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        description: '成功訊息',
+        example: '預約已取消'
+      },
+      data: {
+        type: 'object',
+        description: '取消預約結果資料',
+        properties: {
+          reservation: {
+            $ref: '#/components/schemas/CancelledReservationInfo',
+            description: '已取消的預約資訊'
+          },
+          refunded_lessons: {
+            type: 'integer',
+            description: '退還的課程堂數',
+            example: 1
+          }
+        }
+      }
+    }
   }
 }

@@ -104,6 +104,7 @@ export class ReservationService {
   ): Promise<ReservationListResponse> {
     const {
       status,
+      course_id,
       date_from,
       date_to,
       page = 1,
@@ -118,6 +119,11 @@ export class ReservationService {
       queryBuilder.where('reservation.student_id = :userId', { userId })
     } else {
       queryBuilder.where('reservation.teacher_id = :userId', { userId })
+    }
+
+    // 課程篩選
+    if (course_id) {
+      queryBuilder.andWhere('reservation.course_id = :courseId', { courseId: course_id })
     }
 
     // 狀態過濾
@@ -514,7 +520,7 @@ export class ReservationService {
     if (hoursUntilReservation < 24) {
       throw new BusinessError(
         ERROR_CODES.RESERVATION_CANCEL_TIME_LIMIT,
-        MESSAGES.RESERVATION.CANCELLED
+        MESSAGES.BUSINESS.RESERVATION_CANCEL_TIME_LIMIT
       )
     }
   }
