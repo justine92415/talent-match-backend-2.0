@@ -1,0 +1,303 @@
+/**
+ * 預約管理相關 Schema
+ * 基於實際 ReservationController 和 ReservationService 實作
+ */
+
+export const reservationSchemas = {
+  // === 請求 Schema ===
+  
+  // 建立預約請求 Schema
+  CreateReservationRequest: {
+    type: 'object',
+    required: ['course_id', 'teacher_id', 'reserve_date', 'reserve_time'],
+    properties: {
+      course_id: {
+        type: 'integer',
+        description: '課程 ID (必填，學生必須已購買此課程)',
+        example: 123
+      },
+      teacher_id: {
+        type: 'integer',
+        description: '教師 ID (必填，必須與課程教師一致)',
+        example: 456
+      },
+      reserve_date: {
+        type: 'string',
+        pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+        description: '預約日期 (必填，格式：YYYY-MM-DD，不能是過去日期)',
+        example: '2025-09-25'
+      },
+      reserve_time: {
+        type: 'string',
+        pattern: '^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$',
+        description: '預約時間 (必填，格式：HH:mm，必須是教師可預約時段)',
+        example: '14:00'
+      }
+    }
+  },
+
+  // === 回應資料 Schema ===
+
+  // 課程基本資訊 Schema (預約中的課程資料)
+  ReservationCourseInfo: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '課程 ID',
+        example: 123
+      },
+      name: {
+        type: 'string',
+        description: '課程名稱',
+        example: 'JavaScript 基礎教學'
+      },
+      teacher: {
+        type: 'object',
+        description: '授課教師資訊',
+        properties: {
+          user: {
+            type: 'object',
+            description: '教師使用者資料',
+            properties: {
+              nick_name: {
+                type: 'string',
+                description: '教師暱稱',
+                example: '張教授'
+              },
+              avatar_image: {
+                type: 'string',
+                nullable: true,
+                description: '教師頭像 URL',
+                example: 'https://example.com/avatar.jpg'
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  // 參與者資訊 Schema
+  ReservationParticipantInfo: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '參與者 ID',
+        example: 789
+      },
+      nick_name: {
+        type: 'string',
+        description: '參與者暱稱',
+        example: '學生小明'
+      },
+      role: {
+        type: 'string',
+        enum: ['student', 'teacher'],
+        description: '參與者角色',
+        example: 'student'
+      },
+      avatar_image: {
+        type: 'string',
+        nullable: true,
+        description: '參與者頭像 URL',
+        example: 'https://example.com/student-avatar.jpg'
+      }
+    }
+  },
+
+  // 預約詳細資訊 Schema
+  ReservationDetail: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '預約 ID',
+        example: 1
+      },
+      uuid: {
+        type: 'string',
+        format: 'uuid',
+        description: '預約 UUID',
+        example: '550e8400-e29b-41d4-a716-446655440000'
+      },
+      course_id: {
+        type: 'integer',
+        description: '課程 ID',
+        example: 123
+      },
+      teacher_id: {
+        type: 'integer',
+        description: '教師 ID',
+        example: 456
+      },
+      student_id: {
+        type: 'integer',
+        description: '學生 ID',
+        example: 789
+      },
+      reserve_time: {
+        type: 'string',
+        format: 'date-time',
+        description: '預約上課時間',
+        example: '2025-09-25T14:00:00.000Z'
+      },
+      teacher_status: {
+        type: 'string',
+        enum: ['reserved', 'completed', 'cancelled'],
+        description: '教師端預約狀態',
+        example: 'reserved'
+      },
+      student_status: {
+        type: 'string',
+        enum: ['reserved', 'completed', 'cancelled'],
+        description: '學生端預約狀態',
+        example: 'reserved'
+      },
+      created_at: {
+        type: 'string',
+        format: 'date-time',
+        description: '預約建立時間',
+        example: '2025-09-23T10:30:00.000Z'
+      },
+      updated_at: {
+        type: 'string',
+        format: 'date-time',
+        description: '預約更新時間',
+        example: '2025-09-23T10:30:00.000Z'
+      },
+      course: {
+        $ref: '#/components/schemas/ReservationCourseInfo',
+        description: '課程詳細資訊 (選擇性提供)'
+      },
+      participant: {
+        $ref: '#/components/schemas/ReservationParticipantInfo',
+        description: '參與者資訊 (根據角色顯示對方資料)'
+      }
+    }
+  },
+
+  // 剩餘堂數資訊 Schema
+  RemainingLessonsInfo: {
+    type: 'object',
+    properties: {
+      total: {
+        type: 'integer',
+        description: '總堂數',
+        example: 10
+      },
+      used: {
+        type: 'integer',
+        description: '已使用堂數',
+        example: 3
+      },
+      remaining: {
+        type: 'integer',
+        description: '剩餘堂數',
+        example: 7
+      }
+    }
+  },
+
+  // === 成功回應 Schema ===
+  
+  // 建立預約成功回應 Schema
+  CreateReservationSuccessResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        description: '回應狀態',
+        enum: ['success'],
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        description: '成功訊息',
+        example: '預約建立成功'
+      },
+      data: {
+        type: 'object',
+        description: '預約建立結果資料',
+        properties: {
+          reservation: {
+            $ref: '#/components/schemas/ReservationDetail'
+          },
+          remaining_lessons: {
+            $ref: '#/components/schemas/RemainingLessonsInfo'
+          }
+        }
+      }
+    }
+  },
+
+  // === 錯誤回應 Schema (使用共用 Schema 並提供特定範例) ===
+  
+  // 預約驗證錯誤回應
+  ReservationValidationErrorResponse: {
+    allOf: [
+      { $ref: '#/components/schemas/ValidationErrorResponse' },
+      {
+        type: 'object',
+        properties: {
+          message: {
+            example: '預約參數驗證失敗'
+          },
+          errors: {
+            example: {
+              course_id: ['課程 ID 為必填欄位'],
+              reserve_date: ['預約日期格式不正確'],
+              reserve_time: ['預約時間格式不正確']
+            }
+          }
+        }
+      }
+    ]
+  },
+
+  // 預約未授權錯誤
+  ReservationUnauthorizedErrorResponse: {
+    allOf: [
+      { $ref: '#/components/schemas/UnauthorizedErrorResponse' },
+      {
+        type: 'object',
+        properties: {
+          message: {
+            example: 'Access token 為必填欄位'
+          }
+        }
+      }
+    ]
+  },
+
+  // 預約業務邏輯錯誤
+  ReservationBusinessErrorResponse: {
+    allOf: [
+      { $ref: '#/components/schemas/BusinessErrorResponse' },
+      {
+        type: 'object',
+        properties: {
+          message: {
+            example: '課程已售完或剩餘堂數不足'
+          }
+        }
+      }
+    ]
+  },
+
+  // 預約資源不存在錯誤
+  ReservationNotFoundErrorResponse: {
+    allOf: [
+      { $ref: '#/components/schemas/NotFoundErrorResponse' },
+      {
+        type: 'object',
+        properties: {
+          message: {
+            example: '課程不存在或已下架'
+          }
+        }
+      }
+    ]
+  }
+}
