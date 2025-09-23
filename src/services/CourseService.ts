@@ -892,7 +892,7 @@ export class CourseService {
         const time = reservation.reserve_time
         const hours = time.getHours().toString().padStart(2, '0')
         const minutes = time.getMinutes().toString().padStart(2, '0')
-        return `${hours}:${minutes}`
+        return `${hours}:${minutes}:00` // 修正：加上秒數以符合 time 格式
       })
     )
 
