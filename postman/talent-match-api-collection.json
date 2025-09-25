@@ -1790,23 +1790,41 @@
                   "});",
                   "",
                   "// 驗證時段格式",
-                  "pm.test('Available slots have correct format', function () {",
+                  "pm.test('Available slots have correct format with status', function () {",
                   "    const jsonData = pm.response.json();",
                   "    if (jsonData.data.available_slots.length > 0) {",
                   "        const slot = jsonData.data.available_slots[0];",
                   "        pm.expect(slot).to.have.property('slot_id');",
                   "        pm.expect(slot).to.have.property('start_time');",
                   "        pm.expect(slot).to.have.property('end_time');",
+                  "        pm.expect(slot).to.have.property('status');",
                   "        pm.expect(slot.slot_id).to.be.a('number');",
                   "        pm.expect(slot.start_time).to.match(/^\\d{2}:\\d{2}$/);",
                   "        pm.expect(slot.end_time).to.match(/^\\d{2}:\\d{2}$/);",
+                  "        pm.expect(slot.status).to.be.oneOf(['available', 'unavailable']);",
                   "    }",
+                  "});",
+                  "",
+                  "// 驗證所有時段都有狀態資訊",
+                  "pm.test('All slots have status information', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    jsonData.data.available_slots.forEach((slot, index) => {",
+                  "        pm.expect(slot.status, `Slot ${index + 1} should have status`).to.be.oneOf(['available', 'unavailable']);",
+                  "    });",
                   "});",
                   "",
                   "// 記錄結果",
                   "const jsonData = pm.response.json();",
                   "console.log('查詢日期:', jsonData.data?.date);",
-                  "console.log('可預約時段數量:', jsonData.data?.available_slots?.length || 0);"
+                  "const slots = jsonData.data?.available_slots || [];",
+                  "console.log('總時段數量:', slots.length);",
+                  "const availableSlots = slots.filter(s => s.status === 'available');",
+                  "const unavailableSlots = slots.filter(s => s.status === 'unavailable');",
+                  "console.log('可預約時段數量:', availableSlots.length);",
+                  "console.log('不可預約時段數量:', unavailableSlots.length);",
+                  "if (slots.length > 0) {",
+                  "    console.log('時段狀態分佈:', slots.map(s => `${s.start_time}-${s.end_time}: ${s.status}`).join(', '));",
+                  "}"
                 ]
               }
             }
@@ -1833,7 +1851,7 @@
                 }
               ]
             },
-            "description": "查詢指定課程在特定日期的可預約時段\n\n**功能說明**：\n- 查詢課程在指定日期的所有可預約時段\n- 自動排除已被預約的時段\n- 只顯示該教師在該星期幾有設定的可預約時段\n- 按時間順序返回結果\n\n**使用情境**：\n- 學生選擇日期後查詢可預約時段\n- 前端日曆組件顯示可選時段\n- 預約流程第一步：時段選擇\n\n**回應說明**：\n- 成功時返回該日期的可預約時段陣列\n- 如果當天沒有可預約時段，available_slots 為空陣列\n- 每個時段包含 slot_id (用於預約), start_time, end_time\n\n**注意事項**：\n- 需要認證才能查詢\n- 只能查詢已發布 (published) 狀態的課程\n- 日期格式必須為 YYYY-MM-DD\n- 查詢結果已排除被其他學生預約的時段"
+            "description": "查詢指定課程在特定日期的所有時段及其狀態\n\n**功能說明**：\n- 查詢課程在指定日期教師設定的所有時段\n- 每個時段都會顯示狀態：available (可預約) 或 unavailable (不可預約)\n- 自動檢查每個時段是否已被預約 (包含 pending, reserved, completed 狀態)\n- 按時間順序返回結果\n\n**使用情境**：\n- 學生選擇日期後查詢該日所有時段狀態\n- 前端日曆組件顯示完整時段列表，根據狀態決定是否可點擊\n- 預約流程第一步：時段選擇與狀態檢查\n\n**回應說明**：\n- 成功時返回該日期的所有時段陣列，每個時段都包含狀態資訊\n- 如果當天教師沒有設定任何時段，available_slots 為空陣列\n- 每個時段包含 slot_id (用於預約), start_time, end_time, status\n- status 只有兩種值：'available' 或 'unavailable'\n\n**注意事項**：\n- 需要認證才能查詢\n- 只能查詢已發布 (published) 狀態的課程\n- 日期格式必須為 YYYY-MM-DD\n- 查詢結果包含所有時段，前端根據 status 決定是否可預約"
           }
         }
       ],

@@ -145,13 +145,13 @@ export const reservationSchemas = {
       },
       teacher_status: {
         type: 'string',
-        enum: ['reserved', 'completed', 'cancelled'],
+        enum: ['pending', 'reserved', 'completed', 'cancelled'],
         description: '教師端預約狀態',
         example: 'reserved'
       },
       student_status: {
         type: 'string',
-        enum: ['reserved', 'completed', 'cancelled'],
+        enum: ['pending', 'reserved', 'completed', 'cancelled'],
         description: '學生端預約狀態',
         example: 'reserved'
       },
@@ -166,6 +166,13 @@ export const reservationSchemas = {
         format: 'date-time',
         description: '預約更新時間',
         example: '2025-09-23T10:30:00.000Z'
+      },
+      response_deadline: {
+        type: 'string',
+        format: 'date-time',
+        nullable: true,
+        description: '教師回應期限（僅限 pending 狀態）',
+        example: '2025-09-24T02:00:00.000Z'
       },
       course: {
         $ref: '#/components/schemas/ReservationCourseInfo',
@@ -202,6 +209,80 @@ export const reservationSchemas = {
 
   // === 成功回應 Schema ===
   
+  // 建立預約回應介面 Schema (對應 CreateReservationResponse interface)
+  CreateReservationResponse: {
+    type: 'object',
+    properties: {
+      reservation: {
+        $ref: '#/components/schemas/ReservationDetail'
+      },
+      remaining_lessons: {
+        $ref: '#/components/schemas/RemainingLessonsInfo'
+      }
+    }
+  },
+
+  // 更新預約狀態回應介面 Schema (對應 UpdateReservationStatusResponse interface)
+  UpdateReservationStatusResponse: {
+    type: 'object',
+    properties: {
+      reservation: {
+        $ref: '#/components/schemas/ReservationDetail'
+      },
+      is_fully_completed: {
+        type: 'boolean',
+        description: '是否完全完成 (雙方都確認完成)',
+        example: false
+      }
+    }
+  },
+
+  // 取消預約回應介面 Schema (對應 CancelReservationResponse interface)
+  CancelReservationResponse: {
+    type: 'object',
+    properties: {
+      reservation: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '預約 ID',
+            example: 1
+          },
+          uuid: {
+            type: 'string',
+            format: 'uuid',
+            description: '預約 UUID',
+            example: '550e8400-e29b-41d4-a716-446655440000'
+          },
+          teacher_status: {
+            type: 'string',
+            enum: ['pending', 'reserved', 'completed', 'cancelled'],
+            description: '教師端預約狀態',
+            example: 'cancelled'
+          },
+          student_status: {
+            type: 'string',
+            enum: ['pending', 'reserved', 'completed', 'cancelled'],
+            description: '學生端預約狀態',
+            example: 'cancelled'
+          },
+          updated_at: {
+            type: 'string',
+            format: 'date-time',
+            description: '預約更新時間',
+            example: '2025-09-23T15:30:00.000Z'
+          }
+        }
+      },
+      refunded_lessons: {
+        type: 'integer',
+        description: '退還的課程堂數',
+        example: 1
+      }
+    }
+  },
+
   // 建立預約成功回應 Schema
   CreateReservationSuccessResponse: {
     type: 'object',
@@ -218,16 +299,7 @@ export const reservationSchemas = {
         example: '預約建立成功'
       },
       data: {
-        type: 'object',
-        description: '預約建立結果資料',
-        properties: {
-          reservation: {
-            $ref: '#/components/schemas/ReservationDetail'
-          },
-          remaining_lessons: {
-            $ref: '#/components/schemas/RemainingLessonsInfo'
-          }
-        }
+        $ref: '#/components/schemas/CreateReservationResponse'
       }
     }
   },
@@ -467,7 +539,7 @@ export const reservationSchemas = {
         example: '預約確認成功'
       },
       data: {
-        $ref: '#/components/schemas/ReservationResponse'
+        $ref: '#/components/schemas/ReservationDetail'
       }
     }
   },

@@ -17,6 +17,7 @@ export interface AvailableSlot {
   slot_id: number
   start_time: string
   end_time: string
+  status: 'available' | 'unavailable'
 }
 
 /** 查詢可預約時段的回應 */

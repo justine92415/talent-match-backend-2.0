@@ -872,7 +872,7 @@ export class CourseService {
       }
     }
 
-    // 5. 查詢該日期已有的預約記錄
+    // 5. 查詢該日期已有的預約記錄（包含所有狀態，除了 cancelled）
     const startOfDay = new Date(date + 'T00:00:00.000Z')
     const endOfDay = new Date(date + 'T23:59:59.999Z')
 
@@ -881,8 +881,10 @@ export class CourseService {
       .where('reservation.course_id = :courseId', { courseId })
       .andWhere('reservation.reserve_time >= :startOfDay', { startOfDay })
       .andWhere('reservation.reserve_time <= :endOfDay', { endOfDay })
-      .andWhere('reservation.student_status = :studentStatus', { studentStatus: ReservationStatus.RESERVED })
-      .andWhere('reservation.teacher_status = :teacherStatus', { teacherStatus: ReservationStatus.RESERVED })
+      .andWhere(
+        '(reservation.teacher_status IN (:...statuses) OR reservation.student_status IN (:...statuses))', 
+        { statuses: [ReservationStatus.PENDING, ReservationStatus.RESERVED, ReservationStatus.COMPLETED] }
+      )
       .select(['reservation.reserve_time'])
       .getMany()
 
@@ -894,21 +896,24 @@ export class CourseService {
       })
     )
 
-    // 7. 過濾出可預約的時段
-    const availableTimeslots = availableSlots.filter(slot => {
+    // 7. 回傳所有時段並標記狀態
+    const allSlots = availableSlots.map(slot => {
       // 正規化時間格式進行比較
       const normalizedSlotTime = TimeUtils.normalizeTimeFormat(slot.start_time)
-      return !reservedTimeSlots.has(normalizedSlotTime)
+      const isUnavailable = reservedTimeSlots.has(normalizedSlotTime)
+
+      return {
+        slot_id: slot.id,
+        start_time: slot.start_time.substring(0, 5), // HH:mm 格式
+        end_time: slot.end_time.substring(0, 5),       // HH:mm 格式
+        status: isUnavailable ? 'unavailable' as const : 'available' as const
+      }
     })
 
     // 8. 格式化回應資料
     return {
       date,
-      available_slots: availableTimeslots.map(slot => ({
-        slot_id: slot.id,
-        start_time: slot.start_time.substring(0, 5), // HH:mm 格式
-        end_time: slot.end_time.substring(0, 5)       // HH:mm 格式
-      }))
+      available_slots: allSlots
     }
   }
 }

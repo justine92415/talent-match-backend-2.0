@@ -1291,6 +1291,12 @@ export const courseSchemas = {
         pattern: '^\\d{2}:\\d{2}$',
         description: '結束時間 (HH:mm 格式)',
         example: '10:00'
+      },
+      status: {
+        type: 'string',
+        enum: ['available', 'unavailable'],
+        description: '時段狀態 (available: 可預約, unavailable: 不可預約)',
+        example: 'available'
       }
     }
   },
@@ -1308,7 +1314,7 @@ export const courseSchemas = {
       message: {
         type: 'string',
         description: '成功訊息',
-        example: '查詢可預約時段成功'
+        example: '查詢課程時段成功'
       },
       data: {
         type: 'object',
@@ -1324,10 +1330,10 @@ export const courseSchemas = {
             items: {
               $ref: '#/components/schemas/AvailableSlotInfo'
             },
-            description: '該日期可預約的時段列表 (已排除被預約的時段)'
+            description: '該日期教師的所有時段列表，包含狀態資訊 (available: 可預約, unavailable: 不可預約)'
           }
         },
-        description: '可預約時段查詢結果'
+        description: '課程時段查詢結果'
       }
     }
   },

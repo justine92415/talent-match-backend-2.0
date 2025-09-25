@@ -903,20 +903,20 @@ router.get('/:id/reviews', authenticateToken, createSchemasMiddleware({ params: 
  *       - Courses
  *     summary: 查詢課程可預約時段
  *     description: |
- *       查詢指定課程在特定日期的可預約時段列表。
+ *       查詢指定課程在特定日期的所有時段及其狀態。
  *       
  *       **業務邏輯**：
  *       - 驗證課程是否存在
  *       - 檢查課程狀態 (只有已發布的課程可以預約)
  *       - 計算查詢日期對應的星期幾
- *       - 查詢教師在該星期幾的可預約時段設定
- *       - 排除已被預約的時段 (檢查預約狀態為 RESERVED)
- *       - 按時間順序返回可預約時段列表
+ *       - 查詢教師在該星期幾的所有時段設定
+ *       - 檢查每個時段是否已被預約 (pending, reserved, completed 狀態)
+ *       - 回傳所有時段並標記狀態：available (可預約) 或 unavailable (不可預約)
  *       
  *       **使用情境**：
- *       - 學生選擇日期後查詢該日可預約的時段
- *       - 前端日曆組件顯示可選時段
- *       - 預約流程的第一步：時段選擇
+ *       - 學生選擇日期後查詢該日所有時段狀態
+ *       - 前端日曆組件顯示完整時段列表，根據狀態決定是否可點擊
+ *       - 預約流程的第一步：時段選擇與狀態檢查
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -948,24 +948,31 @@ router.get('/:id/reviews', authenticateToken, createSchemasMiddleware({ params: 
  *                 summary: 有可預約時段
  *                 value:
  *                   status: "success"
- *                   message: "查詢可預約時段成功"
+ *                   message: "查詢課程時段成功"
  *                   data:
  *                     date: "2025-09-23"
  *                     available_slots:
  *                       - slot_id: 123
  *                         start_time: "09:00"
  *                         end_time: "10:00"
+ *                         status: "available"
+ *                       - slot_id: 124
+ *                         start_time: "11:00"
+ *                         end_time: "12:00"
+ *                         status: "unavailable"
  *                       - slot_id: 125
  *                         start_time: "14:00"
  *                         end_time: "15:00"
+ *                         status: "available"
  *                       - slot_id: 127
  *                         start_time: "16:00"
  *                         end_time: "17:00"
+ *                         status: "available"
  *               no_slots:
- *                 summary: 無可預約時段
+ *                 summary: 該日教師無開放時段
  *                 value:
  *                   status: "success"
- *                   message: "當天無可預約時段"
+ *                   message: "查詢課程時段成功"
  *                   data:
  *                     date: "2025-09-23"
  *                     available_slots: []
