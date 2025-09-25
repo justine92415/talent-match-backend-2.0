@@ -167,6 +167,13 @@ export const reservationSchemas = {
         description: '預約更新時間',
         example: '2025-09-23T10:30:00.000Z'
       },
+      rejection_reason: {
+        type: 'string',
+        nullable: true,
+        maxLength: 500,
+        description: '拒絕原因（當狀態為 cancelled 時提供）',
+        example: '該時段已有其他安排，無法進行課程'
+      },
       response_deadline: {
         type: 'string',
         format: 'date-time',
@@ -710,6 +717,13 @@ export const reservationSchemas = {
         format: 'date-time',
         description: '預約更新時間',
         example: '2025-09-23T15:30:00.000Z'
+      },
+      rejection_reason: {
+        type: 'string',
+        nullable: true,
+        maxLength: 500,
+        description: '拒絕原因（當狀態為 cancelled 時提供）',
+        example: '該時段已有其他安排，無法進行課程'
       },
       response_deadline: {
         type: 'string',

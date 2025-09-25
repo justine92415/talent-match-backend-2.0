@@ -1156,6 +1156,7 @@ export class ReservationService {
       teacher_status: reservation.teacher_status,
       student_status: reservation.student_status,
       overall_status,
+      rejection_reason: reservation.rejection_reason,
       created_at: reservation.created_at.toISOString(),
       updated_at: reservation.updated_at.toISOString(),
       response_deadline: reservation.response_deadline?.toISOString()

@@ -415,6 +415,9 @@ export interface TeacherReservationItem {
   student_status: ReservationStatus
   overall_status: 'pending' | 'reserved' | 'completed' | 'cancelled'
   
+  /** 拒絕原因（當狀態為 cancelled 時） */
+  rejection_reason?: string | null
+  
   /** 時間資訊 */
   created_at: string
   updated_at: string
