@@ -2,12 +2,13 @@ import { Repository, Not, IsNull, In } from 'typeorm'
 import { dataSource } from '@db/data-source'
 import { Teacher } from '@entities/Teacher'
 import { User } from '@entities/User'
+import { Course } from '@entities/Course'
 import { MainCategory } from '@entities/MainCategory'
 import { SubCategory } from '@entities/SubCategory'
 import { TeacherWorkExperience } from '@entities/TeacherWorkExperience'
 import { TeacherLearningExperience } from '@entities/TeacherLearningExperience'
 import { TeacherCertificate } from '@entities/TeacherCertificate'
-import { UserRole, AccountStatus, ApplicationStatus } from '@entities/enums'
+import { UserRole, AccountStatus, ApplicationStatus, CourseStatus } from '@entities/enums'
 import { Errors, ValidationError } from '@utils/errors'
 import { BusinessMessages, ValidationMessages } from '@constants/Message'
 import { UserRoleService } from './UserRoleService'
@@ -28,6 +29,7 @@ import { userRoleService } from './UserRoleService'
 export class TeacherService {
   private readonly teacherRepository: Repository<Teacher>
   private readonly userRepository: Repository<User>
+  private readonly courseRepository: Repository<Course>
   private readonly mainCategoryRepository: Repository<MainCategory>
   private readonly subCategoryRepository: Repository<SubCategory>
   private readonly workExperienceRepository: Repository<TeacherWorkExperience>
@@ -37,6 +39,7 @@ export class TeacherService {
   constructor() {
     this.teacherRepository = dataSource.getRepository(Teacher)
     this.userRepository = dataSource.getRepository(User)
+    this.courseRepository = dataSource.getRepository(Course)
     this.mainCategoryRepository = dataSource.getRepository(MainCategory)
     this.subCategoryRepository = dataSource.getRepository(SubCategory)
     this.workExperienceRepository = dataSource.getRepository(TeacherWorkExperience)
@@ -963,6 +966,40 @@ export class TeacherService {
     if (certificateCount === 0) {
       throw Errors.validationFailed('申請資料不完整，至少需要一張證書')
     }
+  }
+
+  /**
+   * 獲取教師的課程清單（用於下拉選單）
+   * @param teacherId 教師ID
+   * @returns 課程選項列表
+   */
+  async getMyCourses(teacherId: number): Promise<{ value: number; label: string }[]> {
+    // 驗證教師是否存在
+    const teacher = await this.teacherRepository.findOne({
+      where: { id: teacherId }
+    })
+
+    if (!teacher) {
+      throw Errors.validationFailed('教師不存在')
+    }
+
+    // 查詢教師的所有已發布課程
+    const courses = await this.courseRepository.find({
+      where: {
+        teacher_id: teacherId,
+        status: CourseStatus.PUBLISHED  // 只返回已發布的課程
+      },
+      select: ['id', 'name'],
+      order: {
+        created_at: 'DESC'  // 最新建立的在前
+      }
+    })
+
+    // 轉換為前端 SelectOption 格式
+    return courses.map(course => ({
+      value: course.id,
+      label: course.name
+    }))
   }
 }
 

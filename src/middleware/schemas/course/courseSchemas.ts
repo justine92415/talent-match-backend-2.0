@@ -215,3 +215,59 @@ export const courseListQuerySchema = Joi.object({
       'number.max': '每頁數量不能超過 100'
     })
 })
+
+// 查詢可預約時段參數驗證
+export const availableSlotsParamsSchema = Joi.object({
+  id: Joi.number()
+    .integer()
+    .positive()
+    .required()
+    .messages({
+      'number.base': '課程 ID 必須是數字',
+      'number.integer': '課程 ID 必須是整數',
+      'number.positive': '課程 ID 必須大於 0',
+      'any.required': '課程 ID 是必填的'
+    })
+})
+
+export const availableSlotsQuerySchema = Joi.object({
+  date: Joi.string()
+    .pattern(/^\d{4}-\d{2}-\d{2}$/)
+    .custom((value, helpers) => {
+      // 檢查日期是否有效
+      const date = new Date(value + 'T00:00:00.000Z')
+      
+      // 檢查是否為有效日期
+      if (isNaN(date.getTime())) {
+        return helpers.error('date.invalid')
+      }
+      
+      // 檢查日期字串是否與實際解析的日期一致（防止如 2025-02-30 這種情況）
+      const year = date.getUTCFullYear()
+      const month = (date.getUTCMonth() + 1).toString().padStart(2, '0')
+      const day = date.getUTCDate().toString().padStart(2, '0')
+      const reconstructedDate = `${year}-${month}-${day}`
+      
+      if (value !== reconstructedDate) {
+        return helpers.error('date.invalid')
+      }
+      
+      // 檢查日期不能是過去的日期（可選，根據業務需求決定）
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
+      if (date < today) {
+        return helpers.error('date.past')
+      }
+      
+      return value
+    })
+    .required()
+    .messages({
+      'string.base': '日期必須是字串格式',
+      'string.pattern.base': '日期格式不正確，請使用 YYYY-MM-DD 格式',
+      'date.invalid': '日期無效，請提供正確的日期',
+      'date.past': '不能查詢過去的日期',
+      'any.required': '日期是必填的'
+    })
+})

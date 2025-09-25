@@ -36,6 +36,7 @@ export enum VideoType {
 }
 
 export enum ReservationStatus {
+  PENDING = 'pending',      // 等待教師確認
   RESERVED = 'reserved',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled'

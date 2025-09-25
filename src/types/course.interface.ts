@@ -12,6 +12,20 @@ import { PriceOption, PriceOptionSummary } from './priceOption.interface'
 
 // ==================== 課程相關介面 ====================
 
+/** 可預約時段 */
+export interface AvailableSlot {
+  slot_id: number
+  start_time: string
+  end_time: string
+  status: 'available' | 'unavailable'
+}
+
+/** 查詢可預約時段的回應 */
+export interface AvailableSlotsResponse {
+  date: string
+  available_slots: AvailableSlot[]
+}
+
 /** 課程基本資訊 */
 export interface CourseBasicInfo {
   id: number

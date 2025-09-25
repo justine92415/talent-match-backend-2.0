@@ -1,5 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index, ManyToOne, JoinColumn } from 'typeorm'
 import { ReservationStatus } from './enums'
+import { User } from './User'
+import { Course } from './Course'
 
 @Entity('reservations')
 // 新增複合索引以優化查詢效能
@@ -28,6 +30,21 @@ export class Reservation {
   @Column()
   student_id!: number
 
+  /** 課程關聯 */
+  @ManyToOne(() => Course)
+  @JoinColumn({ name: 'course_id' })
+  course!: Course
+
+  /** 授課教師關聯 */
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'teacher_id' })
+  teacher!: User
+
+  /** 預約學生關聯 */
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'student_id' })
+  student!: User
+
   /** 預約上課時間 */
   @Column({ type: 'timestamp' })
   reserve_time!: Date
@@ -39,6 +56,14 @@ export class Reservation {
   /** 學生端預約狀態 */
   @Column({ type: 'enum', enum: ReservationStatus })
   student_status!: ReservationStatus
+
+  /** 教師回應期限 */
+  @Column({ type: 'timestamp', nullable: true })
+  response_deadline!: Date | null
+
+  /** 拒絕原因（當狀態為 cancelled 時記錄） */
+  @Column({ type: 'text', nullable: true })
+  rejection_reason!: string | null
 
   /** 建立時間 */
   @CreateDateColumn({ type: 'timestamp' })

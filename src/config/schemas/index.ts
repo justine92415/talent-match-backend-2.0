@@ -16,6 +16,8 @@ import { scheduleSchemas } from './schedule'
 import { cartSchemas } from './cart'
 import { orderSchemas } from './order'
 import { paymentSchemas } from './payment'
+import { purchaseSchemas } from './purchase'
+import { reservationSchemas } from './reservation'
 
 // 合併所有 Schema
 export const allSchemas = {
@@ -31,8 +33,10 @@ export const allSchemas = {
   ...scheduleSchemas,
   ...cartSchemas,
   ...orderSchemas,
-  ...paymentSchemas
+  ...paymentSchemas,
+  ...purchaseSchemas,
+  ...reservationSchemas
 }
 
 // 也可以分別匯出，供特定需求使用
-export { commonSchemas, authSchemas, userAvatarSchemas, teacherSchemas, tagsSchemas, courseSchemas, publicCourseSchemas, videoSchemas, priceOptionSchemas, scheduleSchemas, cartSchemas, orderSchemas, paymentSchemas }
+export { commonSchemas, authSchemas, userAvatarSchemas, teacherSchemas, tagsSchemas, courseSchemas, publicCourseSchemas, videoSchemas, priceOptionSchemas, scheduleSchemas, cartSchemas, orderSchemas, paymentSchemas, purchaseSchemas, reservationSchemas }

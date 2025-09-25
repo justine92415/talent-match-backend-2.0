@@ -23,6 +23,8 @@ export interface ReservationInfo {
   teacher_status: ReservationStatus
   /** 學生端預約狀態 */
   student_status: ReservationStatus
+  /** 拒絕原因（當狀態為 cancelled 時） */
+  rejection_reason?: string | null
   /** 建立時間 */
   created_at: Date
   /** 更新時間 */
@@ -84,6 +86,8 @@ export interface ReservationListQuery {
   role?: 'teacher' | 'student'
   /** 狀態篩選 */
   status?: ReservationStatus
+  /** 課程篩選 */
+  course_id?: number
   /** 開始日期 (YYYY-MM-DD) */
   date_from?: string
   /** 結束日期 (YYYY-MM-DD) */
@@ -359,4 +363,78 @@ export interface ReservationTrend {
   completed_reservations: number
   /** 取消預約數 */
   cancelled_reservations: number
+}
+
+// === 教師預約查詢相關介面 ===
+
+/** 教師預約查詢參數 */
+export interface TeacherReservationQuery {
+  /** 課程篩選 */
+  course_id?: number
+  /** 時間範圍篩選 */
+  time_range?: 'all' | 'today' | 'week' | 'month'
+  /** 自定義日期範圍 */
+  date_from?: string  // YYYY-MM-DD
+  date_to?: string    // YYYY-MM-DD
+  /** 預約狀態篩選 */
+  status?: 'all' | 'pending' | 'reserved' | 'completed' | 'cancelled'
+  /** 學生搜尋（暱稱或ID） */
+  student_search?: string
+  /** 分頁參數 */
+  page?: number
+  per_page?: number
+}
+
+/** 教師預約查詢回應中的預約項目 */
+export interface TeacherReservationItem {
+  /** 預約基本資訊 */
+  id: number
+  uuid: string
+  
+  /** 日期時段資訊 */
+  reserve_date: string      // YYYY-MM-DD
+  reserve_time: string      // HH:mm
+  reserve_start_time: string // HH:mm 開始時間
+  reserve_end_time: string   // HH:mm 結束時間
+  reserve_datetime: string   // ISO 格式完整時間
+  
+  /** 學生資訊（僅暱稱和ID） */
+  student: {
+    id: number
+    nick_name: string
+  }
+  
+  /** 課程資訊 */
+  course: {
+    id: number
+    name: string
+  }
+  
+  /** 預約狀態資訊 */
+  teacher_status: ReservationStatus
+  student_status: ReservationStatus
+  overall_status: 'pending' | 'reserved' | 'completed' | 'cancelled'
+  
+  /** 拒絕原因（當狀態為 cancelled 時） */
+  rejection_reason?: string | null
+  
+  /** 時間資訊 */
+  created_at: string
+  updated_at: string
+  response_deadline?: string  // 僅 pending 狀態時顯示
+}
+
+/** 教師預約查詢回應 */
+export interface TeacherReservationResponse {
+  status: 'success'
+  message: string
+  data: {
+    reservations: TeacherReservationItem[]
+    pagination: {
+      current_page: number
+      per_page: number
+      total: number
+      total_pages: number
+    }
+  }
 }

@@ -729,13 +729,15 @@ export class ScheduleService {
       order: { weekday: 'ASC', start_time: 'ASC' }
     })
 
-    // 取得該日期範圍內已被預約的時段
+    // 取得該日期範圍內已被預約的時段（排除已取消的預約）
     const existingReservations = await this.reservationRepo.createQueryBuilder('reservation')
       .where('reservation.teacher_id = :teacherId', { teacherId })
       .andWhere('DATE(reservation.reserve_time) BETWEEN :startDate AND :endDate', {
         startDate: startDate.toISOString().split('T')[0],
         endDate: endDate.toISOString().split('T')[0]
       })
+      .andWhere('reservation.teacher_status NOT IN (:...cancelledStatuses)', { cancelledStatuses: ['cancelled'] })
+      .andWhere('reservation.student_status NOT IN (:...cancelledStatuses)', { cancelledStatuses: ['cancelled'] })
       .getMany()
 
     // 建立已預約時段的 Map（以日期+時間為 key）
@@ -811,7 +813,7 @@ export class ScheduleService {
         .addOrderBy('slot.start_time', 'ASC')
         .getMany(),
       
-      // 使用 QueryBuilder 查詢預約資料（比原本的方式更有效率）
+      // 使用 QueryBuilder 查詢預約資料（比原本的方式更有效率，排除已取消的預約）
       this.reservationRepo
         .createQueryBuilder('reservation')
         .select(['reservation.reserve_time'])
@@ -822,6 +824,8 @@ export class ScheduleService {
         .andWhere('DATE(reservation.reserve_time) <= :endDate', { 
           endDate: endDate.toISOString().split('T')[0] 
         })
+        .andWhere('reservation.teacher_status NOT IN (:...cancelledStatuses)', { cancelledStatuses: ['cancelled'] })
+        .andWhere('reservation.student_status NOT IN (:...cancelledStatuses)', { cancelledStatuses: ['cancelled'] })
         .getMany()
     ])
 

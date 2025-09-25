@@ -21,7 +21,9 @@ import {
   createCourseSchema,
   updateCourseSchema,
   courseIdSchema,
-  courseListQuerySchema
+  courseListQuerySchema,
+  availableSlotsParamsSchema,
+  availableSlotsQuerySchema
 } from '@middleware/schemas/course/courseSchemas'
 import { integratedCourseCreateSchema } from '@middleware/schemas/course/integratedCourseSchemas'
 import {
@@ -892,5 +894,129 @@ router.delete('/:course_id/files/:file_id', authenticateToken, createSchemasMidd
 
 // Get course reviews
 router.get('/:id/reviews', authenticateToken, createSchemasMiddleware({ params: courseIdSchema, query: courseReviewQuerySchema }), reviewController.getCourseReviews)
+
+/**
+ * @swagger
+ * /api/courses/{id}/available-slots:
+ *   get:
+ *     tags:
+ *       - Courses
+ *     summary: 查詢課程可預約時段
+ *     description: |
+ *       查詢指定課程在特定日期的所有時段及其狀態。
+ *       
+ *       **業務邏輯**：
+ *       - 驗證課程是否存在
+ *       - 檢查課程狀態 (只有已發布的課程可以預約)
+ *       - 計算查詢日期對應的星期幾
+ *       - 查詢教師在該星期幾的所有時段設定
+ *       - 檢查每個時段是否已被預約 (pending, reserved, completed 狀態)
+ *       - 回傳所有時段並標記狀態：available (可預約) 或 unavailable (不可預約)
+ *       
+ *       **使用情境**：
+ *       - 學生選擇日期後查詢該日所有時段狀態
+ *       - 前端日曆組件顯示完整時段列表，根據狀態決定是否可點擊
+ *       - 預約流程的第一步：時段選擇與狀態檢查
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: 課程 ID
+ *         example: 2
+ *       - in: query
+ *         name: date
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^\\d{4}-\\d{2}-\\d{2}$'
+ *         description: 查詢日期 (YYYY-MM-DD 格式)
+ *         example: '2025-09-23'
+ *     responses:
+ *       200:
+ *         description: 查詢成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GetAvailableSlotsSuccessResponse'
+ *             examples:
+ *               has_slots:
+ *                 summary: 有可預約時段
+ *                 value:
+ *                   status: "success"
+ *                   message: "查詢課程時段成功"
+ *                   data:
+ *                     date: "2025-09-23"
+ *                     available_slots:
+ *                       - slot_id: 123
+ *                         start_time: "09:00"
+ *                         end_time: "10:00"
+ *                         status: "available"
+ *                       - slot_id: 124
+ *                         start_time: "11:00"
+ *                         end_time: "12:00"
+ *                         status: "unavailable"
+ *                       - slot_id: 125
+ *                         start_time: "14:00"
+ *                         end_time: "15:00"
+ *                         status: "available"
+ *                       - slot_id: 127
+ *                         start_time: "16:00"
+ *                         end_time: "17:00"
+ *                         status: "available"
+ *               no_slots:
+ *                 summary: 該日教師無開放時段
+ *                 value:
+ *                   status: "success"
+ *                   message: "查詢課程時段成功"
+ *                   data:
+ *                     date: "2025-09-23"
+ *                     available_slots: []
+ *       400:
+ *         description: 請求參數錯誤或業務邏輯錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - $ref: '#/components/schemas/GetAvailableSlotsValidationErrorResponse'
+ *                 - $ref: '#/components/schemas/GetAvailableSlotsBusinessErrorResponse'
+ *             examples:
+ *               validation_error:
+ *                 summary: 日期格式錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "參數驗證失敗"
+ *                   errors:
+ *                     date: ["日期格式不正確，請使用 YYYY-MM-DD 格式"]
+ *               business_error:
+ *                 summary: 課程狀態錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "課程尚未發布，無法預約"
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       404:
+ *         description: 課程不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GetAvailableSlotsNotFoundErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
+// Get course available slots for a specific date
+router.get('/:id/available-slots', authenticateToken, createSchemasMiddleware({ params: availableSlotsParamsSchema, query: availableSlotsQuerySchema }), courseController.getAvailableSlots)
 
 export default router
