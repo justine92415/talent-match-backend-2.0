@@ -407,4 +407,26 @@ export class TeacherController {
       }
     }, SUCCESS.TEACHER_APPLICATION_SUBMITTED))
   })
+
+  /**
+   * 獲取教師課程清單（用於下拉選單）
+   * GET /teachers/my-courses
+   */
+  getMyCourses = handleErrorAsync(async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.userId
+
+    // 根據 userId 查找對應的教師記錄
+    const teacher = await this.teacherService.getApplication(userId)
+    if (!teacher) {
+      res.status(404).json({
+        status: 'error',
+        message: '教師資料不存在'
+      })
+      return
+    }
+
+    const courses = await this.teacherService.getMyCourses(teacher.id)
+
+    res.status(200).json(handleSuccess(courses, '課程清單獲取成功'))
+  })
 }

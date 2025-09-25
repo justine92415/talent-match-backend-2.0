@@ -600,5 +600,159 @@ export const reservationSchemas = {
         example: '預約已過期，無法確認'
       }
     }
+  },
+
+  // === 教師預約查詢相關 Schema ===
+
+  // 教師預約列表項目 Schema
+  TeacherReservationItem: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '預約 ID',
+        example: 1
+      },
+      uuid: {
+        type: 'string',
+        format: 'uuid',
+        description: '預約唯一識別碼',
+        example: '550e8400-e29b-41d4-a716-446655440000'
+      },
+      reserve_date: {
+        type: 'string',
+        format: 'date',
+        description: '預約日期 (YYYY-MM-DD)',
+        example: '2025-09-25'
+      },
+      reserve_time: {
+        type: 'string',
+        pattern: '^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$',
+        description: '預約開始時間 (HH:mm)',
+        example: '14:00'
+      },
+      reserve_start_time: {
+        type: 'string',
+        pattern: '^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$',
+        description: '課程開始時間 (HH:mm)',
+        example: '14:00'
+      },
+      reserve_end_time: {
+        type: 'string',
+        pattern: '^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$',
+        description: '課程結束時間 (HH:mm)',
+        example: '15:00'
+      },
+      reserve_datetime: {
+        type: 'string',
+        format: 'date-time',
+        description: '完整預約時間 (ISO 格式)',
+        example: '2025-09-25T14:00:00.000Z'
+      },
+      student: {
+        type: 'object',
+        description: '預約學生資訊',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '學生 ID',
+            example: 123
+          },
+          nick_name: {
+            type: 'string',
+            description: '學生暱稱',
+            example: '小明'
+          }
+        }
+      },
+      course: {
+        type: 'object',
+        description: '課程基本資訊',
+        properties: {
+          id: {
+            type: 'integer',
+            description: '課程 ID',
+            example: 456
+          },
+          name: {
+            type: 'string',
+            description: '課程名稱',
+            example: 'JavaScript 基礎教學'
+          }
+        }
+      },
+      teacher_status: {
+        type: 'string',
+        enum: ['pending', 'reserved', 'completed', 'cancelled'],
+        description: '教師端預約狀態',
+        example: 'reserved'
+      },
+      student_status: {
+        type: 'string',
+        enum: ['pending', 'reserved', 'completed', 'cancelled'],
+        description: '學生端預約狀態',
+        example: 'reserved'
+      },
+      overall_status: {
+        type: 'string',
+        enum: ['pending', 'reserved', 'completed', 'cancelled'],
+        description: '綜合預約狀態',
+        example: 'reserved'
+      },
+      created_at: {
+        type: 'string',
+        format: 'date-time',
+        description: '預約建立時間',
+        example: '2025-09-23T10:30:00.000Z'
+      },
+      updated_at: {
+        type: 'string',
+        format: 'date-time',
+        description: '預約更新時間',
+        example: '2025-09-23T15:30:00.000Z'
+      },
+      response_deadline: {
+        type: 'string',
+        format: 'date-time',
+        nullable: true,
+        description: '教師回應期限（僅 pending 狀態時顯示）',
+        example: '2025-09-24T02:00:00.000Z'
+      }
+    }
+  },
+
+  // 教師預約查詢成功回應 Schema
+  TeacherReservationSuccessResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        enum: ['success'],
+        description: '回應狀態',
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        description: '成功訊息',
+        example: '預約列表查詢成功'
+      },
+      data: {
+        type: 'object',
+        description: '教師預約查詢結果資料',
+        properties: {
+          reservations: {
+            type: 'array',
+            description: '預約記錄列表',
+            items: {
+              $ref: '#/components/schemas/TeacherReservationItem'
+            }
+          },
+          pagination: {
+            $ref: '#/components/schemas/PaginationInfo',
+            description: '分頁資訊'
+          }
+        }
+      }
+    }
   }
 }

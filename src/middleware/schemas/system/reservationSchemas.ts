@@ -142,6 +142,69 @@ export const studentReservationListQuerySchema = Joi.object({
     })
 })
 
+// 教師預約查詢參數（不需要 role 參數）
+export const teacherReservationQuerySchema = Joi.object({
+  course_id: Joi.alternatives().try(
+    Joi.number().integer().positive(),
+    Joi.string().allow(''),
+    Joi.allow(null)
+  ).optional()
+    .messages({
+      'number.base': '課程 ID 必須是數字',
+      'number.integer': '課程 ID 必須是整數',
+      'number.positive': '課程 ID 必須大於 0'
+    }),
+  time_range: Joi.string().valid('all', 'today', 'week', 'month').default('all').optional()
+    .messages({
+      'any.only': '時間範圍必須是 all, today, week, month 其中之一'
+    }),
+  date_from: Joi.alternatives().try(
+    Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/),
+    Joi.string().allow(''),
+    Joi.allow(null)
+  ).optional()
+    .messages({
+      'string.pattern.base': '開始日期格式不正確，請使用 YYYY-MM-DD 格式'
+    }),
+  date_to: Joi.alternatives().try(
+    Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/),
+    Joi.string().allow(''),
+    Joi.allow(null)
+  ).optional()
+    .messages({
+      'string.pattern.base': '結束日期格式不正確，請使用 YYYY-MM-DD 格式'
+    }),
+  status: Joi.string().valid('all', 'pending', 'reserved', 'completed', 'cancelled').default('all').optional()
+    .messages({
+      'any.only': '狀態必須是 all, pending, reserved, completed, cancelled 其中之一'
+    }),
+  student_search: Joi.string().max(100).optional()
+    .messages({
+      'string.max': '學生搜尋關鍵字不能超過 100 字元'
+    }),
+  page: Joi.alternatives().try(
+    Joi.number().integer().min(1),
+    Joi.string().allow(''),
+    Joi.allow(null)
+  ).default(1).optional()
+    .messages({
+      'number.base': '頁碼必須是數字',
+      'number.integer': '頁碼必須是整數',
+      'number.min': '頁碼必須大於 0'
+    }),
+  per_page: Joi.alternatives().try(
+    Joi.number().integer().min(1).max(100),
+    Joi.string().allow(''),
+    Joi.allow(null)
+  ).default(10).optional()
+    .messages({
+      'number.base': '每頁數量必須是數字',
+      'number.integer': '每頁數量必須是整數',
+      'number.min': '每頁數量必須大於 0',
+      'number.max': '每頁數量不能超過 100'
+    })
+})
+
 export const updateReservationStatusSchema = Joi.object({
   status_type: Joi.string().valid('teacher-complete', 'student-complete').required(),
   notes: Joi.string().max(500).optional()

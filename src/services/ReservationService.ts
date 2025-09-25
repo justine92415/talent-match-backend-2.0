@@ -14,6 +14,9 @@ import { v4 as uuidv4 } from 'uuid'
 import { Repository, IsNull } from 'typeorm'
 import { dataSource } from '@db/data-source'
 import { Reservation } from '@entities/Reservation'
+import { Teacher } from '@entities/Teacher'
+import { User } from '@entities/User'
+import { Course } from '@entities/Course'
 import { UserCoursePurchase } from '@entities/UserCoursePurchase'
 import { TeacherAvailableSlot } from '@entities/TeacherAvailableSlot'
 import { ReservationStatus } from '@entities/enums'
@@ -33,7 +36,10 @@ import type {
   CalendarViewResponse,
   ReservationDetail,
   CalendarDayData,
-  CalendarReservation
+  CalendarReservation,
+  TeacherReservationQuery,
+  TeacherReservationResponse,
+  TeacherReservationItem
 } from '@models/reservation.interface'
 
 export class ReservationService {
@@ -243,6 +249,136 @@ export class ReservationService {
         per_page,
         total,
         total_pages: Math.ceil(total / per_page)
+      }
+    }
+  }
+
+  /**
+   * 教師查詢課程預約列表
+   */
+  async getTeacherCourseReservations(
+    userId: number,
+    query: TeacherReservationQuery
+  ): Promise<TeacherReservationResponse> {
+    // 先根據 userId 找到教師記錄
+    const teacherRepository = dataSource.getRepository(Teacher)
+    const teacher = await teacherRepository.findOne({
+      where: { user_id: userId }
+    })
+    
+    if (!teacher) {
+      throw new BusinessError(
+        ERROR_CODES.UNAUTHORIZED_ACCESS,
+        '教師資料不存在',
+        404
+      )
+    }
+
+    const teacherId = teacher.id
+    const {
+      course_id,
+      time_range,
+      date_from,
+      date_to,
+      status,
+      student_search,
+      page = 1,
+      per_page = 10
+    } = query
+
+    // 建立查詢 - 先獲取預約記錄，然後批量查詢關聯資料
+    const queryBuilder = this.reservationRepository.createQueryBuilder('reservation')
+      .leftJoinAndSelect('reservation.course', 'course')
+      .leftJoinAndSelect('reservation.student', 'student')
+      .leftJoinAndSelect('reservation.teacher', 'teacher')
+      
+    // 教師篩選（只能查詢自己的課程預約）
+    queryBuilder.where('reservation.teacher_id = :teacherId', { teacherId })
+
+    // 課程篩選
+    if (course_id) {
+      queryBuilder.andWhere('reservation.course_id = :courseId', { courseId: course_id })
+    }
+
+    // 時間範圍篩選
+    if (time_range && time_range !== 'all') {
+      const dateRange = this.getDateRange(time_range)
+      if (dateRange) {
+        queryBuilder.andWhere('reservation.reserve_time BETWEEN :startDate AND :endDate', {
+          startDate: dateRange.start,
+          endDate: dateRange.end
+        })
+      }
+    } else if (date_from && date_to) {
+      // 自定義日期範圍
+      const fromDate = new Date(date_from)
+      const toDate = new Date(date_to)
+      toDate.setHours(23, 59, 59, 999)
+
+      queryBuilder.andWhere('reservation.reserve_time BETWEEN :fromDate AND :toDate', {
+        fromDate,
+        toDate
+      })
+    }
+
+    // 狀態篩選
+    if (status && status !== 'all') {
+      if (status === 'pending') {
+        queryBuilder.andWhere('reservation.teacher_status = :status', { status: 'pending' })
+      } else {
+        // 使用綜合狀態邏輯
+        this.addOverallStatusFilter(queryBuilder, status)
+      }
+    }
+
+    // 學生搜尋（暱稱或ID）
+    if (student_search) {
+      const isNumeric = /^\d+$/.test(student_search)
+      if (isNumeric) {
+        // 數字搜尋：同時搜尋學生ID和暱稱
+        queryBuilder.andWhere(
+          '(student.id = :studentId OR student.nick_name LIKE :studentName)',
+          { 
+            studentId: parseInt(student_search),
+            studentName: `%${student_search}%`
+          }
+        )
+      } else {
+        // 文字搜尋：僅搜尋暱稱
+        queryBuilder.andWhere('student.nick_name LIKE :studentName', { 
+          studentName: `%${student_search}%` 
+        })
+      }
+    }
+
+    // 排除已軟刪除的記錄
+    queryBuilder.andWhere('reservation.deleted_at IS NULL')
+
+    // 排序：按預約時間最新在前
+    queryBuilder.orderBy('reservation.reserve_time', 'DESC')
+
+    // 分頁
+    const skip = (page - 1) * per_page
+    queryBuilder.skip(skip).take(per_page)
+
+    const [reservations, total] = await queryBuilder.getManyAndCount()
+
+    // 轉換為回應格式
+    const reservationList = reservations.map(reservation => 
+      this.transformToTeacherReservationItem(reservation)
+    )
+
+    return {
+      status: 'success',
+      message: '預約列表查詢成功',
+      data: {
+        reservations: reservationList,
+        pagination: {
+          current_page: page,
+          per_page,
+          total,
+          total_pages: Math.ceil(total / per_page)
+        }
       }
     }
   }
@@ -874,6 +1010,122 @@ export class ReservationService {
     // 5. 不需要退還課程堂數，因為創建預約時沒有扣除
 
     return this.transformReservationToResponse(updatedReservation)
+  }
+
+  /**
+   * 取得時間範圍的開始和結束日期
+   */
+  private getDateRange(timeRange: string): { start: Date; end: Date } | null {
+    const now = new Date()
+    
+    switch (timeRange) {
+      case 'today': {
+        const start = new Date(now)
+        start.setHours(0, 0, 0, 0)
+        const end = new Date(now)
+        end.setHours(23, 59, 59, 999)
+        return { start, end }
+      }
+      case 'week': {
+        const start = new Date(now)
+        const dayOfWeek = start.getDay()
+        const diff = start.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1) // 週一開始
+        start.setDate(diff)
+        start.setHours(0, 0, 0, 0)
+        
+        const end = new Date(start)
+        end.setDate(start.getDate() + 6)
+        end.setHours(23, 59, 59, 999)
+        return { start, end }
+      }
+      case 'month': {
+        const start = new Date(now.getFullYear(), now.getMonth(), 1)
+        const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+        return { start, end }
+      }
+      default:
+        return null
+    }
+  }
+
+  /**
+   * 為查詢添加綜合狀態篩選條件
+   */
+  private addOverallStatusFilter(queryBuilder: any, status: string): void {
+    switch (status) {
+      case 'reserved':
+        queryBuilder.andWhere(
+          '(reservation.teacher_status = :teacherReserved AND reservation.student_status = :studentReserved)',
+          { teacherReserved: 'reserved', studentReserved: 'reserved' }
+        )
+        break
+      case 'completed':
+        queryBuilder.andWhere(
+          '(reservation.teacher_status = :teacherCompleted AND reservation.student_status = :studentCompleted)',
+          { teacherCompleted: 'completed', studentCompleted: 'completed' }
+        )
+        break
+      case 'cancelled':
+        queryBuilder.andWhere(
+          '(reservation.teacher_status = :teacherCancelled OR reservation.student_status = :studentCancelled)',
+          { teacherCancelled: 'cancelled', studentCancelled: 'cancelled' }
+        )
+        break
+    }
+  }
+
+  /**
+   * 將預約實體轉換為教師預約查詢回應格式
+   */
+  private transformToTeacherReservationItem(reservation: any): TeacherReservationItem {
+    const reserveTime = new Date(reservation.reserve_time)
+    const SLOT_DURATION_MINUTES = 60 // 預設課程時長
+
+    // 計算結束時間
+    const endTime = new Date(reserveTime)
+    endTime.setMinutes(endTime.getMinutes() + SLOT_DURATION_MINUTES)
+
+    // 格式化時間
+    const reserve_date = reserveTime.toISOString().split('T')[0] // YYYY-MM-DD
+    const reserve_time_str = reserveTime.toTimeString().slice(0, 5) // HH:mm
+    const reserve_start_time = reserve_time_str
+    const reserve_end_time = endTime.toTimeString().slice(0, 5) // HH:mm
+
+    // 綜合狀態邏輯
+    let overall_status: 'pending' | 'reserved' | 'completed' | 'cancelled'
+    if (reservation.teacher_status === 'cancelled' || reservation.student_status === 'cancelled') {
+      overall_status = 'cancelled'
+    } else if (reservation.teacher_status === 'pending') {
+      overall_status = 'pending'
+    } else if (reservation.teacher_status === 'completed' && reservation.student_status === 'completed') {
+      overall_status = 'completed'
+    } else {
+      overall_status = 'reserved'
+    }
+
+    return {
+      id: reservation.id,
+      uuid: reservation.uuid,
+      reserve_date,
+      reserve_time: reserve_time_str,
+      reserve_start_time,
+      reserve_end_time,
+      reserve_datetime: reservation.reserve_time.toISOString(),
+      student: {
+        id: reservation.student.id,
+        nick_name: reservation.student.nick_name
+      },
+      course: {
+        id: reservation.course.id,
+        name: reservation.course.name
+      },
+      teacher_status: reservation.teacher_status,
+      student_status: reservation.student_status,
+      overall_status,
+      created_at: reservation.created_at.toISOString(),
+      updated_at: reservation.updated_at.toISOString(),
+      response_deadline: reservation.response_deadline?.toISOString()
+    }
   }
 }
 

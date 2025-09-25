@@ -1,10 +1,11 @@
 import { Router } from 'express'
-import { authenticateToken } from '@middleware/auth'
+import { authenticateToken, requireTeacher } from '@middleware/auth'
 import { createSchemasMiddleware } from '@middleware/schemas/core'
 import { 
   createReservationSchema, 
   reservationListQuerySchema,
   studentReservationListQuerySchema,
+  teacherReservationQuerySchema,
   updateReservationStatusSchema, 
   reservationIdParamSchema, 
   calendarViewQuerySchema 
@@ -319,6 +320,143 @@ router.get('/my-reservations',
   authenticateToken,
   createSchemasMiddleware({ query: studentReservationListQuerySchema }),
   reservationController.getMyReservations
+)
+
+/**
+ * @swagger
+ * /api/reservations/course-reservations:
+ *   get:
+ *     tags:
+ *       - Reservation Management
+ *     summary: 教師查詢課程預約列表
+ *     description: |
+ *       教師查詢自己課程的預約記錄，支援多種篩選和搜尋功能。
+ *       
+ *       **業務邏輯**：
+ *       - 僅限教師角色使用（需要 teacherAuth middleware）
+ *       - 查詢教師自己教授課程的所有預約記錄
+ *       - 支援按課程 ID 篩選
+ *       - 支援時間範圍篩選（今天/本週/本月/全部）
+ *       - 支援自定義日期範圍篩選
+ *       - 支援預約狀態篩選
+ *       - 支援學生搜尋（暱稱或ID）
+ *       - 按預約時間最新在前排序
+ *       - 包含預約開始和結束時間資訊
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: course_id
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: 課程 ID，篩選特定課程的預約記錄
+ *         example: 2
+ *       - name: time_range
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [all, today, week, month]
+ *           default: all
+ *         description: 時間範圍篩選
+ *         example: week
+ *       - name: date_from
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: 自定義查詢起始日期 (YYYY-MM-DD)
+ *         example: "2025-09-01"
+ *       - name: date_to
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: 自定義查詢結束日期 (YYYY-MM-DD)
+ *         example: "2025-09-30"
+ *       - name: status
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [all, pending, reserved, completed, cancelled]
+ *           default: all
+ *         description: 預約狀態篩選
+ *         example: pending
+ *       - name: student_search
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *           maxLength: 100
+ *         description: 學生搜尋（支援暱稱或 ID 搜尋）
+ *         example: "小明"
+ *       - name: page
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: 頁數
+ *         example: 1
+ *       - name: per_page
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: 每頁筆數
+ *         example: 20
+ *     responses:
+ *       200:
+ *         description: 查詢成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TeacherReservationSuccessResponse'
+ *       400:
+ *         description: 參數驗證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ReservationValidationErrorResponse'
+ *       401:
+ *         description: 身份認證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ReservationUnauthorizedErrorResponse'
+ *       403:
+ *         description: 權限不足（需要教師身份）
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ForbiddenErrorResponse'
+ *       404:
+ *         description: 教師資料不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/NotFoundErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
+router.get('/course-reservations',
+  authenticateToken,
+  requireTeacher,
+  createSchemasMiddleware({ query: teacherReservationQuerySchema }),
+  reservationController.getCourseReservations
 )
 
 router.get('/', 

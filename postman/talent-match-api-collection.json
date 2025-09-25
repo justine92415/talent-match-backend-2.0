@@ -2633,6 +2633,114 @@
           ]
         },
         {
+          "name": "教師查詢課程預約列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reservations/course-reservations?page=1&per_page=10&course_id=2&time_range=week&status=pending",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reservations", "course-reservations"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "10"
+                },
+                {
+                  "key": "course_id",
+                  "value": "2",
+                  "description": "可選：篩選特定課程的預約"
+                },
+                {
+                  "key": "time_range",
+                  "value": "week",
+                  "description": "時間範圍：all/today/week/month"
+                },
+                {
+                  "key": "status",
+                  "value": "pending",
+                  "description": "預約狀態：all/pending/reserved/completed/cancelled"
+                },
+                {
+                  "key": "student_search",
+                  "value": "小明",
+                  "description": "可選：學生搜尋（暱稱或ID）",
+                  "disabled": true
+                },
+                {
+                  "key": "date_from",
+                  "value": "2025-09-01",
+                  "description": "可選：自定義起始日期",
+                  "disabled": true
+                },
+                {
+                  "key": "date_to",
+                  "value": "2025-09-30",
+                  "description": "可選：自定義結束日期",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "教師查詢自己課程的預約記錄，支援多種篩選條件"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response should have correct structure\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    ",
+                  "    if (jsonData.data) {",
+                  "        pm.expect(jsonData.data).to.have.property('reservations');",
+                  "        pm.expect(jsonData.data).to.have.property('pagination');",
+                  "        pm.expect(jsonData.data.pagination).to.have.property('current_page');",
+                  "        pm.expect(jsonData.data.pagination).to.have.property('per_page');",
+                  "        pm.expect(jsonData.data.pagination).to.have.property('total');",
+                  "        pm.expect(jsonData.data.pagination).to.have.property('total_pages');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test(\"Teacher reservations should be array\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.reservations) {",
+                  "        pm.expect(jsonData.data.reservations).to.be.an('array');",
+                  "        ",
+                  "        // 檢查預約項目結構",
+                  "        if (jsonData.data.reservations.length > 0) {",
+                  "            const reservation = jsonData.data.reservations[0];",
+                  "            pm.expect(reservation).to.have.property('id');",
+                  "            pm.expect(reservation).to.have.property('uuid');",
+                  "            pm.expect(reservation).to.have.property('reserve_date');",
+                  "            pm.expect(reservation).to.have.property('reserve_time');",
+                  "            pm.expect(reservation).to.have.property('reserve_start_time');",
+                  "            pm.expect(reservation).to.have.property('reserve_end_time');",
+                  "            pm.expect(reservation).to.have.property('student');",
+                  "            pm.expect(reservation).to.have.property('course');",
+                  "            pm.expect(reservation).to.have.property('teacher_status');",
+                  "            pm.expect(reservation).to.have.property('student_status');",
+                  "            pm.expect(reservation).to.have.property('overall_status');",
+                  "        }",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
           "name": "建立預約",
           "request": {
             "method": "POST",

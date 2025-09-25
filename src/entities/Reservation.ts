@@ -1,5 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index, ManyToOne, JoinColumn } from 'typeorm'
 import { ReservationStatus } from './enums'
+import { User } from './User'
+import { Course } from './Course'
 
 @Entity('reservations')
 // 新增複合索引以優化查詢效能
@@ -27,6 +29,21 @@ export class Reservation {
   /** 預約學生ID */
   @Column()
   student_id!: number
+
+  /** 課程關聯 */
+  @ManyToOne(() => Course)
+  @JoinColumn({ name: 'course_id' })
+  course!: Course
+
+  /** 授課教師關聯 */
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'teacher_id' })
+  teacher!: User
+
+  /** 預約學生關聯 */
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'student_id' })
+  student!: User
 
   /** 預約上課時間 */
   @Column({ type: 'timestamp' })
