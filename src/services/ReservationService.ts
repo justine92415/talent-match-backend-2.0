@@ -791,6 +791,7 @@ export class ReservationService {
       reserve_time: reservation.reserve_time,
       teacher_status: reservation.teacher_status,
       student_status: reservation.student_status,
+      rejection_reason: reservation.rejection_reason,
       created_at: reservation.created_at,
       updated_at: reservation.updated_at
     }
@@ -1036,6 +1037,7 @@ export class ReservationService {
     reservation.teacher_status = ReservationStatus.CANCELLED
     reservation.student_status = ReservationStatus.CANCELLED
     reservation.response_deadline = null // 清除回應期限
+    reservation.rejection_reason = reason || null // 儲存拒絕原因
 
     const updatedReservation = await this.reservationRepository.save(reservation)
 

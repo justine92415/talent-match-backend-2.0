@@ -61,6 +61,10 @@ export class Reservation {
   @Column({ type: 'timestamp', nullable: true })
   response_deadline!: Date | null
 
+  /** 拒絕原因（當狀態為 cancelled 時記錄） */
+  @Column({ type: 'text', nullable: true })
+  rejection_reason!: string | null
+
   /** 建立時間 */
   @CreateDateColumn({ type: 'timestamp' })
   created_at!: Date
