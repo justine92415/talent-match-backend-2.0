@@ -1000,14 +1000,30 @@ export class ReservationService {
   /**
    * 教師拒絕預約
    */
-  async rejectReservation(reservationId: number, teacherId: number, reason?: string): Promise<ReservationDetail> {
-    // 1. 查找預約
+  async rejectReservation(reservationId: number, userId: number, reason?: string): Promise<ReservationDetail> {
+    // 1. 先根據 userId 找到教師記錄
+    const teacherRepository = dataSource.getRepository(Teacher)
+    const teacher = await teacherRepository.findOne({
+      where: { user_id: userId }
+    })
+    
+    if (!teacher) {
+      throw new BusinessError(
+        ERROR_CODES.UNAUTHORIZED_ACCESS,
+        '教師資料不存在',
+        404
+      )
+    }
+
+    const teacherId = teacher.id
+
+    // 2. 查找預約
     const reservation = await this.getReservationById(reservationId)
 
-    // 2. 驗證權限
+    // 3. 驗證權限
     this.validateReservationAccess(reservation, teacherId, 'teacher')
 
-    // 3. 檢查預約狀態
+    // 4. 檢查預約狀態
     if (reservation.teacher_status !== ReservationStatus.PENDING) {
       throw new BusinessError(
         ERROR_CODES.RESERVATION_STATUS_INVALID,
@@ -1016,7 +1032,7 @@ export class ReservationService {
       )
     }
 
-    // 4. 更新預約狀態
+    // 5. 更新預約狀態
     reservation.teacher_status = ReservationStatus.CANCELLED
     reservation.student_status = ReservationStatus.CANCELLED
     reservation.response_deadline = null // 清除回應期限

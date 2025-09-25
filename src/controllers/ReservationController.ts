@@ -368,8 +368,8 @@ export class ReservationController {
    */
   rejectReservation = handleErrorAsync(
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-      const teacherId = req.user?.userId
-      if (!teacherId) {
+      const userId = req.user?.userId
+      if (!userId) {
         throw new BusinessError(
           ERROR_CODES.UNAUTHORIZED_ACCESS,
           MESSAGES.BUSINESS.UNAUTHORIZED_ACCESS,
@@ -390,7 +390,7 @@ export class ReservationController {
 
       const result = await this.reservationService.rejectReservation(
         reservationId,
-        teacherId,
+        userId,
         reason
       )
 
