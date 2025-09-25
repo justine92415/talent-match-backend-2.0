@@ -517,6 +517,20 @@ export const reservationSchemas = {
 
   // === 教師預約確認/拒絕相關 Schema ===
 
+  // 取消預約請求 Schema
+  CancelReservationRequest: {
+    type: 'object',
+    properties: {
+      reason: {
+        type: 'string',
+        maxLength: 500,
+        description: '取消預約的原因（教師取消時為必填，學生取消時可選，最多500字元）',
+        example: '該時段已有其他安排，無法進行課程'
+      }
+    },
+    description: '取消預約請求。教師取消預約時必須提供原因，學生取消時原因為可選。'
+  },
+
   // 教師拒絕預約請求 Schema
   RejectReservationRequest: {
     type: 'object',

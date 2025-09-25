@@ -279,9 +279,13 @@ export class ReservationController {
         )
       }
 
+      // 從 body 取得取消原因（教師必填，學生選填）
+      const { reason } = req.body || {}
+
       const result = await this.reservationService.cancelReservation(
         reservationId,
-        userId
+        userId,
+        reason
       )
 
       res.status(200).json(

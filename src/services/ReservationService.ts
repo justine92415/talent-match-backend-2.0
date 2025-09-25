@@ -436,28 +436,56 @@ export class ReservationService {
    */
   async cancelReservation(
     reservationId: number,
-    userId: number
+    userId: number,
+    reason?: string
   ): Promise<CancelReservationResponse> {
     // 1. 查找預約
     const reservation = await this.getReservationById(reservationId)
 
-    // 2. 驗證權限（學生或教師都可以取消）
+    // 2. 檢查用戶是否為學生
     const isStudent = reservation.student_id === userId
-    const isTeacher = reservation.teacher_id === userId
     
+    // 3. 檢查用戶是否為教師（需要透過教師表查詢）
+    let isTeacher = false
+    let teacherRecord = null
+    if (!isStudent) {
+      const teacherRepository = dataSource.getRepository(Teacher)
+      teacherRecord = await teacherRepository.findOne({
+        where: { user_id: userId }
+      })
+      if (teacherRecord && teacherRecord.id === reservation.teacher_id) {
+        isTeacher = true
+      }
+    }
+
+    // 4. 驗證權限（學生或教師都可以取消）
     if (!isStudent && !isTeacher) {
       throw new BusinessError(
         ERROR_CODES.RESERVATION_UNAUTHORIZED_ACCESS,
-        MESSAGES.RESERVATION.CANCELLED
+        MESSAGES.BUSINESS.RESERVATION_UNAUTHORIZED_ACCESS
       )
     }
 
-    // 3. 驗證取消條件
+    // 5. 如果是教師取消，必須提供原因
+    if (isTeacher && !reason) {
+      throw new BusinessError(
+        ERROR_CODES.VALIDATION_ERROR,
+        '教師取消預約必須提供原因',
+        400
+      )
+    }
+
+    // 6. 驗證取消條件
     this.validateCancellationRules(reservation)
 
-    // 4. 更新狀態為已取消
+    // 7. 更新狀態為已取消
     reservation.teacher_status = ReservationStatus.CANCELLED
     reservation.student_status = ReservationStatus.CANCELLED
+    
+    // 8. 只有教師取消時才儲存原因
+    if (isTeacher && reason) {
+      reservation.rejection_reason = reason
+    }
 
     const updatedReservation = await this.reservationRepository.save(reservation)
 

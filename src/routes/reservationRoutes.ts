@@ -7,6 +7,7 @@ import {
   studentReservationListQuerySchema,
   teacherReservationQuerySchema,
   updateReservationStatusSchema, 
+  cancelReservationRequestSchema,
   reservationIdParamSchema, 
   calendarViewQuerySchema 
 } from '@middleware/schemas/system/reservationSchemas'
@@ -483,9 +484,12 @@ router.put('/:id/status',
  *       
  *       **業務邏輯**：
  *       - 驗證使用者身份認證和權限
- *       - 檢查預約是否存在且屬於該使用者
+ *       - 檢查預約是否存在且屬於該使用者（學生或教師）
+ *       - **教師取消預約時必須提供原因**
+ *       - **學生取消預約時原因為可選**
  *       - 驗證取消條件（時間限制等）
  *       - 將教師和學生狀態都更新為 "cancelled"
+ *       - 只有教師取消時才儲存拒絕原因
  *       - 退還一堂課程堂數給學生
  *       - 回傳取消後的預約資訊和退還堂數
  *     security:
@@ -499,6 +503,21 @@ router.put('/:id/status',
  *           minimum: 1
  *         description: 預約 ID
  *         example: 123
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CancelReservationRequest'
+ *           examples:
+ *             teacher_cancel:
+ *               summary: 教師取消預約（必須提供原因）
+ *               value:
+ *                 reason: "該時段已有其他安排，無法進行課程"
+ *             student_cancel:
+ *               summary: 學生取消預約（原因可選）
+ *               value:
+ *                 reason: "臨時有事無法參加"
  *     responses:
  *       200:
  *         description: 預約取消成功
@@ -522,6 +541,12 @@ router.put('/:id/status',
  *                   message: "預約參數驗證失敗"
  *                   errors:
  *                     id: ["預約 ID 必須為正整數"]
+ *                     reason: ["取消原因不能超過 500 字元"]
+ *               teacher_reason_required:
+ *                 summary: 教師必須提供取消原因
+ *                 value:
+ *                   status: "error"
+ *                   message: "教師取消預約必須提供原因"
  *               business_error:
  *                 summary: 取消條件不符
  *                 value:
@@ -583,7 +608,7 @@ router.put('/:id/status',
  */
 router.delete('/:id', 
   authenticateToken,
-  createSchemasMiddleware({ params: reservationIdParamSchema }),
+  createSchemasMiddleware({ params: reservationIdParamSchema, body: cancelReservationRequestSchema }),
   reservationController.cancelReservation
 )
 

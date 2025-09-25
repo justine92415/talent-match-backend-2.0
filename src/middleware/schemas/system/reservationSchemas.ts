@@ -210,6 +210,12 @@ export const updateReservationStatusSchema = Joi.object({
   notes: Joi.string().max(500).optional()
 })
 
+export const cancelReservationRequestSchema = Joi.object({
+  reason: Joi.string().max(500).optional().messages({
+    'string.max': '取消原因不能超過 500 字元'
+  })
+})
+
 export const reservationIdParamSchema = Joi.object({
   id: Joi.number().integer().positive().required()
 })
