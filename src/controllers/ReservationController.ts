@@ -222,6 +222,79 @@ export class ReservationController {
   )
 
   /**
+   * 教師確認預約
+   * POST /reservations/:id/confirm
+   */
+  confirmReservation = handleErrorAsync(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const teacherId = req.user?.userId
+      if (!teacherId) {
+        throw new BusinessError(
+          ERROR_CODES.UNAUTHORIZED_ACCESS,
+          MESSAGES.BUSINESS.UNAUTHORIZED_ACCESS,
+          401
+        )
+      }
+
+      const reservationId = parseInt(req.params.id, 10)
+      if (isNaN(reservationId)) {
+        throw new BusinessError(
+          ERROR_CODES.VALIDATION_ERROR,
+          MESSAGES.VALIDATION.RESERVATION_COURSE_ID_INVALID,
+          400
+        )
+      }
+
+      const result = await this.reservationService.confirmReservation(
+        reservationId,
+        teacherId
+      )
+
+      res.status(200).json(
+        handleSuccess(result, '預約確認成功')
+      )
+    }
+  )
+
+  /**
+   * 教師拒絕預約
+   * POST /reservations/:id/reject
+   */
+  rejectReservation = handleErrorAsync(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const teacherId = req.user?.userId
+      if (!teacherId) {
+        throw new BusinessError(
+          ERROR_CODES.UNAUTHORIZED_ACCESS,
+          MESSAGES.BUSINESS.UNAUTHORIZED_ACCESS,
+          401
+        )
+      }
+
+      const reservationId = parseInt(req.params.id, 10)
+      if (isNaN(reservationId)) {
+        throw new BusinessError(
+          ERROR_CODES.VALIDATION_ERROR,
+          MESSAGES.VALIDATION.RESERVATION_COURSE_ID_INVALID,
+          400
+        )
+      }
+
+      const { reason } = req.body
+
+      const result = await this.reservationService.rejectReservation(
+        reservationId,
+        teacherId,
+        reason
+      )
+
+      res.status(200).json(
+        handleSuccess(result, '預約已拒絕')
+      )
+    }
+  )
+
+  /**
    * 取得預約詳情
    * GET /reservations/:id
    */

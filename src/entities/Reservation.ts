@@ -40,6 +40,10 @@ export class Reservation {
   @Column({ type: 'enum', enum: ReservationStatus })
   student_status!: ReservationStatus
 
+  /** 教師回應期限 */
+  @Column({ type: 'timestamp', nullable: true })
+  response_deadline!: Date | null
+
   /** 建立時間 */
   @CreateDateColumn({ type: 'timestamp' })
   created_at!: Date

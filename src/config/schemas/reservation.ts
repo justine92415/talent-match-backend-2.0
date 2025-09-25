@@ -434,5 +434,99 @@ export const reservationSchemas = {
         }
       }
     }
+  },
+
+  // === 教師預約確認/拒絕相關 Schema ===
+
+  // 教師拒絕預約請求 Schema
+  RejectReservationRequest: {
+    type: 'object',
+    properties: {
+      reason: {
+        type: 'string',
+        maxLength: 500,
+        description: '拒絕預約的原因 (可選，最多500字元)',
+        example: '該時段已有其他安排，無法進行課程'
+      }
+    }
+  },
+
+    // 教師確認預約成功回應 Schema
+  ConfirmReservationSuccessResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        description: '回應狀態',
+        enum: ['success'],
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        description: '成功訊息',
+        example: '預約確認成功'
+      },
+      data: {
+        $ref: '#/components/schemas/ReservationResponse'
+      }
+    }
+  },
+
+  // 教師拒絕預約成功回應 Schema
+  RejectReservationSuccessResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        description: '回應狀態',
+        enum: ['success'],
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        description: '成功訊息',
+        example: '預約已拒絕'
+      },
+      data: {
+        $ref: '#/components/schemas/ReservationDetail',
+        description: '拒絕後的預約詳細資訊'
+      }
+    }
+  },
+
+  // 預約狀態無效錯誤回應 Schema
+  ReservationStatusInvalidErrorResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        description: '回應狀態',
+        enum: ['error'],
+        example: 'error'
+      },
+      message: {
+        type: 'string',
+        description: '錯誤訊息',
+        example: '預約狀態無效，只有待確認的預約可以被確認'
+      }
+    }
+  },
+
+  // 預約過期錯誤回應 Schema
+  ReservationExpiredErrorResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        description: '回應狀態',
+        enum: ['error'],
+        example: 'error'
+      },
+      message: {
+        type: 'string',
+        description: '錯誤訊息',
+        example: '預約已過期，無法確認'
+      }
+    }
   }
 }

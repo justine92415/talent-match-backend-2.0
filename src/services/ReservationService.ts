@@ -68,21 +68,25 @@ export class ReservationService {
     // 4. 建立預約時間
     const reserveDateTime = this.parseReserveDateTime(reserve_date, reserve_time)
 
-    // 5. 建立預約記錄
+    // 5. 計算教師回應期限
+    const responseDeadline = this.calculateResponseDeadline(reserveDateTime)
+
+    // 6. 建立預約記錄（設定初始狀態為待確認）
     const reservation = this.reservationRepository.create({
       uuid: uuidv4(),
       course_id,
       teacher_id,
       student_id: studentId,
       reserve_time: reserveDateTime,
-      teacher_status: ReservationStatus.RESERVED,
-      student_status: ReservationStatus.RESERVED
+      teacher_status: ReservationStatus.PENDING,
+      student_status: ReservationStatus.RESERVED,
+      response_deadline: responseDeadline
     })
 
     const savedReservation = await this.reservationRepository.save(reservation)
 
-    // 6. 更新購買記錄的已使用堂數
-    await this.updateUsedLessons(purchase.id, purchase.quantity_used + 1)
+    // 注意：暫時不扣除課程堂數，待教師確認後再扣除
+    // await this.updateUsedLessons(purchase.id, purchase.quantity_used + 1)
 
     // 7. 直接轉換預約資料，避免額外的資料庫查詢
     const reservationWithDetails = this.transformReservationToResponse(savedReservation)
@@ -704,6 +708,102 @@ export class ReservationService {
   private getWeekdayName(weekday: number): string {
     const weekdays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六']
     return weekdays[weekday]
+  }
+
+  /**
+   * 計算教師回應期限
+   */
+  private calculateResponseDeadline(reserveTime: Date): Date {
+    const now = new Date()
+    const tomorrow = new Date(now)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setHours(23, 59, 59, 999) // 設定為明天的結束時間
+    
+    const responseDeadline = new Date(now)
+    
+    // 檢查是否為隔天預約
+    if (reserveTime.getTime() <= tomorrow.getTime()) {
+      // 隔天預約：12小時回應期限
+      responseDeadline.setTime(now.getTime() + 12 * 60 * 60 * 1000)
+    } else {
+      // 其他預約：24小時回應期限
+      responseDeadline.setTime(now.getTime() + 24 * 60 * 60 * 1000)
+    }
+    
+    return responseDeadline
+  }
+
+  /**
+   * 教師確認預約
+   */
+  async confirmReservation(reservationId: number, teacherId: number): Promise<ReservationDetail> {
+    // 1. 查找預約
+    const reservation = await this.getReservationById(reservationId)
+
+    // 2. 驗證權限
+    this.validateReservationAccess(reservation, teacherId, 'teacher')
+
+    // 3. 檢查預約狀態
+    if (reservation.teacher_status !== ReservationStatus.PENDING) {
+      throw new BusinessError(
+        ERROR_CODES.RESERVATION_STATUS_INVALID,
+        '預約狀態無效，只有待確認的預約可以被確認',
+        400
+      )
+    }
+
+    // 4. 檢查是否超過回應期限
+    const now = new Date()
+    if (reservation.response_deadline && now > reservation.response_deadline) {
+      throw new BusinessError(
+        ERROR_CODES.RESERVATION_STATUS_INVALID,
+        '預約已過期，無法確認',
+        400
+      )
+    }
+
+    // 5. 更新預約狀態
+    reservation.teacher_status = ReservationStatus.RESERVED
+    reservation.response_deadline = null // 清除回應期限
+
+    const updatedReservation = await this.reservationRepository.save(reservation)
+
+    // 6. 扣除學生課程堂數
+    const purchase = await this.validateStudentPurchase(reservation.student_id, reservation.course_id)
+    await this.updateUsedLessons(purchase.id, purchase.quantity_used + 1)
+
+    return this.transformReservationToResponse(updatedReservation)
+  }
+
+  /**
+   * 教師拒絕預約
+   */
+  async rejectReservation(reservationId: number, teacherId: number, reason?: string): Promise<ReservationDetail> {
+    // 1. 查找預約
+    const reservation = await this.getReservationById(reservationId)
+
+    // 2. 驗證權限
+    this.validateReservationAccess(reservation, teacherId, 'teacher')
+
+    // 3. 檢查預約狀態
+    if (reservation.teacher_status !== ReservationStatus.PENDING) {
+      throw new BusinessError(
+        ERROR_CODES.RESERVATION_STATUS_INVALID,
+        '預約狀態無效，只有待確認的預約可以被拒絕',
+        400
+      )
+    }
+
+    // 4. 更新預約狀態
+    reservation.teacher_status = ReservationStatus.CANCELLED
+    reservation.student_status = ReservationStatus.CANCELLED
+    reservation.response_deadline = null // 清除回應期限
+
+    const updatedReservation = await this.reservationRepository.save(reservation)
+
+    // 5. 不需要退還課程堂數，因為創建預約時沒有扣除
+
+    return this.transformReservationToResponse(updatedReservation)
   }
 }
 

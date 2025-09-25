@@ -349,4 +349,215 @@ router.get('/calendar',
   reservationController.getCalendarView
 )
 
+/**
+ * @swagger
+ * /api/reservations/{id}/confirm:
+ *   post:
+ *     tags:
+ *       - Reservation Management
+ *     summary: 教師確認預約
+ *     description: |
+ *       教師確認學生的預約請求，將預約狀態從等待確認改為已確認。
+ *       
+ *       **業務邏輯**：
+ *       - 驗證教師身份認證和權限（只有預約的教師可以確認）
+ *       - 檢查預約狀態是否為 PENDING（等待確認）
+ *       - 檢查是否超過教師回應期限
+ *       - 更新預約狀態為 RESERVED（已確認）
+ *       - 扣除學生的課程堂數
+ *       - 清除回應期限
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: 預約ID
+ *         example: 123
+ *     responses:
+ *       200:
+ *         description: 預約確認成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ConfirmReservationSuccessResponse'
+ *       400:
+ *         description: 請求參數錯誤或業務邏輯錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - $ref: '#/components/schemas/ValidationErrorResponse'
+ *                 - $ref: '#/components/schemas/ReservationStatusInvalidErrorResponse'
+ *                 - $ref: '#/components/schemas/ReservationExpiredErrorResponse'
+ *             examples:
+ *               validation_error:
+ *                 summary: 參數驗證錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "參數驗證失敗"
+ *                   errors:
+ *                     id: ["預約ID必須是數字"]
+ *               status_invalid:
+ *                 summary: 預約狀態無效
+ *                 value:
+ *                   status: "error"
+ *                   message: "預約狀態無效，只有待確認的預約可以被確認"
+ *               reservation_expired:
+ *                 summary: 預約已過期
+ *                 value:
+ *                   status: "error"
+ *                   message: "預約已過期，無法確認"
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       403:
+ *         description: 禁止存取 - 無權限操作此預約
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BusinessErrorResponse'
+ *             examples:
+ *               unauthorized_access:
+ *                 summary: 權限不足
+ *                 value:
+ *                   status: "error"
+ *                   message: "無權限操作此預約"
+ *       404:
+ *         description: 預約不存在或已被刪除
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/NotFoundErrorResponse'
+ *             examples:
+ *               not_found:
+ *                 summary: 預約不存在
+ *                 value:
+ *                   status: "error"
+ *                   message: "預約不存在"
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
+router.post('/:id/confirm',
+  authenticateToken,
+  createSchemasMiddleware({ params: reservationIdParamSchema }),
+  reservationController.confirmReservation
+)
+
+/**
+ * @swagger  
+ * /api/reservations/{id}/reject:
+ *   post:
+ *     tags:
+ *       - Reservation Management
+ *     summary: 教師拒絕預約
+ *     description: |
+ *       教師拒絕學生的預約請求，將預約狀態改為已取消。
+ *       
+ *       **業務邏輯**：
+ *       - 驗證教師身份認證和權限（只有預約的教師可以拒絕）
+ *       - 檢查預約狀態是否為 PENDING（等待確認）
+ *       - 更新預約雙方狀態為 CANCELLED（已取消）
+ *       - 不扣除學生課程堂數（因為確認時才會扣除）
+ *       - 清除回應期限
+ *       - 可選擇性提供拒絕原因
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: 預約ID
+ *         example: 123
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RejectReservationRequest'
+ *     responses:
+ *       200:
+ *         description: 預約拒絕成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RejectReservationSuccessResponse'
+ *       400:
+ *         description: 請求參數錯誤或業務邏輯錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - $ref: '#/components/schemas/ValidationErrorResponse'
+ *                 - $ref: '#/components/schemas/ReservationStatusInvalidErrorResponse'
+ *             examples:
+ *               validation_error:
+ *                 summary: 參數驗證錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "參數驗證失敗"
+ *                   errors:
+ *                     id: ["預約ID必須是數字"]
+ *                     reason: ["拒絕原因不能超過500字元"]
+ *               status_invalid:
+ *                 summary: 預約狀態無效
+ *                 value:
+ *                   status: "error"
+ *                   message: "預約狀態無效，只有待確認的預約可以被拒絕"
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       403:
+ *         description: 禁止存取 - 無權限操作此預約
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BusinessErrorResponse'
+ *             examples:
+ *               unauthorized_access:
+ *                 summary: 權限不足
+ *                 value:
+ *                   status: "error"
+ *                   message: "無權限操作此預約"
+ *       404:
+ *         description: 預約不存在或已被刪除
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/NotFoundErrorResponse'
+ *             examples:
+ *               not_found:
+ *                 summary: 預約不存在
+ *                 value:
+ *                   status: "error"
+ *                   message: "預約不存在"
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
+router.post('/:id/reject',
+  authenticateToken,
+  createSchemasMiddleware({ params: reservationIdParamSchema }),
+  reservationController.rejectReservation
+)
+
 export default router

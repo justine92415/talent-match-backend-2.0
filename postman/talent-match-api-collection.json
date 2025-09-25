@@ -1,8 +1,8 @@
 {
   "info": {
     "name": "Talent Match API 2.0",
-    "description": "Talent Match 後端 API 完整集合 - 包含所有認證、課程、教師、購物車、訂單等功能的 API 端點\n\n🆕 **v2.2 新功能**：\n- 管理員課程申請列表 API\n- 課程狀態篩選（submitted, approved, rejected, draft, published, archived）\n- 管理員 token 自動保存\n- 增強的測試腳本和變數管理\n\n🔧 **v2.1 功能**：\n- 整合式課程建立 API (支援同時上傳圖片和設定價格方案)\n- multipart/form-data 支援檔案上傳\n- 資料庫交易確保原子性操作\n- 自動錯誤恢復和資源清理",
-    "version": "2.2.0",
+    "description": "Talent Match 後端 API 完整集合 - 包含所有認證、課程、教師、購物車、訂單等功能的 API 端點\n\n🆕 **v2.3 新功能**：\n- 預約確認流程：學生預約後需要教師確認\n- 教師確認/拒絕預約 API\n- 預約狀態自動過期機制（隔天預約12小時內回應，其他24小時內回應）\n- PENDING 狀態預約管理\n\n🔧 **v2.2 功能**：\n- 管理員課程申請列表 API\n- 課程狀態篩選（submitted, approved, rejected, draft, published, archived）\n- 管理員 token 自動保存\n- 增強的測試腳本和變數管理\n\n🔧 **v2.1 功能**：\n- 整合式課程建立 API (支援同時上傳圖片和設定價格方案)\n- multipart/form-data 支援檔案上傳\n- 資料庫交易確保原子性操作\n- 自動錯誤恢復和資源清理",
+    "version": "2.3.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -2552,7 +2552,28 @@
               "path": ["api", "reservations"]
             },
             "description": "建立課程預約"
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('預約建立成功', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.status).to.eql('success');",
+                  "    pm.expect(response.message).to.include('預約建立成功');",
+                  "    pm.expect(response.data).to.have.property('id');",
+                  "    pm.expect(response.data.status).to.eql('pending');",
+                  "    pm.expect(response.data).to.have.property('response_deadline');",
+                  "    // 保存預約 ID 供後續測試使用",
+                  "    pm.globals.set('reservation_id', response.data.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "預約詳情",
@@ -2602,6 +2623,95 @@
           }
         },
         {
+          "name": "教師確認預約",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reservations/:id/confirm",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reservations", ":id", "confirm"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "教師確認學生的預約請求"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('預約確認成功', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.status).to.eql('success');",
+                  "    pm.expect(response.message).to.include('預約確認成功');",
+                  "    pm.expect(response.data).to.have.property('id');",
+                  "    pm.expect(response.data.status).to.eql('reserved');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "教師拒絕預約",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"時間衝突，建議重新預約其他時段\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/reservations/:id/reject",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reservations", ":id", "reject"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "教師拒絕學生的預約請求並提供拒絕原因"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('預約拒絕成功', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.status).to.eql('success');",
+                  "    pm.expect(response.message).to.include('預約已拒絕');",
+                  "    pm.expect(response.data).to.have.property('id');",
+                  "    pm.expect(response.data.status).to.eql('cancelled');",
+                  "    pm.expect(response.data).to.have.property('rejection_reason');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
           "name": "取消預約",
           "request": {
             "method": "DELETE",
@@ -2621,7 +2731,7 @@
           }
         }
       ],
-      "description": "課程預約管理相關 API"
+      "description": "課程預約管理相關 API\n\n📋 **預約流程**：\n1. 學生建立預約（狀態：pending）\n2. 系統設定教師回應期限（隔天預約12小時，其他24小時）\n3. 教師確認/拒絕預約\n4. 超過期限自動過期\n\n🔧 **可用狀態**：pending（待確認）、reserved（已確認）、cancelled（已取消/拒絕）、completed（已完成）"
     },
     {
       "name": "教師後台管理 (Teacher Dashboard)",
