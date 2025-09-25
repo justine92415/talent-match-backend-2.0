@@ -178,6 +178,76 @@ export class ReservationService {
   }
 
   /**
+   * 學生查詢自己的預約列表
+   */
+  async getStudentReservations(
+    studentId: number,
+    query: Omit<ReservationListQuery, 'role'>
+  ): Promise<ReservationListResponse> {
+    const {
+      status,
+      course_id,
+      date_from,
+      date_to,
+      page = 1,
+      per_page = 10
+    } = query
+
+    // 建立基礎查詢（簡化版本，避免複雜的關聯查詢）
+    const queryBuilder = this.reservationRepository.createQueryBuilder('reservation')
+
+    // 只查詢學生自己的預約
+    queryBuilder.where('reservation.student_id = :studentId', { studentId })
+
+    // 課程篩選
+    if (course_id) {
+      queryBuilder.andWhere('reservation.course_id = :courseId', { courseId: course_id })
+    }
+
+    // 狀態過濾 - 使用學生狀態
+    if (status) {
+      queryBuilder.andWhere('reservation.student_status = :status', { status })
+    }
+
+    // 日期範圍過濾
+    if (date_from && date_to) {
+      const fromDate = new Date(date_from)
+      const toDate = new Date(date_to)
+      toDate.setHours(23, 59, 59, 999) // 包含整天
+
+      queryBuilder.andWhere('reservation.reserve_time BETWEEN :fromDate AND :toDate', {
+        fromDate,
+        toDate
+      })
+    }
+
+    // 排除已軟刪除的記錄
+    queryBuilder.andWhere('reservation.deleted_at IS NULL')
+
+    // 排序：最新的預約在前
+    queryBuilder.orderBy('reservation.reserve_time', 'DESC')
+
+    // 分頁
+    const skip = (page - 1) * per_page
+    queryBuilder.skip(skip).take(per_page)
+
+    const [reservations, total] = await queryBuilder.getManyAndCount()
+
+    // 轉換為回應格式
+    const reservationList = reservations.map(reservation => this.transformReservationToResponse(reservation))
+
+    return {
+      reservations: reservationList,
+      pagination: {
+        current_page: page,
+        per_page,
+        total,
+        total_pages: Math.ceil(total / per_page)
+      }
+    }
+  }
+
+  /**
    * 更新預約狀態
    */
   async updateReservationStatus(

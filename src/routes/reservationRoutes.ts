@@ -3,7 +3,8 @@ import { authenticateToken } from '@middleware/auth'
 import { createSchemasMiddleware } from '@middleware/schemas/core'
 import { 
   createReservationSchema, 
-  reservationListQuerySchema, 
+  reservationListQuerySchema,
+  studentReservationListQuerySchema,
   updateReservationStatusSchema, 
   reservationIdParamSchema, 
   calendarViewQuerySchema 
@@ -215,6 +216,111 @@ router.post('/',
  *             schema:
  *               $ref: '#/components/schemas/ServerErrorResponse'
  */
+
+/**
+ * @swagger
+ * /api/reservations/my-reservations:
+ *   get:
+ *     tags:
+ *       - Reservation Management
+ *     summary: 學生查詢自己的預約記錄
+ *     description: |
+ *       學生查詢自己的預約記錄，支援多種篩選條件。
+ *       
+ *       **業務邏輯**：
+ *       - 僅限學生角色使用
+ *       - 查詢登入學生的所有預約記錄
+ *       - 支援依課程 ID 篩選（course_id）
+ *       - 支援分頁查詢（page, per_page）
+ *       - 支援狀態篩選（status）
+ *       - 支援日期範圍篩選（date_from, date_to）
+ *       - 回傳預約列表和分頁資訊
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: course_id
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: 課程 ID，篩選特定課程的預約記錄
+ *         example: 2
+ *       - name: page
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: 頁數
+ *         example: 1
+ *       - name: per_page
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: 每頁筆數
+ *         example: 10
+ *       - name: status
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [pending, reserved, completed, cancelled]
+ *         description: 預約狀態篩選
+ *         example: reserved
+ *       - name: date_from
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: 查詢起始日期 (YYYY-MM-DD)
+ *         example: "2025-09-01"
+ *       - name: date_to
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: 查詢結束日期 (YYYY-MM-DD)
+ *         example: "2025-09-30"
+ *     responses:
+ *       200:
+ *         description: 查詢成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ReservationListSuccessResponse'
+ *       400:
+ *         description: 參數驗證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ReservationValidationErrorResponse'
+ *       401:
+ *         description: 身份認證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ReservationUnauthorizedErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
+router.get('/my-reservations',
+  authenticateToken,
+  createSchemasMiddleware({ query: studentReservationListQuerySchema }),
+  reservationController.getMyReservations
+)
+
 router.get('/', 
   authenticateToken,
   createSchemasMiddleware({ query: reservationListQuerySchema }),

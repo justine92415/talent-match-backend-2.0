@@ -86,6 +86,62 @@ export const reservationListQuerySchema = Joi.object({
     })
 })
 
+// 學生專用預約查詢參數（不需要 role 參數）
+export const studentReservationListQuerySchema = Joi.object({
+  status: Joi.alternatives().try(
+    Joi.string().valid('reserved', 'completed', 'cancelled'),
+    Joi.string().allow(''),
+    Joi.allow(null)
+  ).optional(),
+  course_id: Joi.alternatives().try(
+    Joi.number().integer().positive(),
+    Joi.string().allow(''),
+    Joi.allow(null)
+  ).optional()
+    .messages({
+      'number.base': '課程 ID 必須是數字',
+      'number.integer': '課程 ID 必須是整數',
+      'number.positive': '課程 ID 必須大於 0'
+    }),
+  date_from: Joi.alternatives().try(
+    Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/),
+    Joi.string().allow(''),
+    Joi.allow(null)
+  ).optional()
+    .messages({
+      'string.pattern.base': '開始日期格式不正確，請使用 YYYY-MM-DD 格式'
+    }),
+  date_to: Joi.alternatives().try(
+    Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/),
+    Joi.string().allow(''),
+    Joi.allow(null)
+  ).optional()
+    .messages({
+      'string.pattern.base': '結束日期格式不正確，請使用 YYYY-MM-DD 格式'
+    }),
+  page: Joi.alternatives().try(
+    Joi.number().integer().min(1),
+    Joi.string().allow(''),
+    Joi.allow(null)
+  ).default(1).optional()
+    .messages({
+      'number.base': '頁碼必須是數字',
+      'number.integer': '頁碼必須是整數',
+      'number.min': '頁碼必須大於 0'
+    }),
+  per_page: Joi.alternatives().try(
+    Joi.number().integer().min(1).max(100),
+    Joi.string().allow(''),
+    Joi.allow(null)
+  ).default(10).optional()
+    .messages({
+      'number.base': '每頁數量必須是數字',
+      'number.integer': '每頁數量必須是整數',
+      'number.min': '每頁數量必須大於 0',
+      'number.max': '每頁數量不能超過 100'
+    })
+})
+
 export const updateReservationStatusSchema = Joi.object({
   status_type: Joi.string().valid('teacher-complete', 'student-complete').required(),
   notes: Joi.string().max(500).optional()

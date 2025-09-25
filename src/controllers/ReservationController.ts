@@ -112,6 +112,58 @@ export class ReservationController {
   )
 
   /**
+   * 學生查詢自己的預約列表
+   * GET /reservations/my-reservations
+   */
+  getMyReservations = handleErrorAsync(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const userId = req.user?.userId
+      if (!userId) {
+        throw new BusinessError(
+          ERROR_CODES.UNAUTHORIZED_ACCESS,
+          MESSAGES.BUSINESS.UNAUTHORIZED_ACCESS,
+          401
+        )
+      }
+
+      // 輔助函數：處理空字串或無效值
+      const parseParam = (value: any): any => {
+        if (value === '' || value === null || value === undefined || value === 'undefined' || value === 'null') {
+          return undefined
+        }
+        return value
+      }
+
+      const parseIntParam = (value: any): number | undefined => {
+        if (value === '' || value === null || value === undefined || value === 'undefined' || value === 'null') {
+          return undefined
+        }
+        const parsed = parseInt(value as string, 10)
+        return isNaN(parsed) ? undefined : parsed
+      }
+
+      // 解析查詢參數 - 移除 role 參數，因為明確是學生查詢
+      const query: Omit<ReservationListQuery, 'role'> = {
+        status: parseParam(req.query.status) as any,
+        course_id: parseIntParam(req.query.course_id),
+        date_from: parseParam(req.query.date_from) as string,
+        date_to: parseParam(req.query.date_to) as string,
+        page: parseIntParam(req.query.page) || 1,
+        per_page: parseIntParam(req.query.per_page) || 10
+      }
+
+      const result = await this.reservationService.getStudentReservations(
+        userId,
+        query
+      )
+
+      res.status(200).json(
+        handleSuccess(result, MESSAGES.RESERVATION.LIST_SUCCESS)
+      )
+    }
+  )
+
+  /**
    * 更新預約狀態
    * PUT /reservations/:id/status
    */
