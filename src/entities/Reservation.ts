@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import { ReservationStatus } from './enums'
 import { User } from './User'
 import { Course } from './Course'
+import { Teacher } from './Teacher'
 
 @Entity('reservations')
 // 新增複合索引以優化查詢效能
@@ -36,9 +37,9 @@ export class Reservation {
   course!: Course
 
   /** 授課教師關聯 */
-  @ManyToOne(() => User)
+  @ManyToOne(() => Teacher)
   @JoinColumn({ name: 'teacher_id' })
-  teacher!: User
+  teacher!: Teacher
 
   /** 預約學生關聯 */
   @ManyToOne(() => User)
