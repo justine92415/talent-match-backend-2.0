@@ -1735,4 +1735,77 @@ router.put('/schedule', authenticateToken, validateRequest(weeklyScheduleSchema)
  */
 router.get('/schedule/conflicts', authenticateToken, validateRequest(conflictsQuerySchema, 'query'), scheduleController.checkConflicts)
 
+/**
+ * @swagger
+ * /api/teachers/my-courses:
+ *   get:
+ *     tags:
+ *       - Teacher Management
+ *     summary: 獲取教師課程清單
+ *     description: |
+ *       教師獲取自己的課程清單，用於下拉選單選項。
+ *       
+ *       **業務邏輯**：
+ *       - 僅限已認證的教師使用
+ *       - 只返回已發布狀態的課程
+ *       - 按課程建立時間倒序排列
+ *       - 返回符合前端 SelectOption 介面格式的資料
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 課程清單獲取成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: 課程清單獲取成功
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       value:
+ *                         type: integer
+ *                         description: 課程 ID
+ *                         example: 123
+ *                       label:
+ *                         type: string
+ *                         description: 課程名稱
+ *                         example: "JavaScript 基礎教學"
+ *       401:
+ *         description: 身份認證失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       404:
+ *         description: 教師資料不存在
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: 教師資料不存在
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
+router.get('/my-courses', authenticateToken, teacherController.getMyCourses)
+
 export default router

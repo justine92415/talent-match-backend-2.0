@@ -20,7 +20,8 @@ import type {
   CreateReservationRequest,
   ReservationListQuery,
   UpdateReservationStatusRequest,
-  CalendarViewQuery
+  CalendarViewQuery,
+  TeacherReservationQuery
 } from '@models/reservation.interface'
 
 export class ReservationController {
@@ -72,14 +73,31 @@ export class ReservationController {
       // 從查詢參數取得使用者角色（預設為學生）
       const userRole = req.query.role as 'teacher' | 'student' || 'student'
 
+      // 輔助函數：處理空字串或無效值
+      const parseParam = (value: any): any => {
+        if (value === '' || value === null || value === undefined || value === 'undefined' || value === 'null') {
+          return undefined
+        }
+        return value
+      }
+
+      const parseIntParam = (value: any): number | undefined => {
+        if (value === '' || value === null || value === undefined || value === 'undefined' || value === 'null') {
+          return undefined
+        }
+        const parsed = parseInt(value as string, 10)
+        return isNaN(parsed) ? undefined : parsed
+      }
+
       // 解析查詢參數
       const query: ReservationListQuery = {
         role: req.query.role as 'teacher' | 'student',
-        status: req.query.status as any,
-        date_from: req.query.date_from as string,
-        date_to: req.query.date_to as string,
-        page: req.query.page ? parseInt(req.query.page as string, 10) : 1,
-        per_page: req.query.per_page ? parseInt(req.query.per_page as string, 10) : 10
+        status: parseParam(req.query.status) as any,
+        course_id: parseIntParam(req.query.course_id),
+        date_from: parseParam(req.query.date_from) as string,
+        date_to: parseParam(req.query.date_to) as string,
+        page: parseIntParam(req.query.page) || 1,
+        per_page: parseIntParam(req.query.per_page) || 10
       }
 
       const result = await this.reservationService.getReservations(
@@ -91,6 +109,111 @@ export class ReservationController {
       res.status(200).json(
         handleSuccess(result, MESSAGES.RESERVATION.LIST_SUCCESS)
       )
+    }
+  )
+
+  /**
+   * 學生查詢自己的預約列表
+   * GET /reservations/my-reservations
+   */
+  getMyReservations = handleErrorAsync(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const userId = req.user?.userId
+      if (!userId) {
+        throw new BusinessError(
+          ERROR_CODES.UNAUTHORIZED_ACCESS,
+          MESSAGES.BUSINESS.UNAUTHORIZED_ACCESS,
+          401
+        )
+      }
+
+      // 輔助函數：處理空字串或無效值
+      const parseParam = (value: any): any => {
+        if (value === '' || value === null || value === undefined || value === 'undefined' || value === 'null') {
+          return undefined
+        }
+        return value
+      }
+
+      const parseIntParam = (value: any): number | undefined => {
+        if (value === '' || value === null || value === undefined || value === 'undefined' || value === 'null') {
+          return undefined
+        }
+        const parsed = parseInt(value as string, 10)
+        return isNaN(parsed) ? undefined : parsed
+      }
+
+      // 解析查詢參數 - 移除 role 參數，因為明確是學生查詢
+      const query: Omit<ReservationListQuery, 'role'> = {
+        status: parseParam(req.query.status) as any,
+        course_id: parseIntParam(req.query.course_id),
+        date_from: parseParam(req.query.date_from) as string,
+        date_to: parseParam(req.query.date_to) as string,
+        page: parseIntParam(req.query.page) || 1,
+        per_page: parseIntParam(req.query.per_page) || 10
+      }
+
+      const result = await this.reservationService.getStudentReservations(
+        userId,
+        query
+      )
+
+      res.status(200).json(
+        handleSuccess(result, MESSAGES.RESERVATION.LIST_SUCCESS)
+      )
+    }
+  )
+
+  /**
+   * 教師查詢課程預約列表
+   * GET /reservations/course-reservations
+   */
+  getCourseReservations = handleErrorAsync(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const userId = req.user?.userId
+      if (!userId) {
+        throw new BusinessError(
+          ERROR_CODES.UNAUTHORIZED_ACCESS,
+          MESSAGES.BUSINESS.UNAUTHORIZED_ACCESS,
+          401
+        )
+      }
+
+      // 輔助函數：處理空字串或無效值
+      const parseParam = (value: any): any => {
+        if (value === '' || value === null || value === undefined || value === 'undefined' || value === 'null') {
+          return undefined
+        }
+        return value
+      }
+
+      const parseIntParam = (value: any): number | undefined => {
+        if (value === '' || value === null || value === undefined || value === 'undefined' || value === 'null') {
+          return undefined
+        }
+        const parsed = parseInt(value as string, 10)
+        return isNaN(parsed) ? undefined : parsed
+      }
+
+      // 解析查詢參數
+      const query: TeacherReservationQuery = {
+        course_id: parseIntParam(req.query.course_id),
+        time_range: parseParam(req.query.time_range) as 'all' | 'today' | 'week' | 'month',
+        date_from: parseParam(req.query.date_from) as string,
+        date_to: parseParam(req.query.date_to) as string,
+        status: parseParam(req.query.status) as 'all' | 'pending' | 'reserved' | 'completed' | 'cancelled',
+        student_search: parseParam(req.query.student_search) as string,
+        page: parseIntParam(req.query.page) || 1,
+        per_page: parseIntParam(req.query.per_page) || 10
+      }
+
+      // 直接使用 userId 調用服務，middleware 已確保使用者是教師
+      const result = await this.reservationService.getTeacherCourseReservations(
+        userId,
+        query
+      )
+
+      res.status(200).json(result)
     }
   )
 
@@ -156,9 +279,13 @@ export class ReservationController {
         )
       }
 
+      // 從 body 取得取消原因（教師必填，學生選填）
+      const { reason } = req.body || {}
+
       const result = await this.reservationService.cancelReservation(
         reservationId,
-        userId
+        userId,
+        reason
       )
 
       res.status(200).json(
@@ -200,6 +327,79 @@ export class ReservationController {
 
       res.status(200).json(
         handleSuccess(result, MESSAGES.RESERVATION.CALENDAR_SUCCESS)
+      )
+    }
+  )
+
+  /**
+   * 教師確認預約
+   * POST /reservations/:id/confirm
+   */
+  confirmReservation = handleErrorAsync(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const userId = req.user?.userId
+      if (!userId) {
+        throw new BusinessError(
+          ERROR_CODES.UNAUTHORIZED_ACCESS,
+          MESSAGES.BUSINESS.UNAUTHORIZED_ACCESS,
+          401
+        )
+      }
+
+      const reservationId = parseInt(req.params.id, 10)
+      if (isNaN(reservationId)) {
+        throw new BusinessError(
+          ERROR_CODES.VALIDATION_ERROR,
+          MESSAGES.VALIDATION.RESERVATION_COURSE_ID_INVALID,
+          400
+        )
+      }
+
+      const result = await this.reservationService.confirmReservation(
+        reservationId,
+        userId
+      )
+
+      res.status(200).json(
+        handleSuccess(result, '預約確認成功')
+      )
+    }
+  )
+
+  /**
+   * 教師拒絕預約
+   * POST /reservations/:id/reject
+   */
+  rejectReservation = handleErrorAsync(
+    async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      const userId = req.user?.userId
+      if (!userId) {
+        throw new BusinessError(
+          ERROR_CODES.UNAUTHORIZED_ACCESS,
+          MESSAGES.BUSINESS.UNAUTHORIZED_ACCESS,
+          401
+        )
+      }
+
+      const reservationId = parseInt(req.params.id, 10)
+      if (isNaN(reservationId)) {
+        throw new BusinessError(
+          ERROR_CODES.VALIDATION_ERROR,
+          MESSAGES.VALIDATION.RESERVATION_COURSE_ID_INVALID,
+          400
+        )
+      }
+
+      const { reason } = req.body
+
+      const result = await this.reservationService.rejectReservation(
+        reservationId,
+        userId,
+        reason
+      )
+
+      res.status(200).json(
+        handleSuccess(result, '預約已拒絕')
       )
     }
   )

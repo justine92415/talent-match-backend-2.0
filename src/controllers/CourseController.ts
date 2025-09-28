@@ -190,6 +190,19 @@ export class CourseController {
 
     res.status(200).json(handleSuccess(null, SUCCESS.COURSE_ARCHIVED))
   })
+
+  /**
+   * 查詢課程在特定日期的可預約時段
+   * GET /api/courses/:id/available-slots?date=YYYY-MM-DD
+   */
+  getAvailableSlots = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const courseId = parseInt(req.params.id)
+    const date = req.query.date as string
+
+    const result = await courseService.getAvailableSlots(courseId, date)
+
+    res.status(200).json(handleSuccess(result, '查詢可預約時段成功'))
+  })
 }
 
 // 匯出控制器實例
