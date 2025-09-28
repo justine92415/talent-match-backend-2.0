@@ -112,25 +112,36 @@ export class VideoController {
    * 更新影片資訊
    * 
    * 支援部分欄位更新：
-   * - 標題、描述更新
-   * - YouTube 連結更新
+   * - 標題、分類、介紹更新
    * - 檔案替換（如果提供新檔案）
    * 
    * @route PUT /api/videos/:id
    * @access Private (只能更新自己的影片)
    */
-  updateVideo = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.user!.userId
-    const videoId = parseInt(req.params.id, 10)
-    const updateData: VideoUpdateRequest = req.body
+  updateVideo = async (req: Request, res: Response, next: NextFunction) => {
+    const videoFile = (req as any).videoFile
+    
+    try {
+      const userId = req.user!.userId
+      const videoId = parseInt(req.params.id, 10)
+      const updateData: VideoUpdateRequest = req.body
 
-    // TODO: 檔案更新處理：檢查是否有上傳新檔案
-    // const uploadedFile = req.file
+      // 準備完整的影片更新資料
+      const updateVideoData = {
+        ...updateData,
+        videoFile // 檔案物件，由 Service 層處理上傳（可選）
+      }
 
-    const video = await videoService.updateVideo(videoId, userId, updateData)
+      // 呼叫服務層更新影片（包含可選的檔案替換）
+      const video = await videoService.updateVideoWithFile(videoId, userId, updateVideoData)
 
-    res.status(200).json(handleSuccess({ video }, SUCCESS.VIDEO_UPDATED))
-  })
+      res.status(200).json(handleSuccess({ video }, SUCCESS.VIDEO_UPDATED))
+
+    } catch (error) {
+      // 錯誤處理交給中間件處理暫存檔案清理
+      next(error)
+    }
+  }
 
   /**
    * 刪除影片（軟刪除）

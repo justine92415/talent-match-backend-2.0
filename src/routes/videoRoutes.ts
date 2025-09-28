@@ -22,7 +22,9 @@ import {
 } from '@middleware/schemas/course'
 import {
   parseVideoFile,
+  parseOptionalVideoFile,
   validateVideoFileMiddleware,
+  validateOptionalVideoFileMiddleware,
   cleanupTempVideoFile
 } from '@middleware/upload/videoFileUpload'
 
@@ -231,9 +233,194 @@ router.post('/',
 
 router.get('/', ...authMiddlewareChains.teacherAuth, validateRequest(videoListQuerySchema), videoController.getVideoList)
 
+/**
+ * @swagger
+ * /api/videos/{id}:
+ *   get:
+ *     tags:
+ *       - Video Management
+ *     summary: 取得影片詳細資訊
+ *     description: |
+ *       取得指定影片的詳細資訊和使用統計。只能查看自己上傳的影片。
+ *       
+ *       **業務邏輯**：
+ *       - 驗證教師身份和權限
+ *       - 驗證影片 ID 格式
+ *       - 查詢影片基本資訊
+ *       - 驗證影片所有權（只能查看自己的影片）
+ *       - 取得影片使用統計資訊
+ *       - 排除已軟刪除的影片
+ *       
+ *       **權限控制**：
+ *       - 需要教師身份認證
+ *       - 只能查看自己上傳的影片
+ *       - 無法查看已刪除的影片
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: 影片 ID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: 取得影片詳情成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoDetailSuccessResponse'
+ *       400:
+ *         description: 請求參數錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *             examples:
+ *               invalid_id:
+ *                 summary: 影片 ID 格式錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "參數驗證失敗"
+ *                   errors:
+ *                     id: ["影片 ID 必須為正整數"]
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       403:
+ *         description: 禁止存取 - 無權限查看此影片
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoPermissionErrorResponse'
+ *       404:
+ *         description: 影片不存在或已被刪除
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoNotFoundErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
 router.get('/:id', ...authMiddlewareChains.teacherAuth, videoController.getVideoDetail)
 
-router.put('/:id', ...authMiddlewareChains.teacherAuth, validateRequest(updateVideoSchema), videoController.updateVideo)
+/**
+ * @swagger
+ * /api/videos/{id}:
+ *   put:
+ *     tags:
+ *       - Video Management
+ *     summary: 更新影片資訊
+ *     description: |
+ *       更新指定影片的基本資訊。支援部分欄位更新，只能更新自己上傳的影片。
+ *       
+ *       **業務邏輯**：
+ *       - 驗證教師身份和權限
+ *       - 驗證影片 ID 和更新資料格式
+ *       - 查詢現有影片記錄
+ *       - 驗證影片所有權（只能更新自己的影片）
+ *       - 更新指定欄位到資料庫
+ *       - 回傳更新後的影片資訊
+ *       
+ *       **可更新欄位**：
+ *       - `name`: 影片名稱（1-200字元）
+ *       - `category`: 影片分類（1-100字元）
+ *       - `intro`: 影片介紹（1-2000字元）
+ *       
+ *       **注意事項**：
+ *       - 不支援更新影片檔案，如需更換請重新上傳
+ *       - 至少需要提供一個欄位進行更新
+ *       - 無法更新已刪除的影片
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: 影片 ID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/VideoUpdateRequest'
+ *     responses:
+ *       200:
+ *         description: 影片資訊更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoUpdateSuccessResponse'
+ *       400:
+ *         description: 請求參數錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoUpdateValidationErrorResponse'
+ *             examples:
+ *               validation_error:
+ *                 summary: 參數驗證錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "參數驗證失敗"
+ *                   errors:
+ *                     name: ["影片名稱長度不能超過200字元"]
+ *                     category: ["影片分類不能為空"]
+ *               no_update_data:
+ *                 summary: 沒有提供更新資料
+ *                 value:
+ *                   status: "error"
+ *                   message: "參數驗證失敗"
+ *                   errors:
+ *                     body: ["至少需要提供一個欄位進行更新"]
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       403:
+ *         description: 禁止存取 - 無權限更新此影片
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoPermissionErrorResponse'
+ *       404:
+ *         description: 影片不存在或已被刪除
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoNotFoundErrorResponse'
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
+
+router.put('/:id', 
+  ...authMiddlewareChains.teacherAuth, 
+  parseOptionalVideoFile,
+  validateOptionalVideoFileMiddleware,
+  validateRequest(updateVideoSchema),
+  videoController.updateVideo,
+  cleanupTempVideoFile
+)
 
 router.delete('/:id', ...authMiddlewareChains.teacherAuth, videoController.deleteVideo)
 

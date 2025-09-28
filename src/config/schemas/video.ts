@@ -164,6 +164,76 @@ export const videoSchemas = {
     }
   },
 
+  // 影片更新成功回應 Schema
+  VideoUpdateSuccessResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        description: '回應狀態',
+        enum: ['success'],
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        description: '成功訊息',
+        example: '影片資訊更新成功'
+      },
+      data: {
+        type: 'object',
+        properties: {
+          video: {
+            $ref: '#/components/schemas/VideoBasicInfo'
+          }
+        },
+        description: '更新後的影片資料'
+      }
+    }
+  },
+
+  // 影片詳情成功回應 Schema
+  VideoDetailSuccessResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        description: '回應狀態',
+        enum: ['success'],
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        description: '成功訊息',
+        example: '取得影片詳情成功'
+      },
+      data: {
+        type: 'object',
+        properties: {
+          video: {
+            $ref: '#/components/schemas/VideoBasicInfo'
+          },
+          usage_stats: {
+            type: 'object',
+            properties: {
+              used_in_courses: {
+                type: 'integer',
+                description: '被多少課程使用',
+                example: 0
+              },
+              total_views: {
+                type: 'integer',
+                description: '總觀看次數',
+                example: 0
+              }
+            },
+            description: '影片使用統計資訊'
+          }
+        },
+        description: '影片詳細資料和使用統計'
+      }
+    }
+  },
+
   // ==================== 共用影片資訊 Schema ====================
 
   // 影片基本資訊 Schema
@@ -304,6 +374,42 @@ export const videoSchemas = {
         properties: {
           message: {
             example: '需要教師權限才能管理影片'
+          }
+        }
+      }
+    ]
+  },
+
+  // 影片更新驗證錯誤回應 Schema
+  VideoUpdateValidationErrorResponse: {
+    allOf: [
+      { $ref: '#/components/schemas/ValidationErrorResponse' },
+      {
+        type: 'object',
+        properties: {
+          message: {
+            example: '參數驗證失敗'
+          },
+          errors: {
+            example: {
+              name: ['影片名稱長度不能超過200字元'],
+              category: ['影片分類長度不能超過100字元']
+            }
+          }
+        }
+      }
+    ]
+  },
+
+  // 影片不存在錯誤回應 Schema
+  VideoNotFoundErrorResponse: {
+    allOf: [
+      { $ref: '#/components/schemas/NotFoundErrorResponse' },
+      {
+        type: 'object',
+        properties: {
+          message: {
+            example: '影片不存在'
           }
         }
       }

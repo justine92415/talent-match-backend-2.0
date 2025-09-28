@@ -235,7 +235,123 @@ export class VideoService {
   }
 
   /**
-   * 更新影片資訊
+   * 更新影片資訊（包含檔案替換）
+   * @param videoId 影片 ID
+   * @param teacherId 教師 ID
+   * @param updateData 包含檔案的更新資料
+   * @returns Promise<Video>
+   */
+  async updateVideoWithFile(
+    videoId: number, 
+    teacherId: number, 
+    updateData: VideoUpdateRequest & { videoFile?: any }
+  ): Promise<Video> {
+    const { videoFile, ...basicUpdateData } = updateData
+
+    // 查詢影片
+    const video = await this.videoRepository.findOne({
+      where: { id: videoId, deleted_at: IsNull() }
+    })
+
+    if (!video) {
+      throw this.createVideoNotFoundError(videoId)
+    }
+
+    // 驗證權限
+    this.validateVideoOwnership(video, teacherId)
+
+    let newVideoUrl: string | null = video.url // 預設使用現有影片 URL
+    let oldVideoUrl: string | null = null // 用於後續清理
+
+    try {
+      // 1. 處理影片檔案更新（如果有提供新檔案）
+      if (videoFile) {
+        try {
+          // 儲存舊影片 URL 以便後續清理
+          oldVideoUrl = video.url
+
+          // 上傳新影片到 Storage
+          const uploadedFile = await this.uploadVideoToFirebase(
+            videoFile.filepath,
+            videoFile.originalFilename || `video_${Date.now()}`,
+            videoFile.mimetype,
+            teacherId
+          )
+          newVideoUrl = uploadedFile.downloadURL
+          
+          // 立即清理暫存檔案
+          this.cleanupTempVideoFile(videoFile.filepath, '(檔案替換成功)')
+          
+        } catch (error) {
+          // 清理暫存檔案
+          if (videoFile.filepath) {
+            this.cleanupTempVideoFile(videoFile.filepath, '(檔案替換失敗)')
+          }
+          
+          console.error('影片檔案上傳失敗:', error)
+          throw new BusinessError(
+            ERROR_CODES.VIDEO_UPLOAD_FAILED,
+            '影片檔案上傳失敗',
+            500
+          )
+        }
+      }
+
+      // 2. 更新影片資料
+      Object.assign(video, {
+        name: basicUpdateData.name || video.name,
+        category: basicUpdateData.category || video.category,
+        intro: basicUpdateData.intro || video.intro,
+        url: newVideoUrl,
+        updated_at: new Date()
+      })
+
+      // 儲存更新
+      const updatedVideo = await this.videoRepository.save(video)
+
+      // 3. 成功後清理舊影片檔案（如果有替換）
+      if (videoFile && oldVideoUrl && oldVideoUrl.trim() !== '' && oldVideoUrl !== newVideoUrl) {
+        console.log(`準備清理舊影片檔案: ${oldVideoUrl}`)
+        try {
+          const firebaseUrl = this.extractFirebaseUrlFromDownloadUrl(oldVideoUrl)
+          await this.deleteVideoFile(firebaseUrl)
+          console.log('✅ 舊影片檔案已清理:', oldVideoUrl)
+        } catch (error) {
+          console.error('❌ 清理舊影片檔案失敗:', error)
+          // 不拋出錯誤，避免影響主要流程
+        }
+      }
+
+      return updatedVideo
+
+    } catch (error) {
+      // 如果新檔案已上傳但更新失敗，清理新上傳的檔案
+      if (videoFile && newVideoUrl && newVideoUrl !== video.url) {
+        console.log(`清理失敗更新的新檔案: ${newVideoUrl}`)
+        try {
+          const firebaseUrl = this.extractFirebaseUrlFromDownloadUrl(newVideoUrl)
+          await this.deleteVideoFile(firebaseUrl)
+          console.log('✅ 失敗的新檔案已清理:', newVideoUrl)
+        } catch (cleanupError) {
+          console.error('❌ 清理新檔案失敗:', cleanupError)
+        }
+      }
+
+      if (error instanceof BusinessError) {
+        throw error
+      }
+      
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      throw new BusinessError(
+        ERROR_CODES.VIDEO_UPLOAD_FAILED,
+        `影片更新失敗: ${errorMessage}`,
+        500
+      )
+    }
+  }
+
+  /**
+   * 更新影片資訊（原有方法，保持向後相容性）
    * @param videoId 影片 ID
    * @param teacherId 教師 ID
    * @param updateData 更新資料
@@ -667,6 +783,61 @@ export class VideoService {
       }
     } catch (error) {
       console.warn(`清理暫存影片檔案失敗 ${context}:`, filePath, error)
+    }
+  }
+
+  /**
+   * 從下載 URL 中解析 Firebase 檔案路徑
+   * 
+   * @param downloadUrl 下載 URL
+   * @returns Firebase 檔案路徑
+   */
+  private extractFirebaseUrlFromDownloadUrl(downloadUrl: string): string {
+    // 支援多種 Firebase Storage URL 格式
+    
+    // 格式 1: https://firebasestorage.googleapis.com/v0/b/bucket-name.firebasestorage.app/o/path?alt=media&token=xxx
+    // 格式 1b: https://firebasestorage.googleapis.com/v0/b/bucket-name/o/path?alt=media&token=xxx
+    let match = downloadUrl.match(/\/b\/([^\/]+)\/o\/([^?]+)/)
+    if (match) {
+      const [, bucketName, encodedPath] = match
+      const filePath = decodeURIComponent(encodedPath)
+      
+      // 如果 bucketName 包含 .firebasestorage.app，需要保留完整名稱
+      const result = `gs://${bucketName}/${filePath}`
+      return result
+    }
+
+    // 格式 2: https://storage.googleapis.com/bucket/path/file.ext
+    match = downloadUrl.match(/https:\/\/storage\.googleapis\.com\/([^\/]+)\/(.+)/)
+    if (match) {
+      const [, bucketName, filePath] = match
+      const result = `gs://${bucketName}/${filePath}`
+      return result
+    }
+
+    // 格式 3: https://bucket.storage.googleapis.com/path/file.ext
+    match = downloadUrl.match(/https:\/\/([^\.]+)\.storage\.googleapis\.com\/(.+)/)
+    if (match) {
+      const [, bucketName, filePath] = match
+      const result = `gs://${bucketName}/${filePath}`
+      return result
+    }
+
+    console.error(`無法解析的影片 URL 格式: ${downloadUrl}`)
+    throw new Error(`無法解析 Firebase URL 格式: ${downloadUrl}`)
+  }
+
+  /**
+   * 刪除 Firebase Storage 中的影片檔案
+   * 
+   * @param firebaseUrl Firebase Storage URL (gs://bucket/path 格式)
+   */
+  private async deleteVideoFile(firebaseUrl: string): Promise<void> {
+    try {
+      await this.fileUploadService.deleteFile(firebaseUrl)
+    } catch (error) {
+      console.error('刪除影片檔案失敗:', error)
+      throw error
     }
   }
 
