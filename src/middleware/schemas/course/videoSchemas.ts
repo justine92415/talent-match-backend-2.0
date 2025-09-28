@@ -110,19 +110,12 @@ export const uploadStorageVideoSchema = Joi.object({
   })
 })
 
-/** 影片上傳通用驗證（根據 video_type 動態驗證） */
+/** 影片上傳驗證（統一為檔案上傳） */
 export const uploadVideoSchema = Joi.object({
   name: videoNameSchema,
   category: videoCategorySchema,
-  intro: videoIntroSchema,
-  video_type: videoTypeSchema,
-  youtube_url: Joi.when('video_type', {
-    is: VideoType.YOUTUBE,
-    then: youtubeUrlSchema.required(),
-    otherwise: Joi.forbidden().messages({
-      'any.unknown': MESSAGES.VALIDATION.YOUTUBE_URL_NOT_ALLOWED_FOR_STORAGE
-    })
-  })
+  intro: videoIntroSchema
+  // 移除 video_type 和 youtube_url，統一為檔案上傳
 })
 
 // ========================================

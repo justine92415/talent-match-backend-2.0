@@ -2185,29 +2185,28 @@
               "mode": "formdata",
               "formdata": [
                 {
-                  "key": "video",
+                  "key": "videoFile",
                   "type": "file",
-                  "src": []
+                  "src": [],
+                  "description": "影片檔案（必填）- 支援 MP4, AVI, MOV, WMV 格式，最大 500MB"
                 },
                 {
-                  "key": "course_uuid",
-                  "value": "course-uuid-here",
-                  "type": "text"
+                  "key": "name",
+                  "value": "JavaScript 基礎教學",
+                  "type": "text",
+                  "description": "影片名稱（必填，1-200字元）"
                 },
                 {
-                  "key": "title",
-                  "value": "第一章：Python 簡介",
-                  "type": "text"
+                  "key": "category",
+                  "value": "程式設計",
+                  "type": "text",
+                  "description": "影片分類（必填，1-100字元）"
                 },
                 {
-                  "key": "description",
-                  "value": "Python 程式語言的基礎介紹",
-                  "type": "text"
-                },
-                {
-                  "key": "order_index",
-                  "value": "1",
-                  "type": "text"
+                  "key": "intro",
+                  "value": "這是一堂深入淺出的 JavaScript 基礎教學課程，適合初學者學習",
+                  "type": "text",
+                  "description": "影片介紹（必填，1-2000字元）"
                 }
               ]
             },
@@ -2216,7 +2215,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "videos"]
             },
-            "description": "上傳課程影片"
+            "description": "上傳影片檔案（統一為本地儲存，不再支援 YouTube 連結）\n\n📌 **重要變更**：\n- 不再支援 YouTube 連結上傳\n- 統一採用檔案上傳方式\n- 自動設定為 STORAGE 類型\n\n🎯 **請求格式**：multipart/form-data\n\n📝 **欄位說明**：\n- `videoFile`: 影片檔案（必填）- 支援 MP4, AVI, MOV, WMV 格式，最大 500MB\n- `name`: 影片名稱（必填，1-200字元）\n- `category`: 影片分類（必填，1-100字元）\n- `intro`: 影片介紹（必填，1-2000字元）\n\n✅ **成功回應範例**：\n```json\n{\n  \"status\": \"success\",\n  \"message\": \"影片上傳成功\",\n  \"data\": {\n    \"video\": {\n      \"id\": 1,\n      \"uuid\": \"video-uuid-123\",\n      \"teacher_id\": 1,\n      \"name\": \"JavaScript 基礎教學\",\n      \"category\": \"程式設計\",\n      \"intro\": \"這是一堂深入淺出的 JavaScript 基礎教學課程\",\n      \"url\": \"https://storage.googleapis.com/...\",\n      \"video_type\": \"storage\",\n      \"created_at\": \"2024-01-15T10:30:00.000Z\",\n      \"updated_at\": \"2024-01-15T10:30:00.000Z\"\n    }\n  }\n}\n```"
           }
         },
         {
