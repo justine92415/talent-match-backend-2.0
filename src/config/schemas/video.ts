@@ -429,5 +429,23 @@ export const videoSchemas = {
         }
       }
     ]
+  },
+
+  // 影片更新失敗錯誤回應 Schema
+  VideoUpdateFailedErrorResponse: {
+    allOf: [
+      { $ref: '#/components/schemas/ServerErrorResponse' },
+      {
+        type: 'object',
+        properties: {
+          message: {
+            example: '影片檔案上傳失敗'
+          },
+          code: {
+            example: 'VIDEO_UPLOAD_FAILED'
+          }
+        }
+      }
+    ]
   }
 }
