@@ -503,6 +503,106 @@ router.put('/:id',
   cleanupTempVideoFile
 )
 
+/**
+ * @swagger
+ * /api/videos/{id}:
+ *   delete:
+ *     tags:
+ *       - Video Management
+ *     summary: 刪除影片
+ *     description: |
+ *       刪除指定的影片記錄和檔案。這是軟刪除操作，會同時清理 Firebase Storage 中的影片檔案。
+ *       
+ *       **業務邏輯**：
+ *       - 驗證教師身份和權限
+ *       - 驗證影片 ID 格式
+ *       - 查詢影片記錄並驗證所有權
+ *       - 檢查影片是否正在被課程使用
+ *       - 執行軟刪除操作（設定 deleted_at 時間戳）
+ *       - 刪除 Firebase Storage 中的影片檔案
+ *       - 檔案刪除失敗不影響軟刪除操作
+ *       
+ *       **權限控制**：
+ *       - 需要教師身份認證
+ *       - 只能刪除自己上傳的影片
+ *       - 無法刪除已被軟刪除的影片
+ *       
+ *       **注意事項**：
+ *       - 這是軟刪除，不會真正刪除資料庫記錄
+ *       - 正在被課程使用的影片無法刪除
+ *       - Firebase Storage 檔案會同步刪除
+ *       - 檔案刪除失敗僅記錄錯誤，不影響主要操作
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: 影片 ID
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           example: 1
+ *     responses:
+ *       200:
+ *         description: 影片刪除成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoDeleteSuccessResponse'
+ *       400:
+ *         description: 請求參數錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *             examples:
+ *               invalid_id:
+ *                 summary: 影片 ID 格式錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "參數驗證失敗"
+ *                   errors:
+ *                     id: ["影片 ID 必須為正整數"]
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       403:
+ *         description: 禁止存取 - 無權限刪除此影片
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoPermissionErrorResponse'
+ *       404:
+ *         description: 影片不存在或已被刪除
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoNotFoundErrorResponse'
+ *       409:
+ *         description: 影片正在被使用中，無法刪除
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoCannotDeleteErrorResponse'
+ *             examples:
+ *               in_use:
+ *                 summary: 影片正在被使用
+ *                 value:
+ *                   status: "error"
+ *                   message: "影片正在被使用中，無法刪除"
+ *                   code: "VIDEO_CANNOT_DELETE"
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
+
 router.delete('/:id', ...authMiddlewareChains.teacherAuth, videoController.deleteVideo)
 
 export default router

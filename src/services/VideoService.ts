@@ -407,9 +407,38 @@ export class VideoService {
       throw this.createVideoInUseError(videoId)
     }
 
-    // 軟刪除
-    video.deleted_at = new Date()
-    await this.videoRepository.save(video)
+    try {
+      // 軟刪除
+      video.deleted_at = new Date()
+      await this.videoRepository.save(video)
+
+      // 刪除 Firebase Storage 中的影片檔案
+      if (video.url && video.url.trim() !== '') {
+        console.log(`準備刪除影片檔案: ${video.url}`)
+        try {
+          const firebaseUrl = this.extractFirebaseUrlFromDownloadUrl(video.url)
+          await this.deleteVideoFile(firebaseUrl)
+          console.log('✅ 影片檔案已刪除:', video.url)
+        } catch (fileDeleteError) {
+          // 檔案刪除失敗不影響軟刪除操作，僅記錄錯誤
+          console.error('❌ 刪除影片檔案失敗:', fileDeleteError)
+          console.error('影片記錄已軟刪除，但檔案可能仍存在於 Firebase Storage 中')
+        }
+      }
+    } catch (error) {
+      // 如果軟刪除失敗，拋出錯誤
+      if (error instanceof BusinessError) {
+        throw error
+      }
+      
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.error('刪除影片失敗:', errorMessage)
+      throw new BusinessError(
+        ERROR_CODES.VIDEO_CANNOT_DELETE,
+        '刪除影片失敗',
+        500
+      )
+    }
   }
 
   /**

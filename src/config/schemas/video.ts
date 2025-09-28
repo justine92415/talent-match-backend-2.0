@@ -447,5 +447,46 @@ export const videoSchemas = {
         }
       }
     ]
+  },
+
+  // 影片刪除成功回應 Schema
+  VideoDeleteSuccessResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        description: '回應狀態',
+        enum: ['success'],
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        description: '成功訊息',
+        example: '影片刪除成功'
+      },
+      data: {
+        nullable: true,
+        description: '回應資料（刪除操作無回傳資料）',
+        example: null
+      }
+    }
+  },
+
+  // 影片無法刪除錯誤回應 Schema
+  VideoCannotDeleteErrorResponse: {
+    allOf: [
+      { $ref: '#/components/schemas/BusinessErrorResponse' },
+      {
+        type: 'object',
+        properties: {
+          message: {
+            example: '影片正在被使用中，無法刪除'
+          },
+          code: {
+            example: 'VIDEO_CANNOT_DELETE'
+          }
+        }
+      }
+    ]
   }
 }

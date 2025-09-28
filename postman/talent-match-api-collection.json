@@ -1,8 +1,8 @@
 {
   "info": {
     "name": "Talent Match API 2.0",
-    "description": "Talent Match 後端 API 完整集合 - 包含所有認證、課程、教師、購物車、訂單等功能的 API 端點\n\n🆕 **v2.3 新功能**：\n- 預約確認流程：學生預約後需要教師確認\n- 教師確認/拒絕預約 API\n- 預約狀態自動過期機制（隔天預約12小時內回應，其他24小時內回應）\n- PENDING 狀態預約管理\n\n🔧 **v2.2 功能**：\n- 管理員課程申請列表 API\n- 課程狀態篩選（submitted, approved, rejected, draft, published, archived）\n- 管理員 token 自動保存\n- 增強的測試腳本和變數管理\n\n🔧 **v2.1 功能**：\n- 整合式課程建立 API (支援同時上傳圖片和設定價格方案)\n- multipart/form-data 支援檔案上傳\n- 資料庫交易確保原子性操作\n- 自動錯誤恢復和資源清理",
-    "version": "2.3.0",
+    "description": "Talent Match 後端 API 完整集合 - 包含所有認證、課程、教師、購物車、訂單等功能的 API 端點\n\n🆕 **v2.4 新功能**：\n- 影片管理系統重大更新：統一檔案替換功能\n- 影片更新 API 現在統一使用 FormData 格式（與課程編輯一致）\n- 完整檔案管理：新增/更新/刪除時都會正確處理 Firebase Storage 檔案\n- 影片刪除功能：軟刪除 + 同步清理 Firebase Storage 檔案\n- 可選檔案上傳：更新時檔案為可選，不提供時保持原有檔案\n\n🔧 **v2.3 功能**：\n- 預約確認流程：學生預約後需要教師確認\n- 教師確認/拒絕預約 API\n- 預約狀態自動過期機制（隔天預約12小時內回應，其他24小時內回應）\n- PENDING 狀態預約管理\n\n🔧 **v2.2 功能**：\n- 管理員課程申請列表 API\n- 課程狀態篩選（submitted, approved, rejected, draft, published, archived）\n- 管理員 token 自動保存\n- 增強的測試腳本和變數管理\n\n🔧 **v2.1 功能**：\n- 整合式課程建立 API (支援同時上傳圖片和設定價格方案)\n- multipart/form-data 支援檔案上傳\n- 資料庫交易確保原子性操作\n- 自動錯誤恢復和資源清理",
+    "version": "2.4.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -2153,25 +2153,6 @@
       "name": "影片管理 (Videos)",
       "item": [
         {
-          "name": "課程影片列表",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/videos/course/:course_uuid",
-              "host": ["{{base_url}}"],
-              "path": ["api", "videos", "course", ":course_uuid"],
-              "variable": [
-                {
-                  "key": "course_uuid",
-                  "value": "course-uuid-here"
-                }
-              ]
-            },
-            "description": "取得課程影片列表"
-          }
-        },
-        {
           "name": "上傳影片",
           "request": {
             "method": "POST",
@@ -2215,22 +2196,103 @@
               "host": ["{{base_url}}"],
               "path": ["api", "videos"]
             },
-            "description": "上傳影片檔案（統一為本地儲存，不再支援 YouTube 連結）\n\n📌 **重要變更**：\n- 不再支援 YouTube 連結上傳\n- 統一採用檔案上傳方式\n- 自動設定為 STORAGE 類型\n\n🎯 **請求格式**：multipart/form-data\n\n📝 **欄位說明**：\n- `videoFile`: 影片檔案（必填）- 支援 MP4, AVI, MOV, WMV 格式，最大 500MB\n- `name`: 影片名稱（必填，1-200字元）\n- `category`: 影片分類（必填，1-100字元）\n- `intro`: 影片介紹（必填，1-2000字元）\n\n✅ **成功回應範例**：\n```json\n{\n  \"status\": \"success\",\n  \"message\": \"影片上傳成功\",\n  \"data\": {\n    \"video\": {\n      \"id\": 1,\n      \"uuid\": \"video-uuid-123\",\n      \"teacher_id\": 1,\n      \"name\": \"JavaScript 基礎教學\",\n      \"category\": \"程式設計\",\n      \"intro\": \"這是一堂深入淺出的 JavaScript 基礎教學課程\",\n      \"url\": \"https://storage.googleapis.com/...\",\n      \"video_type\": \"storage\",\n      \"created_at\": \"2024-01-15T10:30:00.000Z\",\n      \"updated_at\": \"2024-01-15T10:30:00.000Z\"\n    }\n  }\n}\n```"
+            "description": "教師上傳影片檔案到系統。統一採用本地儲存方式，不再支援 YouTube 連結。\n\n📌 **重要變更**：\n- 不再支援 YouTube 連結上傳\n- 統一採用檔案上傳方式\n- 自動設定為 STORAGE 類型\n- 支援 MP4, AVI, MOV, WMV 格式\n- 檔案大小限制：最大 500MB\n\n🎯 **請求格式**：multipart/form-data\n\n📝 **欄位說明**：\n- `videoFile`: 影片檔案（必填）\n- `name`: 影片名稱（必填，1-200字元）\n- `category`: 影片分類（必填，1-100字元）\n- `intro`: 影片介紹（必填，1-2000字元）\n\n✅ **成功回應範例**：\n```json\n{\n  \"status\": \"success\",\n  \"message\": \"影片上傳成功\",\n  \"data\": {\n    \"video\": {\n      \"id\": 1,\n      \"uuid\": \"video-uuid-123\",\n      \"teacher_id\": 1,\n      \"name\": \"JavaScript 基礎教學\",\n      \"category\": \"程式設計\",\n      \"intro\": \"這是一堂深入淺出的 JavaScript 基礎教學課程\",\n      \"url\": \"https://storage.googleapis.com/...\",\n      \"video_type\": \"storage\",\n      \"created_at\": \"2024-01-15T10:30:00.000Z\",\n      \"updated_at\": \"2024-01-15T10:30:00.000Z\"\n    }\n  }\n}\n```"
           }
         },
         {
-          "name": "更新影片資訊",
+          "name": "取得影片列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/videos?page=1&per_page=20&category=程式設計&search=JavaScript",
+              "host": ["{{base_url}}"],
+              "path": ["api", "videos"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "頁碼（預設 1）"
+                },
+                {
+                  "key": "per_page",
+                  "value": "20",
+                  "description": "每頁數量（預設 20，最大 100）"
+                },
+                {
+                  "key": "category",
+                  "value": "程式設計",
+                  "description": "分類篩選（模糊搜尋）"
+                },
+                {
+                  "key": "search",
+                  "value": "JavaScript",
+                  "description": "搜尋關鍵字（搜尋標題和介紹）"
+                }
+              ]
+            },
+            "description": "取得目前登入教師的影片列表。支援分頁、分類篩選和關鍵字搜尋。\n\n🎯 **功能特色**：\n- 權限隔離：只顯示該教師的影片\n- 分頁查詢：支援大量資料瀏覽\n- 分類篩選：模糊搜尋影片分類\n- 關鍵字搜尋：搜尋影片名稱和介紹\n- 排序：依建立時間倒序排列\n- 軟刪除：排除已刪除的影片\n\n📝 **查詢參數**：\n- `page`: 頁碼（選填，預設 1）\n- `per_page`: 每頁數量（選填，預設 20，最大 100）\n- `category`: 分類篩選（選填，模糊搜尋）\n- `search`: 搜尋關鍵字（選填，搜尋標題和介紹）"
+          }
+        },
+        {
+          "name": "取得影片詳情",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/videos/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "videos", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "影片 ID"
+                }
+              ]
+            },
+            "description": "取得指定影片的詳細資訊和使用統計。只能查看自己上傳的影片。\n\n🎯 **功能說明**：\n- 權限控制：只能查看自己上傳的影片\n- 詳細資訊：包含影片基本資訊和使用統計\n- 軟刪除：無法查看已刪除的影片\n\n📝 **路徑參數**：\n- `id`: 影片 ID（必填，正整數）"
+          }
+        },
+        {
+          "name": "更新影片資訊（支援檔案替換）",
           "request": {
             "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
-                "value": "application/json"
+                "value": "multipart/form-data"
               }
             ],
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"第一章：Python 進階介紹\",\n  \"description\": \"深入介紹 Python 程式語言的特性\",\n  \"order_index\": 1\n}"
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "更新的影片名稱",
+                  "type": "text",
+                  "description": "影片名稱（可選，1-200字元）"
+                },
+                {
+                  "key": "category",
+                  "value": "前端開發",
+                  "type": "text",
+                  "description": "影片分類（可選，1-100字元）"
+                },
+                {
+                  "key": "intro",
+                  "value": "這是更新後的影片介紹",
+                  "type": "text",
+                  "description": "影片介紹（可選，1-2000字元）"
+                },
+                {
+                  "key": "videoFile",
+                  "type": "file",
+                  "src": [],
+                  "description": "影片檔案（可選）- 支援 MP4, AVI, MOV, WMV 格式，最大 500MB",
+                  "disabled": true
+                }
+              ]
             },
             "url": {
               "raw": "{{base_url}}/api/videos/:id",
@@ -2239,11 +2301,12 @@
               "variable": [
                 {
                   "key": "id",
-                  "value": "1"
+                  "value": "1",
+                  "description": "影片 ID"
                 }
               ]
             },
-            "description": "更新影片資訊"
+            "description": "更新指定影片的基本資訊和檔案。支援部分欄位更新和檔案替換。\n\n🆕 **檔案替換功能**：\n- 統一使用 FormData 格式（與課程編輯一致）\n- 支援可選影片檔案上傳\n- 上傳新檔案時自動刪除舊檔案\n- 檔案上傳失敗時自動回滾\n\n🎯 **請求格式**：multipart/form-data\n\n📝 **可更新欄位**（所有欄位均為可選）：\n- `name`: 影片名稱（1-200字元）\n- `category`: 影片分類（1-100字元）\n- `intro`: 影片介紹（1-2000字元）\n- `videoFile`: 影片檔案（可選，支援 MP4, AVI, MOV, WMV，最大 500MB）\n\n⚠️ **注意事項**：\n- 所有欄位均為可選，至少需要提供一個欄位\n- 檔案為可選，不提供時保持原有檔案\n- 無法更新已刪除的影片\n- 只能更新自己上傳的影片\n\n💡 **使用方式**：\n1. 只更新基本資訊：不勾選 videoFile 欄位\n2. 更新資訊 + 替換檔案：勾選 videoFile 並選擇新檔案"
           }
         },
         {
@@ -2258,15 +2321,16 @@
               "variable": [
                 {
                   "key": "id",
-                  "value": "1"
+                  "value": "1",
+                  "description": "影片 ID"
                 }
               ]
             },
-            "description": "刪除影片"
+            "description": "刪除指定的影片記錄和檔案。這是軟刪除操作，會同時清理 Firebase Storage 中的影片檔案。\n\n🎯 **功能說明**：\n- 軟刪除：設定 deleted_at 時間戳，不真正刪除資料庫記錄\n- 檔案清理：同步刪除 Firebase Storage 中的影片檔案\n- 權限控制：只能刪除自己上傳的影片\n- 使用檢查：正在被課程使用的影片無法刪除\n\n📝 **業務邏輯**：\n1. 驗證教師身份和權限\n2. 查詢影片記錄並驗證所有權\n3. 檢查影片是否正在被課程使用\n4. 執行軟刪除操作\n5. 刪除 Firebase Storage 中的影片檔案\n\n⚠️ **注意事項**：\n- 這是軟刪除，資料庫記錄不會消失\n- 正在被課程使用的影片無法刪除\n- Firebase Storage 檔案會同步刪除\n- 檔案刪除失敗僅記錄錯誤，不影響主要操作\n\n📝 **路徑參數**：\n- `id`: 影片 ID（必填，正整數）"
           }
         }
       ],
-      "description": "課程影片管理相關 API"
+      "description": "影片管理相關 API\n\n🆕 **v2.4 重大更新**：\n- 統一檔案替換功能：影片更新 API 現在統一使用 FormData 格式\n- 完整檔案管理：新增/更新/刪除時都會正確處理 Firebase Storage 檔案\n- 與課程編輯一致：使用相同的檔案替換邏輯和錯誤處理\n- 可選檔案上傳：更新時檔案為可選，不提供時保持原有檔案\n\n📋 **API 清單**：\n- POST /api/videos - 上傳影片\n- GET /api/videos - 取得影片列表（支援分頁和搜尋）\n- GET /api/videos/:id - 取得影片詳情\n- PUT /api/videos/:id - 更新影片資訊（支援檔案替換）🆕\n- DELETE /api/videos/:id - 刪除影片（軟刪除 + 檔案清理）🆕\n\n⚠️ **重要變更**：\n- 不再支援 YouTube 連結，統一採用檔案上傳\n- 更新 API 現在使用 multipart/form-data 格式（與課程編輯一致）\n- 刪除操作會同時清理 Firebase Storage 檔案\n- 所有 API 都需要教師身份認證\n- 完整的權限隔離和錯誤處理"
     },
     {
       "name": "購物車管理 (Cart)",
