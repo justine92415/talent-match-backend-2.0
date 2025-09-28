@@ -1,8 +1,8 @@
 {
   "info": {
     "name": "Talent Match API 2.0",
-    "description": "Talent Match 後端 API 完整集合 - 包含所有認證、課程、教師、購物車、訂單等功能的 API 端點\n\n🆕 **v2.2 新功能**：\n- 管理員課程申請列表 API\n- 課程狀態篩選（submitted, approved, rejected, draft, published, archived）\n- 管理員 token 自動保存\n- 增強的測試腳本和變數管理\n\n🔧 **v2.1 功能**：\n- 整合式課程建立 API (支援同時上傳圖片和設定價格方案)\n- multipart/form-data 支援檔案上傳\n- 資料庫交易確保原子性操作\n- 自動錯誤恢復和資源清理",
-    "version": "2.2.0",
+    "description": "Talent Match 後端 API 完整集合 - 包含所有認證、課程、教師、購物車、訂單等功能的 API 端點\n\n🆕 **v2.3 新功能**：\n- 預約確認流程：學生預約後需要教師確認\n- 教師確認/拒絕預約 API\n- 預約狀態自動過期機制（隔天預約12小時內回應，其他24小時內回應）\n- PENDING 狀態預約管理\n\n🔧 **v2.2 功能**：\n- 管理員課程申請列表 API\n- 課程狀態篩選（submitted, approved, rejected, draft, published, archived）\n- 管理員 token 自動保存\n- 增強的測試腳本和變數管理\n\n🔧 **v2.1 功能**：\n- 整合式課程建立 API (支援同時上傳圖片和設定價格方案)\n- multipart/form-data 支援檔案上傳\n- 資料庫交易確保原子性操作\n- 自動錯誤恢復和資源清理",
+    "version": "2.3.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -1764,9 +1764,98 @@
             },
             "description": "刪除價格方案（需要教師身份認證）"
           }
+        },
+        {
+          "name": "查詢課程可預約時段",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// 檢查回應狀態",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// 檢查回應格式",
+                  "pm.test('Response has correct structure', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    pm.expect(jsonData.status).to.eql('success');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    pm.expect(jsonData.data).to.have.property('date');",
+                  "    pm.expect(jsonData.data).to.have.property('available_slots');",
+                  "    pm.expect(jsonData.data.available_slots).to.be.an('array');",
+                  "});",
+                  "",
+                  "// 驗證時段格式",
+                  "pm.test('Available slots have correct format with status', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.data.available_slots.length > 0) {",
+                  "        const slot = jsonData.data.available_slots[0];",
+                  "        pm.expect(slot).to.have.property('slot_id');",
+                  "        pm.expect(slot).to.have.property('start_time');",
+                  "        pm.expect(slot).to.have.property('end_time');",
+                  "        pm.expect(slot).to.have.property('status');",
+                  "        pm.expect(slot.slot_id).to.be.a('number');",
+                  "        pm.expect(slot.start_time).to.match(/^\\d{2}:\\d{2}$/);",
+                  "        pm.expect(slot.end_time).to.match(/^\\d{2}:\\d{2}$/);",
+                  "        pm.expect(slot.status).to.be.oneOf(['available', 'unavailable']);",
+                  "    }",
+                  "});",
+                  "",
+                  "// 驗證所有時段都有狀態資訊",
+                  "pm.test('All slots have status information', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    jsonData.data.available_slots.forEach((slot, index) => {",
+                  "        pm.expect(slot.status, `Slot ${index + 1} should have status`).to.be.oneOf(['available', 'unavailable']);",
+                  "    });",
+                  "});",
+                  "",
+                  "// 記錄結果",
+                  "const jsonData = pm.response.json();",
+                  "console.log('查詢日期:', jsonData.data?.date);",
+                  "const slots = jsonData.data?.available_slots || [];",
+                  "console.log('總時段數量:', slots.length);",
+                  "const availableSlots = slots.filter(s => s.status === 'available');",
+                  "const unavailableSlots = slots.filter(s => s.status === 'unavailable');",
+                  "console.log('可預約時段數量:', availableSlots.length);",
+                  "console.log('不可預約時段數量:', unavailableSlots.length);",
+                  "if (slots.length > 0) {",
+                  "    console.log('時段狀態分佈:', slots.map(s => `${s.start_time}-${s.end_time}: ${s.status}`).join(', '));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/courses/:id/available-slots?date=2025-09-23",
+              "host": ["{{base_url}}"],
+              "path": ["api", "courses", ":id", "available-slots"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2025-09-23",
+                  "description": "查詢日期 (YYYY-MM-DD 格式)"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "2",
+                  "description": "課程 ID"
+                }
+              ]
+            },
+            "description": "查詢指定課程在特定日期的所有時段及其狀態\n\n**功能說明**：\n- 查詢課程在指定日期教師設定的所有時段\n- 每個時段都會顯示狀態：available (可預約) 或 unavailable (不可預約)\n- 自動檢查每個時段是否已被預約 (包含 pending, reserved, completed 狀態)\n- 按時間順序返回結果\n\n**使用情境**：\n- 學生選擇日期後查詢該日所有時段狀態\n- 前端日曆組件顯示完整時段列表，根據狀態決定是否可點擊\n- 預約流程第一步：時段選擇與狀態檢查\n\n**回應說明**：\n- 成功時返回該日期的所有時段陣列，每個時段都包含狀態資訊\n- 如果當天教師沒有設定任何時段，available_slots 為空陣列\n- 每個時段包含 slot_id (用於預約), start_time, end_time, status\n- status 只有兩種值：'available' 或 'unavailable'\n\n**注意事項**：\n- 需要認證才能查詢\n- 只能查詢已發布 (published) 狀態的課程\n- 日期格式必須為 YYYY-MM-DD\n- 查詢結果包含所有時段，前端根據 status 決定是否可預約"
+          }
         }
       ],
-      "description": "課程管理相關 API，包含課程 CRUD、狀態管理、價格方案等功能\n\n**🆕 整合式課程建立 API**：\n- POST /api/courses (multipart/form-data) - 建立課程 + 圖片上傳 + 價格方案 (一次完成)\n- POST /api/courses (application/json) - 建立課程 (傳統格式，僅基本資料)\n\n**教師課程管理功能**：\n- PUT /api/courses/:id - 更新課程 (完整版：圖片上傳 + 價格方案編輯) 🆕\n- GET /api/courses/:id - 取得課程詳情 (瀏覽用，基本資訊)\n- GET /api/courses/:id/edit - 取得課程編輯資料 (包含價格方案) 🆕\n- GET /api/courses - 教師課程列表\n- DELETE /api/courses/:id - 刪除課程\n\n**課程狀態管理**：\n- POST /api/courses/:id/submit - 提交審核\n- POST /api/courses/:id/resubmit - 重新提交審核\n- POST /api/courses/:id/publish - 發布課程\n- POST /api/courses/:id/archive - 封存課程\n\n**價格方案管理**：\n- GET /api/courses/:courseId/price-options - 取得價格方案 (⚠️ 建議使用編輯端點)\n- POST /api/courses/:courseId/price-options - 新增價格方案\n- PUT /api/courses/:courseId/price-options/:id - 更新價格方案\n- DELETE /api/courses/:courseId/price-options/:id - 刪除價格方案\n\n**🎯 v2.1 新增專用編輯端點**：\n- GET /api/courses/:id/edit - 專門供前端編輯頁面使用\n- 一次 API 呼叫取得完整編輯資料 (課程 + 價格方案)\n- 清晰分離瀏覽和編輯功能\n- 只有課程擁有者可以存取\n\n**✨ v2.2 完整編輯功能更新**：\n- PUT /api/courses/:id 現已支援 multipart/form-data 格式\n- 支援圖片上傳和自動替換 (舊圖片自動清理)\n- 支援價格方案的完整替換編輯\n- 原子性操作確保資料一致性\n- 自動錯誤恢復和資源清理\n- 支援課程圖片上傳 (JPEG/PNG/WebP，最大 10MB)\n- 前後台功能分離，提升 API 設計清晰度\n\n**注意事項**：\n- 所有端點都需要教師身份認證\n- 使用 :id 參數（數字），不是 :uuid\n- 狀態管理遵循特定業務規則\n- 更新功能支援部分更新，所有參數皆為選填"
+      "description": "課程管理相關 API，包含課程 CRUD、狀態管理、價格方案等功能\n\n**🆕 整合式課程建立 API**：\n- POST /api/courses (multipart/form-data) - 建立課程 + 圖片上傳 + 價格方案 (一次完成)\n- POST /api/courses (application/json) - 建立課程 (傳統格式，僅基本資料)\n\n**教師課程管理功能**：\n- PUT /api/courses/:id - 更新課程 (完整版：圖片上傳 + 價格方案編輯) 🆕\n- GET /api/courses/:id - 取得課程詳情 (瀏覽用，基本資訊)\n- GET /api/courses/:id/edit - 取得課程編輯資料 (包含價格方案) 🆕\n- GET /api/courses - 教師課程列表\n- DELETE /api/courses/:id - 刪除課程\n\n**課程狀態管理**：\n- POST /api/courses/:id/submit - 提交審核\n- POST /api/courses/:id/resubmit - 重新提交審核\n- POST /api/courses/:id/publish - 發布課程\n- POST /api/courses/:id/archive - 封存課程\n\n**價格方案管理**：\n- GET /api/courses/:courseId/price-options - 取得價格方案 (⚠️ 建議使用編輯端點)\n- POST /api/courses/:courseId/price-options - 新增價格方案\n- PUT /api/courses/:courseId/price-options/:id - 更新價格方案\n- DELETE /api/courses/:courseId/price-options/:id - 刪除價格方案\n\n**🎯 課程預約相關 API (新增)**：\n- GET /api/courses/:id/available-slots - 查詢課程可預約時段 🆕\n\n**🎯 v2.1 新增專用編輯端點**：\n- GET /api/courses/:id/edit - 專門供前端編輯頁面使用\n- 一次 API 呼叫取得完整編輯資料 (課程 + 價格方案)\n- 清晰分離瀏覽和編輯功能\n- 只有課程擁有者可以存取\n\n**✨ v2.2 完整編輯功能更新**：\n- PUT /api/courses/:id 現已支援 multipart/form-data 格式\n- 支援圖片上傳和自動替換 (舊圖片自動清理)\n- 支援價格方案的完整替換編輯\n- 原子性操作確保資料一致性\n- 自動錯誤恢復和資源清理\n- 支援課程圖片上傳 (JPEG/PNG/WebP，最大 10MB)\n- 前後台功能分離，提升 API 設計清晰度\n\n**注意事項**：\n- 所有端點都需要教師身份認證\n- 使用 :id 參數（數字），不是 :uuid\n- 狀態管理遵循特定業務規則\n- 更新功能支援部分更新，所有參數皆為選填"
     },
     {
       "name": "公開課程瀏覽 (Public Courses)",
@@ -2462,6 +2551,221 @@
           }
         },
         {
+          "name": "學生查詢自己預約列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reservations/my-reservations?page=1&per_page=10&course_id=2",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reservations", "my-reservations"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "10"
+                },
+                {
+                  "key": "course_id",
+                  "value": "2",
+                  "description": "可選：篩選特定課程的預約"
+                },
+                {
+                  "key": "status",
+                  "value": "reserved",
+                  "description": "可選：篩選特定狀態的預約",
+                  "disabled": true
+                },
+                {
+                  "key": "date_from",
+                  "value": "2025-09-01",
+                  "description": "可選：查詢起始日期",
+                  "disabled": true
+                },
+                {
+                  "key": "date_to",
+                  "value": "2025-09-30",
+                  "description": "可選：查詢結束日期", 
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "學生查詢自己的預約記錄，支援多種篩選條件"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response should have correct structure\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    ",
+                  "    if (jsonData.data) {",
+                  "        pm.expect(jsonData.data).to.have.property('reservations');",
+                  "        pm.expect(jsonData.data).to.have.property('pagination');",
+                  "        pm.expect(jsonData.data.pagination).to.have.property('current_page');",
+                  "        pm.expect(jsonData.data.pagination).to.have.property('per_page');",
+                  "        pm.expect(jsonData.data.pagination).to.have.property('total');",
+                  "        pm.expect(jsonData.data.pagination).to.have.property('total_pages');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test(\"Reservations should be array\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.reservations) {",
+                  "        pm.expect(jsonData.data.reservations).to.be.an('array');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test(\"Reservation structure should be correct\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.reservations && jsonData.data.reservations.length > 0) {",
+                  "        const reservation = jsonData.data.reservations[0];",
+                  "        pm.expect(reservation).to.have.property('id');",
+                  "        pm.expect(reservation).to.have.property('uuid');",
+                  "        pm.expect(reservation).to.have.property('course_id');",
+                  "        pm.expect(reservation).to.have.property('teacher_id');",
+                  "        pm.expect(reservation).to.have.property('student_id');",
+                  "        pm.expect(reservation).to.have.property('reserve_time');",
+                  "        pm.expect(reservation).to.have.property('teacher_status');",
+                  "        pm.expect(reservation).to.have.property('student_status');",
+                  "        pm.expect(reservation).to.have.property('created_at');",
+                  "        pm.expect(reservation).to.have.property('updated_at');",
+                  "        // rejection_reason 是可選欄位，只在拒絕時存在",
+                  "        if (reservation.teacher_status === 'cancelled' || reservation.student_status === 'cancelled') {",
+                  "            pm.expect(reservation).to.have.property('rejection_reason');",
+                  "        }",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "教師查詢課程預約列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reservations/course-reservations?page=1&per_page=10&course_id=2&time_range=week&status=pending",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reservations", "course-reservations"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "10"
+                },
+                {
+                  "key": "course_id",
+                  "value": "2",
+                  "description": "可選：篩選特定課程的預約"
+                },
+                {
+                  "key": "time_range",
+                  "value": "week",
+                  "description": "時間範圍：all/today/week/month"
+                },
+                {
+                  "key": "status",
+                  "value": "pending",
+                  "description": "預約狀態：all/pending/reserved/completed/cancelled"
+                },
+                {
+                  "key": "student_search",
+                  "value": "小明",
+                  "description": "可選：學生搜尋（暱稱或ID）",
+                  "disabled": true
+                },
+                {
+                  "key": "date_from",
+                  "value": "2025-09-01",
+                  "description": "可選：自定義起始日期",
+                  "disabled": true
+                },
+                {
+                  "key": "date_to",
+                  "value": "2025-09-30",
+                  "description": "可選：自定義結束日期",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "教師查詢自己課程的預約記錄，支援多種篩選條件"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response should have correct structure\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    ",
+                  "    if (jsonData.data) {",
+                  "        pm.expect(jsonData.data).to.have.property('reservations');",
+                  "        pm.expect(jsonData.data).to.have.property('pagination');",
+                  "        pm.expect(jsonData.data.pagination).to.have.property('current_page');",
+                  "        pm.expect(jsonData.data.pagination).to.have.property('per_page');",
+                  "        pm.expect(jsonData.data.pagination).to.have.property('total');",
+                  "        pm.expect(jsonData.data.pagination).to.have.property('total_pages');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test(\"Teacher reservations should be array\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.reservations) {",
+                  "        pm.expect(jsonData.data.reservations).to.be.an('array');",
+                  "        ",
+                  "        // 檢查預約項目結構",
+                  "        if (jsonData.data.reservations.length > 0) {",
+                  "            const reservation = jsonData.data.reservations[0];",
+                  "            pm.expect(reservation).to.have.property('id');",
+                  "            pm.expect(reservation).to.have.property('uuid');",
+                  "            pm.expect(reservation).to.have.property('reserve_date');",
+                  "            pm.expect(reservation).to.have.property('reserve_time');",
+                  "            pm.expect(reservation).to.have.property('reserve_start_time');",
+                  "            pm.expect(reservation).to.have.property('reserve_end_time');",
+                  "            pm.expect(reservation).to.have.property('student');",
+                  "            pm.expect(reservation).to.have.property('course');",
+                  "            pm.expect(reservation).to.have.property('teacher_status');",
+                  "            pm.expect(reservation).to.have.property('student_status');",
+                  "            pm.expect(reservation).to.have.property('overall_status');",
+                  "            // rejection_reason 是可選欄位，只在拒絕時存在",
+                  "            if (reservation.teacher_status === 'cancelled' || reservation.student_status === 'cancelled') {",
+                  "                pm.expect(reservation).to.have.property('rejection_reason');",
+                  "            }",
+                  "        }",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
           "name": "建立預約",
           "request": {
             "method": "POST",
@@ -2481,7 +2785,28 @@
               "path": ["api", "reservations"]
             },
             "description": "建立課程預約"
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('預約建立成功', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.status).to.eql('success');",
+                  "    pm.expect(response.message).to.include('預約建立成功');",
+                  "    pm.expect(response.data).to.have.property('id');",
+                  "    pm.expect(response.data.status).to.eql('pending');",
+                  "    pm.expect(response.data).to.have.property('response_deadline');",
+                  "    // 保存預約 ID 供後續測試使用",
+                  "    pm.globals.set('reservation_id', response.data.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "預約詳情",
@@ -2531,6 +2856,95 @@
           }
         },
         {
+          "name": "教師確認預約",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reservations/:id/confirm",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reservations", ":id", "confirm"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "教師確認學生的預約請求"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('預約確認成功', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.status).to.eql('success');",
+                  "    pm.expect(response.message).to.include('預約確認成功');",
+                  "    pm.expect(response.data).to.have.property('id');",
+                  "    pm.expect(response.data.status).to.eql('reserved');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "教師拒絕預約",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"時間衝突，建議重新預約其他時段\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/reservations/:id/reject",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reservations", ":id", "reject"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "教師拒絕學生的預約請求並提供拒絕原因"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('預約拒絕成功', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.status).to.eql('success');",
+                  "    pm.expect(response.message).to.include('預約已拒絕');",
+                  "    pm.expect(response.data).to.have.property('id');",
+                  "    pm.expect(response.data.status).to.eql('cancelled');",
+                  "    pm.expect(response.data).to.have.property('rejection_reason');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
           "name": "取消預約",
           "request": {
             "method": "DELETE",
@@ -2550,7 +2964,7 @@
           }
         }
       ],
-      "description": "課程預約管理相關 API"
+      "description": "課程預約管理相關 API\n\n📋 **預約流程**：\n1. 學生建立預約（狀態：pending）\n2. 系統設定教師回應期限（隔天預約12小時，其他24小時）\n3. 教師確認/拒絕預約\n4. 超過期限自動過期\n\n🔧 **可用狀態**：pending（待確認）、reserved（已確認）、cancelled（已取消/拒絕）、completed（已完成）"
     },
     {
       "name": "教師後台管理 (Teacher Dashboard)",
