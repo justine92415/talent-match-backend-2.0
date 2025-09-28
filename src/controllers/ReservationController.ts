@@ -33,7 +33,12 @@ export class ReservationController {
    */
   createReservation = handleErrorAsync(
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      console.log('=== 建立預約開始 ===')
+      console.log('Request body:', req.body)
+      
       const studentId = req.user?.userId
+      console.log('Student ID:', studentId)
+      
       if (!studentId) {
         throw new BusinessError(
           ERROR_CODES.UNAUTHORIZED_ACCESS,
@@ -43,11 +48,14 @@ export class ReservationController {
       }
 
       const requestData: CreateReservationRequest = req.body
+      console.log('Request data:', requestData)
 
+      console.log('呼叫 reservationService.createReservation')
       const result = await this.reservationService.createReservation(
         studentId,
         requestData
       )
+      console.log('Service 結果:', result)
 
       res.status(201).json(
         handleCreated(result, MESSAGES.RESERVATION.CREATED)

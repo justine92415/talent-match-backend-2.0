@@ -60,47 +60,69 @@ export class ReservationService {
     studentId: number,
     request: CreateReservationRequest
   ): Promise<CreateReservationResponse> {
+    console.log('=== ReservationService.createReservation 開始 ===')
+    console.log('Parameters:', { studentId, request })
+    
     const { course_id, teacher_id, reserve_date, reserve_time } = request
 
-    // 1. 驗證學生是否有該課程的購買記錄和剩餘堂數
-    const purchase = await this.validateStudentPurchase(studentId, course_id)
-    
-    // 2-3. 並行執行驗證以提升效能
-    await Promise.all([
-      this.validateTeacherAvailability(teacher_id, reserve_date, reserve_time),
-      this.validateTimeSlotConflict(teacher_id, reserve_date, reserve_time)
-    ])
+    try {
+      // 1. 驗證學生是否有該課程的購買記錄和剩餘堂數
+      console.log('Step 1: 驗證學生購買記錄')
+      const purchase = await this.validateStudentPurchase(studentId, course_id)
+      console.log('購買記錄驗證通過:', purchase.id)
+      
+      // 2-3. 並行執行驗證以提升效能
+      console.log('Step 2-3: 驗證教師可用性和時間衝突')
+      await Promise.all([
+        this.validateTeacherAvailability(teacher_id, reserve_date, reserve_time),
+        this.validateTimeSlotConflict(teacher_id, reserve_date, reserve_time)
+      ])
+      console.log('教師可用性和時間衝突驗證通過')
 
-    // 4. 建立預約時間
-    const reserveDateTime = this.parseReserveDateTime(reserve_date, reserve_time)
+      // 4. 建立預約時間
+      console.log('Step 4: 建立預約時間')
+      const reserveDateTime = this.parseReserveDateTime(reserve_date, reserve_time)
+      console.log('預約時間:', reserveDateTime)
 
-    // 5. 計算教師回應期限
-    const responseDeadline = this.calculateResponseDeadline(reserveDateTime)
+      // 5. 計算教師回應期限
+      console.log('Step 5: 計算教師回應期限')
+      const responseDeadline = this.calculateResponseDeadline(reserveDateTime)
+      console.log('回應期限:', responseDeadline)
 
-    // 6. 建立預約記錄（設定初始狀態為待確認）
-    const reservation = this.reservationRepository.create({
-      uuid: uuidv4(),
-      course_id,
-      teacher_id,
-      student_id: studentId,
-      reserve_time: reserveDateTime,
-      teacher_status: ReservationStatus.PENDING,
-      student_status: ReservationStatus.RESERVED,
-      response_deadline: responseDeadline
-    })
+      // 6. 建立預約記錄（設定初始狀態為待確認）
+      console.log('Step 6: 建立預約記錄')
+      const reservation = this.reservationRepository.create({
+        uuid: uuidv4(),
+        course_id,
+        teacher_id,
+        student_id: studentId,
+        reserve_time: reserveDateTime,
+        teacher_status: ReservationStatus.PENDING,
+        student_status: ReservationStatus.RESERVED,
+        response_deadline: responseDeadline
+      })
+      console.log('預約記錄建立成功:', reservation)
 
-    const savedReservation = await this.reservationRepository.save(reservation)
+      console.log('Step 7: 儲存預約記錄')
+      const savedReservation = await this.reservationRepository.save(reservation)
+      console.log('預約記錄儲存成功:', savedReservation.id)
 
-    // 注意：暫時不扣除課程堂數，待教師確認後再扣除
-    // await this.updateUsedLessons(purchase.id, purchase.quantity_used + 1)
+      // 注意：暫時不扣除課程堂數，待教師確認後再扣除
+      // await this.updateUsedLessons(purchase.id, purchase.quantity_used + 1)
 
-    // 7. 直接轉換預約資料，避免額外的資料庫查詢
-    const reservationWithDetails = this.transformReservationToResponse(savedReservation)
-    const remainingLessons = this.calculateRemainingLessons(purchase)
+      // 7. 直接轉換預約資料，避免額外的資料庫查詢
+      console.log('Step 8: 轉換回應資料')
+      const reservationWithDetails = this.transformReservationToResponse(savedReservation)
+      const remainingLessons = this.calculateRemainingLessons(purchase)
 
-    return {
-      reservation: reservationWithDetails,
-      remaining_lessons: remainingLessons
+      console.log('=== createReservation 成功完成 ===')
+      return {
+        reservation: reservationWithDetails,
+        remaining_lessons: remainingLessons
+      }
+    } catch (error) {
+      console.error('=== createReservation 錯誤 ===', error)
+      throw error
     }
   }
 
