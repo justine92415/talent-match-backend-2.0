@@ -25,6 +25,8 @@ import { MainCategory } from '@entities/MainCategory'
 import { SubCategory } from '@entities/SubCategory'
 import { City } from '@entities/City'
 import { CoursePriceOption } from '@entities/CoursePriceOption'
+import { CourseVideo } from '@entities/CourseVideo'
+import { Video } from '@entities/Video'
 import { TeacherCertificate } from '@entities/TeacherCertificate'
 import { TeacherWorkExperience } from '@entities/TeacherWorkExperience'
 import { TeacherLearningExperience } from '@entities/TeacherLearningExperience'
@@ -92,6 +94,8 @@ export class PublicCourseService {
   private subCategoryRepository: Repository<SubCategory>
   private cityRepository: Repository<City>
   private coursePriceOptionRepository: Repository<CoursePriceOption>
+  private courseVideoRepository: Repository<CourseVideo>
+  private videoRepository: Repository<Video>
   private teacherCertificateRepository: Repository<TeacherCertificate>
   private teacherWorkExperienceRepository: Repository<TeacherWorkExperience>
   private teacherLearningExperienceRepository: Repository<TeacherLearningExperience>
@@ -105,6 +109,8 @@ export class PublicCourseService {
     this.subCategoryRepository = dataSource.getRepository(SubCategory)
     this.cityRepository = dataSource.getRepository(City)
     this.coursePriceOptionRepository = dataSource.getRepository(CoursePriceOption)
+    this.courseVideoRepository = dataSource.getRepository(CourseVideo)
+    this.videoRepository = dataSource.getRepository(Video)
     this.teacherCertificateRepository = dataSource.getRepository(TeacherCertificate)
     this.teacherWorkExperienceRepository = dataSource.getRepository(TeacherWorkExperience)
     this.teacherLearningExperienceRepository = dataSource.getRepository(TeacherLearningExperience)
@@ -249,20 +255,22 @@ export class PublicCourseService {
     const endDate = new Date(tomorrow)
     endDate.setDate(endDate.getDate() + 6) // 7天後
 
-    // 🚀 TypeORM 查詢優化：從 8 個查詢減少到 3 個查詢
-    const [courseWithRelations, teacherProfileData, schedule] = await Promise.all([
+    // 🚀 TypeORM 查詢優化：從 8 個查詢減少到 4 個查詢
+    const [courseWithRelations, teacherProfileData, schedule, courseVideos] = await Promise.all([
       // 查詢1：使用 JOIN 一次性獲取課程相關資料
       this.getCourseWithAllRelationsOptimized(courseId, course.teacher_id, course.main_category_id, course.sub_category_id),
       // 查詢2：一次性獲取教師檔案資料（限制數量）
       this.getTeacherProfileDataOptimized(course.teacher_id),
       // 查詢3：課程表（使用 TypeORM 優化版本）
-      scheduleService.getDayScheduleForDateRange(course.teacher_id, tomorrow, endDate)
+      scheduleService.getDayScheduleForDateRange(course.teacher_id, tomorrow, endDate),
+      // 查詢4：課程短影音
+      this.getCourseVideosOptimized(courseId)
     ])
 
     const { teacher, mainCategory, subCategory, priceOptions } = courseWithRelations
     const { certificates, workExperiences, learningExperiences } = teacherProfileData
 
-    return this.buildCourseDetailResponse(course, teacher, mainCategory, subCategory, priceOptions, certificates, workExperiences, learningExperiences, schedule)
+    return this.buildCourseDetailResponse(course, teacher, mainCategory, subCategory, priceOptions, certificates, workExperiences, learningExperiences, schedule, courseVideos)
   }
 
   /**
@@ -343,7 +351,8 @@ export class PublicCourseService {
     teacherCertificates: TeacherCertificate[] = [],
     teacherWorkExperiences: TeacherWorkExperience[] = [],
     teacherLearningExperiences: TeacherLearningExperience[] = [],
-    schedule: any[] = []
+    schedule: any[] = [],
+    courseVideos: any[] = []
   ): PublicCourseDetailResponse {
     return {
       course: {
@@ -406,7 +415,14 @@ export class PublicCourseService {
         price: parseFloat(option.price.toString()),
         quantity: option.quantity
       })),
-      videos: [], // TODO: 查詢課程影片
+      videos: courseVideos.map(video => ({
+        id: video.id,
+        name: video.name,
+        intro: video.intro || '',
+        url: video.url || '',
+        video_type: 'storage' as const, // 統一為儲存類型
+        is_preview: false // 實體課程的短影音都不是預覽
+      })),
       files: [], // TODO: 查詢課程檔案
       schedule: schedule,
       recent_reviews: [], // TODO: 查詢最近評價
@@ -711,6 +727,44 @@ export class PublicCourseService {
     ])
 
     return { certificates, workExperiences, learningExperiences }
+  }
+
+  /**
+   * 優化版：取得課程短影音
+   */
+  private async getCourseVideosOptimized(courseId: number) {
+    const courseVideos = await this.courseVideoRepository.find({
+      where: { course_id: courseId },
+      order: { display_order: 'ASC' }
+    })
+
+    if (courseVideos.length === 0) {
+      return []
+    }
+
+    const videoIds = courseVideos.map(cv => cv.video_id)
+    const videos = await this.videoRepository.find({
+      where: { 
+        id: require('typeorm').In(videoIds),
+        deleted_at: require('typeorm').IsNull() 
+      },
+      select: ['id', 'uuid', 'name', 'category', 'intro', 'url', 'created_at']
+    })
+
+    // 組合短影音資訊（保持排序）
+    return courseVideos.map(courseVideo => {
+      const video = videos.find(v => v.id === courseVideo.video_id)
+      return video ? {
+        id: video.id,
+        uuid: video.uuid,
+        name: video.name,
+        category: video.category,
+        intro: video.intro,
+        url: video.url,
+        display_order: courseVideo.display_order,
+        created_at: video.created_at
+      } : null
+    }).filter(Boolean)
   }
 }
 

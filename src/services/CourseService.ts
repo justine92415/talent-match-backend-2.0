@@ -7,12 +7,14 @@
  * - 業務規則驗證
  */
 
-import { Repository } from 'typeorm'
+import { Repository, In, IsNull } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
 import * as fs from 'fs'
 import { dataSource } from '@db/data-source'
 import { Course } from '@entities/Course'
 import { CoursePriceOption } from '@entities/CoursePriceOption'
+import { CourseVideo } from '@entities/CourseVideo'
+import { Video } from '@entities/Video'
 import { TeacherAvailableSlot } from '@entities/TeacherAvailableSlot'
 import { Reservation } from '@entities/Reservation'
 import { Teacher } from '@entities/Teacher'
@@ -54,6 +56,8 @@ const PAGINATION_DEFAULTS = {
 export class CourseService {
   private courseRepository: Repository<Course>
   private coursePriceOptionRepository: Repository<CoursePriceOption>
+  private courseVideoRepository: Repository<CourseVideo>
+  private videoRepository: Repository<Video>
   private teacherAvailableSlotRepository: Repository<TeacherAvailableSlot>
   private reservationRepository: Repository<Reservation>
   private teacherRepository: Repository<Teacher>
@@ -62,6 +66,8 @@ export class CourseService {
   constructor() {
     this.courseRepository = dataSource.getRepository(Course)
     this.coursePriceOptionRepository = dataSource.getRepository(CoursePriceOption)
+    this.courseVideoRepository = dataSource.getRepository(CourseVideo)
+    this.videoRepository = dataSource.getRepository(Video)
     this.teacherAvailableSlotRepository = dataSource.getRepository(TeacherAvailableSlot)
     this.reservationRepository = dataSource.getRepository(Reservation)
     this.teacherRepository = dataSource.getRepository(Teacher)
@@ -274,6 +280,16 @@ export class CourseService {
         })
 
         await queryRunner.manager.save(CoursePriceOption, priceOptionEntities)
+      }
+
+      // 4. 處理短影音關聯
+      if (courseData.selectedVideos && courseData.selectedVideos.length > 0) {
+        await this.handleCourseVideoAssociation(
+          queryRunner, 
+          savedCourse.id, 
+          teacher.id, 
+          courseData.selectedVideos
+        )
       }
 
       // 提交交易
@@ -513,6 +529,16 @@ export class CourseService {
         }
       }
 
+      // 4. 處理短影音關聯更新（如果有提供，可選）
+      if (courseData.selectedVideos !== undefined) {
+        await this.handleCourseVideoAssociation(
+          queryRunner, 
+          savedCourse.id, 
+          teacher.id, 
+          courseData.selectedVideos
+        )
+      }
+
       // 提交交易
       await queryRunner.commitTransaction()
       
@@ -629,6 +655,46 @@ export class CourseService {
       order: { price: 'ASC' }
     })
 
+    // 查詢關聯的短影音
+    const courseVideos = await this.courseVideoRepository.find({
+      where: { course_id: courseId },
+      relations: ['video'],
+      order: { display_order: 'ASC' }
+    })
+
+    // 查詢短影音詳細資訊
+    const selectedVideos = []
+    if (courseVideos.length > 0) {
+      const videoIds = courseVideos.map(cv => cv.video_id)
+      const videos = await this.videoRepository.find({
+        where: { 
+          id: In(videoIds),
+          deleted_at: IsNull() 
+        },
+        select: ['id', 'uuid', 'name', 'category', 'intro', 'url', 'created_at']
+      })
+
+      // 組合短影音資訊（保持排序）
+      for (const courseVideo of courseVideos) {
+        const video = videos.find(v => v.id === courseVideo.video_id)
+        if (video) {
+          selectedVideos.push({
+            video_id: video.id,
+            display_order: courseVideo.display_order,
+            video_info: {
+              id: video.id,
+              uuid: video.uuid,
+              name: video.name,
+              category: video.category,
+              intro: video.intro,
+              url: video.url,
+              created_at: video.created_at
+            }
+          })
+        }
+      }
+    }
+
     // 組合完整資料
     const courseWithPriceOptions: CourseWithPriceOptions = {
       ...this.mapToBasicInfo(fullCourse),
@@ -641,7 +707,8 @@ export class CourseService {
         is_active: option.is_active,
         created_at: option.created_at,
         updated_at: option.updated_at
-      }))
+      })),
+      selected_videos: selectedVideos // 新增短影音資訊
     }
 
     return courseWithPriceOptions
@@ -915,6 +982,68 @@ export class CourseService {
       date,
       available_slots: allSlots
     }
+  }
+
+  // ==================== 私有輔助方法 ====================
+
+  /**
+   * 處理課程與短影音的關聯
+   * @param queryRunner 資料庫交易查詢器
+   * @param courseId 課程ID
+   * @param teacherId 教師ID  
+   * @param selectedVideos 選擇的短影音（可選）
+   */
+  private async handleCourseVideoAssociation(
+    queryRunner: any, 
+    courseId: number, 
+    teacherId: number, 
+    selectedVideos: Array<{ video_id: number; display_order: number }> | null
+  ): Promise<void> {
+    // 1. 清除現有的課程短影音關聯
+    await queryRunner.manager.delete(CourseVideo, { course_id: courseId })
+
+    // 2. 如果沒有選擇短影音，直接返回（完全可選）
+    if (!selectedVideos || selectedVideos.length === 0) {
+      return
+    }
+
+    // 3. 驗證最多 3 個短影音限制
+    if (selectedVideos.length > 3) {
+      throw new BusinessError(
+        ERROR_CODES.VALIDATION_ERROR,
+        '課程最多只能連結 3 個短影音',
+        400
+      )
+    }
+
+    // 4. 驗證所選影片是否屬於該教師且未被刪除
+    const videoIds = selectedVideos.map(v => v.video_id)
+    const videos = await this.videoRepository.find({
+      where: { 
+        id: In(videoIds), 
+        teacher_id: teacherId,
+        deleted_at: IsNull() 
+      }
+    })
+
+    if (videos.length !== videoIds.length) {
+      throw new BusinessError(
+        ERROR_CODES.VALIDATION_ERROR, 
+        '包含無效的影片選擇，請確認所選影片存在且屬於您', 
+        400
+      )
+    }
+
+    // 5. 建立新的課程短影音關聯
+    const courseVideoEntities = selectedVideos.map(selectedVideo => {
+      const courseVideo = new CourseVideo()
+      courseVideo.course_id = courseId
+      courseVideo.video_id = selectedVideo.video_id
+      courseVideo.display_order = selectedVideo.display_order
+      return courseVideo
+    })
+
+    await queryRunner.manager.save(CourseVideo, courseVideoEntities)
   }
 }
 

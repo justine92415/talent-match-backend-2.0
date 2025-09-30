@@ -1,8 +1,8 @@
 {
   "info": {
     "name": "Talent Match API 2.0",
-    "description": "Talent Match 後端 API 完整集合 - 包含所有認證、課程、教師、購物車、訂單等功能的 API 端點\n\n🆕 **v2.4 新功能**：\n- 影片管理系統重大更新：統一檔案替換功能\n- 影片更新 API 現在統一使用 FormData 格式（與課程編輯一致）\n- 完整檔案管理：新增/更新/刪除時都會正確處理 Firebase Storage 檔案\n- 影片刪除功能：軟刪除 + 同步清理 Firebase Storage 檔案\n- 可選檔案上傳：更新時檔案為可選，不提供時保持原有檔案\n\n🔧 **v2.3 功能**：\n- 預約確認流程：學生預約後需要教師確認\n- 教師確認/拒絕預約 API\n- 預約狀態自動過期機制（隔天預約12小時內回應，其他24小時內回應）\n- PENDING 狀態預約管理\n\n🔧 **v2.2 功能**：\n- 管理員課程申請列表 API\n- 課程狀態篩選（submitted, approved, rejected, draft, published, archived）\n- 管理員 token 自動保存\n- 增強的測試腳本和變數管理\n\n🔧 **v2.1 功能**：\n- 整合式課程建立 API (支援同時上傳圖片和設定價格方案)\n- multipart/form-data 支援檔案上傳\n- 資料庫交易確保原子性操作\n- 自動錯誤恢復和資源清理",
-    "version": "2.4.0",
+    "description": "Talent Match 後端 API 完整集合 - 包含所有認證、課程、教師、購物車、訂單等功能的 API 端點\n\n🆕 **v2.5 新功能**：\n- 短影音課程關聯功能：教師可於新增/編輯課程時選擇短影音\n- 課程建立/編輯 API 支援 selectedVideos 欄位\n- 最多可關聯 3 支短影音，支援自訂顯示順序\n- 課程編輯資料載入 API 包含關聯短影音\n- 公開課程詳情 API 顯示關聯短影音\n- 適用於實體課程的宣傳短片功能\n\n🆕 **v2.4 功能**：\n- 影片管理系統重大更新：統一檔案替換功能\n- 影片更新 API 現在統一使用 FormData 格式（與課程編輯一致）\n- 完整檔案管理：新增/更新/刪除時都會正確處理 Firebase Storage 檔案\n- 影片刪除功能：軟刪除 + 同步清理 Firebase Storage 檔案\n- 可選檔案上傳：更新時檔案為可選，不提供時保持原有檔案\n\n🔧 **v2.3 功能**：\n- 預約確認流程：學生預約後需要教師確認\n- 教師確認/拒絕預約 API\n- 預約狀態自動過期機制（隔天預約12小時內回應，其他24小時內回應）\n- PENDING 狀態預約管理\n\n🔧 **v2.2 功能**：\n- 管理員課程申請列表 API\n- 課程狀態篩選（submitted, approved, rejected, draft, published, archived）\n- 管理員 token 自動保存\n- 增強的測試腳本和變數管理\n\n🔧 **v2.1 功能**：\n- 整合式課程建立 API (支援同時上傳圖片和設定價格方案)\n- multipart/form-data 支援檔案上傳\n- 資料庫交易確保原子性操作\n- 自動錯誤恢復和資源清理",
+    "version": "2.5.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -1452,7 +1452,7 @@
               "formdata": [
                 {
                   "key": "courseData",
-                  "value": "{\n  \"name\": \"JavaScript 基礎入門課程\",\n  \"content\": \"<p>完整的 JavaScript 基礎教學，適合初學者學習程式設計</p>\",\n  \"main_category_id\": 1,\n  \"sub_category_id\": 2,\n  \"city\": \"台北市\",\n  \"district\": \"信義區\",\n  \"address\": \"台北市信義區信義路五段7號\",\n  \"survey_url\": \"https://forms.google.com/survey123\",\n  \"purchase_message\": \"請準備筆記本，課程需要大量練習\"\n}",
+                  "value": "{\n  \"name\": \"JavaScript 基礎入門課程\",\n  \"content\": \"<p>完整的 JavaScript 基礎教學，適合初學者學習程式設計</p>\",\n  \"main_category_id\": 1,\n  \"sub_category_id\": 2,\n  \"city\": \"台北市\",\n  \"district\": \"信義區\",\n  \"address\": \"台北市信義區信義路五段7號\",\n  \"survey_url\": \"https://forms.google.com/survey123\",\n  \"purchase_message\": \"請準備筆記本，課程需要大量練習\",\n  \"selectedVideos\": [\n    {\n      \"video_id\": 1,\n      \"display_order\": 1\n    },\n    {\n      \"video_id\": 3,\n      \"display_order\": 2\n    }\n  ]\n}",
                   "type": "text",
                   "description": "課程基本資料 (JSON 格式)"
                 },
@@ -1475,7 +1475,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "courses"]
             },
-            "description": "建立新課程 (支援同時上傳圖片和設定價格方案)\n\n**新功能特色：**\n- 支援 multipart/form-data 格式\n- 可同時上傳課程圖片 (最大 10MB)\n- 可同時建立多個價格方案\n- 原子性操作，確保資料一致性\n\n**表單欄位說明：**\n- courseData: 課程基本資料 (JSON 字串)\n- priceOptions: 價格方案陣列 (JSON 字串)\n- courseImage: 課程主圖檔案 (可選)\n\n**注意事項：**\n- 需要教師身份認證\n- 教師必須已通過審核\n- 圖片格式支援: JPEG, PNG, WebP\n- 建立失敗時會自動清理已上傳的圖片"
+            "description": "建立新課程 (支援同時上傳圖片、設定價格方案和關聯短影音)\n\n**新功能特色：**\n- 支援 multipart/form-data 格式\n- 可同時上傳課程圖片 (最大 10MB)\n- 可同時建立多個價格方案\n- 可同時關聯短影音 (最多 3 支，支援自訂順序)\n- 原子性操作，確保資料一致性\n\n**表單欄位說明：**\n- courseData: 課程基本資料 (JSON 字串，可包含 selectedVideos)\n- priceOptions: 價格方案陣列 (JSON 字串)\n- courseImage: 課程主圖檔案 (可選)\n\n**短影音功能：**\n- 在 courseData 中設定 selectedVideos 陣列\n- 格式：[{\"video_id\": 1, \"display_order\": 1}]\n- 只能選擇自己上傳且未刪除的影片\n- 最多可關聯 3 支影片\n\n**注意事項：**\n- 需要教師身份認證\n- 教師必須已通過審核\n- 圖片格式支援: JPEG, PNG, WebP\n- 建立失敗時會自動清理已上傳的圖片"
           }
         },
         {
@@ -1490,14 +1490,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Python 程式設計基礎\",\n  \"content\": \"完整的Python程式設計入門課程，從基礎語法開始教學\",\n  \"main_category_id\": 1,\n  \"sub_category_id\": 2,\n  \"city\": \"新北市\",\n  \"district\": \"板橋區\",\n  \"address\": \"新北市板橋區文化路一段188號\",\n  \"survey_url\": \"https://forms.google.com/python-survey\",\n  \"purchase_message\": \"課程提供完整程式碼範例和練習題\",\n  \"priceOptions\": [\n    {\n      \"price\": 2000,\n      \"quantity\": 1\n    },\n    {\n      \"price\": 5500,\n      \"quantity\": 3\n    }\n  ]\n}"
+              "raw": "{\n  \"name\": \"Python 程式設計基礎\",\n  \"content\": \"完整的Python程式設計入門課程，從基礎語法開始教學\",\n  \"main_category_id\": 1,\n  \"sub_category_id\": 2,\n  \"city\": \"新北市\",\n  \"district\": \"板橋區\",\n  \"address\": \"新北市板橋區文化路一段188號\",\n  \"survey_url\": \"https://forms.google.com/python-survey\",\n  \"purchase_message\": \"課程提供完整程式碼範例和練習題\",\n  \"selectedVideos\": [\n    {\n      \"video_id\": 1,\n      \"display_order\": 1\n    },\n    {\n      \"video_id\": 2,\n      \"display_order\": 2\n    }\n  ],\n  \"priceOptions\": [\n    {\n      \"price\": 2000,\n      \"quantity\": 1\n    },\n    {\n      \"price\": 5500,\n      \"quantity\": 3\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/courses",
               "host": ["{{base_url}}"],
               "path": ["api", "courses"]
             },
-            "description": "建立新課程 (傳統 JSON 格式，不包含圖片上傳)\n\n**適用情境：**\n- 僅需要建立課程基本資料和價格方案\n- 不需要上傳課程圖片\n- 使用傳統的 JSON API 格式\n\n**注意事項：**\n- 仍需要教師身份認證\n- 教師必須已通過審核\n- 價格方案直接包含在 JSON 中\n- 圖片可以稍後透過更新 API 或其他方式上傳"
+            "description": "建立新課程 (傳統 JSON 格式，不包含圖片上傳但支援短影音關聯)\n\n**適用情境：**\n- 僅需要建立課程基本資料、價格方案和短影音關聯\n- 不需要上傳課程圖片\n- 使用傳統的 JSON API 格式\n\n**短影音功能：**\n- 支援 selectedVideos 欄位關聯短影音\n- 格式：[{\"video_id\": 1, \"display_order\": 1}]\n- 最多可關聯 3 支影片\n\n**注意事項：**\n- 仍需要教師身份認證\n- 教師必須已通過審核\n- 價格方案直接包含在 JSON 中\n- 圖片可以稍後透過更新 API 或其他方式上傳"
           }
         },
         {
@@ -1515,7 +1515,7 @@
                 },
                 {
                   "key": "courseData",
-                  "value": "{\"name\":\"Python 程式設計進階（更新）\",\"content\":\"進階Python程式設計課程，涵蓋物件導向、資料結構、設計模式等進階主題\",\"main_category_id\":1,\"sub_category_id\":2,\"city\":\"桃園市\",\"district\":\"中壢區\",\"address\":\"桃園市中壢區中大路300號\",\"survey_url\":\"https://forms.google.com/updated\",\"purchase_message\":\"更新後的購買須知：請準備好學習心情！\"}",
+                  "value": "{\"name\":\"Python 程式設計進階（更新）\",\"content\":\"進階Python程式設計課程，涵蓋物件導向、資料結構、設計模式等進階主題\",\"main_category_id\":1,\"sub_category_id\":2,\"city\":\"桃園市\",\"district\":\"中壢區\",\"address\":\"桃園市中壢區中大路300號\",\"survey_url\":\"https://forms.google.com/updated\",\"purchase_message\":\"更新後的購買須知：請準備好學習心情！\",\"selectedVideos\":[{\"video_id\":2,\"display_order\":1},{\"video_id\":4,\"display_order\":2}]}",
                   "description": "課程基本資料 (JSON 字串格式)",
                   "type": "text"
                 },
@@ -1538,7 +1538,7 @@
                 }
               ]
             },
-            "description": "**完整課程更新功能** (支援圖片上傳和價格方案編輯)\n\n**功能特性**：\n- 🖼️ 支援課程圖片上傳和替換（自動清理舊圖片）\n- 💰 支援價格方案的完整替換\n- 📝 支援所有課程基本資料更新\n- ⚡ 原子性操作，確保資料一致性\n\n**請求格式**：multipart/form-data\n\n**參數說明**：\n- `courseImage`: 圖片檔案 (可選)\n- `courseData`: 課程資料 JSON\n- `priceOptions`: 價格方案 JSON 陣列\n\n**注意事項**：\n- 所有參數皆為選填，未提供的欄位保持原值\n- 如有上傳新圖片，舊圖片會自動清理\n- 價格方案會完全替換，不是增量更新\n- 需要教師身份認證且課程為自己所有"
+            "description": "**完整課程更新功能** (支援圖片上傳、價格方案編輯和短影音關聯)\n\n**功能特性**：\n- 🖼️ 支援課程圖片上傳和替換（自動清理舊圖片）\n- 💰 支援價格方案的完整替換\n- 🎬 支援短影音關聯的完整替換\n- 📝 支援所有課程基本資料更新\n- ⚡ 原子性操作，確保資料一致性\n\n**請求格式**：multipart/form-data\n\n**參數說明**：\n- `courseImage`: 圖片檔案 (可選)\n- `courseData`: 課程資料 JSON (可包含 selectedVideos)\n- `priceOptions`: 價格方案 JSON 陣列\n\n**短影音功能**：\n- 在 courseData 中設定 selectedVideos 陣列進行關聯\n- 格式：[{\"video_id\": 2, \"display_order\": 1}]\n- 最多可關聯 3 支影片\n- 會完全替換現有關聯，不是增量更新\n\n**注意事項**：\n- 所有參數皆為選填，未提供的欄位保持原值\n- 如有上傳新圖片，舊圖片會自動清理\n- 價格方案會完全替換，不是增量更新\n- 短影音關聯會完全替換，不是增量更新\n- 需要教師身份認證且課程為自己所有"
           }
         },
         {
@@ -1855,7 +1855,7 @@
           }
         }
       ],
-      "description": "課程管理相關 API，包含課程 CRUD、狀態管理、價格方案等功能\n\n**🆕 整合式課程建立 API**：\n- POST /api/courses (multipart/form-data) - 建立課程 + 圖片上傳 + 價格方案 (一次完成)\n- POST /api/courses (application/json) - 建立課程 (傳統格式，僅基本資料)\n\n**教師課程管理功能**：\n- PUT /api/courses/:id - 更新課程 (完整版：圖片上傳 + 價格方案編輯) 🆕\n- GET /api/courses/:id - 取得課程詳情 (瀏覽用，基本資訊)\n- GET /api/courses/:id/edit - 取得課程編輯資料 (包含價格方案) 🆕\n- GET /api/courses - 教師課程列表\n- DELETE /api/courses/:id - 刪除課程\n\n**課程狀態管理**：\n- POST /api/courses/:id/submit - 提交審核\n- POST /api/courses/:id/resubmit - 重新提交審核\n- POST /api/courses/:id/publish - 發布課程\n- POST /api/courses/:id/archive - 封存課程\n\n**價格方案管理**：\n- GET /api/courses/:courseId/price-options - 取得價格方案 (⚠️ 建議使用編輯端點)\n- POST /api/courses/:courseId/price-options - 新增價格方案\n- PUT /api/courses/:courseId/price-options/:id - 更新價格方案\n- DELETE /api/courses/:courseId/price-options/:id - 刪除價格方案\n\n**🎯 課程預約相關 API (新增)**：\n- GET /api/courses/:id/available-slots - 查詢課程可預約時段 🆕\n\n**🎯 v2.1 新增專用編輯端點**：\n- GET /api/courses/:id/edit - 專門供前端編輯頁面使用\n- 一次 API 呼叫取得完整編輯資料 (課程 + 價格方案)\n- 清晰分離瀏覽和編輯功能\n- 只有課程擁有者可以存取\n\n**✨ v2.2 完整編輯功能更新**：\n- PUT /api/courses/:id 現已支援 multipart/form-data 格式\n- 支援圖片上傳和自動替換 (舊圖片自動清理)\n- 支援價格方案的完整替換編輯\n- 原子性操作確保資料一致性\n- 自動錯誤恢復和資源清理\n- 支援課程圖片上傳 (JPEG/PNG/WebP，最大 10MB)\n- 前後台功能分離，提升 API 設計清晰度\n\n**注意事項**：\n- 所有端點都需要教師身份認證\n- 使用 :id 參數（數字），不是 :uuid\n- 狀態管理遵循特定業務規則\n- 更新功能支援部分更新，所有參數皆為選填"
+      "description": "課程管理相關 API，包含課程 CRUD、狀態管理、價格方案、短影音關聯等功能\n\n**🆕 短影音功能**：\n- 建立/編輯課程時支援關聯短影音（selectedVideos 欄位）\n- 最多可關聯 3 支短影音，支援自訂顯示順序\n- 只能選擇自己上傳且未刪除的影片\n- 學生可在課程詳情頁面查看關聯的短影音\n\n**🆕 整合式課程建立 API**：\n- POST /api/courses (multipart/form-data) - 建立課程 + 圖片上傳 + 價格方案 + 短影音關聯 (一次完成)\n- POST /api/courses (application/json) - 建立課程 (傳統格式，僅基本資料 + 短影音關聯)\n\n**教師課程管理功能**：\n- PUT /api/courses/:id - 更新課程 (完整版：圖片上傳 + 價格方案編輯 + 短影音關聯) 🆕\n- GET /api/courses/:id - 取得課程詳情 (瀏覽用，基本資訊)\n- GET /api/courses/:id/edit - 取得課程編輯資料 (包含價格方案 + 關聯短影音) 🆕\n- GET /api/courses - 教師課程列表\n- DELETE /api/courses/:id - 刪除課程\n\n**課程狀態管理**：\n- POST /api/courses/:id/submit - 提交審核\n- POST /api/courses/:id/resubmit - 重新提交審核\n- POST /api/courses/:id/publish - 發布課程\n- POST /api/courses/:id/archive - 封存課程\n\n**價格方案管理**：\n- GET /api/courses/:courseId/price-options - 取得價格方案 (⚠️ 建議使用編輯端點)\n- POST /api/courses/:courseId/price-options - 新增價格方案\n- PUT /api/courses/:courseId/price-options/:id - 更新價格方案\n- DELETE /api/courses/:courseId/price-options/:id - 刪除價格方案\n\n**🎯 課程預約相關 API (新增)**：\n- GET /api/courses/:id/available-slots - 查詢課程可預約時段 🆕\n\n**🎯 v2.1 新增專用編輯端點**：\n- GET /api/courses/:id/edit - 專門供前端編輯頁面使用\n- 一次 API 呼叫取得完整編輯資料 (課程 + 價格方案 + 關聯短影音)\n- 清晰分離瀏覽和編輯功能\n- 只有課程擁有者可以存取\n\n**✨ v2.2 完整編輯功能更新**：\n- PUT /api/courses/:id 現已支援 multipart/form-data 格式\n- 支援圖片上傳和自動替換 (舊圖片自動清理)\n- 支援價格方案的完整替換編輯\n- 支援短影音關聯的完整替換編輯\n- 原子性操作確保資料一致性\n- 自動錯誤恢復和資源清理\n- 支援課程圖片上傳 (JPEG/PNG/WebP，最大 10MB)\n- 前後台功能分離，提升 API 設計清晰度\n\n**注意事項**：\n- 所有端點都需要教師身份認證\n- 使用 :id 參數（數字），不是 :uuid\n- 狀態管理遵循特定業務規則\n- 更新功能支援部分更新，所有參數皆為選填\n- 短影音關聯功能僅適用於實體課程的宣傳短片"
     },
     {
       "name": "公開課程瀏覽 (Public Courses)",

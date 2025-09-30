@@ -63,22 +63,31 @@ const courseFileController = new CourseFileController()
  *       - Course Management
  *     summary: 建立新課程 (支援圖片上傳)
  *     description: |
- *       建立新的課程，需要教師身份認證。支援同時上傳課程圖片、設定課程資訊和價格方案。
+ *       建立新的課程，需要教師身份認證。支援同時上傳課程圖片、設定課程資訊、價格方案和短影音關聯。
  *       
  *       **業務邏輯**：
  *       - 驗證使用者具有教師權限且審核通過
  *       - 處理 multipart/form-data 格式請求 (courseData JSON + priceOptions JSON + courseImage 檔案)
  *       - 驗證課程資料、價格方案和圖片檔案 (可選)
+ *       - 處理短影音關聯 (可選，最多 3 個)
+ *       - 驗證短影音權限 (只能選擇自己上傳的影片)
  *       - 上傳課程圖片到 Firebase Storage (如有提供)
- *       - 在資料庫交易中建立課程和所有價格方案
+ *       - 在資料庫交易中建立課程、價格方案和短影音關聯
  *       - 自動生成課程 UUID 和設定預設值
  *       - 建立課程記錄，狀態為草稿 (draft)
  *       - 回傳建立的課程完整資訊
  *       
  *       **表單欄位**：
- *       - courseData: JSON 字串，包含課程基本資訊
+ *       - courseData: JSON 字串，包含課程基本資訊和短影音選擇 (可選)
  *       - priceOptions: JSON 陣列字串，包含價格方案列表
  *       - courseImage: 圖片檔案 (可選，支援 JPEG/PNG/WebP，最大 10MB)
+ *       
+ *       **短影音功能**：
+ *       - 支援關聯教師上傳的短影音 (完全可選)
+ *       - 最多選擇 3 個短影音
+ *       - 支援自訂顯示順序
+ *       - 只能選擇自己上傳且未刪除的影片
+ *       - 學生可在課程詳情頁面查看關聯的短影音
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -94,8 +103,8 @@ const courseFileController = new CourseFileController()
  *               courseData:
  *                 type: string
  *                 format: json
- *                 description: '課程基本資料 (JSON 字串格式)'
- *                 example: '{"name":"JavaScript 基礎入門課程","content":"<p>完整的 JavaScript 基礎教學，適合初學者</p>","main_category_id":1,"sub_category_id":2,"city":"台北市","district":"信義區","address":"台北市信義區信義路五段7號","survey_url":"https://forms.google.com/survey123","purchase_message":"請準備筆記本，課程需要大量練習"}'
+ *                 description: '課程基本資料 (JSON 字串格式，可包含短影音關聯)'
+ *                 example: '{"name":"JavaScript 基礎入門課程","content":"<p>完整的 JavaScript 基礎教學，適合初學者</p>","main_category_id":1,"sub_category_id":2,"city":"台北市","district":"信義區","address":"台北市信義區信義路五段7號","survey_url":"https://forms.google.com/survey123","purchase_message":"請準備筆記本，課程需要大量練習","selectedVideos":[{"video_id":1,"display_order":1},{"video_id":3,"display_order":2}]}'
  *               priceOptions:
  *                 type: string
  *                 format: json
@@ -200,13 +209,22 @@ router.post('/',
  *       - 支援課程基本資料更新
  *       - 支援課程圖片上傳和替換（自動清理舊圖片）
  *       - 支援價格方案的完整替換（新增、修改、刪除）
+ *       - 支援短影音關聯管理（新增、修改、刪除關聯）
  *       - 使用 multipart/form-data 格式上傳
+ *       
+ *       **短影音功能**：
+ *       - 教師可在 courseData 中設定 selectedVideos 陣列關聯短影音
+ *       - 最多可關聯 3 支短影音
+ *       - 支援自訂顯示順序
+ *       - 只能選擇自己上傳且未刪除的影片
+ *       - 學生可在課程詳情頁面查看關聯的短影音
  *       
  *       **業務邏輯**：
  *       - 驗證使用者具有教師權限且已通過審核
  *       - 驗證課程存在且為使用者所擁有
  *       - 如有上傳新圖片，會自動替換並清理舊圖片
  *       - 價格方案會完全替換（不是增量更新）
+ *       - 短影音關聯會完全替換（不是增量更新）
  *       - 所有參數皆為選填，未提供的欄位保持原值
  *       - 自動更新 updated_at 時間戳
  *     security:
@@ -502,7 +520,7 @@ router.delete('/:id', authenticateToken, createSchemasMiddleware({ params: cours
  *       - Course Management
  *     summary: 取得課程編輯資料
  *     description: |
- *       取得課程的完整編輯資料，包含基本資訊和價格方案。專門供編輯頁面使用。
+ *       取得課程的完整編輯資料，包含基本資訊、價格方案和關聯的短影音。專門供編輯頁面使用。
  *       
  *       **權限限制**：
  *       - 只有課程擁有者可以存取
@@ -512,13 +530,20 @@ router.delete('/:id', authenticateToken, createSchemasMiddleware({ params: cours
  *       **回應資料**：
  *       - 完整的課程基本資訊
  *       - 所有價格方案列表（按價格排序）
+ *       - 關聯的短影音列表（包含影片資訊和顯示順序）
  *       - 供前端編輯表單初始化使用
+ *       
+ *       **短影音資料**：
+ *       - 回傳課程已關聯的短影音列表
+ *       - 包含影片 ID、標題、縮圖 URL 和顯示順序
+ *       - 前端可用此資料預設選中的影片
  *       
  *       **業務邏輯**：
  *       - 驗證使用者具有教師權限
  *       - 驗證課程所有權
  *       - 查詢完整課程資料
  *       - 查詢關聯的價格方案
+ *       - 查詢關聯的短影音資料
  *       - 回傳整合資料
  *     security:
  *       - bearerAuth: []
