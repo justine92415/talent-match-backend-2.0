@@ -121,6 +121,7 @@ export const publicCourseSchemas = {
   // 公開課程列表項目 Schema
   PublicCourseListItem: {
     type: 'object',
+    required: ['id', 'uuid', 'name', 'min_price', 'max_price', 'rate', 'review_count', 'student_count', 'main_category', 'sub_category', 'teacher', 'created_at', 'updated_at'],
     properties: {
       id: {
         type: 'integer',
@@ -189,6 +190,7 @@ export const publicCourseSchemas = {
       },
       main_category: {
         type: 'object',
+        description: '主分類資訊',
         properties: {
           id: {
             type: 'integer',
@@ -201,10 +203,11 @@ export const publicCourseSchemas = {
             example: '藝術創作'
           }
         },
-        description: '主分類資訊'
+        required: ['id', 'name']
       },
       sub_category: {
         type: 'object',
+        description: '次分類資訊',
         properties: {
           id: {
             type: 'integer',
@@ -217,10 +220,11 @@ export const publicCourseSchemas = {
             example: '插畫'
           }
         },
-        description: '次分類資訊'
+        required: ['id', 'name']
       },
       teacher: {
         type: 'object',
+        description: '教師資訊',
         properties: {
           id: {
             type: 'integer',
@@ -229,6 +233,7 @@ export const publicCourseSchemas = {
           },
           user: {
             type: 'object',
+            description: '教師使用者資訊',
             properties: {
               name: {
                 type: 'string',
@@ -246,10 +251,10 @@ export const publicCourseSchemas = {
                 example: 'https://firebasestorage.googleapis.com/v0/b/talent-match-2.firebasestorage.app/o/avatars%2Fuser_4%2Fc4853549-5487-4e2f-be17-1d09697c4d57.png?alt=media'
               }
             },
-            description: '教師使用者資訊'
+            required: ['name', 'nick_name', 'avatar_image']
           }
         },
-        description: '教師資訊'
+        required: ['id', 'user']
       },
       created_at: {
         type: 'string',
@@ -371,6 +376,7 @@ export const publicCourseSchemas = {
   // 公開課程詳情 Schema
   PublicCourseDetail: {
     type: 'object',
+    required: ['id', 'uuid', 'name', 'rate', 'review_count', 'student_count', 'purchase_count', 'main_category', 'sub_category', 'created_at'],
     properties: {
       id: {
         type: 'integer',
@@ -452,6 +458,8 @@ export const publicCourseSchemas = {
       },
       main_category: {
         type: 'object',
+        description: '主分類資訊',
+        required: ['id', 'name'],
         properties: {
           id: {
             type: 'integer',
@@ -463,11 +471,12 @@ export const publicCourseSchemas = {
             description: '主分類名稱',
             example: '藝術創作'
           }
-        },
-        description: '主分類資訊'
+        }
       },
       sub_category: {
         type: 'object',
+        description: '次分類資訊',
+        required: ['id', 'name'],
         properties: {
           id: {
             type: 'integer',
@@ -479,8 +488,7 @@ export const publicCourseSchemas = {
             description: '次分類名稱',
             example: '插畫'
           }
-        },
-        description: '次分類資訊'
+        }
       },
       created_at: {
         type: 'string',
@@ -494,6 +502,7 @@ export const publicCourseSchemas = {
   // 公開課程教師資訊 Schema
   PublicCourseTeacherInfo: {
     type: 'object',
+    required: ['id', 'user', 'total_students', 'total_courses', 'average_rating'],
     properties: {
       id: {
         type: 'integer',
@@ -502,6 +511,8 @@ export const publicCourseSchemas = {
       },
       user: {
         type: 'object',
+        description: '教師使用者資訊',
+        required: ['name', 'nick_name', 'avatar_image'],
         properties: {
           name: {
             type: 'string',
@@ -518,8 +529,7 @@ export const publicCourseSchemas = {
             description: '教師頭像 URL',
             example: 'https://firebasestorage.googleapis.com/v0/b/talent-match-2.firebasestorage.app/o/avatars%2Fuser_4%2Fc4853549-5487-4e2f-be17-1d09697c4d57.png?alt=media'
           }
-        },
-        description: '教師使用者資訊'
+        }
       },
       city: {
         type: 'string',
@@ -566,6 +576,7 @@ export const publicCourseSchemas = {
   // 公開課程價格方案 Schema
   PublicCoursePriceOption: {
     type: 'object',
+    required: ['id', 'uuid', 'price', 'quantity'],
     properties: {
       id: {
         type: 'integer',
@@ -589,6 +600,176 @@ export const publicCourseSchemas = {
         example: 1
       }
     }
+  },
+
+  // ==================== 課程詳細資料相關 Schema ====================
+
+  // 公開課程影片 Schema
+  PublicCourseVideo: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '影片 ID',
+        example: 1
+      },
+      name: {
+        type: 'string',
+        description: '影片名稱',
+        example: '課程介紹影片'
+      },
+      intro: {
+        type: 'string',
+        description: '影片簡介',
+        example: '本影片將簡單介紹課程內容和學習目標'
+      },
+      url: {
+        type: 'string',
+        description: '影片 URL',
+        example: 'https://firebasestorage.googleapis.com/v0/b/.../video1.mp4'
+      },
+      video_type: {
+        type: 'string',
+        enum: ['storage', 'youtube'],
+        description: '影片類型 (storage: 儲存類型, youtube: YouTube 連結)',
+        example: 'storage'
+      },
+      is_preview: {
+        type: 'boolean',
+        description: '是否為預覽影片',
+        example: false
+      }
+    },
+    required: ['id', 'name', 'intro', 'url', 'video_type', 'is_preview'],
+    description: '公開課程影片資訊'
+  },
+
+  // 公開課程檔案 Schema
+  PublicCourseFile: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '檔案 ID',
+        example: 1
+      },
+      name: {
+        type: 'string',
+        description: '檔案名稱',
+        example: '課程講義.pdf'
+      },
+      url: {
+        type: 'string',
+        description: '檔案下載 URL',
+        example: 'https://firebasestorage.googleapis.com/v0/b/.../course-materials.pdf'
+      }
+    },
+    required: ['id', 'name', 'url'],
+    description: '公開課程檔案資訊'
+  },
+
+  // 公開課程評價 Schema
+  PublicCourseReview: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '評價 ID',
+        example: 1
+      },
+      rate: {
+        type: 'integer',
+        minimum: 1,
+        maximum: 5,
+        description: '評分 (1-5星)',
+        example: 5
+      },
+      comment: {
+        type: 'string',
+        description: '評價內容',
+        example: '老師教學很棒，內容豐富易懂！'
+      },
+      user: {
+        type: 'object',
+        properties: {
+          nick_name: {
+            type: 'string',
+            description: '評價者暱稱',
+            example: '學習愛好者'
+          }
+        },
+        required: ['nick_name'],
+        description: '評價者資訊'
+      },
+      created_at: {
+        type: 'string',
+        format: 'date-time',
+        description: '評價建立時間',
+        example: '2024-09-20T10:30:00.000Z'
+      }
+    },
+    required: ['id', 'rate', 'comment', 'user', 'created_at'],
+    description: '公開課程評價資訊'
+  },
+
+  // 推薦課程 Schema
+  PublicRecommendedCourse: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'integer',
+        description: '推薦課程 ID',
+        example: 3
+      },
+      uuid: {
+        type: 'string',
+        format: 'uuid',
+        description: '推薦課程 UUID',
+        example: '123e4567-e89b-12d3-a456-426614174001'
+      },
+      name: {
+        type: 'string',
+        description: '推薦課程名稱',
+        example: 'Python 進階應用'
+      },
+      main_image: {
+        type: 'string',
+        nullable: true,
+        description: '推薦課程主圖 URL',
+        example: 'https://firebasestorage.googleapis.com/v0/b/.../recommended-course.jpg'
+      },
+      rate: {
+        type: 'number',
+        description: '推薦課程評分',
+        example: 4.5
+      },
+      min_price: {
+        type: 'number',
+        description: '推薦課程最低價格',
+        example: 1500
+      },
+      teacher: {
+        type: 'object',
+        properties: {
+          user: {
+            type: 'object',
+            properties: {
+              nick_name: {
+                type: 'string',
+                description: '推薦課程教師暱稱',
+                example: '資深講師'
+              }
+            },
+            required: ['nick_name'],
+            description: '推薦課程教師使用者資訊'
+          }
+        },
+        required: ['user'],
+        description: '推薦課程教師資訊'
+      }
+    },
+    required: ['id', 'uuid', 'name', 'rate', 'min_price', 'teacher'],
+    description: '推薦課程資訊'
   },
 
   // ==================== 教師詳細資訊相關 Schema ====================
@@ -714,15 +895,17 @@ export const publicCourseSchemas = {
           },
           videos: {
             type: 'array',
-            items: {},
-            description: '課程影片列表 (目前為空陣列)',
-            example: []
+            items: {
+              $ref: '#/components/schemas/PublicCourseVideo'
+            },
+            description: '課程影片列表 (關聯的短影音，按顯示順序排列)'
           },
           files: {
             type: 'array',
-            items: {},
-            description: '課程檔案列表 (目前為空陣列)',
-            example: []
+            items: {
+              $ref: '#/components/schemas/PublicCourseFile'
+            },
+            description: '課程檔案列表 (課程相關文件和資料)'
           },
           schedule: {
             type: 'array',
@@ -751,15 +934,17 @@ export const publicCourseSchemas = {
           },
           recent_reviews: {
             type: 'array',
-            items: {},
-            description: '最近評價列表 (目前為空陣列)',
-            example: []
+            items: {
+              $ref: '#/components/schemas/PublicCourseReview'
+            },
+            description: '最近評價列表 (顯示最新的課程評價)'
           },
           recommended_courses: {
             type: 'array',
-            items: {},
-            description: '推薦課程列表 (目前為空陣列)',
-            example: []
+            items: {
+              $ref: '#/components/schemas/PublicRecommendedCourse'
+            },
+            description: '推薦課程列表 (相關或相似的課程推薦)'
           },
           teacher_certificates: {
             type: 'array',
