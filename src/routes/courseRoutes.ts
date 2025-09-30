@@ -314,9 +314,14 @@ router.put('/:id',
  *   get:
  *     tags:
  *       - Course Management
- *     summary: 取得課程詳細資訊
+ *     summary: 取得課程完整詳細資訊
  *     description: |
- *       取得指定課程的詳細資訊。根據使用者身份和課程狀態決定存取權限。
+ *       取得指定課程的完整詳細資訊，包含價格方案和關聯的短影音。根據使用者身份和課程狀態決定存取權限。
+ *       
+ *       **🆕 回應內容（與編輯 API 一致）**：
+ *       - 完整課程基本資訊 (CourseBasicInfo)
+ *       - 所有價格方案列表 (按價格排序)
+ *       - 關聯的短影音列表 (最多3支，按顯示順序排列)
  *       
  *       **存取權限規則**：
  *       - 未登入：只能查看已發布 (published) 的課程
@@ -328,7 +333,15 @@ router.put('/:id',
  *       - 查詢指定 ID 的課程
  *       - 檢查課程是否存在
  *       - 根據使用者身份驗證存取權限
+ *       - 查詢價格方案 (按價格升序排列)
+ *       - 查詢關聯的短影音 (包含影片詳細資訊)
  *       - 回傳完整的課程資訊
+ *       
+ *       **短影音功能**：
+ *       - 回傳課程關聯的短影音列表
+ *       - 包含影片 ID、名稱、類別、簡介、URL 和建立時間
+ *       - 按顯示順序排列，供前端播放器使用
+ *       - 最多可關聯 3 支短影音
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -342,11 +355,120 @@ router.put('/:id',
  *         example: 1
  *     responses:
  *       200:
- *         description: 成功取得課程資訊
+ *         description: 成功取得完整課程資訊 (包含價格方案和短影音)
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/GetCourseSuccessResponse'
+ *             examples:
+ *               with_videos:
+ *                 summary: 包含短影音的課程
+ *                 value:
+ *                   status: "success"
+ *                   message: null
+ *                   data:
+ *                     course:
+ *                       id: 1
+ *                       uuid: "550e8400-e29b-41d4-a716-446655440000"
+ *                       teacher_id: 1
+ *                       name: "JavaScript 基礎入門課程"
+ *                       content: "<p>完整的 JavaScript 基礎教學，適合初學者</p>"
+ *                       main_image: "https://firebasestorage.googleapis.com/v0/b/.../course-image.jpg"
+ *                       rate: 4.5
+ *                       review_count: 12
+ *                       view_count: 150
+ *                       purchase_count: 25
+ *                       student_count: 25
+ *                       main_category_id: 1
+ *                       sub_category_id: 2
+ *                       city: "台北市"
+ *                       district: "信義區"
+ *                       address: "台北市信義區信義路五段7號"
+ *                       survey_url: "https://forms.google.com/survey123"
+ *                       purchase_message: "請準備筆記本，課程需要大量練習"
+ *                       status: "published"
+ *                       submission_notes: null
+ *                       archive_reason: null
+ *                       created_at: "2024-01-15T10:30:00.000Z"
+ *                       updated_at: "2024-01-15T10:30:00.000Z"
+ *                       price_options:
+ *                         - id: 1
+ *                           uuid: "660e8400-e29b-41d4-a716-446655440000"
+ *                           course_id: 1
+ *                           price: 1500.00
+ *                           quantity: 1
+ *                           is_active: true
+ *                           created_at: "2024-01-15T10:30:00.000Z"
+ *                           updated_at: "2024-01-15T10:30:00.000Z"
+ *                         - id: 2
+ *                           uuid: "660e8400-e29b-41d4-a716-446655440001"
+ *                           course_id: 1
+ *                           price: 4200.00
+ *                           quantity: 3
+ *                           is_active: true
+ *                           created_at: "2024-01-15T10:30:00.000Z"
+ *                           updated_at: "2024-01-15T10:30:00.000Z"
+ *                       selected_videos:
+ *                         - video_id: 1
+ *                           display_order: 1
+ *                           video_info:
+ *                             id: 1
+ *                             uuid: "123e4567-e89b-12d3-a456-426614174000"
+ *                             name: "課程介紹影片"
+ *                             category: "介紹影片"
+ *                             intro: "本影片將簡單介紹課程內容和學習目標"
+ *                             url: "https://firebasestorage.googleapis.com/v0/b/.../video1.mp4"
+ *                             created_at: "2024-01-10T09:00:00.000Z"
+ *                         - video_id: 3
+ *                           display_order: 2
+ *                           video_info:
+ *                             id: 3
+ *                             uuid: "789e0123-e89b-12d3-a456-426614174000"
+ *                             name: "學習目標說明"
+ *                             category: "教學影片"
+ *                             intro: "說明本課程的具體學習目標和成果"
+ *                             url: "https://firebasestorage.googleapis.com/v0/b/.../video3.mp4"
+ *                             created_at: "2024-01-12T11:30:00.000Z"
+ *               without_videos:
+ *                 summary: 無短影音的課程
+ *                 value:
+ *                   status: "success"
+ *                   message: null
+ *                   data:
+ *                     course:
+ *                       id: 2
+ *                       uuid: "660e8400-e29b-41d4-a716-446655440002"
+ *                       teacher_id: 1
+ *                       name: "Python 程式設計基礎"
+ *                       content: "<p>完整的Python程式設計入門課程</p>"
+ *                       main_image: null
+ *                       rate: 0
+ *                       review_count: 0
+ *                       view_count: 0
+ *                       purchase_count: 0
+ *                       student_count: 0
+ *                       main_category_id: 1
+ *                       sub_category_id: 2
+ *                       city: "新北市"
+ *                       district: "板橋區"
+ *                       address: "新北市板橋區文化路一段188號"
+ *                       survey_url: "https://forms.google.com/python-survey"
+ *                       purchase_message: "課程提供完整程式碼範例和練習題"
+ *                       status: "draft"
+ *                       submission_notes: null
+ *                       archive_reason: null
+ *                       created_at: "2024-01-16T14:20:00.000Z"
+ *                       updated_at: "2024-01-16T14:20:00.000Z"
+ *                       price_options:
+ *                         - id: 3
+ *                           uuid: "770e8400-e29b-41d4-a716-446655440003"
+ *                           course_id: 2
+ *                           price: 2000.00
+ *                           quantity: 1
+ *                           is_active: true
+ *                           created_at: "2024-01-16T14:20:00.000Z"
+ *                           updated_at: "2024-01-16T14:20:00.000Z"
+ *                       selected_videos: []
  *       401:
  *         description: 未授權 - Token 無效或過期
  *         content:

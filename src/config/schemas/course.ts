@@ -324,6 +324,72 @@ export const courseSchemas = {
               $ref: '#/components/schemas/PriceOption'
             },
             description: '課程價格方案列表'
+          },
+          selected_videos: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                video_id: {
+                  type: 'integer',
+                  description: '短影音 ID',
+                  example: 1
+                },
+                display_order: {
+                  type: 'integer',
+                  description: '顯示順序',
+                  example: 1
+                },
+                video_info: {
+                  type: 'object',
+                  properties: {
+                    id: {
+                      type: 'integer',
+                      description: '短影音 ID',
+                      example: 1
+                    },
+                    uuid: {
+                      type: 'string',
+                      format: 'uuid',
+                      description: '短影音 UUID',
+                      example: '550e8400-e29b-41d4-a716-446655440000'
+                    },
+                    name: {
+                      type: 'string',
+                      description: '短影音名稱',
+                      example: '課程介紹影片'
+                    },
+                    category: {
+                      type: 'string',
+                      nullable: true,
+                      description: '短影音分類',
+                      example: '介紹影片'
+                    },
+                    intro: {
+                      type: 'string',
+                      nullable: true,
+                      description: '短影音簡介',
+                      example: '本影片將簡單介紹課程內容和學習目標'
+                    },
+                    url: {
+                      type: 'string',
+                      nullable: true,
+                      description: '短影音 URL',
+                      example: 'https://firebasestorage.googleapis.com/v0/b/...'
+                    },
+                    created_at: {
+                      type: 'string',
+                      format: 'date-time',
+                      description: '短影音建立時間',
+                      example: '2024-01-15T10:30:00.000Z'
+                    }
+                  },
+                  description: '短影音詳細資訊'
+                }
+              },
+              description: '關聯的短影音資訊'
+            },
+            description: '課程關聯的短影音列表 (最多3支，按顯示順序排列)'
           }
         }
       }
@@ -408,10 +474,10 @@ export const courseSchemas = {
         type: 'object',
         properties: {
           course: {
-            $ref: '#/components/schemas/CourseBasicInfo'
+            $ref: '#/components/schemas/CourseWithPriceOptions'
           }
         },
-        description: '課程詳細資料'
+        description: '完整課程詳細資料，包含價格方案和短影音'
       }
     }
   },

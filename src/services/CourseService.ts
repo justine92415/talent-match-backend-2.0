@@ -581,17 +581,20 @@ export class CourseService {
   }
 
   /**
-   * 取得課程詳情
+   * 取得課程詳情（包含價格方案和短影音）
    * @param courseId 課程ID
    * @param userId 使用者ID（來自JWT，用於權限檢查）
-   * @returns 課程詳情
+   * @returns 完整課程詳情，包含價格方案和短影音
    */
-  async getCourseById(courseId: number, userId?: number): Promise<CourseBasicInfo> {
+  async getCourseById(courseId: number, userId?: number): Promise<CourseWithPriceOptions> {
+    // 查詢完整課程資料
     const course = await this.courseRepository.findOne({
       where: { id: courseId },
       select: [
         'id', 'uuid', 'name', 'content', 'main_image', 'rate', 'review_count',
-        'status', 'teacher_id', 'created_at', 'updated_at'
+        'status', 'teacher_id', 'created_at', 'updated_at', 'view_count', 'purchase_count',
+        'student_count', 'main_category_id', 'sub_category_id', 'city', 'district', 'address',
+        'survey_url', 'purchase_message', 'submission_notes', 'archive_reason'
       ]
     })
 
@@ -620,7 +623,68 @@ export class CourseService {
       }
     }
 
-    return this.mapToBasicInfo(course)
+    // 查詢價格方案
+    const priceOptions = await this.coursePriceOptionRepository.find({
+      where: { course_id: courseId },
+      order: { price: 'ASC' }
+    })
+
+    // 查詢關聯的短影音
+    const courseVideos = await this.courseVideoRepository.find({
+      where: { course_id: courseId },
+      order: { display_order: 'ASC' }
+    })
+
+    // 查詢短影音詳細資訊
+    const selectedVideos = []
+    if (courseVideos.length > 0) {
+      const videoIds = courseVideos.map(cv => cv.video_id)
+      const videos = await this.videoRepository.find({
+        where: { 
+          id: In(videoIds),
+          deleted_at: IsNull() 
+        },
+        select: ['id', 'uuid', 'name', 'category', 'intro', 'url', 'created_at']
+      })
+
+      // 組合短影音資訊（保持排序）
+      for (const courseVideo of courseVideos) {
+        const video = videos.find(v => v.id === courseVideo.video_id)
+        if (video) {
+          selectedVideos.push({
+            video_id: video.id,
+            display_order: courseVideo.display_order,
+            video_info: {
+              id: video.id,
+              uuid: video.uuid,
+              name: video.name,
+              category: video.category,
+              intro: video.intro,
+              url: video.url,
+              created_at: video.created_at
+            }
+          })
+        }
+      }
+    }
+
+    // 組合完整資料
+    const courseWithPriceOptions: CourseWithPriceOptions = {
+      ...this.mapToBasicInfo(course),
+      price_options: priceOptions.map(option => ({
+        id: option.id,
+        uuid: option.uuid,
+        course_id: option.course_id,
+        price: Number(option.price), // 確保價格以數字格式回傳
+        quantity: option.quantity,
+        is_active: option.is_active,
+        created_at: option.created_at,
+        updated_at: option.updated_at
+      })),
+      selected_videos: selectedVideos
+    }
+
+    return courseWithPriceOptions
   }
 
   /**
