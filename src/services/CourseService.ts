@@ -658,7 +658,6 @@ export class CourseService {
     // 查詢關聯的短影音
     const courseVideos = await this.courseVideoRepository.find({
       where: { course_id: courseId },
-      relations: ['video'],
       order: { display_order: 'ASC' }
     })
 
@@ -1016,12 +1015,26 @@ export class CourseService {
       )
     }
 
-    // 4. 驗證所選影片是否屬於該教師且未被刪除
+    // 4. 根據教師 ID 取得對應的 user_id（videos 表的 teacher_id 實際存儲的是 user_id）
+    const teacher = await this.teacherRepository.findOne({
+      where: { id: teacherId },
+      select: ['user_id']
+    })
+
+    if (!teacher) {
+      throw new BusinessError(
+        ERROR_CODES.TEACHER_NOT_FOUND,
+        '教師不存在',
+        404
+      )
+    }
+
+    // 5. 驗證所選影片是否屬於該教師且未被刪除（使用 user_id）
     const videoIds = selectedVideos.map(v => v.video_id)
     const videos = await this.videoRepository.find({
       where: { 
         id: In(videoIds), 
-        teacher_id: teacherId,
+        teacher_id: teacher.user_id,  // 使用 user_id 而不是 teacher.id
         deleted_at: IsNull() 
       }
     })
@@ -1034,7 +1047,7 @@ export class CourseService {
       )
     }
 
-    // 5. 建立新的課程短影音關聯
+    // 6. 建立新的課程短影音關聯
     const courseVideoEntities = selectedVideos.map(selectedVideo => {
       const courseVideo = new CourseVideo()
       courseVideo.course_id = courseId
