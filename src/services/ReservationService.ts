@@ -418,7 +418,10 @@ export class ReservationService {
     // 1. 查找預約
     const reservation = await this.getReservationById(reservationId)
 
-    // 2. 根據狀態類型確定角色並驗證權限
+    // 2. 驗證課程時間（只有課程結束後才能標記完成）
+    this.validateCompletionTime(reservation)
+
+    // 3. 根據狀態類型確定角色並驗證權限
     let role: 'student' | 'teacher'
     
     if (status_type === 'teacher-complete') {
@@ -733,6 +736,34 @@ export class ReservationService {
     }
 
     return reservation
+  }
+
+  /**
+   * 驗證標記完成的時間條件
+   */
+  private validateCompletionTime(reservation: Reservation): void {
+    const now = new Date()
+    // 假設課程時長為1小時，實際應該從課程表取得
+    const courseEndTime = new Date(reservation.reserve_time.getTime() + 60 * 60 * 1000)
+    
+    // 檢查當前狀態是否允許標記完成
+    if (reservation.teacher_status !== ReservationStatus.RESERVED && 
+        reservation.teacher_status !== ReservationStatus.OVERDUE) {
+      throw new BusinessError(
+        ERROR_CODES.RESERVATION_STATUS_INVALID,
+        '預約狀態不允許標記完成',
+        400
+      )
+    }
+
+    // 檢查課程是否已結束
+    if (now < courseEndTime) {
+      throw new BusinessError(
+        ERROR_CODES.RESERVATION_STATUS_INVALID,
+        '課程尚未結束，無法標記完成',
+        400
+      )
+    }
   }
 
   /**
@@ -1143,6 +1174,12 @@ export class ReservationService {
           { teacherReserved: 'reserved', studentReserved: 'reserved' }
         )
         break
+      case 'overdue':
+        queryBuilder.andWhere(
+          '(reservation.teacher_status = :teacherOverdue AND reservation.student_status = :studentOverdue)',
+          { teacherOverdue: 'overdue', studentOverdue: 'overdue' }
+        )
+        break
       case 'completed':
         queryBuilder.andWhere(
           '(reservation.teacher_status = :teacherCompleted AND reservation.student_status = :studentCompleted)',
@@ -1176,13 +1213,15 @@ export class ReservationService {
     const reserve_end_time = endTime.toTimeString().slice(0, 5) // HH:mm
 
     // 綜合狀態邏輯
-    let overall_status: 'pending' | 'reserved' | 'completed' | 'cancelled'
+    let overall_status: 'pending' | 'reserved' | 'overdue' | 'completed' | 'cancelled'
     if (reservation.teacher_status === 'cancelled' || reservation.student_status === 'cancelled') {
       overall_status = 'cancelled'
     } else if (reservation.teacher_status === 'pending') {
       overall_status = 'pending'
     } else if (reservation.teacher_status === 'completed' && reservation.student_status === 'completed') {
       overall_status = 'completed'
+    } else if (reservation.teacher_status === 'overdue' && reservation.student_status === 'overdue') {
+      overall_status = 'overdue'
     } else {
       overall_status = 'reserved'
     }

@@ -272,7 +272,7 @@ router.post('/',
  *         required: false
  *         schema:
  *           type: string
- *           enum: [pending, reserved, completed, cancelled]
+ *           enum: [pending, reserved, overdue, completed, cancelled]
  *         description: 預約狀態篩選
  *         example: reserved
  *       - name: date_from
@@ -384,7 +384,7 @@ router.get('/my-reservations',
  *         required: false
  *         schema:
  *           type: string
- *           enum: [all, pending, reserved, completed, cancelled]
+ *           enum: [all, pending, reserved, overdue, completed, cancelled]
  *           default: all
  *         description: 預約狀態篩選
  *         example: pending

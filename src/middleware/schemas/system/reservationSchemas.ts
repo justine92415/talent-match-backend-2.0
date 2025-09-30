@@ -174,9 +174,9 @@ export const teacherReservationQuerySchema = Joi.object({
     .messages({
       'string.pattern.base': '結束日期格式不正確，請使用 YYYY-MM-DD 格式'
     }),
-  status: Joi.string().valid('all', 'pending', 'reserved', 'completed', 'cancelled').default('all').optional()
+  status: Joi.string().valid('all', 'pending', 'reserved', 'overdue', 'completed', 'cancelled').default('all').optional()
     .messages({
-      'any.only': '狀態必須是 all, pending, reserved, completed, cancelled 其中之一'
+      'any.only': '狀態必須是 all, pending, reserved, overdue, completed, cancelled 其中之一'
     }),
   student_search: Joi.string().max(100).optional()
     .messages({

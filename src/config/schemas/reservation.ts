@@ -145,13 +145,13 @@ export const reservationSchemas = {
       },
       teacher_status: {
         type: 'string',
-        enum: ['pending', 'reserved', 'completed', 'cancelled'],
+        enum: ['pending', 'reserved', 'overdue', 'completed', 'cancelled'],
         description: '教師端預約狀態',
         example: 'reserved'
       },
       student_status: {
         type: 'string',
-        enum: ['pending', 'reserved', 'completed', 'cancelled'],
+        enum: ['pending', 'reserved', 'overdue', 'completed', 'cancelled'],
         description: '學生端預約狀態',
         example: 'reserved'
       },
@@ -264,13 +264,13 @@ export const reservationSchemas = {
           },
           teacher_status: {
             type: 'string',
-            enum: ['pending', 'reserved', 'completed', 'cancelled'],
+            enum: ['pending', 'reserved', 'overdue', 'completed', 'cancelled'],
             description: '教師端預約狀態',
             example: 'cancelled'
           },
           student_status: {
             type: 'string',
-            enum: ['pending', 'reserved', 'completed', 'cancelled'],
+            enum: ['pending', 'reserved', 'overdue', 'completed', 'cancelled'],
             description: '學生端預約狀態',
             example: 'cancelled'
           },
@@ -704,19 +704,19 @@ export const reservationSchemas = {
       },
       teacher_status: {
         type: 'string',
-        enum: ['pending', 'reserved', 'completed', 'cancelled'],
+        enum: ['pending', 'reserved', 'overdue', 'completed', 'cancelled'],
         description: '教師端預約狀態',
         example: 'reserved'
       },
       student_status: {
         type: 'string',
-        enum: ['pending', 'reserved', 'completed', 'cancelled'],
+        enum: ['pending', 'reserved', 'overdue', 'completed', 'cancelled'],
         description: '學生端預約狀態',
         example: 'reserved'
       },
       overall_status: {
         type: 'string',
-        enum: ['pending', 'reserved', 'completed', 'cancelled'],
+        enum: ['pending', 'reserved', 'overdue', 'completed', 'cancelled'],
         description: '綜合預約狀態',
         example: 'reserved'
       },

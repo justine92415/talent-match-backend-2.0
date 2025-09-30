@@ -413,7 +413,7 @@ export interface TeacherReservationItem {
   /** 預約狀態資訊 */
   teacher_status: ReservationStatus
   student_status: ReservationStatus
-  overall_status: 'pending' | 'reserved' | 'completed' | 'cancelled'
+  overall_status: 'pending' | 'reserved' | 'overdue' | 'completed' | 'cancelled'
   
   /** 拒絕原因（當狀態為 cancelled 時） */
   rejection_reason?: string | null
