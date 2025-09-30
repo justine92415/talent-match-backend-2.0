@@ -110,6 +110,7 @@ export interface PublicPriceOption {
 export interface PublicCourseVideo {
   id: number
   name: string
+  category: string | null
   intro: string
   url: string
   video_type: 'storage' | 'youtube'

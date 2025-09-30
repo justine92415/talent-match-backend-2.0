@@ -28,8 +28,7 @@ export interface VideoUploadRequest {
   name: string
   category: string
   intro: string
-  video_type: VideoType
-  youtube_url?: string
+  // 移除 video_type 和 youtube_url，統一為檔案上傳
 }
 
 /** 影片檔案上傳介面 */

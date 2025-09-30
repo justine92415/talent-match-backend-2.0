@@ -20,6 +20,13 @@ import {
   updateVideoSchema,
   videoListQuerySchema
 } from '@middleware/schemas/course'
+import {
+  parseVideoFile,
+  parseOptionalVideoFile,
+  validateVideoFileMiddleware,
+  validateOptionalVideoFileMiddleware,
+  cleanupTempVideoFile
+} from '@middleware/upload/videoFileUpload'
 
 const router = Router()
 
@@ -27,25 +34,25 @@ const router = Router()
  * @swagger
  * /api/videos:
  *   post:
- *     summary: 上傳課程影片
- *     description: |
- *       上傳新的課程影片，支援兩種上傳方式：
- *       1. **YouTube 影片**：提供 YouTube URL 連結
- *       2. **本地儲存影片**：上傳影片檔案到伺服器
- *       
- *       **支援的影片格式：**
- *       - MP4, AVI, MOV, WMV, QuickTime
- *       - 檔案大小限制：最大 500MB
- *       
- *       **縮圖檔案（選填）：**
- *       - 格式：JPEG, JPG, PNG, WebP
- *       - 大小限制：最大 5MB
- *       
- *       **權限要求：**
- *       - 需要教師身份認證
- *       - 只能為自己的課程上傳影片
  *     tags:
  *       - Video Management
+ *     summary: 上傳影片檔案
+ *     description: |
+ *       教師上傳影片檔案到系統。統一採用本地儲存方式，不再支援 YouTube 連結。
+ *       
+ *       **業務邏輯**：
+ *       - 驗證教師身份和權限
+ *       - 解析 multipart/form-data 表單資料
+ *       - 驗證影片檔案格式和大小（支援 MP4, AVI, MOV, WMV，最大 500MB）
+ *       - 驗證影片基本資料（名稱、分類、介紹）
+ *       - 上傳檔案到 Firebase Storage
+ *       - 建立影片記錄到資料庫
+ *       - 自動清理暫存檔案
+ *       
+ *       **檔案要求**：
+ *       - 支援格式：MP4, AVI, MOV, WMV, QuickTime
+ *       - 檔案大小：最大 500MB
+ *       - 儲存位置：Firebase Storage (`videos/teacher_{teacherId}/`)
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -53,351 +60,257 @@ const router = Router()
  *       content:
  *         multipart/form-data:
  *           schema:
- *             type: object
- *             required:
- *               - name
- *               - category
- *               - intro
- *               - video_type
- *             properties:
- *               name:
- *                 type: string
- *                 maxLength: 200
- *                 description: 影片名稱
- *                 example: "Python 基礎語法介紹"
- *               category:
- *                 type: string
- *                 maxLength: 100
- *                 description: 影片分類
- *                 example: "基礎教學"
- *               intro:
- *                 type: string
- *                 maxLength: 2000
- *                 description: 影片介紹
- *                 example: "這個影片將介紹 Python 的基本語法和變數使用方式"
- *               video_type:
- *                 type: string
- *                 enum: [youtube, storage]
- *                 description: 影片類型
- *                 example: "youtube"
- *               youtube_url:
- *                 type: string
- *                 description: YouTube 影片 URL（當 video_type 為 youtube 時必填）
- *                 example: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
- *               video_file:
- *                 type: string
- *                 format: binary
- *                 description: 影片檔案（當 video_type 為 storage 時必填）
- *               thumbnail:
- *                 type: string
- *                 format: binary
- *                 description: 影片縮圖（選填）
- *         application/json:
- *           schema:
  *             $ref: '#/components/schemas/VideoUploadRequest'
- *           examples:
- *             youtube_video:
- *               summary: YouTube 影片
- *               value:
- *                 name: "Python 基礎語法介紹"
- *                 category: "基礎教學"
- *                 intro: "這個影片將介紹 Python 的基本語法和變數使用方式"
- *                 video_type: "youtube"
- *                 youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
- *             storage_video:
- *               summary: 本地儲存影片
- *               value:
- *                 name: "進階 Python 概念"
- *                 category: "進階教學"
- *                 intro: "深入探討 Python 的物件導向程式設計"
- *                 video_type: "storage"
  *     responses:
  *       201:
  *         description: 影片上傳成功
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       $ref: '#/components/schemas/VideoInfo'
- *             examples:
- *               success:
- *                 summary: 上傳成功回應
- *                 value:
- *                   status: "success"
- *                   message: "影片上傳成功"
- *                   data:
- *                     id: 1
- *                     name: "Python 基礎語法介紹"
- *                     category: "基礎教學"
- *                     intro: "這個影片將介紹 Python 的基本語法和變數使用方式"
- *                     video_type: "youtube"
- *                     youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
- *                     file_url: null
- *                     thumbnail_url: null
- *                     duration: null
- *                     file_size: null
- *                     created_at: "2024-01-15T10:00:00Z"
- *                     updated_at: "2024-01-15T10:00:00Z"
+ *               $ref: '#/components/schemas/VideoUploadSuccessResponse'
  *       400:
- *         $ref: '#/components/responses/ValidationError'
- *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
- *       403:
- *         description: 權限不足，只有教師可以上傳影片
+ *         description: 請求參數錯誤或檔案格式錯誤
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       413:
- *         description: 檔案過大
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               oneOf:
+ *                 - $ref: '#/components/schemas/VideoUploadValidationErrorResponse'
+ *                 - $ref: '#/components/schemas/VideoFileFormatErrorResponse'
+ *                 - $ref: '#/components/schemas/VideoFileSizeErrorResponse'
  *             examples:
- *               file_too_large:
- *                 summary: 影片檔案過大
+ *               validation_error:
+ *                 summary: 參數驗證錯誤
  *                 value:
  *                   status: "error"
- *                   message: "影片檔案過大，最大限制為 500MB"
- *                   error_code: "FILE_TOO_LARGE"
- *       415:
- *         description: 不支援的檔案格式
+ *                   message: "參數驗證失敗"
+ *                   errors:
+ *                     name: ["影片名稱為必填欄位"]
+ *                     videoFile: ["影片檔案為必填欄位"]
+ *               file_format_error:
+ *                 summary: 檔案格式錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "檔案格式錯誤"
+ *                   errors:
+ *                     videoFile: ["不支援的檔案格式 \"video/mpeg\"。僅支援: MP4, AVI, MOV, WMV, QuickTime"]
+ *               file_size_error:
+ *                 summary: 檔案大小超過限制
+ *                 value:
+ *                   status: "error"
+ *                   message: "檔案大小超過限制"
+ *                   errors:
+ *                     videoFile: ["檔案大小超過限制。當前大小: 600.0MB，最大允許: 500.0MB"]
+ *       401:
+ *         description: 未授權 - Token 無效或過期
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       403:
+ *         description: 禁止存取 - 需要教師權限
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoPermissionErrorResponse'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         description: 伺服器內部錯誤 - 檔案處理失敗
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoUploadFailedErrorResponse'
  */
-router.post('/', ...authMiddlewareChains.teacherAuth, validateRequest(uploadVideoSchema), videoController.uploadVideo)
+router.post('/', 
+  ...authMiddlewareChains.teacherAuth, 
+  parseVideoFile,
+  validateVideoFileMiddleware,
+  validateRequest(uploadVideoSchema),
+  videoController.uploadVideo,
+  cleanupTempVideoFile
+)
 
 /**
  * @swagger
  * /api/videos:
  *   get:
- *     summary: 取得影片列表
- *     description: |
- *       取得教師的影片列表，支援分頁、搜索和分類篩選。
- *       只能查看自己上傳的影片。
- *       
- *       **功能特色：**
- *       - 支援分頁瀏覽
- *       - 支援影片名稱搜索
- *       - 支援分類篩選
- *       - 按上傳時間排序（最新優先）
- *       
- *       **權限要求：**
- *       - 需要教師身份認證
- *       - 只能查看自己的影片
  *     tags:
  *       - Video Management
+ *     summary: 取得教師影片列表
+ *     description: |
+ *       取得目前登入教師的影片列表。支援分頁、分類篩選和關鍵字搜尋。
+ *       
+ *       **業務邏輯**：
+ *       - 驗證教師身份和權限
+ *       - 驗證查詢參數
+ *       - 只回傳該教師的影片（權限隔離）
+ *       - 支援分類模糊搜尋篩選
+ *       - 支援關鍵字搜尋（影片名稱和介紹）
+ *       - 分頁查詢，預設每頁 20 筆
+ *       - 依建立時間倒序排列
+ *       - 排除已軟刪除的影片
+ *       
+ *       **查詢功能**：
+ *       - `category`: 分類篩選（模糊搜尋）
+ *       - `search`: 關鍵字搜尋（搜尋標題和介紹）
+ *       - `page`: 分頁頁碼
+ *       - `per_page`: 每頁筆數（最大 100）
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - in: query
- *         name: page
+ *       - name: page
+ *         in: query
+ *         description: 頁碼 (預設 1)
+ *         required: false
  *         schema:
  *           type: integer
  *           minimum: 1
- *           default: 1
- *         description: 頁碼
- *         example: 1
- *       - in: query
- *         name: per_page
+ *           example: 1
+ *       - name: per_page
+ *         in: query
+ *         description: 每頁數量 (預設 20，最大 100)
+ *         required: false
  *         schema:
  *           type: integer
  *           minimum: 1
  *           maximum: 100
- *           default: 20
- *         description: 每頁顯示數量
- *         example: 20
- *       - in: query
- *         name: category
+ *           example: 20
+ *       - name: category
+ *         in: query
+ *         description: 分類篩選 (模糊搜尋)
+ *         required: false
  *         schema:
  *           type: string
  *           maxLength: 100
- *         description: 依分類篩選（空字串或不提供表示不篩選）
- *         example: "基礎教學"
- *       - in: query
- *         name: search
+ *           example: "程式設計"
+ *       - name: search
+ *         in: query
+ *         description: 搜尋關鍵字 (搜尋標題和介紹)
+ *         required: false
  *         schema:
  *           type: string
  *           maxLength: 200
- *         description: 搜索關鍵字，在影片名稱中搜索
- *         example: "Python"
+ *           example: "JavaScript"
  *     responses:
  *       200:
- *         description: 成功取得影片列表
+ *         description: 查詢成功
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       type: object
- *                       properties:
- *                         videos:
- *                           type: array
- *                           items:
- *                             $ref: '#/components/schemas/VideoBasicInfo'
- *                         pagination:
- *                           $ref: '#/components/schemas/PaginationInfo'
- *             examples:
- *               success:
- *                 summary: 成功回應範例
- *                 value:
- *                   status: "success"
- *                   message: "成功取得影片列表"
- *                   data:
- *                     videos:
- *                       - id: 1
- *                         name: "Python 基礎語法介紹"
- *                         category: "基礎教學"
- *                         video_type: "youtube"
- *                         thumbnail_url: null
- *                         duration: 1800
- *                         created_at: "2024-01-15T10:00:00Z"
- *                       - id: 2
- *                         name: "進階 Python 概念"
- *                         category: "進階教學"
- *                         video_type: "storage"
- *                         thumbnail_url: "/uploads/thumbnails/thumb2.jpg"
- *                         duration: 2400
- *                         created_at: "2024-01-16T14:30:00Z"
- *                     pagination:
- *                       current_page: 1
- *                       per_page: 20
- *                       total: 2
- *                       total_pages: 1
+ *               $ref: '#/components/schemas/VideoListSuccessResponse'
  *       400:
- *         $ref: '#/components/responses/ValidationError'
- *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
- *       403:
- *         description: 權限不足，只有教師可以查看影片列表
+ *         description: 請求參數錯誤
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *             examples:
+ *               invalid_params:
+ *                 summary: 參數驗證錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "參數驗證失敗"
+ *                   errors:
+ *                     page: ["頁碼必須為正整數"]
+ *                     per_page: ["每頁數量不能超過100"]
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       403:
+ *         description: 禁止存取 - 需要教師權限
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoPermissionErrorResponse'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
  */
+
 router.get('/', ...authMiddlewareChains.teacherAuth, validateRequest(videoListQuerySchema), videoController.getVideoList)
 
 /**
  * @swagger
  * /api/videos/{id}:
  *   get:
- *     summary: 取得影片詳情
- *     description: |
- *       取得指定影片的詳細資訊，包含完整的影片資料和統計資訊。
- *       只能查看自己上傳的影片。
- *       
- *       **返回資訊：**
- *       - 影片基本資訊（名稱、分類、介紹）
- *       - 影片檔案資訊（URL、大小、時長）
- *       - 縮圖資訊
- *       - 上傳和更新時間
- *       
- *       **權限要求：**
- *       - 需要教師身份認證
- *       - 只能查看自己的影片
  *     tags:
  *       - Video Management
+ *     summary: 取得影片詳細資訊
+ *     description: |
+ *       取得指定影片的詳細資訊和使用統計。只能查看自己上傳的影片。
+ *       
+ *       **業務邏輯**：
+ *       - 驗證教師身份和權限
+ *       - 驗證影片 ID 格式
+ *       - 查詢影片基本資訊
+ *       - 驗證影片所有權（只能查看自己的影片）
+ *       - 取得影片使用統計資訊
+ *       - 排除已軟刪除的影片
+ *       
+ *       **權限控制**：
+ *       - 需要教師身份認證
+ *       - 只能查看自己上傳的影片
+ *       - 無法查看已刪除的影片
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: id
+ *       - name: id
+ *         in: path
+ *         description: 影片 ID
  *         required: true
  *         schema:
  *           type: integer
  *           minimum: 1
- *         description: 影片 ID
- *         example: 1
+ *           example: 1
  *     responses:
  *       200:
- *         description: 成功取得影片詳情
+ *         description: 取得影片詳情成功
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       $ref: '#/components/schemas/VideoDetailInfo'
- *             examples:
- *               youtube_video:
- *                 summary: YouTube 影片詳情
- *                 value:
- *                   status: "success"
- *                   message: "成功取得影片詳情"
- *                   data:
- *                     id: 1
- *                     name: "Python 基礎語法介紹"
- *                     category: "基礎教學"
- *                     intro: "這個影片將介紹 Python 的基本語法和變數使用方式"
- *                     video_type: "youtube"
- *                     youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
- *                     file_url: null
- *                     thumbnail_url: null
- *                     duration: 1800
- *                     file_size: null
- *                     view_count: 25
- *                     created_at: "2024-01-15T10:00:00Z"
- *                     updated_at: "2024-01-15T10:00:00Z"
- *               storage_video:
- *                 summary: 本地儲存影片詳情
- *                 value:
- *                   status: "success"
- *                   message: "成功取得影片詳情"
- *                   data:
- *                     id: 2
- *                     name: "進階 Python 概念"
- *                     category: "進階教學"
- *                     intro: "深入探討 Python 的物件導向程式設計"
- *                     video_type: "storage"
- *                     youtube_url: null
- *                     file_url: "/uploads/videos/video2.mp4"
- *                     thumbnail_url: "/uploads/thumbnails/thumb2.jpg"
- *                     duration: 2400
- *                     file_size: 150000000
- *                     view_count: 12
- *                     created_at: "2024-01-16T14:30:00Z"
- *                     updated_at: "2024-01-16T14:30:00Z"
+ *               $ref: '#/components/schemas/VideoDetailSuccessResponse'
  *       400:
- *         $ref: '#/components/responses/ValidationError'
- *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
- *       403:
- *         description: 權限不足，只能查看自己的影片
+ *         description: 請求參數錯誤
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       404:
- *         description: 影片不存在
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
  *             examples:
- *               not_found:
- *                 summary: 影片不存在
+ *               invalid_id:
+ *                 summary: 影片 ID 格式錯誤
  *                 value:
  *                   status: "error"
- *                   message: "影片不存在"
- *                   error_code: "VIDEO_NOT_FOUND"
+ *                   message: "參數驗證失敗"
+ *                   errors:
+ *                     id: ["影片 ID 必須為正整數"]
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       403:
+ *         description: 禁止存取 - 無權限查看此影片
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoPermissionErrorResponse'
+ *       404:
+ *         description: 影片不存在或已被刪除
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoNotFoundErrorResponse'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
  */
 router.get('/:id', ...authMiddlewareChains.teacherAuth, videoController.getVideoDetail)
 
@@ -405,185 +318,291 @@ router.get('/:id', ...authMiddlewareChains.teacherAuth, videoController.getVideo
  * @swagger
  * /api/videos/{id}:
  *   put:
- *     summary: 更新影片資訊
- *     description: |
- *       更新指定影片的基本資訊，包含名稱、分類和介紹。
- *       只能更新自己上傳的影片。
- *       
- *       **可更新欄位：**
- *       - name：影片名稱
- *       - category：影片分類
- *       - intro：影片介紹
- *       
- *       **注意事項：**
- *       - 至少需要提供一個要更新的欄位
- *       - 不能更改影片類型或檔案
- *       - 縮圖更新需使用專門的上傳端點
- *       
- *       **權限要求：**
- *       - 需要教師身份認證
- *       - 只能更新自己的影片
  *     tags:
  *       - Video Management
+ *     summary: 更新影片資訊
+ *     description: |
+ *       更新指定影片的基本資訊和檔案。支援部分欄位更新和檔案替換，只能更新自己上傳的影片。
+ *       
+ *       **業務邏輯**：
+ *       - 驗證教師身份和權限
+ *       - 解析 multipart/form-data 表單資料（支援檔案替換）
+ *       - 驗證影片檔案格式和大小（如有提供新檔案）
+ *       - 查詢現有影片記錄並驗證所有權
+ *       - 上傳新檔案到 Firebase Storage（如有提供）
+ *       - 更新影片資訊到資料庫
+ *       - 清理舊影片檔案（如有替換檔案）
+ *       - 自動清理暫存檔案
+ *       
+ *       **可更新欄位**：
+ *       - `name`: 影片名稱（1-200字元）
+ *       - `category`: 影片分類（1-100字元） 
+ *       - `intro`: 影片介紹（1-2000字元）
+ *       - `videoFile`: 影片檔案（可選，支援 MP4, AVI, MOV, WMV，最大 500MB）
+ *       
+ *       **檔案替換功能**：
+ *       - 支援可選影片檔案上傳
+ *       - 上傳新檔案時自動刪除舊檔案
+ *       - 檔案上傳失敗時自動回滾
+ *       - 支援與課程編輯相同的檔案替換邏輯
+ *       
+ *       **注意事項**：
+ *       - 所有欄位均為可選（至少需要提供一個欄位）
+ *       - 檔案為可選，不提供時保持原有檔案
+ *       - 檔案格式限制：MP4, AVI, MOV, WMV, QuickTime
+ *       - 檔案大小限制：最大 500MB
+ *       - 無法更新已刪除的影片
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: id
+ *       - name: id
+ *         in: path
+ *         description: 影片 ID
  *         required: true
  *         schema:
  *           type: integer
  *           minimum: 1
- *         description: 影片 ID
- *         example: 1
+ *           example: 1
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
- *             $ref: '#/components/schemas/VideoUpdateRequest'
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: 影片名稱（可選）
+ *                 minLength: 1
+ *                 maxLength: 200
+ *                 example: "更新的影片名稱"
+ *               category:
+ *                 type: string
+ *                 description: 影片分類（可選）
+ *                 minLength: 1
+ *                 maxLength: 100
+ *                 example: "程式設計"
+ *               intro:
+ *                 type: string
+ *                 description: 影片介紹（可選）
+ *                 minLength: 1
+ *                 maxLength: 2000
+ *                 example: "這是更新後的影片介紹"
+ *               videoFile:
+ *                 type: string
+ *                 format: binary
+ *                 description: 影片檔案（可選）
  *           examples:
- *             update_name:
- *               summary: 只更新名稱
+ *             update_info_only:
+ *               summary: 只更新基本資訊
  *               value:
- *                 name: "Python 基礎語法介紹（更新版）"
- *             update_all:
- *               summary: 更新多個欄位
+ *                 name: "更新的影片名稱"
+ *                 category: "程式設計"
+ *                 intro: "更新的影片介紹"
+ *             update_with_file:
+ *               summary: 更新資訊並替換檔案
  *               value:
- *                 name: "Python 基礎語法完整介紹"
- *                 category: "基礎教學"
- *                 intro: "這個影片將完整介紹 Python 的基本語法、變數使用方式和基礎概念"
+ *                 name: "更新的影片名稱"
+ *                 category: "程式設計"
+ *                 intro: "更新的影片介紹"
+ *                 videoFile: "[影片檔案]"
  *     responses:
  *       200:
  *         description: 影片資訊更新成功
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     data:
- *                       $ref: '#/components/schemas/VideoInfo'
- *             examples:
- *               success:
- *                 summary: 更新成功回應
- *                 value:
- *                   status: "success"
- *                   message: "影片資訊更新成功"
- *                   data:
- *                     id: 1
- *                     name: "Python 基礎語法完整介紹"
- *                     category: "基礎教學"
- *                     intro: "這個影片將完整介紹 Python 的基本語法、變數使用方式和基礎概念"
- *                     video_type: "youtube"
- *                     youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
- *                     file_url: null
- *                     thumbnail_url: null
- *                     duration: 1800
- *                     file_size: null
- *                     created_at: "2024-01-15T10:00:00Z"
- *                     updated_at: "2024-01-20T15:30:00Z"
+ *               $ref: '#/components/schemas/VideoUpdateSuccessResponse'
  *       400:
- *         $ref: '#/components/responses/ValidationError'
+ *         description: 請求參數錯誤或檔案格式錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoUpdateValidationErrorResponse'
+ *             examples:
+ *               validation_error:
+ *                 summary: 基本資料驗證錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "參數驗證失敗"
+ *                   errors:
+ *                     name: ["影片名稱長度不能超過200字元"]
+ *                     category: ["影片分類不能為空"]
+ *               file_format_error:
+ *                 summary: 檔案格式錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "不支援的檔案格式 \"video/x-msvideo\"。僅支援: MP4, AVI, MOV, WMV, QuickTime"
+ *                   code: "VIDEO_FILE_FORMAT_INVALID"
+ *                   errors:
+ *                     videoFile: ["不支援的檔案格式 \"video/x-msvideo\"。僅支援: MP4, AVI, MOV, WMV, QuickTime"]
+ *                     currentFormat: ["當前格式: video/x-msvideo"]
+ *                     fileName: ["檔案名稱: example.avi"]
+ *               file_size_error:
+ *                 summary: 檔案大小超過限制
+ *                 value:
+ *                   status: "error"
+ *                   message: "檔案大小超過限制。當前大小: 600.0MB，最大允許: 500.0MB"
+ *                   code: "VIDEO_FILE_TOO_LARGE"
+ *                   errors:
+ *                     videoFile: ["檔案大小超過限制。當前大小: 600.0MB，最大允許: 500.0MB"]
+ *                     fileSize: ["當前大小: 600.0MB"]
+ *                     maxSize: ["最大允許: 500.0MB"]
+ *               no_update_data:
+ *                 summary: 沒有提供更新資料
+ *                 value:
+ *                   status: "error"
+ *                   message: "參數驗證失敗"
+ *                   errors:
+ *                     body: ["至少需要提供一個欄位進行更新"]
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
  *       403:
- *         description: 權限不足，只能更新自己的影片
+ *         description: 禁止存取 - 無權限更新此影片
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/VideoPermissionErrorResponse'
  *       404:
- *         description: 影片不存在
+ *         description: 影片不存在或已被刪除
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *               $ref: '#/components/schemas/VideoNotFoundErrorResponse'
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         description: 伺服器內部錯誤 - 檔案處理失敗或資料庫錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoUpdateFailedErrorResponse'
+ *             examples:
+ *               upload_failed:
+ *                 summary: 檔案上傳失敗
+ *                 value:
+ *                   status: "error"
+ *                   message: "影片檔案上傳失敗"
+ *                   code: "VIDEO_UPLOAD_FAILED"
+ *               database_error:
+ *                 summary: 資料庫更新失敗
+ *                 value:
+ *                   status: "error"
+ *                   message: "影片資訊更新失敗"
+ *                   code: "SERVER_ERROR"
  */
-router.put('/:id', ...authMiddlewareChains.teacherAuth, validateRequest(updateVideoSchema), videoController.updateVideo)
+
+router.put('/:id', 
+  ...authMiddlewareChains.teacherAuth, 
+  parseOptionalVideoFile,
+  validateOptionalVideoFileMiddleware,
+  validateRequest(updateVideoSchema),
+  videoController.updateVideo,
+  cleanupTempVideoFile
+)
 
 /**
  * @swagger
  * /api/videos/{id}:
  *   delete:
- *     summary: 刪除影片
- *     description: |
- *       刪除指定的影片及相關檔案。
- *       只能刪除自己上傳的影片。
- *       
- *       **刪除內容：**
- *       - 影片資料庫記錄
- *       - 影片檔案（如果是本地儲存）
- *       - 縮圖檔案（如果有）
- *       - 相關的觀看記錄和統計資料
- *       
- *       **注意事項：**
- *       - 刪除是永久性的，無法恢復
- *       - YouTube 影片只會刪除資料庫記錄，不會影響 YouTube 上的影片
- *       - 如果影片正在被課程使用，可能會被拒絕刪除
- *       
- *       **權限要求：**
- *       - 需要教師身份認證
- *       - 只能刪除自己的影片
  *     tags:
  *       - Video Management
+ *     summary: 刪除影片
+ *     description: |
+ *       刪除指定的影片記錄和檔案。這是軟刪除操作，會同時清理 Firebase Storage 中的影片檔案。
+ *       
+ *       **業務邏輯**：
+ *       - 驗證教師身份和權限
+ *       - 驗證影片 ID 格式
+ *       - 查詢影片記錄並驗證所有權
+ *       - 檢查影片是否正在被課程使用
+ *       - 執行軟刪除操作（設定 deleted_at 時間戳）
+ *       - 刪除 Firebase Storage 中的影片檔案
+ *       - 檔案刪除失敗不影響軟刪除操作
+ *       
+ *       **權限控制**：
+ *       - 需要教師身份認證
+ *       - 只能刪除自己上傳的影片
+ *       - 無法刪除已被軟刪除的影片
+ *       
+ *       **注意事項**：
+ *       - 這是軟刪除，不會真正刪除資料庫記錄
+ *       - 正在被課程使用的影片無法刪除
+ *       - Firebase Storage 檔案會同步刪除
+ *       - 檔案刪除失敗僅記錄錯誤，不影響主要操作
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: id
+ *       - name: id
+ *         in: path
+ *         description: 影片 ID
  *         required: true
  *         schema:
  *           type: integer
  *           minimum: 1
- *         description: 影片 ID
- *         example: 1
+ *           example: 1
  *     responses:
  *       200:
  *         description: 影片刪除成功
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SuccessResponse'
+ *               $ref: '#/components/schemas/VideoDeleteSuccessResponse'
+ *       400:
+ *         description: 請求參數錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
  *             examples:
- *               success:
- *                 summary: 刪除成功回應
- *                 value:
- *                   status: "success"
- *                   message: "影片刪除成功"
- *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
- *       403:
- *         description: 權限不足，只能刪除自己的影片
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       404:
- *         description: 影片不存在
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       409:
- *         description: 影片正在使用中，無法刪除
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *             examples:
- *               in_use:
- *                 summary: 影片使用中
+ *               invalid_id:
+ *                 summary: 影片 ID 格式錯誤
  *                 value:
  *                   status: "error"
- *                   message: "影片正在被課程使用，無法刪除"
- *                   error_code: "VIDEO_IN_USE"
+ *                   message: "參數驗證失敗"
+ *                   errors:
+ *                     id: ["影片 ID 必須為正整數"]
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedErrorResponse'
+ *       403:
+ *         description: 禁止存取 - 無權限刪除此影片
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoPermissionErrorResponse'
+ *       404:
+ *         description: 影片不存在或已被刪除
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoNotFoundErrorResponse'
+ *       409:
+ *         description: 影片正在被使用中，無法刪除
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VideoCannotDeleteErrorResponse'
+ *             examples:
+ *               in_use:
+ *                 summary: 影片正在被使用
+ *                 value:
+ *                   status: "error"
+ *                   message: "影片正在被使用中，無法刪除"
+ *                   code: "VIDEO_CANNOT_DELETE"
  *       500:
- *         $ref: '#/components/responses/InternalServerError'
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
  */
+
 router.delete('/:id', ...authMiddlewareChains.teacherAuth, videoController.deleteVideo)
 
 export default router

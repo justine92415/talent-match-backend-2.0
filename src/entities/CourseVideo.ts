@@ -18,10 +18,6 @@ export class CourseVideo {
   @Column({ type: 'integer' })
   display_order!: number
 
-  /** 是否為預覽影片 */
-  @Column({ type: 'boolean', default: false })
-  is_preview!: boolean
-
   /** 建立時間 */
   @CreateDateColumn({ type: 'timestamp' })
   created_at!: Date
