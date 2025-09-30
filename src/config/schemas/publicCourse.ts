@@ -618,6 +618,12 @@ export const publicCourseSchemas = {
         description: '影片名稱',
         example: '課程介紹影片'
       },
+      category: {
+        type: 'string',
+        nullable: true,
+        description: '影片分類',
+        example: '介紹影片'
+      },
       intro: {
         type: 'string',
         description: '影片簡介',

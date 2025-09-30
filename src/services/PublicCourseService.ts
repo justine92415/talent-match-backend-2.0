@@ -418,6 +418,7 @@ export class PublicCourseService {
       videos: courseVideos.map(video => ({
         id: video.id,
         name: video.name,
+        category: video.category,
         intro: video.intro || '',
         url: video.url || '',
         video_type: 'storage' as const, // 統一為儲存類型
