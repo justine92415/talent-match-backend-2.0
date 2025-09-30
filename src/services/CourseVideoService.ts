@@ -137,7 +137,6 @@ export class CourseVideoService {
         courseVideo.course_id = courseId
         courseVideo.video_id = videoId
         courseVideo.display_order = orderInfo?.display_order || (index + 1) // 優先使用 order_info 的順序
-        courseVideo.is_preview = orderInfo?.is_preview || false // 從 order_info 取得 is_preview
         return courseVideo
       })
 
@@ -153,7 +152,6 @@ export class CourseVideoService {
           course_id: cv.course_id,
           video_id: cv.video_id,
           display_order: cv.display_order,
-          is_preview: cv.is_preview,
           created_at: cv.created_at,
           updated_at: cv.updated_at,
           video: {
@@ -351,7 +349,6 @@ export class CourseVideoService {
           course_id: cv.course_id,
           video_id: cv.video_id,
           display_order: cv.display_order,
-          is_preview: cv.is_preview,
           created_at: cv.created_at,
           updated_at: cv.updated_at,
           video: {
@@ -371,9 +368,7 @@ export class CourseVideoService {
     return {
       course_videos: courseVideoDetails,
       summary: {
-        total_videos: courseVideoDetails.length,
-        preview_videos: courseVideoDetails.filter(v => v.is_preview).length,
-        regular_videos: courseVideoDetails.filter(v => !v.is_preview).length
+        total_videos: courseVideoDetails.length
       }
     }
   }

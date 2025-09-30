@@ -56,6 +56,19 @@ export interface CourseBasicInfo {
 /** 包含價格方案的課程資訊（供編輯使用） */
 export interface CourseWithPriceOptions extends CourseBasicInfo {
   price_options: PriceOption[]
+  selected_videos?: Array<{
+    video_id: number
+    display_order: number
+    video_info: {
+      id: number
+      uuid: string
+      name: string
+      category: string | null
+      intro: string | null
+      url: string | null
+      created_at: Date
+    }
+  }>
 }
 
 /** 課程建立請求參數 */

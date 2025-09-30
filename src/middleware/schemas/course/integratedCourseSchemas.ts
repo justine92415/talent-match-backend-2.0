@@ -168,6 +168,29 @@ export const integratedCourseCreateSchema = Joi.object({
   survey_url: courseDataSchema.extract('survey_url'),
   purchase_message: courseDataSchema.extract('purchase_message'),
   
+  // 短影音關聯（可選）
+  selectedVideos: Joi.array().items(
+    Joi.object({
+      video_id: Joi.number().integer().positive().required()
+        .messages({
+          'number.base': '影片 ID 必須為數字',
+          'number.integer': '影片 ID 必須為整數',
+          'number.positive': '影片 ID 必須為正數',
+          'any.required': '影片 ID 為必填欄位'
+        }),
+      display_order: Joi.number().integer().min(1).required()
+        .messages({
+          'number.base': '顯示順序必須為數字',
+          'number.integer': '顯示順序必須為整數',
+          'number.min': '顯示順序必須大於等於 1',
+          'any.required': '顯示順序為必填欄位'
+        })
+    })
+  ).max(3).optional()
+    .messages({
+      'array.max': '最多只能關聯 3 個短影音'
+    }),
+  
   // 價格方案陣列（來自 priceOptions JSON）
   priceOptions: priceOptionsArraySchema
 })

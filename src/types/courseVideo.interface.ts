@@ -19,7 +19,6 @@ export interface CourseVideoBase {
   course_id: number
   video_id: number
   display_order: number
-  is_preview: boolean
   created_at: Date
   updated_at: Date
 }
@@ -85,8 +84,6 @@ export interface CourseVideoListResponse {
   course_videos: CourseVideoDetail[]
   summary: {
     total_videos: number
-    preview_videos: number
-    regular_videos: number
   }
 }
 
@@ -153,10 +150,7 @@ export interface BatchLinkVideosOptions {
 /** 課程影片關聯統計 */
 export interface CourseVideoStats {
   total_videos: number
-  preview_videos: number
-  regular_videos: number
   video_types: {
-    youtube: number
-    storage: number
+    storage: number // 只保留儲存類型，因為已移除 YouTube 支援
   }
 }

@@ -21,31 +21,41 @@ import { Request, Response, NextFunction } from 'express'
 import { videoService } from '@services/VideoService'
 import { handleErrorAsync, handleSuccess, handleCreated } from '@utils/index'
 import { SUCCESS } from '@constants/Message'
-import type { VideoUploadRequest, VideoUpdateRequest, VideoListRequest } from '@models/video.interface'
+import type { VideoUploadRequest, VideoUpdateRequest, VideoListRequest } from '../types/video.interface'
 
 export class VideoController {
   /**
    * 影片上傳
    * 
-   * 支援兩種上傳方式：
-   * 1. 檔案上傳（multipart/form-data）
-   * 2. YouTube 連結上傳（application/json）
+   * 支援檔案上傳（multipart/form-data）
+   * 統一採用本地儲存方式，不再支援 YouTube 連結
    * 
    * @route POST /api/videos
    * @access Private (需要教師權限)
    */
-  uploadVideo = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.user!.userId
-    const videoData: VideoUploadRequest = req.body
+  uploadVideo = async (req: Request, res: Response, next: NextFunction) => {
+    const videoFile = (req as any).videoFile
+    
+    try {
+      const userId = req.user!.userId
+      const videoData: VideoUploadRequest = req.body
 
-    // 檔案上傳處理：檢查是否有上傳檔案
-    // TODO: 後續整合 multer 中間件時，可透過 req.file 取得檔案資訊
-    // const uploadedFile = req.file
+      // 準備完整的影片建立資料
+      const createVideoData = {
+        ...videoData,
+        videoFile // 檔案物件，由 Service 層處理上傳
+      }
 
-    const video = await videoService.createVideo(userId, videoData)
+      // 呼叫服務層建立影片（包含檔案上傳）
+      const video = await videoService.createVideoWithFile(userId, createVideoData)
 
-    res.status(201).json(handleCreated({ video }, SUCCESS.VIDEO_UPLOADED))
-  })
+      res.status(201).json(handleCreated({ video }, SUCCESS.VIDEO_UPLOADED))
+
+    } catch (error) {
+      // 錯誤處理交給中間件處理暫存檔案清理
+      next(error)
+    }
+  }
 
   /**
    * 取得影片列表
@@ -102,25 +112,36 @@ export class VideoController {
    * 更新影片資訊
    * 
    * 支援部分欄位更新：
-   * - 標題、描述更新
-   * - YouTube 連結更新
+   * - 標題、分類、介紹更新
    * - 檔案替換（如果提供新檔案）
    * 
    * @route PUT /api/videos/:id
    * @access Private (只能更新自己的影片)
    */
-  updateVideo = handleErrorAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.user!.userId
-    const videoId = parseInt(req.params.id, 10)
-    const updateData: VideoUpdateRequest = req.body
+  updateVideo = async (req: Request, res: Response, next: NextFunction) => {
+    const videoFile = (req as any).videoFile
+    
+    try {
+      const userId = req.user!.userId
+      const videoId = parseInt(req.params.id, 10)
+      const updateData: VideoUpdateRequest = req.body
 
-    // TODO: 檔案更新處理：檢查是否有上傳新檔案
-    // const uploadedFile = req.file
+      // 準備完整的影片更新資料
+      const updateVideoData = {
+        ...updateData,
+        videoFile // 檔案物件，由 Service 層處理上傳（可選）
+      }
 
-    const video = await videoService.updateVideo(videoId, userId, updateData)
+      // 呼叫服務層更新影片（包含可選的檔案替換）
+      const video = await videoService.updateVideoWithFile(videoId, userId, updateVideoData)
 
-    res.status(200).json(handleSuccess({ video }, SUCCESS.VIDEO_UPDATED))
-  })
+      res.status(200).json(handleSuccess({ video }, SUCCESS.VIDEO_UPDATED))
+
+    } catch (error) {
+      // 錯誤處理交給中間件處理暫存檔案清理
+      next(error)
+    }
+  }
 
   /**
    * 刪除影片（軟刪除）
