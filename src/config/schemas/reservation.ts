@@ -6,6 +6,26 @@
 export const reservationSchemas = {
   // === 請求 Schema ===
   
+  // 更新預約狀態請求 Schema
+  UpdateReservationStatusRequest: {
+    type: 'object',
+    required: ['status_type'],
+    properties: {
+      status_type: {
+        type: 'string',
+        enum: ['teacher-complete', 'student-complete'],
+        description: '狀態類型 (teacher-complete: 教師標記完成, student-complete: 學生標記完成)',
+        example: 'teacher-complete'
+      },
+      notes: {
+        type: 'string',
+        maxLength: 500,
+        description: '備註或回饋 (可選，最多500字元)',
+        example: '課程進行順利，學生表現良好'
+      }
+    }
+  },
+
   // 建立預約請求 Schema
   CreateReservationRequest: {
     type: 'object',
@@ -286,6 +306,27 @@ export const reservationSchemas = {
         type: 'integer',
         description: '退還的課程堂數',
         example: 1
+      }
+    }
+  },
+
+  // 更新預約狀態成功回應 Schema
+  UpdateReservationStatusSuccessResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        description: '回應狀態',
+        enum: ['success'],
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        description: '成功訊息',
+        example: '預約狀態已更新'
+      },
+      data: {
+        $ref: '#/components/schemas/UpdateReservationStatusResponse'
       }
     }
   },

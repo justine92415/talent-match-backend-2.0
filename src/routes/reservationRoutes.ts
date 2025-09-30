@@ -466,6 +466,114 @@ router.get('/',
   reservationController.getReservationList
 )
 
+/**
+ * @swagger
+ * /api/reservations/{id}/status:
+ *   put:
+ *     tags:
+ *       - Reservation Management
+ *     summary: 更新預約完成狀態
+ *     description: |
+ *       教師或學生手動標記預約為完成狀態，用於確認課程已完成。
+ *       
+ *       **業務邏輯**：
+ *       - 驗證使用者身份認證和權限
+ *       - 檢查預約是否存在且屬於該使用者
+ *       - 驗證課程時間（只有課程結束後才能標記完成）
+ *       - 檢查當前狀態是否允許標記完成（必須是 reserved 或 overdue）
+ *       - 根據 status_type 更新對應的狀態
+ *         - teacher-complete: 更新教師狀態為 completed
+ *         - student-complete: 更新學生狀態為 completed
+ *       - 檢查是否雙方都已確認完成
+ *       - 回傳更新後的預約資訊
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: 預約 ID
+ *         example: 123
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateReservationStatusRequest'
+ *     responses:
+ *       200:
+ *         description: 預約狀態更新成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UpdateReservationStatusSuccessResponse'
+ *       400:
+ *         description: 請求參數錯誤或業務邏輯錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - $ref: '#/components/schemas/ReservationValidationErrorResponse'
+ *                 - $ref: '#/components/schemas/ReservationBusinessErrorResponse'
+ *             examples:
+ *               validation_error:
+ *                 summary: 參數驗證錯誤
+ *                 value:
+ *                   status: "error"
+ *                   message: "參數驗證失敗"
+ *                   errors:
+ *                     status_type: ["狀態類型必須是 teacher-complete 或 student-complete"]
+ *                     notes: ["備註不能超過 500 字元"]
+ *               course_not_ended:
+ *                 summary: 課程尚未結束
+ *                 value:
+ *                   status: "error"
+ *                   message: "課程尚未結束，無法標記完成"
+ *               status_invalid:
+ *                 summary: 預約狀態不允許標記完成
+ *                 value:
+ *                   status: "error"
+ *                   message: "預約狀態不允許標記完成"
+ *       401:
+ *         description: 未授權 - Token 無效或過期
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ReservationUnauthorizedErrorResponse'
+ *       403:
+ *         description: 禁止存取 - 無權限操作此預約
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ReservationBusinessErrorResponse'
+ *             examples:
+ *               unauthorized_access:
+ *                 summary: 權限不足
+ *                 value:
+ *                   status: "error"
+ *                   message: "無權限操作此預約"
+ *       404:
+ *         description: 預約不存在或已被刪除
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ReservationNotFoundErrorResponse'
+ *             examples:
+ *               reservation_not_found:
+ *                 summary: 預約不存在
+ *                 value:
+ *                   status: "error"
+ *                   message: "預約不存在或已被刪除"
+ *       500:
+ *         description: 伺服器內部錯誤
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ServerErrorResponse'
+ */
 router.put('/:id/status', 
   authenticateToken,
   createSchemasMiddleware({ params: reservationIdParamSchema, body: updateReservationStatusSchema }),
