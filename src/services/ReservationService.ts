@@ -422,15 +422,38 @@ export class ReservationService {
     this.validateCompletionTime(reservation)
 
     // 3. 根據狀態類型確定角色並驗證權限
-    let role: 'student' | 'teacher'
-    
     if (status_type === 'teacher-complete') {
-      role = 'teacher'
-      this.validateReservationAccess(reservation, userId, role)
+      // 教師角色：需要先查詢 teacher_id
+      const teacherRepository = dataSource.getRepository(Teacher)
+      const teacher = await teacherRepository.findOne({
+        where: { user_id: userId }
+      })
+      
+      if (!teacher) {
+        throw new BusinessError(
+          ERROR_CODES.UNAUTHORIZED_ACCESS,
+          '教師資料不存在',
+          404
+        )
+      }
+
+      if (teacher.id !== reservation.teacher_id) {
+        throw new BusinessError(
+          ERROR_CODES.RESERVATION_UNAUTHORIZED_ACCESS,
+          MESSAGES.BUSINESS.RESERVATION_UNAUTHORIZED_ACCESS
+        )
+      }
+
       reservation.teacher_status = ReservationStatus.COMPLETED
     } else if (status_type === 'student-complete') {
-      role = 'student'
-      this.validateReservationAccess(reservation, userId, role)
+      // 學生角色：直接比較 user_id
+      if (userId !== reservation.student_id) {
+        throw new BusinessError(
+          ERROR_CODES.RESERVATION_UNAUTHORIZED_ACCESS,
+          MESSAGES.BUSINESS.RESERVATION_UNAUTHORIZED_ACCESS
+        )
+      }
+
       reservation.student_status = ReservationStatus.COMPLETED
     } else {
       throw new ValidationError(
