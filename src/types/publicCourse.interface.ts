@@ -139,6 +139,7 @@ export interface PublicTeacherDetail {
   total_students: number
   total_courses: number
   average_rating: number
+  total_completed_lessons: number
 }
 
 /** 教師工作經驗（公開版） */

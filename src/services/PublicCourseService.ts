@@ -15,12 +15,13 @@
  *    - course_price_options: (course_id, is_active, price)
  */
 
-import { Repository, SelectQueryBuilder } from 'typeorm'
+import { Repository, SelectQueryBuilder, IsNull } from 'typeorm'
 import { dataSource } from '@db/data-source'
 import { Course } from '@entities/Course'
 import { Teacher } from '@entities/Teacher'
 import { User } from '@entities/User'
 import { Review } from '@entities/Review'
+import { Reservation } from '@entities/Reservation'
 import { MainCategory } from '@entities/MainCategory'
 import { SubCategory } from '@entities/SubCategory'
 import { City } from '@entities/City'
@@ -33,7 +34,7 @@ import { TeacherLearningExperience } from '@entities/TeacherLearningExperience'
 import { BusinessError } from '@utils/errors'
 import { ERROR_CODES } from '@constants/ErrorCode'
 import { MESSAGES } from '@constants/Message'
-import { CourseStatus } from '@entities/enums'
+import { CourseStatus, ReservationStatus } from '@entities/enums'
 import { PublicCourseListResponse, PublicCourseDetailResponse, CourseReviewListResponse, PublicCourseItem, PublicReview } from '../types/publicCourse.interface'
 import { scheduleService } from './ScheduleService'
 
@@ -90,6 +91,7 @@ export class PublicCourseService {
   private teacherRepository: Repository<Teacher>
   private userRepository: Repository<User>
   private reviewRepository: Repository<Review>
+  private reservationRepository: Repository<Reservation>
   private mainCategoryRepository: Repository<MainCategory>
   private subCategoryRepository: Repository<SubCategory>
   private cityRepository: Repository<City>
@@ -105,6 +107,7 @@ export class PublicCourseService {
     this.teacherRepository = dataSource.getRepository(Teacher)
     this.userRepository = dataSource.getRepository(User)
     this.reviewRepository = dataSource.getRepository(Review)
+  this.reservationRepository = dataSource.getRepository(Reservation)
     this.mainCategoryRepository = dataSource.getRepository(MainCategory)
     this.subCategoryRepository = dataSource.getRepository(SubCategory)
     this.cityRepository = dataSource.getRepository(City)
@@ -256,7 +259,14 @@ export class PublicCourseService {
     endDate.setDate(endDate.getDate() + 6) // 7天後
 
     // 🚀 TypeORM 查詢優化：從 8 個查詢減少到 4 個查詢
-    const [courseWithRelations, teacherProfileData, schedule, courseVideos, recentReviews] = await Promise.all([
+    const [
+      courseWithRelations,
+      teacherProfileData,
+      schedule,
+      courseVideos,
+      recentReviews,
+      completedLessonCount
+    ] = await Promise.all([
       // 查詢1：使用 JOIN 一次性獲取課程相關資料
       this.getCourseWithAllRelationsOptimized(courseId, course.teacher_id, course.main_category_id, course.sub_category_id),
       // 查詢2：一次性獲取教師檔案資料（限制數量）
@@ -266,13 +276,28 @@ export class PublicCourseService {
       // 查詢4：課程短影音
       this.getCourseVideosOptimized(courseId),
       // 查詢5：課程最近評價
-      this.getRecentCourseReviews(courseId)
+      this.getRecentCourseReviews(courseId),
+      // 查詢6：累積完成課堂數
+      this.getTeacherCompletedLessonCount(course.teacher_id)
     ])
 
     const { teacher, mainCategory, subCategory, priceOptions } = courseWithRelations
     const { certificates, workExperiences, learningExperiences } = teacherProfileData
 
-    return this.buildCourseDetailResponse(course, teacher, mainCategory, subCategory, priceOptions, certificates, workExperiences, learningExperiences, schedule, courseVideos, recentReviews)
+    return this.buildCourseDetailResponse(
+      course,
+      teacher,
+      mainCategory,
+      subCategory,
+      priceOptions,
+      certificates,
+      workExperiences,
+      learningExperiences,
+      schedule,
+      courseVideos,
+      recentReviews,
+      completedLessonCount
+    )
   }
 
   /**
@@ -355,7 +380,8 @@ export class PublicCourseService {
     teacherLearningExperiences: TeacherLearningExperience[] = [],
     schedule: any[] = [],
     courseVideos: any[] = [],
-    recentReviews: PublicReview[] = []
+    recentReviews: PublicReview[] = [],
+    completedLessonCount = 0
   ): PublicCourseDetailResponse {
     return {
       course: {
@@ -394,9 +420,10 @@ export class PublicCourseService {
         district: teacher.district || '',
         address: teacher.address || '',
         introduction: teacher.introduction || '',
-        total_students: 0, // TODO: 實際計算
-        total_courses: 0,  // TODO: 實際計算
-        average_rating: 0  // TODO: 實際計算
+        total_students: teacher.total_students ?? 0,
+        total_courses: teacher.total_courses ?? 0,
+        average_rating: Number(teacher.average_rating) || 0,
+        total_completed_lessons: completedLessonCount
       } : {
         id: 0,
         user: {
@@ -410,7 +437,8 @@ export class PublicCourseService {
         introduction: '',
         total_students: 0,
         total_courses: 0,
-        average_rating: 0
+        average_rating: 0,
+        total_completed_lessons: 0
       },
       price_options: priceOptions.map(option => ({
         id: option.id,
@@ -429,7 +457,7 @@ export class PublicCourseService {
       })),
       files: [], // TODO: 查詢課程檔案
       schedule: schedule,
-  recent_reviews: recentReviews,
+      recent_reviews: recentReviews,
       recommended_courses: [], // TODO: 查詢推薦課程
       teacher_certificates: teacherCertificates.map(cert => ({
         id: cert.id,
@@ -486,6 +514,20 @@ export class PublicCourseService {
           avatar_image: avatarImage
         },
         created_at: review.created_at.toISOString()
+      }
+    })
+  }
+
+  /**
+   * 私有方法：計算教師累積完成課堂數
+   */
+  private async getTeacherCompletedLessonCount(teacherId: number): Promise<number> {
+    return this.reservationRepository.count({
+      where: {
+        teacher_id: teacherId,
+        teacher_status: ReservationStatus.COMPLETED,
+        student_status: ReservationStatus.COMPLETED,
+        deleted_at: IsNull()
       }
     })
   }

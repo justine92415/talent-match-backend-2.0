@@ -502,7 +502,7 @@ export const publicCourseSchemas = {
   // 公開課程教師資訊 Schema
   PublicCourseTeacherInfo: {
     type: 'object',
-    required: ['id', 'user', 'total_students', 'total_courses', 'average_rating'],
+    required: ['id', 'user', 'total_students', 'total_courses', 'average_rating', 'total_completed_lessons'],
     properties: {
       id: {
         type: 'integer',
@@ -569,6 +569,11 @@ export const publicCourseSchemas = {
         type: 'integer',
         description: '教師平均評分',
         example: 0
+      },
+      total_completed_lessons: {
+        type: 'integer',
+        description: '累積完成課堂數',
+        example: 48
       }
     }
   },
