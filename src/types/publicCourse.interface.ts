@@ -196,6 +196,7 @@ export interface PublicReview {
   comment: string
   user: {
     nick_name: string
+    avatar_image?: string
   }
   created_at: string
 }

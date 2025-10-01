@@ -702,6 +702,12 @@ export const publicCourseSchemas = {
             type: 'string',
             description: '評價者暱稱',
             example: '學習愛好者'
+          },
+          avatar_image: {
+            type: 'string',
+            nullable: true,
+            description: '評價者頭像 URL (可能為空字串表示尚未上傳)',
+            example: 'https://firebasestorage.googleapis.com/v0/b/.../avatars/user_12.png'
           }
         },
         required: ['nick_name'],
@@ -943,7 +949,29 @@ export const publicCourseSchemas = {
             items: {
               $ref: '#/components/schemas/PublicCourseReview'
             },
-            description: '最近評價列表 (顯示最新的課程評價)'
+            description: '最近評價列表 (顯示最新的課程評價)',
+            example: [
+              {
+                id: 101,
+                rate: 5,
+                comment: '老師的講解非常生動，課程內容豐富又實用。',
+                user: {
+                  nick_name: '學生A',
+                  avatar_image: 'https://firebasestorage.googleapis.com/v0/b/.../avatars/student_a.png'
+                },
+                created_at: '2025-09-20T05:12:00.000Z'
+              },
+              {
+                id: 98,
+                rate: 4,
+                comment: '整體很棒，若能增加練習題就更好了。',
+                user: {
+                  nick_name: '學生B',
+                  avatar_image: 'https://firebasestorage.googleapis.com/v0/b/.../avatars/student_b.png'
+                },
+                created_at: '2025-09-18T03:45:00.000Z'
+              }
+            ]
           },
           recommended_courses: {
             type: 'array',

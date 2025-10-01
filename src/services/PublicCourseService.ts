@@ -34,7 +34,7 @@ import { BusinessError } from '@utils/errors'
 import { ERROR_CODES } from '@constants/ErrorCode'
 import { MESSAGES } from '@constants/Message'
 import { CourseStatus } from '@entities/enums'
-import { PublicCourseListResponse, PublicCourseDetailResponse, CourseReviewListResponse, PublicCourseItem } from '../types/publicCourse.interface'
+import { PublicCourseListResponse, PublicCourseDetailResponse, CourseReviewListResponse, PublicCourseItem, PublicReview } from '../types/publicCourse.interface'
 import { scheduleService } from './ScheduleService'
 
 // 簡化的查詢介面
@@ -256,7 +256,7 @@ export class PublicCourseService {
     endDate.setDate(endDate.getDate() + 6) // 7天後
 
     // 🚀 TypeORM 查詢優化：從 8 個查詢減少到 4 個查詢
-    const [courseWithRelations, teacherProfileData, schedule, courseVideos] = await Promise.all([
+    const [courseWithRelations, teacherProfileData, schedule, courseVideos, recentReviews] = await Promise.all([
       // 查詢1：使用 JOIN 一次性獲取課程相關資料
       this.getCourseWithAllRelationsOptimized(courseId, course.teacher_id, course.main_category_id, course.sub_category_id),
       // 查詢2：一次性獲取教師檔案資料（限制數量）
@@ -264,13 +264,15 @@ export class PublicCourseService {
       // 查詢3：課程表（使用 TypeORM 優化版本）
       scheduleService.getDayScheduleForDateRange(course.teacher_id, tomorrow, endDate),
       // 查詢4：課程短影音
-      this.getCourseVideosOptimized(courseId)
+      this.getCourseVideosOptimized(courseId),
+      // 查詢5：課程最近評價
+      this.getRecentCourseReviews(courseId)
     ])
 
     const { teacher, mainCategory, subCategory, priceOptions } = courseWithRelations
     const { certificates, workExperiences, learningExperiences } = teacherProfileData
 
-    return this.buildCourseDetailResponse(course, teacher, mainCategory, subCategory, priceOptions, certificates, workExperiences, learningExperiences, schedule, courseVideos)
+    return this.buildCourseDetailResponse(course, teacher, mainCategory, subCategory, priceOptions, certificates, workExperiences, learningExperiences, schedule, courseVideos, recentReviews)
   }
 
   /**
@@ -352,7 +354,8 @@ export class PublicCourseService {
     teacherWorkExperiences: TeacherWorkExperience[] = [],
     teacherLearningExperiences: TeacherLearningExperience[] = [],
     schedule: any[] = [],
-    courseVideos: any[] = []
+    courseVideos: any[] = [],
+    recentReviews: PublicReview[] = []
   ): PublicCourseDetailResponse {
     return {
       course: {
@@ -426,7 +429,7 @@ export class PublicCourseService {
       })),
       files: [], // TODO: 查詢課程檔案
       schedule: schedule,
-      recent_reviews: [], // TODO: 查詢最近評價
+  recent_reviews: recentReviews,
       recommended_courses: [], // TODO: 查詢推薦課程
       teacher_certificates: teacherCertificates.map(cert => ({
         id: cert.id,
@@ -448,6 +451,43 @@ export class PublicCourseService {
         end_year: exp.end_year ?? null
       }))
     }
+  }
+
+  /**
+   * 私有方法：取得課程最近評價（預設取最新 3 筆）
+   */
+  private async getRecentCourseReviews(courseId: number, limit = 3): Promise<PublicReview[]> {
+    const reviews = await this.reviewRepository
+      .createQueryBuilder('review')
+      .where('review.course_id = :courseId', { courseId })
+      .andWhere('review.is_visible = :isVisible', { isVisible: true })
+      .andWhere('review.deleted_at IS NULL')
+      .orderBy('review.created_at', 'DESC')
+      .limit(limit)
+      .getMany()
+
+    if (reviews.length === 0) {
+      return []
+    }
+
+  const userIds = Array.from(new Set(reviews.map(review => review.user_id)))
+  const users = userIds.length > 0 ? await this.userRepository.findByIds(userIds) : []
+
+    return reviews.map(review => {
+      const user = users.find(u => u.id === review.user_id)
+      const avatarImage = user?.avatar_image || user?.avatar_google_url || ''
+
+      return {
+        id: review.id,
+        rate: review.rate || 0,
+        comment: review.comment || '',
+        user: {
+          nick_name: user?.nick_name || '匿名用戶',
+          avatar_image: avatarImage
+        },
+        created_at: review.created_at.toISOString()
+      }
+    })
   }
 
   /**
@@ -513,12 +553,15 @@ export class PublicCourseService {
     // 轉換回應格式
     const reviewList = reviews.map(review => {
       const user = users.find(u => u.id === review.user_id)
+      const avatarImage = user?.avatar_image || user?.avatar_google_url || ''
+
       return {
         id: review.id,
         rate: review.rate || 0, // PublicReview 介面使用 rate
         comment: review.comment,
         user: {
-          nick_name: user?.nick_name || '匿名用戶'
+          nick_name: user?.nick_name || '匿名用戶',
+          avatar_image: avatarImage
         },
         created_at: review.created_at.toISOString()
       }
