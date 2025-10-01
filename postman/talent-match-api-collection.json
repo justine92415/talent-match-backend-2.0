@@ -2701,6 +2701,7 @@
                   "        pm.expect(reservation).to.have.property('student_id');",
                   "        pm.expect(reservation).to.have.property('reserve_time');",
                   "        pm.expect(reservation).to.have.property('teacher_status');",
+                  "        pm.expect(reservation).to.have.property('is_reviewed');",
                   "        pm.expect(reservation).to.have.property('student_status');",
                   "        pm.expect(reservation).to.have.property('created_at');",
                   "        pm.expect(reservation).to.have.property('updated_at');",

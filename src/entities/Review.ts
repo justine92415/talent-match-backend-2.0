@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn } from 'typeorm'
+import { Reservation } from './Reservation'
 
 @Entity('reviews')
 export class Review {
@@ -13,6 +14,11 @@ export class Review {
   /** 關聯的預約ID（一對一） */
   @Column()
   reservation_id!: number
+
+  /** 關聯的預約（存在即表示已留下評論） */
+  @OneToOne(() => Reservation, reservation => reservation.review)
+  @JoinColumn({ name: 'reservation_id' })
+  reservation!: Reservation
 
   /** 評價的課程ID */
   @Column()

@@ -23,6 +23,8 @@ export interface ReservationInfo {
   teacher_status: ReservationStatus
   /** 學生端預約狀態 */
   student_status: ReservationStatus
+  /** 是否已留下評價 */
+  is_reviewed: boolean
   /** 拒絕原因（當狀態為 cancelled 時） */
   rejection_reason?: string | null
   /** 建立時間 */

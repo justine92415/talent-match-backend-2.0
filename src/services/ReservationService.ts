@@ -144,7 +144,9 @@ export class ReservationService {
     } = query
 
     // 建立基礎查詢（簡化版本，避免複雜的關聯查詢）
-    const queryBuilder = this.reservationRepository.createQueryBuilder('reservation')
+    const queryBuilder = this.reservationRepository
+      .createQueryBuilder('reservation')
+      .leftJoinAndSelect('reservation.review', 'review')
 
     // 根據角色過濾
     if (userRole === 'student') {
@@ -222,7 +224,9 @@ export class ReservationService {
     } = query
 
     // 建立基礎查詢（簡化版本，避免複雜的關聯查詢）
-    const queryBuilder = this.reservationRepository.createQueryBuilder('reservation')
+    const queryBuilder = this.reservationRepository
+      .createQueryBuilder('reservation')
+      .leftJoinAndSelect('reservation.review', 'review')
 
     // 只查詢學生自己的預約
     queryBuilder.where('reservation.student_id = :studentId', { studentId })
@@ -747,6 +751,9 @@ export class ReservationService {
       where: { 
         id: reservationId, 
         deleted_at: IsNull() 
+      },
+      relations: {
+        review: true
       }
     })
 
@@ -865,8 +872,10 @@ export class ReservationService {
    */
   private async getReservationWithDetails(reservationId: number): Promise<ReservationDetail> {
     const reservation = await this.reservationRepository.findOne({
-      where: { id: reservationId }
-      // 移除 relations 以避免關聯查詢錯誤
+      where: { id: reservationId },
+      relations: {
+        review: true
+      }
     })
 
     if (!reservation) {
@@ -886,6 +895,8 @@ export class ReservationService {
    * @param includeDetails 是否包含課程和教師詳細資訊（預設為 false 以提升效能）
    */
   private transformReservationToResponse(reservation: Reservation, includeDetails = false): ReservationDetail {
+    const isReviewed = Boolean(reservation.review)
+
     const baseData: ReservationDetail = {
       id: reservation.id,
       uuid: reservation.uuid,
@@ -895,6 +906,7 @@ export class ReservationService {
       reserve_time: reservation.reserve_time,
       teacher_status: reservation.teacher_status,
       student_status: reservation.student_status,
+      is_reviewed: isReviewed,
       rejection_reason: reservation.rejection_reason,
       created_at: reservation.created_at,
       updated_at: reservation.updated_at

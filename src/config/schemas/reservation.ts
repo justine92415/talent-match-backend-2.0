@@ -175,6 +175,11 @@ export const reservationSchemas = {
         description: '學生端預約狀態',
         example: 'reserved'
       },
+      is_reviewed: {
+        type: 'boolean',
+        description: '是否已由學生留下評價',
+        example: false
+      },
       created_at: {
         type: 'string',
         format: 'date-time',
@@ -479,6 +484,31 @@ export const reservationSchemas = {
           pagination: {
             $ref: '#/components/schemas/PaginationInfo',
             description: '分頁資訊'
+          }
+        }
+        ,
+        example: {
+          reservations: [
+            {
+              id: 12,
+              uuid: 'a3f05d27-0f26-4dfc-9a8f-8f0a77cecd0b',
+              course_id: 45,
+              teacher_id: 8,
+              student_id: 1024,
+              reserve_time: '2025-09-25T14:00:00.000Z',
+              teacher_status: 'reserved',
+              student_status: 'reserved',
+              is_reviewed: false,
+              rejection_reason: null,
+              created_at: '2025-09-20T02:15:00.000Z',
+              updated_at: '2025-09-20T02:15:00.000Z'
+            }
+          ],
+          pagination: {
+            current_page: 1,
+            per_page: 10,
+            total: 1,
+            total_pages: 1
           }
         }
       }
