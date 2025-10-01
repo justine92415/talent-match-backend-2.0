@@ -393,7 +393,6 @@ export class PublicCourseService {
         rate: course.rate,
         review_count: course.review_count,
         student_count: course.student_count,
-        purchase_count: course.purchase_count || 0,
         survey_url: course.survey_url || undefined,
         purchase_message: course.purchase_message || undefined,
         city: course.city || undefined,

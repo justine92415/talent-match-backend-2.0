@@ -376,7 +376,7 @@ export const publicCourseSchemas = {
   // 公開課程詳情 Schema
   PublicCourseDetail: {
     type: 'object',
-    required: ['id', 'uuid', 'name', 'rate', 'review_count', 'student_count', 'purchase_count', 'main_category', 'sub_category', 'created_at'],
+  required: ['id', 'uuid', 'name', 'rate', 'review_count', 'student_count', 'main_category', 'sub_category', 'created_at'],
     properties: {
       id: {
         type: 'integer',
@@ -419,11 +419,6 @@ export const publicCourseSchemas = {
       student_count: {
         type: 'integer',
         description: '學生人數',
-        example: 0
-      },
-      purchase_count: {
-        type: 'integer',
-        description: '購買次數',
         example: 0
       },
       survey_url: {

@@ -227,7 +227,6 @@ export interface PublicCourseDetail {
   rate: number
   review_count: number
   student_count: number
-  purchase_count: number
   survey_url?: string | null
   purchase_message?: string | null
   city?: string | null

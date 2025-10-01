@@ -42,7 +42,6 @@ const DEFAULT_COURSE_VALUES = {
   RATE: 0,
   REVIEW_COUNT: 0,
   VIEW_COUNT: 0,
-  PURCHASE_COUNT: 0,
   STUDENT_COUNT: 0,
   SURVEY_URL: '',
   PURCHASE_MESSAGE: ''
@@ -191,7 +190,6 @@ export class CourseService {
       rate: savedCourse.rate || DEFAULT_COURSE_VALUES.RATE,
       review_count: savedCourse.review_count || DEFAULT_COURSE_VALUES.REVIEW_COUNT,
       view_count: savedCourse.view_count || DEFAULT_COURSE_VALUES.VIEW_COUNT,
-      purchase_count: savedCourse.purchase_count || DEFAULT_COURSE_VALUES.PURCHASE_COUNT,
       student_count: savedCourse.student_count || DEFAULT_COURSE_VALUES.STUDENT_COUNT,
       main_category_id: savedCourse.main_category_id,
       sub_category_id: savedCourse.sub_category_id,
@@ -305,7 +303,6 @@ export class CourseService {
         rate: savedCourse.rate || DEFAULT_COURSE_VALUES.RATE,
         review_count: savedCourse.review_count || DEFAULT_COURSE_VALUES.REVIEW_COUNT,
         view_count: savedCourse.view_count || DEFAULT_COURSE_VALUES.VIEW_COUNT,
-        purchase_count: savedCourse.purchase_count || DEFAULT_COURSE_VALUES.PURCHASE_COUNT,
         student_count: savedCourse.student_count || DEFAULT_COURSE_VALUES.STUDENT_COUNT,
         main_category_id: savedCourse.main_category_id,
         sub_category_id: savedCourse.sub_category_id,
@@ -592,7 +589,7 @@ export class CourseService {
       where: { id: courseId },
       select: [
         'id', 'uuid', 'name', 'content', 'main_image', 'rate', 'review_count',
-        'status', 'teacher_id', 'created_at', 'updated_at', 'view_count', 'purchase_count',
+  'status', 'teacher_id', 'created_at', 'updated_at', 'view_count',
         'student_count', 'main_category_id', 'sub_category_id', 'city', 'district', 'address',
         'survey_url', 'purchase_message', 'submission_notes', 'archive_reason'
       ]
@@ -703,7 +700,7 @@ export class CourseService {
       where: { id: courseId },
       select: [
         'id', 'uuid', 'name', 'content', 'main_image', 'rate', 'review_count',
-        'status', 'teacher_id', 'created_at', 'updated_at', 'view_count', 'purchase_count',
+  'status', 'teacher_id', 'created_at', 'updated_at', 'view_count',
         'student_count', 'main_category_id', 'sub_category_id', 'city', 'district', 'address',
         'survey_url', 'purchase_message', 'submission_notes', 'archive_reason'
       ]
@@ -847,7 +844,6 @@ export class CourseService {
       rate: course.rate,
       review_count: course.review_count,
       view_count: course.view_count,
-      purchase_count: course.purchase_count,
       student_count: course.student_count,
       main_category_id: course.main_category_id,
       sub_category_id: course.sub_category_id,

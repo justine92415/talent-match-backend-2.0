@@ -377,7 +377,6 @@ router.put('/:id',
  *                       rate: 4.5
  *                       review_count: 12
  *                       view_count: 150
- *                       purchase_count: 25
  *                       student_count: 25
  *                       main_category_id: 1
  *                       sub_category_id: 2
@@ -445,7 +444,6 @@ router.put('/:id',
  *                       rate: 0
  *                       review_count: 0
  *                       view_count: 0
- *                       purchase_count: 0
  *                       student_count: 0
  *                       main_category_id: 1
  *                       sub_category_id: 2
