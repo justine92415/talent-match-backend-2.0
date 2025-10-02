@@ -39,7 +39,9 @@ const router = Router()
  *
  *       **業務邏輯**：
  *       - 驗證請求參數（預約 UUID、評分、評語）
- *       - 確認預約屬於當前學生且雙方狀態皆為完成
+ *       - 確認預約屬於當前學生且狀態為已完成 (COMPLETED) 或課程已結束 (OVERDUE)
+ *       - OVERDUE 狀態表示課程已結束但尚未手動確認完成，此時學生可以評價
+ *       - 評價後若學生狀態為 OVERDUE，系統會自動將其更新為 COMPLETED
  *       - 防止重複評價同一預約
  *       - 建立評價並更新課程與教師的評分統計
  *     security:
@@ -58,7 +60,14 @@ const router = Router()
  *             schema:
  *               $ref: '#/components/schemas/ReviewSubmitSuccessResponse'
  *       400:
- *         description: 請求參數錯誤或預約狀態不允許評價
+ *         description: |
+ *           請求參數錯誤或預約狀態不允許評價
+ *           
+ *           **常見原因**:
+ *           - 課程尚未結束（狀態不是 COMPLETED 或 OVERDUE）
+ *           - 預約已取消
+ *           - 評分不在 1-5 範圍內
+ *           - 評價內容過短或過長
  *         content:
  *           application/json:
  *             schema:
