@@ -66,6 +66,7 @@ export interface PublicCourseItem {
   id: number
   uuid: string
   name: string
+  description?: string | null
   main_image?: string | null
   rate: number
   review_count: number

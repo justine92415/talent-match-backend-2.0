@@ -684,6 +684,7 @@ export class PublicCourseService {
         id: course.id,
         uuid: course.uuid,
         name: course.name,
+        description: course.content || undefined,
         main_image: course.main_image || undefined,
         min_price: priceInfo.min_price,
         max_price: priceInfo.max_price,
