@@ -39,10 +39,6 @@ export class Course {
   @Column({ type: 'integer', default: 0 })
   view_count!: number
 
-  /** 課程購買次數 */
-  @Column({ type: 'integer', default: 0 })
-  purchase_count!: number
-
   /** 學生總數 */
   @Column({ type: 'integer', default: 0 })
   student_count!: number

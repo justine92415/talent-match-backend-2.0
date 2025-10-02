@@ -144,7 +144,9 @@ export class ReservationService {
     } = query
 
     // 建立基礎查詢（簡化版本，避免複雜的關聯查詢）
-    const queryBuilder = this.reservationRepository.createQueryBuilder('reservation')
+    const queryBuilder = this.reservationRepository
+      .createQueryBuilder('reservation')
+      .leftJoinAndSelect('reservation.review', 'review')
 
     // 根據角色過濾
     if (userRole === 'student') {
@@ -222,7 +224,9 @@ export class ReservationService {
     } = query
 
     // 建立基礎查詢（簡化版本，避免複雜的關聯查詢）
-    const queryBuilder = this.reservationRepository.createQueryBuilder('reservation')
+    const queryBuilder = this.reservationRepository
+      .createQueryBuilder('reservation')
+      .leftJoinAndSelect('reservation.review', 'review')
 
     // 只查詢學生自己的預約
     queryBuilder.where('reservation.student_id = :studentId', { studentId })
@@ -418,16 +422,42 @@ export class ReservationService {
     // 1. 查找預約
     const reservation = await this.getReservationById(reservationId)
 
-    // 2. 根據狀態類型確定角色並驗證權限
-    let role: 'student' | 'teacher'
-    
+    // 2. 驗證課程時間（只有課程結束後才能標記完成）
+    this.validateCompletionTime(reservation)
+
+    // 3. 根據狀態類型確定角色並驗證權限
     if (status_type === 'teacher-complete') {
-      role = 'teacher'
-      this.validateReservationAccess(reservation, userId, role)
+      // 教師角色：需要先查詢 teacher_id
+      const teacherRepository = dataSource.getRepository(Teacher)
+      const teacher = await teacherRepository.findOne({
+        where: { user_id: userId }
+      })
+      
+      if (!teacher) {
+        throw new BusinessError(
+          ERROR_CODES.UNAUTHORIZED_ACCESS,
+          '教師資料不存在',
+          404
+        )
+      }
+
+      if (teacher.id !== reservation.teacher_id) {
+        throw new BusinessError(
+          ERROR_CODES.RESERVATION_UNAUTHORIZED_ACCESS,
+          MESSAGES.BUSINESS.RESERVATION_UNAUTHORIZED_ACCESS
+        )
+      }
+
       reservation.teacher_status = ReservationStatus.COMPLETED
     } else if (status_type === 'student-complete') {
-      role = 'student'
-      this.validateReservationAccess(reservation, userId, role)
+      // 學生角色：直接比較 user_id
+      if (userId !== reservation.student_id) {
+        throw new BusinessError(
+          ERROR_CODES.RESERVATION_UNAUTHORIZED_ACCESS,
+          MESSAGES.BUSINESS.RESERVATION_UNAUTHORIZED_ACCESS
+        )
+      }
+
       reservation.student_status = ReservationStatus.COMPLETED
     } else {
       throw new ValidationError(
@@ -721,6 +751,9 @@ export class ReservationService {
       where: { 
         id: reservationId, 
         deleted_at: IsNull() 
+      },
+      relations: {
+        review: true
       }
     })
 
@@ -733,6 +766,34 @@ export class ReservationService {
     }
 
     return reservation
+  }
+
+  /**
+   * 驗證標記完成的時間條件
+   */
+  private validateCompletionTime(reservation: Reservation): void {
+    const now = new Date()
+    // 假設課程時長為1小時，實際應該從課程表取得
+    const courseEndTime = new Date(reservation.reserve_time.getTime() + 60 * 60 * 1000)
+    
+    // 檢查當前狀態是否允許標記完成
+    if (reservation.teacher_status !== ReservationStatus.RESERVED && 
+        reservation.teacher_status !== ReservationStatus.OVERDUE) {
+      throw new BusinessError(
+        ERROR_CODES.RESERVATION_STATUS_INVALID,
+        '預約狀態不允許標記完成',
+        400
+      )
+    }
+
+    // 檢查課程是否已結束
+    if (now < courseEndTime) {
+      throw new BusinessError(
+        ERROR_CODES.RESERVATION_STATUS_INVALID,
+        '課程尚未結束，無法標記完成',
+        400
+      )
+    }
   }
 
   /**
@@ -811,8 +872,10 @@ export class ReservationService {
    */
   private async getReservationWithDetails(reservationId: number): Promise<ReservationDetail> {
     const reservation = await this.reservationRepository.findOne({
-      where: { id: reservationId }
-      // 移除 relations 以避免關聯查詢錯誤
+      where: { id: reservationId },
+      relations: {
+        review: true
+      }
     })
 
     if (!reservation) {
@@ -832,6 +895,8 @@ export class ReservationService {
    * @param includeDetails 是否包含課程和教師詳細資訊（預設為 false 以提升效能）
    */
   private transformReservationToResponse(reservation: Reservation, includeDetails = false): ReservationDetail {
+    const isReviewed = Boolean(reservation.review)
+
     const baseData: ReservationDetail = {
       id: reservation.id,
       uuid: reservation.uuid,
@@ -841,6 +906,7 @@ export class ReservationService {
       reserve_time: reservation.reserve_time,
       teacher_status: reservation.teacher_status,
       student_status: reservation.student_status,
+      is_reviewed: isReviewed,
       rejection_reason: reservation.rejection_reason,
       created_at: reservation.created_at,
       updated_at: reservation.updated_at
@@ -1143,6 +1209,12 @@ export class ReservationService {
           { teacherReserved: 'reserved', studentReserved: 'reserved' }
         )
         break
+      case 'overdue':
+        queryBuilder.andWhere(
+          '(reservation.teacher_status = :teacherOverdue AND reservation.student_status = :studentOverdue)',
+          { teacherOverdue: 'overdue', studentOverdue: 'overdue' }
+        )
+        break
       case 'completed':
         queryBuilder.andWhere(
           '(reservation.teacher_status = :teacherCompleted AND reservation.student_status = :studentCompleted)',
@@ -1176,13 +1248,15 @@ export class ReservationService {
     const reserve_end_time = endTime.toTimeString().slice(0, 5) // HH:mm
 
     // 綜合狀態邏輯
-    let overall_status: 'pending' | 'reserved' | 'completed' | 'cancelled'
+    let overall_status: 'pending' | 'reserved' | 'overdue' | 'completed' | 'cancelled'
     if (reservation.teacher_status === 'cancelled' || reservation.student_status === 'cancelled') {
       overall_status = 'cancelled'
     } else if (reservation.teacher_status === 'pending') {
       overall_status = 'pending'
     } else if (reservation.teacher_status === 'completed' && reservation.student_status === 'completed') {
       overall_status = 'completed'
+    } else if (reservation.teacher_status === 'overdue' && reservation.student_status === 'overdue') {
+      overall_status = 'overdue'
     } else {
       overall_status = 'reserved'
     }

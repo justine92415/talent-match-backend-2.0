@@ -226,11 +226,6 @@ export const courseSchemas = {
         description: '瀏覽次數',
         example: 0
       },
-      purchase_count: {
-        type: 'integer',
-        description: '購買次數',
-        example: 0
-      },
       student_count: {
         type: 'integer',
         description: '學生人數',

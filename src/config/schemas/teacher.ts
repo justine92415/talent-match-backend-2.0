@@ -498,6 +498,7 @@ export const teacherSchemas = {
               total_students: { type: 'integer', description: '總學生數', example: 25 },
               total_courses: { type: 'integer', description: '總課程數', example: 8 },
               average_rating: { type: 'number', format: 'decimal', description: '平均評分', example: 4.5 },
+              total_completed_lessons: { type: 'integer', description: '累積完成課堂數', example: 120 },
               total_earnings: { type: 'number', format: 'decimal', description: '總收入', example: 150000.00 },
               created_at: { type: 'string', format: 'date-time', description: '建立時間', example: '2024-01-01T00:00:00.000Z' },
               updated_at: { type: 'string', format: 'date-time', description: '更新時間', example: '2024-01-15T10:30:00.000Z' }

@@ -21,6 +21,7 @@ export interface PublicTeacherProfile {
   total_students: number
   total_courses: number
   average_rating: number
+  total_completed_lessons: number
   total_earnings: number
   created_at: string
   user: {

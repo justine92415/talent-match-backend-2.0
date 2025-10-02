@@ -37,7 +37,6 @@ export interface CourseBasicInfo {
   rate: number
   review_count: number
   view_count: number
-  purchase_count: number
   student_count: number
   main_category_id: number | null
   sub_category_id: number | null
@@ -164,7 +163,7 @@ export interface CourseDetailResponse {
 /** 課程列表回應 */
 export interface CourseListResponse {
   courses: Array<Pick<CourseBasicInfo, 
-    'id' | 'uuid' | 'name' | 'main_image' | 'status' | 
+    'id' | 'uuid' | 'name' | 'main_image' | 'status' |
     'student_count' | 'rate' | 'review_count' | 'created_at' | 'updated_at'
   >>
   pagination: {

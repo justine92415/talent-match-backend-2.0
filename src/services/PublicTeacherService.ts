@@ -6,15 +6,17 @@
  * - 教師課程列表查詢
  */
 
-import { Repository, In } from 'typeorm'
+import { Repository, In, IsNull } from 'typeorm'
 import { dataSource } from '@db/data-source'
 import { Teacher } from '@entities/Teacher'
 import { Course } from '@entities/Course'
 import { CourseRatingStat } from '@entities/CourseRatingStat'
+import { Reservation } from '@entities/Reservation'
 import { PublicTeacherProfile, PublicTeacherCourse } from '@models/publicTeacher.interface'
 import { BusinessError } from '@utils/errors'
 import { ERROR_CODES } from '@constants/ErrorCode'
 import { MESSAGES } from '@constants/Message'
+import { ReservationStatus } from '@entities/enums'
 
 /**
  * 教師課程查詢參數介面
@@ -31,11 +33,13 @@ export class PublicTeacherService {
   private teacherRepository: Repository<Teacher>
   private courseRepository: Repository<Course>
   private courseRatingStatRepository: Repository<CourseRatingStat>
+  private reservationRepository: Repository<Reservation>
 
   constructor() {
     this.teacherRepository = dataSource.getRepository(Teacher)
     this.courseRepository = dataSource.getRepository(Course)
     this.courseRatingStatRepository = dataSource.getRepository(CourseRatingStat)
+    this.reservationRepository = dataSource.getRepository(Reservation)
   }
 
   /**
@@ -51,6 +55,8 @@ export class PublicTeacherService {
       throw new BusinessError(ERROR_CODES.TEACHER_NOT_FOUND, MESSAGES.BUSINESS.TEACHER_NOT_FOUND, 404)
     }
 
+    const totalCompletedLessons = await this.getTeacherCompletedLessonCount(teacher.id)
+
     return {
       id: teacher.id,
       name: teacher.user?.name || '未提供姓名',
@@ -64,6 +70,7 @@ export class PublicTeacherService {
       total_students: teacher.total_students,
       total_courses: teacher.total_courses,
       average_rating: Number(teacher.average_rating),
+  total_completed_lessons: totalCompletedLessons,
       total_earnings: 0, // 不顯示實際金額
       created_at: teacher.created_at.toISOString(),
       user: {
@@ -71,6 +78,20 @@ export class PublicTeacherService {
         email: teacher.user?.email || '未提供信箱'
       }
     }
+  }
+
+  /**
+   * 計算教師累積完成課堂數
+   */
+  private async getTeacherCompletedLessonCount(teacherId: number): Promise<number> {
+    return this.reservationRepository.count({
+      where: {
+        teacher_id: teacherId,
+        teacher_status: ReservationStatus.COMPLETED,
+        student_status: ReservationStatus.COMPLETED,
+        deleted_at: IsNull()
+      }
+    })
   }
 
   /**

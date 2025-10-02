@@ -1,8 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index, ManyToOne, JoinColumn } from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index, ManyToOne, JoinColumn, OneToOne } from 'typeorm'
 import { ReservationStatus } from './enums'
 import { User } from './User'
 import { Course } from './Course'
 import { Teacher } from './Teacher'
+import { Review } from './Review'
 
 @Entity('reservations')
 // 新增複合索引以優化查詢效能
@@ -65,6 +66,10 @@ export class Reservation {
   /** 拒絕原因（當狀態為 cancelled 時記錄） */
   @Column({ type: 'text', nullable: true })
   rejection_reason!: string | null
+
+  /** 評價關聯（存在即表示已評價） */
+  @OneToOne(() => Review, review => review.reservation, { nullable: true })
+  review?: Review | null
 
   /** 建立時間 */
   @CreateDateColumn({ type: 'timestamp' })

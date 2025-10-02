@@ -38,6 +38,7 @@ export enum VideoType {
 export enum ReservationStatus {
   PENDING = 'pending',      // 等待教師確認
   RESERVED = 'reserved',
+  OVERDUE = 'overdue',      // 課程已結束，等待標記完成
   COMPLETED = 'completed',
   CANCELLED = 'cancelled'
 }

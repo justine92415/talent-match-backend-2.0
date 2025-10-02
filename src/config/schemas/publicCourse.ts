@@ -376,7 +376,7 @@ export const publicCourseSchemas = {
   // 公開課程詳情 Schema
   PublicCourseDetail: {
     type: 'object',
-    required: ['id', 'uuid', 'name', 'rate', 'review_count', 'student_count', 'purchase_count', 'main_category', 'sub_category', 'created_at'],
+  required: ['id', 'uuid', 'name', 'rate', 'review_count', 'student_count', 'main_category', 'sub_category', 'created_at'],
     properties: {
       id: {
         type: 'integer',
@@ -419,11 +419,6 @@ export const publicCourseSchemas = {
       student_count: {
         type: 'integer',
         description: '學生人數',
-        example: 0
-      },
-      purchase_count: {
-        type: 'integer',
-        description: '購買次數',
         example: 0
       },
       survey_url: {
@@ -502,7 +497,7 @@ export const publicCourseSchemas = {
   // 公開課程教師資訊 Schema
   PublicCourseTeacherInfo: {
     type: 'object',
-    required: ['id', 'user', 'total_students', 'total_courses', 'average_rating'],
+    required: ['id', 'user', 'total_students', 'total_courses', 'average_rating', 'total_completed_lessons'],
     properties: {
       id: {
         type: 'integer',
@@ -569,6 +564,11 @@ export const publicCourseSchemas = {
         type: 'integer',
         description: '教師平均評分',
         example: 0
+      },
+      total_completed_lessons: {
+        type: 'integer',
+        description: '累積完成課堂數',
+        example: 48
       }
     }
   },
@@ -702,6 +702,12 @@ export const publicCourseSchemas = {
             type: 'string',
             description: '評價者暱稱',
             example: '學習愛好者'
+          },
+          avatar_image: {
+            type: 'string',
+            nullable: true,
+            description: '評價者頭像 URL (可能為空字串表示尚未上傳)',
+            example: 'https://firebasestorage.googleapis.com/v0/b/.../avatars/user_12.png'
           }
         },
         required: ['nick_name'],
@@ -943,7 +949,29 @@ export const publicCourseSchemas = {
             items: {
               $ref: '#/components/schemas/PublicCourseReview'
             },
-            description: '最近評價列表 (顯示最新的課程評價)'
+            description: '最近評價列表 (顯示最新的課程評價)',
+            example: [
+              {
+                id: 101,
+                rate: 5,
+                comment: '老師的講解非常生動，課程內容豐富又實用。',
+                user: {
+                  nick_name: '學生A',
+                  avatar_image: 'https://firebasestorage.googleapis.com/v0/b/.../avatars/student_a.png'
+                },
+                created_at: '2025-09-20T05:12:00.000Z'
+              },
+              {
+                id: 98,
+                rate: 4,
+                comment: '整體很棒，若能增加練習題就更好了。',
+                user: {
+                  nick_name: '學生B',
+                  avatar_image: 'https://firebasestorage.googleapis.com/v0/b/.../avatars/student_b.png'
+                },
+                created_at: '2025-09-18T03:45:00.000Z'
+              }
+            ]
           },
           recommended_courses: {
             type: 'array',
