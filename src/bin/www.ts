@@ -48,7 +48,7 @@ server.listen(port, async () => {
     // 啟動預約過期檢查排程任務（每10分鐘執行一次）
     cron.schedule('*/10 * * * *', async () => {
       try {
-        logger.info('開始檢查過期預約...')
+        logger.info('開始檢查教師回應過期預約...')
         const result = await reservationExpirationService.handleExpiredReservations()
         
         if (result.count > 0) {
@@ -61,8 +61,45 @@ server.listen(port, async () => {
     }, {
       timezone: 'Asia/Taipei'
     })
+
+    // 啟動課程結束檢查排程任務（每小時執行一次）
+    cron.schedule('0 * * * *', async () => {
+      try {
+        logger.info('開始檢查課程結束預約...')
+        const result = await reservationExpirationService.markReservationsOverdue()
+        
+        if (result.count > 0) {
+          logger.info(`成功標記 ${result.count} 個過期預約，ID: ${result.overdueReservations.join(', ')}`)
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : '未知錯誤'
+        logger.error(`課程結束檢查任務執行失敗: ${errorMessage}`)
+      }
+    }, {
+      timezone: 'Asia/Taipei'
+    })
+
+    // 啟動自動完成排程任務（每24小時執行一次）
+    cron.schedule('0 0 * * *', async () => {
+      try {
+        logger.info('開始自動完成過期24小時預約...')
+        const result = await reservationExpirationService.autoCompleteOverdueReservations()
+        
+        if (result.count > 0) {
+          logger.info(`成功自動完成 ${result.count} 個預約，ID: ${result.completedReservations.join(', ')}`)
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : '未知錯誤'
+        logger.error(`自動完成任務執行失敗: ${errorMessage}`)
+      }
+    }, {
+      timezone: 'Asia/Taipei'
+    })
     
-    logger.info('預約過期檢查排程已啟動（每10分鐘執行一次）')
+    logger.info('預約管理排程已啟動：')
+    logger.info('- 教師回應過期檢查：每10分鐘')
+    logger.info('- 課程結束檢查：每小時')
+    logger.info('- 自動完成：每24小時（凌晨00:00）')
     logger.info(`伺服器運作中. port: ${port}`)
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : '未知錯誤'

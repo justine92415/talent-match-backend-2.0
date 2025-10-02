@@ -6,6 +6,26 @@
 export const reservationSchemas = {
   // === 請求 Schema ===
   
+  // 更新預約狀態請求 Schema
+  UpdateReservationStatusRequest: {
+    type: 'object',
+    required: ['status_type'],
+    properties: {
+      status_type: {
+        type: 'string',
+        enum: ['teacher-complete', 'student-complete'],
+        description: '狀態類型 (teacher-complete: 教師標記完成, student-complete: 學生標記完成)',
+        example: 'teacher-complete'
+      },
+      notes: {
+        type: 'string',
+        maxLength: 500,
+        description: '備註或回饋 (可選，最多500字元)',
+        example: '課程進行順利，學生表現良好'
+      }
+    }
+  },
+
   // 建立預約請求 Schema
   CreateReservationRequest: {
     type: 'object',
@@ -145,15 +165,20 @@ export const reservationSchemas = {
       },
       teacher_status: {
         type: 'string',
-        enum: ['pending', 'reserved', 'completed', 'cancelled'],
+        enum: ['pending', 'reserved', 'overdue', 'completed', 'cancelled'],
         description: '教師端預約狀態',
         example: 'reserved'
       },
       student_status: {
         type: 'string',
-        enum: ['pending', 'reserved', 'completed', 'cancelled'],
+        enum: ['pending', 'reserved', 'overdue', 'completed', 'cancelled'],
         description: '學生端預約狀態',
         example: 'reserved'
+      },
+      is_reviewed: {
+        type: 'boolean',
+        description: '是否已由學生留下評價',
+        example: false
       },
       created_at: {
         type: 'string',
@@ -264,13 +289,13 @@ export const reservationSchemas = {
           },
           teacher_status: {
             type: 'string',
-            enum: ['pending', 'reserved', 'completed', 'cancelled'],
+            enum: ['pending', 'reserved', 'overdue', 'completed', 'cancelled'],
             description: '教師端預約狀態',
             example: 'cancelled'
           },
           student_status: {
             type: 'string',
-            enum: ['pending', 'reserved', 'completed', 'cancelled'],
+            enum: ['pending', 'reserved', 'overdue', 'completed', 'cancelled'],
             description: '學生端預約狀態',
             example: 'cancelled'
           },
@@ -286,6 +311,27 @@ export const reservationSchemas = {
         type: 'integer',
         description: '退還的課程堂數',
         example: 1
+      }
+    }
+  },
+
+  // 更新預約狀態成功回應 Schema
+  UpdateReservationStatusSuccessResponse: {
+    type: 'object',
+    properties: {
+      status: {
+        type: 'string',
+        description: '回應狀態',
+        enum: ['success'],
+        example: 'success'
+      },
+      message: {
+        type: 'string',
+        description: '成功訊息',
+        example: '預約狀態已更新'
+      },
+      data: {
+        $ref: '#/components/schemas/UpdateReservationStatusResponse'
       }
     }
   },
@@ -438,6 +484,31 @@ export const reservationSchemas = {
           pagination: {
             $ref: '#/components/schemas/PaginationInfo',
             description: '分頁資訊'
+          }
+        }
+        ,
+        example: {
+          reservations: [
+            {
+              id: 12,
+              uuid: 'a3f05d27-0f26-4dfc-9a8f-8f0a77cecd0b',
+              course_id: 45,
+              teacher_id: 8,
+              student_id: 1024,
+              reserve_time: '2025-09-25T14:00:00.000Z',
+              teacher_status: 'reserved',
+              student_status: 'reserved',
+              is_reviewed: false,
+              rejection_reason: null,
+              created_at: '2025-09-20T02:15:00.000Z',
+              updated_at: '2025-09-20T02:15:00.000Z'
+            }
+          ],
+          pagination: {
+            current_page: 1,
+            per_page: 10,
+            total: 1,
+            total_pages: 1
           }
         }
       }
@@ -704,19 +775,19 @@ export const reservationSchemas = {
       },
       teacher_status: {
         type: 'string',
-        enum: ['pending', 'reserved', 'completed', 'cancelled'],
+        enum: ['pending', 'reserved', 'overdue', 'completed', 'cancelled'],
         description: '教師端預約狀態',
         example: 'reserved'
       },
       student_status: {
         type: 'string',
-        enum: ['pending', 'reserved', 'completed', 'cancelled'],
+        enum: ['pending', 'reserved', 'overdue', 'completed', 'cancelled'],
         description: '學生端預約狀態',
         example: 'reserved'
       },
       overall_status: {
         type: 'string',
-        enum: ['pending', 'reserved', 'completed', 'cancelled'],
+        enum: ['pending', 'reserved', 'overdue', 'completed', 'cancelled'],
         description: '綜合預約狀態',
         example: 'reserved'
       },

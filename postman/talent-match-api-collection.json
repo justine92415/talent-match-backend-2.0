@@ -158,8 +158,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/auth/profile",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "profile"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "profile"
+              ]
             },
             "description": "清理工具：移除所有儲存的認證資料"
           }
@@ -204,8 +210,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/auth/profile",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "profile"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "profile"
+              ]
             },
             "description": "檢視工具：顯示目前的認證狀態和 Token 資訊"
           }
@@ -271,8 +283,13 @@
             ],
             "url": {
               "raw": "{{base_url}}/api/tags",
-              "host": ["{{base_url}}"],
-              "path": ["api", "tags"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "tags"
+              ]
             },
             "description": "取得系統中所有啟用的主分類和次分類標籤清單，供前端選單使用。此為公開 API，不需認證。"
           },
@@ -289,8 +306,13 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/api/tags",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "tags"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "tags"
+                  ]
                 }
               },
               "status": "OK",
@@ -383,8 +405,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/register",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "register"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
             },
             "description": "使用者註冊 API，支援學生和教師角色註冊"
           }
@@ -459,8 +487,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "login"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
             },
             "description": "使用者登入，返回 JWT Token"
           }
@@ -528,8 +562,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/refresh",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "refresh"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ]
             },
             "description": "使用 Refresh Token 刷新 Access Token"
           }
@@ -541,8 +581,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/auth/profile",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "profile"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "profile"
+              ]
             },
             "description": "取得目前登入使用者的個人資料"
           }
@@ -563,8 +609,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/profile",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "profile"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "profile"
+              ]
             },
             "description": "更新個人資料"
           }
@@ -585,8 +637,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/forgot-password",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "forgot-password"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "forgot-password"
+              ]
             },
             "description": "發送重設密碼郵件"
           }
@@ -607,8 +665,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/reset-password",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "reset-password"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "reset-password"
+              ]
             },
             "description": "使用重設令牌重設密碼"
           }
@@ -646,8 +710,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/auth/profile",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "profile"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "profile"
+              ]
             },
             "description": "刪除使用者帳號（軟刪除）"
           }
@@ -674,8 +744,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/apply",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "apply"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "apply"
+              ]
             },
             "description": "建立新的教師申請，提交地址資訊、教授科目、專長和自我介紹資料"
           }
@@ -687,8 +763,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/apply-status",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "apply-status"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "apply-status"
+              ]
             },
             "description": "取得使用者的教師申請狀態和所有步驟的表單資料，用於前端判斷申請進度和預填表單"
           }
@@ -700,8 +782,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/basic-info",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "basic-info"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "basic-info"
+              ]
             },
             "description": "取得已通過申請的教師基本資訊，主要用於教師個人資料管理"
           }
@@ -722,8 +810,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/basic-info",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "basic-info"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "basic-info"
+              ]
             },
             "description": "更新已通過申請的教師基本資訊，專門用於個人資料管理"
           }
@@ -744,8 +838,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/basic-info",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "basic-info"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "basic-info"
+              ]
             },
             "description": "更新教師申請的基本資訊，用於多步驟表單的第一步"
           }
@@ -757,8 +857,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/resubmit",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "resubmit"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "resubmit"
+              ]
             },
             "description": "重新提交教師申請"
           }
@@ -770,8 +876,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/submit",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "submit"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "submit"
+              ]
             },
             "description": "最終提交教師申請"
           }
@@ -783,8 +895,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/profile",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "profile"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "profile"
+              ]
             },
             "description": "取得教師完整個人檔案"
           }
@@ -805,8 +923,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/profile",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "profile"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "profile"
+              ]
             },
             "description": "更新教師個人檔案"
           }
@@ -818,8 +942,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/work-experiences",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "work-experiences"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "work-experiences"
+              ]
             },
             "description": "取得教師工作經驗列表"
           }
@@ -840,8 +970,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/work-experiences",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "work-experiences"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "work-experiences"
+              ]
             },
             "description": "批次新增工作經驗記錄，統一使用陣列格式，支援一次新增多筆工作經驗"
           }
@@ -862,8 +998,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/work-experiences/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "work-experiences", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "work-experiences",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -881,8 +1024,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/work-experiences/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "work-experiences", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "work-experiences",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -909,8 +1059,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/work-experiences",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "work-experiences"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "work-experiences"
+              ]
             },
             "description": "批次處理工作經驗記錄，支援同時新增和更新操作。有 id 的記錄會被更新，沒有 id 的記錄會被新增。"
           }
@@ -922,8 +1078,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/learning-experiences",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "learning-experiences"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "learning-experiences"
+              ]
             },
             "description": "取得教師學習經歷列表"
           }
@@ -944,8 +1106,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/learning-experiences",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "learning-experiences"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "learning-experiences"
+              ]
             },
             "description": "批次新增學習經歷，支援一次新增多筆學習經歷記錄"
           }
@@ -966,8 +1134,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/learning-experiences/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "learning-experiences", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "learning-experiences",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -994,8 +1169,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/learning-experiences",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "learning-experiences"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "learning-experiences"
+              ]
             },
             "description": "批次處理學習經歷記錄，支援同時新增和更新操作。有 id 的記錄會被更新，沒有 id 的記錄會被新增。"
           }
@@ -1007,8 +1188,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/learning-experiences/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "learning-experiences", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "learning-experiences",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -1026,8 +1214,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/certificates",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "certificates"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "certificates"
+              ]
             },
             "description": "取得教師證書列表"
           }
@@ -1048,8 +1242,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/certificates",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "certificates"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "certificates"
+              ]
             },
             "description": "批次新增教學證書，支援一次新增多筆證書記錄"
           }
@@ -1070,8 +1270,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/certificates/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "certificates", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "certificates",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -1098,8 +1305,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/certificates",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "certificates"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "certificates"
+              ]
             },
             "description": "批次處理證書記錄，支援同時新增和更新操作。有 id 的記錄會被更新，沒有 id 的記錄會被新增。"
           }
@@ -1111,8 +1324,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/certificates/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "certificates", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "certificates",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -1130,8 +1350,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/schedule",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "schedule"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "schedule"
+              ]
             },
             "description": "取得教師可用時間表 - 週次格式"
           },
@@ -1143,8 +1369,14 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/api/teachers/schedule",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "teachers", "schedule"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teachers",
+                    "schedule"
+                  ]
                 }
               },
               "status": "OK",
@@ -1177,8 +1409,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/teachers/schedule",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "schedule"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "schedule"
+              ]
             },
             "description": "更新教師可用時段 - 新版週次格式\n\n**🆕 新版格式特色**：\n- 使用週次習慣 (1=週一, 7=週日)\n- 直接使用時間點陣列，每個時間點代表1小時時段\n- 支援標準時段：上午 09:00-11:00、下午 13:00-17:00、晚上 19:00-20:00\n- 更直觀的前端開發體驗\n\n**週次對應**：\n- \"1\": 週一, \"2\": 週二, \"3\": 週三, \"4\": 週四\n- \"5\": 週五, \"6\": 週六, \"7\": 週日\n\n**標準時段**：\n- 上午：09:00, 10:00, 11:00\n- 下午：13:00, 14:00, 15:00, 16:00, 17:00\n- 晚上：19:00, 20:00"
           },
@@ -1199,8 +1437,14 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/teachers/schedule",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "teachers", "schedule"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teachers",
+                    "schedule"
+                  ]
                 }
               },
               "status": "OK",
@@ -1224,8 +1468,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/schedule/conflicts?start_time=2024-01-15T09:00:00&end_time=2024-01-15T10:00:00",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", "schedule", "conflicts"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                "schedule",
+                "conflicts"
+              ],
               "query": [
                 {
                   "key": "start_time",
@@ -1233,7 +1484,7 @@
                   "description": "開始時間 (ISO 8601 格式)"
                 },
                 {
-                  "key": "end_time", 
+                  "key": "end_time",
                   "value": "2024-01-15T10:00:00",
                   "description": "結束時間 (ISO 8601 格式)"
                 }
@@ -1255,8 +1506,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/courses",
-              "host": ["{{base_url}}"],
-              "path": ["api", "courses"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "courses"
+              ]
             },
             "description": "取得課程列表"
           }
@@ -1268,8 +1524,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/courses/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "courses",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -1293,8 +1555,14 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/api/courses/1",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "courses", "1"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "courses",
+                    "1"
+                  ]
                 }
               },
               "status": "OK",
@@ -1307,7 +1575,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n    \"status\": \"success\",\n    \"message\": null,\n    \"data\": {\n        \"course\": {\n            \"id\": 1,\n            \"uuid\": \"550e8400-e29b-41d4-a716-446655440000\",\n            \"teacher_id\": 1,\n            \"name\": \"JavaScript 基礎入門課程\",\n            \"content\": \"<p>完整的 JavaScript 基礎教學，適合初學者</p>\",\n            \"main_image\": \"https://firebase.../course-image.jpg\",\n            \"rate\": 4.5,\n            \"review_count\": 12,\n            \"view_count\": 150,\n            \"purchase_count\": 25,\n            \"student_count\": 25,\n            \"main_category_id\": 1,\n            \"sub_category_id\": 2,\n            \"city\": \"台北市\",\n            \"district\": \"信義區\",\n            \"address\": \"台北市信義區信義路五段7號\",\n            \"survey_url\": \"https://forms.google.com/survey123\",\n            \"purchase_message\": \"請準備筆記本，課程需要大量練習\",\n            \"status\": \"published\",\n            \"submission_notes\": null,\n            \"archive_reason\": null,\n            \"created_at\": \"2024-01-15T10:30:00.000Z\",\n            \"updated_at\": \"2024-01-15T10:30:00.000Z\",\n            \"price_options\": [\n                {\n                    \"id\": 1,\n                    \"uuid\": \"660e8400-e29b-41d4-a716-446655440000\",\n                    \"course_id\": 1,\n                    \"price\": 1500.00,\n                    \"quantity\": 1,\n                    \"is_active\": true,\n                    \"created_at\": \"2024-01-15T10:30:00.000Z\",\n                    \"updated_at\": \"2024-01-15T10:30:00.000Z\"\n                },\n                {\n                    \"id\": 2,\n                    \"uuid\": \"660e8400-e29b-41d4-a716-446655440001\",\n                    \"course_id\": 1,\n                    \"price\": 4200.00,\n                    \"quantity\": 3,\n                    \"is_active\": true,\n                    \"created_at\": \"2024-01-15T10:30:00.000Z\",\n                    \"updated_at\": \"2024-01-15T10:30:00.000Z\"\n                },\n                {\n                    \"id\": 3,\n                    \"uuid\": \"660e8400-e29b-41d4-a716-446655440002\",\n                    \"course_id\": 1,\n                    \"price\": 7500.00,\n                    \"quantity\": 6,\n                    \"is_active\": true,\n                    \"created_at\": \"2024-01-15T10:30:00.000Z\",\n                    \"updated_at\": \"2024-01-15T10:30:00.000Z\"\n                }\n            ],\n            \"selected_videos\": [\n                {\n                    \"video_id\": 1,\n                    \"display_order\": 1,\n                    \"video_info\": {\n                        \"id\": 1,\n                        \"uuid\": \"123e4567-e89b-12d3-a456-426614174000\",\n                        \"name\": \"課程介紹影片\",\n                        \"category\": \"介紹影片\",\n                        \"intro\": \"本影片將簡單介紹課程內容和學習目標\",\n                        \"url\": \"https://firebasestorage.googleapis.com/v0/b/.../video1.mp4\",\n                        \"created_at\": \"2024-01-10T09:00:00.000Z\"\n                    }\n                },\n                {\n                    \"video_id\": 3,\n                    \"display_order\": 2,\n                    \"video_info\": {\n                        \"id\": 3,\n                        \"uuid\": \"789e0123-e89b-12d3-a456-426614174000\",\n                        \"name\": \"學習目標說明\",\n                        \"category\": \"教學影片\",\n                        \"intro\": \"說明本課程的具體學習目標和成果\",\n                        \"url\": \"https://firebasestorage.googleapis.com/v0/b/.../video3.mp4\",\n                        \"created_at\": \"2024-01-12T11:30:00.000Z\"\n                    }\n                }\n            ]\n        }\n    }\n}"
+              "body": "{\n    \"status\": \"success\",\n    \"message\": null,\n    \"data\": {\n        \"course\": {\n            \"id\": 1,\n            \"uuid\": \"550e8400-e29b-41d4-a716-446655440000\",\n            \"teacher_id\": 1,\n            \"name\": \"JavaScript 基礎入門課程\",\n            \"content\": \"<p>完整的 JavaScript 基礎教學，適合初學者</p>\",\n            \"main_image\": \"https://firebase.../course-image.jpg\",\n            \"rate\": 4.5,\n            \"review_count\": 12,\n            \"view_count\": 150,\n            \"student_count\": 25,\n            \"main_category_id\": 1,\n            \"sub_category_id\": 2,\n            \"city\": \"台北市\",\n            \"district\": \"信義區\",\n            \"address\": \"台北市信義區信義路五段7號\",\n            \"survey_url\": \"https://forms.google.com/survey123\",\n            \"purchase_message\": \"請準備筆記本，課程需要大量練習\",\n            \"status\": \"published\",\n            \"submission_notes\": null,\n            \"archive_reason\": null,\n            \"created_at\": \"2024-01-15T10:30:00.000Z\",\n            \"updated_at\": \"2024-01-15T10:30:00.000Z\",\n            \"price_options\": [\n                {\n                    \"id\": 1,\n                    \"uuid\": \"660e8400-e29b-41d4-a716-446655440000\",\n                    \"course_id\": 1,\n                    \"price\": 1500.00,\n                    \"quantity\": 1,\n                    \"is_active\": true,\n                    \"created_at\": \"2024-01-15T10:30:00.000Z\",\n                    \"updated_at\": \"2024-01-15T10:30:00.000Z\"\n                },\n                {\n                    \"id\": 2,\n                    \"uuid\": \"660e8400-e29b-41d4-a716-446655440001\",\n                    \"course_id\": 1,\n                    \"price\": 4200.00,\n                    \"quantity\": 3,\n                    \"is_active\": true,\n                    \"created_at\": \"2024-01-15T10:30:00.000Z\",\n                    \"updated_at\": \"2024-01-15T10:30:00.000Z\"\n                },\n                {\n                    \"id\": 3,\n                    \"uuid\": \"660e8400-e29b-41d4-a716-446655440002\",\n                    \"course_id\": 1,\n                    \"price\": 7500.00,\n                    \"quantity\": 6,\n                    \"is_active\": true,\n                    \"created_at\": \"2024-01-15T10:30:00.000Z\",\n                    \"updated_at\": \"2024-01-15T10:30:00.000Z\"\n                }\n            ],\n            \"selected_videos\": [\n                {\n                    \"video_id\": 1,\n                    \"display_order\": 1,\n                    \"video_info\": {\n                        \"id\": 1,\n                        \"uuid\": \"123e4567-e89b-12d3-a456-426614174000\",\n                        \"name\": \"課程介紹影片\",\n                        \"category\": \"介紹影片\",\n                        \"intro\": \"本影片將簡單介紹課程內容和學習目標\",\n                        \"url\": \"https://firebasestorage.googleapis.com/v0/b/.../video1.mp4\",\n                        \"created_at\": \"2024-01-10T09:00:00.000Z\"\n                    }\n                },\n                {\n                    \"video_id\": 3,\n                    \"display_order\": 2,\n                    \"video_info\": {\n                        \"id\": 3,\n                        \"uuid\": \"789e0123-e89b-12d3-a456-426614174000\",\n                        \"name\": \"學習目標說明\",\n                        \"category\": \"教學影片\",\n                                               \"intro\": \"說明本課程的具體學習目標和成果\",\n                        \"url\": \"https://firebasestorage.googleapis.com/v0/b/.../video3.mp4\",\n                        \"created_at\": \"2024-01-12T11:30:00.000Z\"\n                    }\n                }\n            ]\n        }\n    }\n}"
             }
           ]
         },
@@ -1318,8 +1586,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/courses/:id/edit",
-              "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":id", "edit"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "courses",
+                ":id",
+                "edit"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -1343,8 +1618,15 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/api/courses/1/edit",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "courses", "1", "edit"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "courses",
+                    "1",
+                    "edit"
+                  ]
                 }
               },
               "status": "OK",
@@ -1357,27 +1639,9 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n    \"status\": \"success\",\n    \"message\": null,\n    \"data\": {\n        \"course\": {\n            \"id\": 1,\n            \"uuid\": \"550e8400-e29b-41d4-a716-446655440000\",\n            \"teacher_id\": 1,\n            \"name\": \"JavaScript 基礎入門課程\",\n            \"content\": \"<p>完整的 JavaScript 基礎教學，適合初學者</p>\",\n            \"main_image\": \"https://firebase.../course-image.jpg\",\n            \"rate\": 4.5,\n            \"review_count\": 12,\n            \"view_count\": 150,\n            \"purchase_count\": 25,\n            \"student_count\": 25,\n            \"main_category_id\": 1,\n            \"sub_category_id\": 2,\n            \"city\": \"台北市\",\n            \"district\": \"信義區\",\n            \"address\": \"台北市信義區信義路五段7號\",\n            \"survey_url\": \"https://forms.google.com/survey123\",\n            \"purchase_message\": \"請準備筆記本，課程需要大量練習\",\n            \"status\": \"draft\",\n            \"submission_notes\": null,\n            \"archive_reason\": null,\n            \"created_at\": \"2024-01-15T10:30:00.000Z\",\n            \"updated_at\": \"2024-01-15T10:30:00.000Z\",\n            \"price_options\": [\n                {\n                    \"id\": 1,\n                    \"uuid\": \"660e8400-e29b-41d4-a716-446655440000\",\n                    \"course_id\": 1,\n                    \"price\": 1500.00,\n                    \"quantity\": 1,\n                    \"is_active\": true,\n                    \"created_at\": \"2024-01-15T10:30:00.000Z\",\n                    \"updated_at\": \"2024-01-15T10:30:00.000Z\"\n                },\n                {\n                    \"id\": 2,\n                    \"uuid\": \"660e8400-e29b-41d4-a716-446655440001\",\n                    \"course_id\": 1,\n                    \"price\": 4200.00,\n                    \"quantity\": 3,\n                    \"is_active\": true,\n                    \"created_at\": \"2024-01-15T10:30:00.000Z\",\n                    \"updated_at\": \"2024-01-15T10:30:00.000Z\"\n                },\n                {\n                    \"id\": 3,\n                    \"uuid\": \"660e8400-e29b-41d4-a716-446655440002\",\n                    \"course_id\": 1,\n                    \"price\": 7500.00,\n                    \"quantity\": 6,\n                    \"is_active\": true,\n                    \"created_at\": \"2024-01-15T10:30:00.000Z\",\n                    \"updated_at\": \"2024-01-15T10:30:00.000Z\"\n                }\n            ]\n        }\n    }\n}"
-            },
-            {
-              "name": "錯誤回應 - 非課程擁有者",
-              "originalRequest": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{other_user_token}}",
-                    "type": "text"
-                  }
-                ],
-                "url": {
-                  "raw": "{{base_url}}/api/courses/1/edit",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "courses", "1", "edit"]
-                }
-              },
-              "status": "Forbidden",
-              "code": 403,
+              "body": "{\n    \"status\": \"success\",\n    \"message\": null,\n    \"data\": {\n        \"course\": {\n            \"id\": 1,\n            \"uuid\": \"550e8400-e29b-41d4-a716-446655440000\",\n            \"teacher_id\": 1,\n            \"name\": \"JavaScript 基礎入門課程\",\n            \"content\": \"<p>完整的 JavaScript 基礎教學，適合初學者</p>\",\n            \"main_image\": \"https://firebase.../course-image.jpg\",\n            \"rate\": 4.5,\n            \"review_count\": 12,\n            \"view_count\": 150,\n            \"student_count\": 25,\n            \"main_category_id\": 1,\n            \"sub_category_id\": 2,\n            \"city\": \"台北市\",\n            \"district\": \"信義區\",\n            \"address\": \"台北市信義區信義路五段7號\",\n            \"survey_url\": \"https://forms.google.com/survey123\",\n            \"purchase_message\": \"請準備筆記本，課程需要大量練習\",\n            \"status\": \"draft\",\n            \"submission_notes\": null,\n            \"archive_reason\": null,\n            \"created_at\": \"2024-01-15T10:30:00.000Z\",\n            \"updated_at\": \"2024-01-15T10:30:00.000Z\",\n            \"price_options\": [\n                {\n                    \"id\": 1,\n                    \"uuid\": \"660e8400-e29b-41d4-a716-446655440000\",\n                    \"course_id\": 1,\n                    \"price\": 1500.00,\n                    \"quantity\": 1,\n                    \"is_active\": true,\n                    \"created_at\": \"2024-01-15T10:30:00.000Z\",\n                    \"updated_at\": \"2024-01-15T10:30:00.000Z\"\n                },\n                {\n                    \"id\": 2,\n                    \"uuid\": \"660e8400-e29b-41d4-a716-446655440001\",\n                    \"course_id\": 1,\n                    \"price\": 4200.00,\n                    \"quantity\": 3,\n                    \"is_active\": true,\n                    \"created_at\": \"2024-01-15T10:30:00.000Z\",\n                    \"updated_at\": \"2024-01-15T10:30:00.000Z\"\n                },\n                {\n                    \"id\": 3,\n                    \"uuid\": \"660e8400-e29b-41d4-a716-446655440002\",\n                    \"course_id\": 1,\n                    \"price\": 7500.00,\n                    \"quantity\": 6,\n                    \"is_active\": true,\n                    \"created_at\": \"2024-01-15T10:30:00.000Z\",\n                    \"updated_at\": \"2024-01-15T10:30:00.000Z\"\n                }\n            ]\n        }\n    }\n}",
+              "status": "OK",
+              "code": 200,
               "_postman_previewlanguage": "json",
               "header": [
                 {
@@ -1386,7 +1650,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n    \"status\": \"error\",\n    \"code\": \"UNAUTHORIZED_ACCESS\",\n    \"message\": \"只能編輯自己的課程\"\n}"
+              "body": "{\n    \"status\": \"success\",\n    \"message\": null,\n    \"data\": {\n        \"course\": {\n            \"id\": 1,\n            \"uuid\": \"550e8400-e29b-41d4-a716-446655440000\",\n            \"teacher_id\": 1,\n            \"name\": \"JavaScript 基礎入門課程\",\n            \"content\": \"<p>完整的 JavaScript 基礎教學，適合初學者</p>\",\n            \"main_image\": \"https://firebase.../course-image.jpg\",\n            \"rate\": 4.5,\n            \"review_count\": 12,\n            \"view_count\": 150,\n            \"student_count\": 25,\n            \"main_category_id\": 1,\n            \"sub_category_id\": 2,\n            \"city\": \"台北市\",\n            \"district\": \"信義區\",\n            \"address\": \"台北市信義區信義路五段7號\",\n            \"survey_url\": \"https://forms.google.com/survey123\",\n            \"purchase_message\": \"請準備筆記本，課程需要大量練習\",\n            \"status\": \"draft\",\n            \"submission_notes\": null,\n            \"archive_reason\": null,\n            \"created_at\": \"2024-01-15T10:30:00.000Z\",\n            \"updated_at\": \"2024-01-15T10:30:00.000Z\",\n            \"price_options\": [\n                {\n                    \"id\": 1,\n                    \"uuid\": \"660e8400-e29b-41d4-a716-446655440000\",\n                    \"course_id\": 1,\n                    \"price\": 1500.00,\n                    \"quantity\": 1,\n                    \"is_active\": true,\n                    \"created_at\": \"2024-01-15T10:30:00.000Z\",\n                    \"updated_at\": \"2024-01-15T10:30:00.000Z\"\n                },\n                {\n                    \"id\": 2,\n                    \"uuid\": \"660e8400-e29b-41d4-a716-446655440001\",\n                    \"course_id\": 1,\n                    \"price\": 4200.00,\n                    \"quantity\": 3,\n                    \"is_active\": true,\n                    \"created_at\": \"2024-01-15T10:30:00.000Z\",\n                    \"updated_at\": \"2024-01-15T10:30:00.000Z\"\n                },\n                {\n                    \"id\": 3,\n                    \"uuid\": \"660e8400-e29b-41d4-a716-446655440002\",\n                    \"course_id\": 1,\n                    \"price\": 7500.00,\n                    \"quantity\": 6,\n                    \"is_active\": true,\n                    \"created_at\": \"2024-01-15T10:30:00.000Z\",\n                    \"updated_at\": \"2024-01-15T10:30:00.000Z\"\n                }\n            ],\n            \"selected_videos\": [\n                {\n                    \"video_id\": 1,\n                    \"display_order\": 1,\n                    \"video_info\": {\n                        \"id\": 1,\n                        \"uuid\": \"123e4567-e89b-12d3-a456-426614174000\",\n                        \"name\": \"課程介紹影片\",\n                        \"category\": \"介紹影片\",\n                        \"intro\": \"本影片將簡單介紹課程內容和學習目標\",\n                        \"url\": \"https://firebasestorage.googleapis.com/v0/b/.../video1.mp4\",\n                        \"created_at\": \"2024-01-10T09:00:00.000Z\"\n                    }\n                },\n                {\n                    \"video_id\": 3,\n                    \"display_order\": 2,\n                    \"video_info\": {\n                        \"id\": 3,\n                        \"uuid\": \"789e0123-e89b-12d3-a456-426614174000\",\n                        \"name\": \"學習目標說明\",\n                        \"category\": \"教學影片\",\n                        \"intro\": \"說明本課程的具體學習目標和成果\",\n                        \"url\": \"https://firebasestorage.googleapis.com/v0/b/.../video3.mp4\",\n                        \"created_at\": \"2024-01-12T11:30:00.000Z\"\n                    }\n                }\n            ]\n        }\n    }\n}"
             }
           ]
         },
@@ -1397,8 +1661,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/courses?page=1&limit=12",
-              "host": ["{{base_url}}"],
-              "path": ["api", "courses"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "courses"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -1420,8 +1689,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/courses/:id/reviews?page=1&limit=10",
-              "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":id", "reviews"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "courses",
+                ":id",
+                "reviews"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -1472,8 +1748,13 @@
             },
             "url": {
               "raw": "{{base_url}}/api/courses",
-              "host": ["{{base_url}}"],
-              "path": ["api", "courses"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "courses"
+              ]
             },
             "description": "建立新課程 (支援同時上傳圖片、設定價格方案和關聯短影音)\n\n**新功能特色：**\n- 支援 multipart/form-data 格式\n- 可同時上傳課程圖片 (最大 10MB)\n- 可同時建立多個價格方案\n- 可同時關聯短影音 (最多 3 支，支援自訂順序)\n- 原子性操作，確保資料一致性\n\n**表單欄位說明：**\n- courseData: 課程基本資料 (JSON 字串，可包含 selectedVideos)\n- priceOptions: 價格方案陣列 (JSON 字串)\n- courseImage: 課程主圖檔案 (可選)\n\n**短影音功能：**\n- 在 courseData 中設定 selectedVideos 陣列\n- 格式：[{\"video_id\": 1, \"display_order\": 1}]\n- 只能選擇自己上傳且未刪除的影片\n- 最多可關聯 3 支影片\n\n**注意事項：**\n- 需要教師身份認證\n- 教師必須已通過審核\n- 圖片格式支援: JPEG, PNG, WebP\n- 建立失敗時會自動清理已上傳的圖片"
           }
@@ -1494,8 +1775,13 @@
             },
             "url": {
               "raw": "{{base_url}}/api/courses",
-              "host": ["{{base_url}}"],
-              "path": ["api", "courses"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "courses"
+              ]
             },
             "description": "建立新課程 (傳統 JSON 格式，不包含圖片上傳但支援短影音關聯)\n\n**適用情境：**\n- 僅需要建立課程基本資料、價格方案和短影音關聯\n- 不需要上傳課程圖片\n- 使用傳統的 JSON API 格式\n\n**短影音功能：**\n- 支援 selectedVideos 欄位關聯短影音\n- 格式：[{\"video_id\": 1, \"display_order\": 1}]\n- 最多可關聯 3 支影片\n\n**注意事項：**\n- 仍需要教師身份認證\n- 教師必須已通過審核\n- 價格方案直接包含在 JSON 中\n- 圖片可以稍後透過更新 API 或其他方式上傳"
           }
@@ -1529,8 +1815,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/courses/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "courses",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -1548,8 +1840,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/courses/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "courses",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -1576,8 +1874,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/courses/:id/submit",
-              "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":id", "submit"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "courses",
+                ":id",
+                "submit"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -1604,8 +1909,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/courses/:id/resubmit",
-              "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":id", "resubmit"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "courses",
+                ":id",
+                "resubmit"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -1623,8 +1935,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/courses/:id/publish",
-              "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":id", "publish"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "courses",
+                ":id",
+                "publish"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -1651,8 +1970,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/courses/:id/archive",
-              "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":id", "archive"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "courses",
+                ":id",
+                "archive"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -1670,8 +1996,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/courses/:courseId/price-options",
-              "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":courseId", "price-options"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "courses",
+                ":courseId",
+                "price-options"
+              ],
               "variable": [
                 {
                   "key": "courseId",
@@ -1698,8 +2031,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/courses/:courseId/price-options",
-              "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":courseId", "price-options"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "courses",
+                ":courseId",
+                "price-options"
+              ],
               "variable": [
                 {
                   "key": "courseId",
@@ -1726,8 +2066,16 @@
             },
             "url": {
               "raw": "{{base_url}}/api/courses/:courseId/price-options/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":courseId", "price-options", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "courses",
+                ":courseId",
+                "price-options",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "courseId",
@@ -1749,8 +2097,16 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/courses/:courseId/price-options/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":courseId", "price-options", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "courses",
+                ":courseId",
+                "price-options",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "courseId",
@@ -1834,8 +2190,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/courses/:id/available-slots?date=2025-09-23",
-              "host": ["{{base_url}}"],
-              "path": ["api", "courses", ":id", "available-slots"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "courses",
+                ":id",
+                "available-slots"
+              ],
               "query": [
                 {
                   "key": "date",
@@ -1867,8 +2230,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/courses/public?keyword=Python&main_category_id=1&sub_category_id=2&city=台北市&sort=newest&page=1&limit=12",
-              "host": ["{{base_url}}"],
-              "path": ["api", "courses", "public"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "courses",
+                "public"
+              ],
               "query": [
                 {
                   "key": "keyword",
@@ -1910,8 +2279,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/courses/public/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "courses", "public", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "courses",
+                "public",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -1929,8 +2305,15 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/api/courses/public/1",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "courses", "public", "1"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "courses",
+                    "public",
+                    "1"
+                  ]
                 }
               },
               "status": "OK",
@@ -1943,7 +2326,40 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n    \"status\": \"success\",\n    \"message\": \"成功取得課程詳情\",\n    \"data\": {\n        \"course\": {\n            \"id\": 1,\n            \"uuid\": \"550e8400-e29b-41d4-a716-446655440000\",\n            \"name\": \"JavaScript 基礎入門課程\",\n            \"content\": \"<p>完整的 JavaScript 基礎教學，適合初學者</p>\",\n            \"main_image\": \"https://firebase.../course-image.jpg\",\n            \"rate\": 4.5,\n            \"review_count\": 12,\n            \"student_count\": 25,\n            \"purchase_count\": 25,\n            \"city\": \"台北市\",\n            \"district\": \"信義區\",\n            \"address\": \"台北市信義區信義路五段7號\",\n            \"survey_url\": \"https://forms.google.com/survey123\",\n            \"purchase_message\": \"請準備筆記本，課程需要大量練習\",\n            \"main_category\": {\n                \"id\": 1,\n                \"name\": \"程式設計\"\n            },\n            \"sub_category\": {\n                \"id\": 2,\n                \"name\": \"前端開發\"\n            },\n            \"created_at\": \"2024-01-15T10:30:00.000Z\"\n        },\n        \"teacher\": {\n            \"id\": 1,\n            \"user\": {\n                \"name\": \"王小明\",\n                \"nick_name\": \"小明老師\",\n                \"avatar_image\": \"https://firebase.../teacher-avatar.jpg\"\n            },\n            \"city\": \"台北市\",\n            \"district\": \"信義區\",\n            \"address\": \"台北市信義區信義路五段7號\",\n            \"introduction\": \"擁有10年程式設計經驗的專業教師\",\n            \"total_students\": 0,\n            \"total_courses\": 0,\n            \"average_rating\": 0\n        },\n        \"price_options\": [\n            {\n                \"id\": 1,\n                \"uuid\": \"price-uuid-1\",\n                \"price\": 2500.00,\n                \"quantity\": 10\n            }\n        ],\n        \"videos\": [],\n        \"files\": [],\n        \"schedule\": [\n            {\n                \"week\": \"週日\",\n                \"date\": \"2024-09-20\",\n                \"slots\": [\n                    { \"time\": \"09:00\", \"status\": \"unavailable\" },\n                    { \"time\": \"10:00\", \"status\": \"available\" },\n                    { \"time\": \"11:00\", \"status\": \"available\" },\n                    { \"time\": \"13:00\", \"status\": \"available\" },\n                    { \"time\": \"14:00\", \"status\": \"available\" },\n                    { \"time\": \"15:00\", \"status\": \"available\" },\n                    { \"time\": \"16:00\", \"status\": \"available\" },\n                    { \"time\": \"17:00\", \"status\": \"available\" },\n                    { \"time\": \"19:00\", \"status\": \"unavailable\" },\n                    { \"time\": \"20:00\", \"status\": \"unavailable\" }\n                ]\n            },\n            {\n                \"week\": \"週一\",\n                \"date\": \"2024-09-21\",\n                \"slots\": [\n                    { \"time\": \"09:00\", \"status\": \"unavailable\" },\n                    { \"time\": \"10:00\", \"status\": \"available\" },\n                    { \"time\": \"11:00\", \"status\": \"reserved\" },\n                    { \"time\": \"13:00\", \"status\": \"reserved\" },\n                    { \"time\": \"14:00\", \"status\": \"reserved\" },\n                    { \"time\": \"15:00\", \"status\": \"reserved\" },\n                    { \"time\": \"16:00\", \"status\": \"available\" },\n                    { \"time\": \"17:00\", \"status\": \"available\" },\n                    { \"time\": \"19:00\", \"status\": \"unavailable\" },\n                    { \"time\": \"20:00\", \"status\": \"unavailable\" }\n                ]\n            }\n        ],\n        \"recent_reviews\": [],\n        \"recommended_courses\": [],\n        \"teacher_certificates\": [\n            {\n                \"id\": 26,\n                \"license_name\": \"Google Cloud Professional Certification\"\n            },\n            {\n                \"id\": 27,\n                \"license_name\": \"AWS Solutions Architect\"\n            }\n        ],\n        \"teacher_work_experiences\": [\n            {\n                \"id\": 29,\n                \"company_name\": \"Google Taiwan\",\n                \"job_title\": \"軟體工程師\",\n                \"start_year\": 2020,\n                \"end_year\": 2023\n            },\n            {\n                \"id\": 30,\n                \"company_name\": \"Microsoft\",\n                \"job_title\": \"資深工程師\",\n                \"start_year\": 2018,\n                \"end_year\": null\n            }\n        ],\n        \"teacher_learning_experiences\": [\n            {\n                \"id\": 22,\n                \"school_name\": \"國立台灣大學\",\n                \"department\": \"資訊工程學系\",\n                \"degree\": \"bachelor\",\n                \"start_year\": 2014,\n                \"end_year\": 2018\n            },\n            {\n                \"id\": 23,\n                \"school_name\": \"國立台灣大學\",\n                \"department\": \"資訊工程研究所\",\n                \"degree\": \"master\",\n                \"start_year\": 2018,\n                \"end_year\": null\n            }\n        ]\n    }\n}"
+              "body": "{\n    \"status\": \"success\",\n    \"message\": \"成功取得課程詳情\",\n    \"data\": {\n        \"course\": {\n            \"id\": 1,\n            \"uuid\": \"550e8400-e29b-41d4-a716-446655440000\",\n            \"name\": \"JavaScript 基礎入門課程\",\n            \"content\": \"<p>完整的 JavaScript 基礎教學，適合初學者</p>\",\n            \"main_image\": \"https://firebase.../course-image.jpg\",\n            \"rate\": 4.5,\n            \"review_count\": 12,\n            \"student_count\": 25,\n            \"city\": \"台北市\",\n            \"district\": \"信義區\",\n            \"address\": \"台北市信義區信義路五段7號\",\n            \"survey_url\": \"https://forms.google.com/survey123\",\n            \"purchase_message\": \"請準備筆記本，課程需要大量練習\",\n            \"main_category\": {\n                \"id\": 1,\n                \"name\": \"程式設計\"\n            },\n            \"sub_category\": {\n                \"id\": 2,\n                \"name\": \"前端開發\"\n            },\n            \"created_at\": \"2024-01-15T10:30:00.000Z\"\n        },\n        \"teacher\": {\n            \"id\": 1,\n            \"user\": {\n                \"name\": \"王小明\",\n                \"nick_name\": \"小明老師\",\n                \"avatar_image\": \"https://firebase.../teacher-avatar.jpg\"\n            },\n            \"city\": \"台北市\",\n            \"district\": \"信義區\",\n            \"address\": \"台北市信義區信義路五段7號\",\n            \"introduction\": \"擁有10年程式設計經驗的專業教師\",\n            \"total_students\": 0,\n            \"total_courses\": 0,\n            \"average_rating\": 0,\n            \"total_completed_lessons\": 48\n        },\n        \"price_options\": [\n            {\n                \"id\": 1,\n                \"uuid\": \"price-uuid-1\",\n                \"price\": 2500.0,\n                \"quantity\": 10\n            }\n        ],\n        \"videos\": [],\n        \"files\": [],\n        \"schedule\": [\n            {\n                \"week\": \"週日\",\n                \"date\": \"2024-09-20\",\n                \"slots\": [\n                    {\n                        \"time\": \"09:00\",\n                        \"status\": \"unavailable\"\n                    },\n                    {\n                        \"time\": \"10:00\",\n                        \"status\": \"available\"\n                    },\n                    {\n                        \"time\": \"11:00\",\n                        \"status\": \"available\"\n                    },\n                    {\n                        \"time\": \"13:00\",\n                        \"status\": \"available\"\n                    },\n                    {\n                        \"time\": \"14:00\",\n                        \"status\": \"available\"\n                    },\n                    {\n                        \"time\": \"15:00\",\n                        \"status\": \"available\"\n                    },\n                    {\n                        \"time\": \"16:00\",\n                        \"status\": \"available\"\n                    },\n                    {\n                        \"time\": \"17:00\",\n                        \"status\": \"available\"\n                    },\n                    {\n                        \"time\": \"19:00\",\n                        \"status\": \"unavailable\"\n                    },\n                    {\n                        \"time\": \"20:00\",\n                        \"status\": \"unavailable\"\n                    }\n                ]\n            },\n            {\n                \"week\": \"週一\",\n                \"date\": \"2024-09-21\",\n                \"slots\": [\n                    {\n                        \"time\": \"09:00\",\n                        \"status\": \"unavailable\"\n                    },\n                    {\n                        \"time\": \"10:00\",\n                        \"status\": \"available\"\n                    },\n                    {\n                        \"time\": \"11:00\",\n                        \"status\": \"reserved\"\n                    },\n                    {\n                        \"time\": \"13:00\",\n                        \"status\": \"reserved\"\n                    },\n                    {\n                        \"time\": \"14:00\",\n                        \"status\": \"reserved\"\n                    },\n                    {\n                        \"time\": \"15:00\",\n                        \"status\": \"reserved\"\n                    },\n                    {\n                        \"time\": \"16:00\",\n                        \"status\": \"available\"\n                    },\n                    {\n                        \"time\": \"17:00\",\n                        \"status\": \"available\"\n                    },\n                    {\n                        \"time\": \"19:00\",\n                        \"status\": \"unavailable\"\n                    },\n                    {\n                        \"time\": \"20:00\",\n                        \"status\": \"unavailable\"\n                    }\n                ]\n            }\n        ],\n        \"recent_reviews\": [\n            {\n                \"id\": 101,\n                \"rate\": 5,\n                \"comment\": \"老師的講解非常生動，課程內容豐富又實用。\",\n                \"user\": {\n                    \"nick_name\": \"學生A\",\n                    \"avatar_image\": \"https://firebase.../avatars/student_a.png\"\n                },\n                \"created_at\": \"2025-09-20T05:12:00.000Z\"\n            },\n            {\n                \"id\": 98,\n                \"rate\": 4,\n                \"comment\": \"整體很棒，若能增加練習題就更好了。\",\n                \"user\": {\n                    \"nick_name\": \"學生B\",\n                    \"avatar_image\": \"https://firebase.../avatars/student_b.png\"\n                },\n                \"created_at\": \"2025-09-18T03:45:00.000Z\"\n            }\n        ],\n        \"recommended_courses\": [],\n        \"teacher_certificates\": [\n            {\n                \"id\": 26,\n                \"license_name\": \"Google Cloud Professional Certification\"\n            },\n            {\n                \"id\": 27,\n                \"license_name\": \"AWS Solutions Architect\"\n            }\n        ],\n        \"teacher_work_experiences\": [\n            {\n                \"id\": 29,\n                \"company_name\": \"Google Taiwan\",\n                \"job_title\": \"軟體工程師\",\n                \"start_year\": 2020,\n                \"end_year\": 2023\n            },\n            {\n                \"id\": 30,\n                \"company_name\": \"Microsoft\",\n                \"job_title\": \"資深工程師\",\n                \"start_year\": 2018,\n                \"end_year\": null\n            }\n        ],\n        \"teacher_learning_experiences\": [\n            {\n                \"id\": 22,\n                \"school_name\": \"國立台灣大學\",\n                \"department\": \"資訊工程學系\",\n                \"degree\": \"bachelor\",\n                \"start_year\": 2014,\n                \"end_year\": 2018\n            },\n            {\n                \"id\": 23,\n                \"school_name\": \"國立台灣大學\",\n                \"department\": \"資訊工程研究所\",\n                \"degree\": \"master\",\n                \"start_year\": 2018,\n                \"end_year\": null\n            }\n        ]\n    }\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "pm.test('recent_reviews 存在且為陣列', function () {",
+                  "    pm.expect(jsonData.data.recent_reviews).to.be.an('array');",
+                  "});",
+                  "pm.test('teacher 累積課堂欄位存在', function () {",
+                  "    pm.expect(jsonData.data.teacher).to.have.property('total_completed_lessons');",
+                  "    pm.expect(jsonData.data.teacher.total_completed_lessons).to.be.a('number');",
+                  "});",
+                  "pm.test('recent_reviews 物件欄位完整', function () {",
+                  "    if (jsonData.data.recent_reviews.length === 0) {",
+                  "        pm.expect(jsonData.data.recent_reviews.length).to.equal(0);",
+                  "        return;",
+                  "    }",
+                  "    const review = jsonData.data.recent_reviews[0];",
+                  "    pm.expect(review).to.have.property('id');",
+                  "    pm.expect(review).to.have.property('rate');",
+                  "    pm.expect(review).to.have.property('comment');",
+                  "    pm.expect(review).to.have.property('user');",
+                  "    pm.expect(review.user).to.have.property('nick_name');",
+                  "    pm.expect(review.user).to.have.property('avatar_image');",
+                  "    pm.expect(review.user.avatar_image).to.be.a('string');",
+                  "    pm.expect(review).to.have.property('created_at');",
+                  "});"
+                ]
+              }
             }
           ]
         }
@@ -1960,8 +2376,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/:id/profile",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", ":id", "profile"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                ":id",
+                "profile"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -1979,8 +2402,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teachers/:id/courses?page=1&limit=12",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teachers", ":id", "courses"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teachers",
+                ":id",
+                "courses"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2023,8 +2453,13 @@
             },
             "url": {
               "raw": "{{base_url}}/api/reviews",
-              "host": ["{{base_url}}"],
-              "path": ["api", "reviews"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reviews"
+              ]
             },
             "description": "為課程新增評價"
           }
@@ -2045,8 +2480,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/reviews/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "reviews", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2064,8 +2505,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/reviews/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "reviews", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2089,8 +2536,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/favorites?page=1&limit=12",
-              "host": ["{{base_url}}"],
-              "path": ["api", "favorites"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "favorites"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2121,8 +2573,13 @@
             },
             "url": {
               "raw": "{{base_url}}/api/favorites",
-              "host": ["{{base_url}}"],
-              "path": ["api", "favorites"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "favorites"
+              ]
             },
             "description": "收藏課程"
           }
@@ -2134,8 +2591,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/favorites/:course_uuid",
-              "host": ["{{base_url}}"],
-              "path": ["api", "favorites", ":course_uuid"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "favorites",
+                ":course_uuid"
+              ],
               "variable": [
                 {
                   "key": "course_uuid",
@@ -2193,8 +2656,13 @@
             },
             "url": {
               "raw": "{{base_url}}/api/videos",
-              "host": ["{{base_url}}"],
-              "path": ["api", "videos"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "videos"
+              ]
             },
             "description": "教師上傳影片檔案到系統。統一採用本地儲存方式，不再支援 YouTube 連結。\n\n📌 **重要變更**：\n- 不再支援 YouTube 連結上傳\n- 統一採用檔案上傳方式\n- 自動設定為 STORAGE 類型\n- 支援 MP4, AVI, MOV, WMV 格式\n- 檔案大小限制：最大 500MB\n\n🎯 **請求格式**：multipart/form-data\n\n📝 **欄位說明**：\n- `videoFile`: 影片檔案（必填）\n- `name`: 影片名稱（必填，1-200字元）\n- `category`: 影片分類（必填，1-100字元）\n- `intro`: 影片介紹（必填，1-2000字元）\n\n✅ **成功回應範例**：\n```json\n{\n  \"status\": \"success\",\n  \"message\": \"影片上傳成功\",\n  \"data\": {\n    \"video\": {\n      \"id\": 1,\n      \"uuid\": \"video-uuid-123\",\n      \"teacher_id\": 1,\n      \"name\": \"JavaScript 基礎教學\",\n      \"category\": \"程式設計\",\n      \"intro\": \"這是一堂深入淺出的 JavaScript 基礎教學課程\",\n      \"url\": \"https://storage.googleapis.com/...\",\n      \"video_type\": \"storage\",\n      \"created_at\": \"2024-01-15T10:30:00.000Z\",\n      \"updated_at\": \"2024-01-15T10:30:00.000Z\"\n    }\n  }\n}\n```"
           }
@@ -2206,8 +2674,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/videos?page=1&per_page=20&category=程式設計&search=JavaScript",
-              "host": ["{{base_url}}"],
-              "path": ["api", "videos"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "videos"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2241,8 +2714,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/videos/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "videos", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "videos",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2296,8 +2775,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/videos/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "videos", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "videos",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2306,7 +2791,7 @@
                 }
               ]
             },
-            "description": "更新指定影片的基本資訊和檔案。支援部分欄位更新和檔案替換。\n\n🆕 **檔案替換功能**：\n- 統一使用 FormData 格式（與課程編輯一致）\n- 支援可選影片檔案上傳\n- 上傳新檔案時自動刪除舊檔案\n- 檔案上傳失敗時自動回滾\n\n🎯 **請求格式**：multipart/form-data\n\n📝 **可更新欄位**（所有欄位均為可選）：\n- `name`: 影片名稱（1-200字元）\n- `category`: 影片分類（1-100字元）\n- `intro`: 影片介紹（1-2000字元）\n- `videoFile`: 影片檔案（可選，支援 MP4, AVI, MOV, WMV，最大 500MB）\n\n⚠️ **注意事項**：\n- 所有欄位均為可選，至少需要提供一個欄位\n- 檔案為可選，不提供時保持原有檔案\n- 無法更新已刪除的影片\n- 只能更新自己上傳的影片\n\n💡 **使用方式**：\n1. 只更新基本資訊：不勾選 videoFile 欄位\n2. 更新資訊 + 替換檔案：勾選 videoFile 並選擇新檔案"
+            "description": "更新指定影片的基本資訊和檔案。支援部分欄位更新和檔案替換。\n\n🆕 **檔案替換功能**：\n- 統一使用 FormData 格式（與課程編輯一致）\n- 支援可選影片檔案上傳\n- 上傳新檔案時自動刪除舊檔案\n- 檔案上傳失敗時自動回滾\n\n🎯 **請求格式**：multipart/form-data\n\n📝 **可更新欄位**（所有欄位均為可選）：\n- `name`: 影片名稱（1-200字元）\n- `category`: 影片分類（1-100字元）\n- `intro`: 影片介紹（1-2000字元）\n- `videoFile`: 影片檔案（可選，支援 MP4, AVI, MOV, WMV，最大 500MB）\n\n⚠️ **注意事項**：\n- 所有欄位均為可選，至少需要提供一個欄位\n- 檔案為可選，不提供時保持原有檔案\n- 無法更新已刪除的影片\n- 只能更新自己上傳的影片\n\n💡 **使用方式**：\n1. 只更新基本資訊：不勾選 videoFile 欄位\n2. 更新資訊 + 替换檔案：勾選 videoFile 並選擇新檔案"
           }
         },
         {
@@ -2316,8 +2801,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/videos/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "videos", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "videos",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2342,8 +2833,31 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/cart",
-              "host": ["{{base_url}}"],
-              "path": ["api", "cart"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cart"
+              ]
+            },
+            "description": "取得購物車內容，包含所有項目詳細資料和摘要統計\n\n**回應資料**：\n- items: 購物車項目列表（包含課程和價格方案詳細資料）\n- summary: 購物車摘要統計（總數量、總金額、有效/無效項目數）\n\n**業務邏輯**：\n- 查詢使用者的所有購物車項目\n- 載入每個項目的課程和價格方案詳細資料\n- 檢查項目有效性（課程是否存在且已發布、價格方案是否存在）\n- 僅有效項目計入總金額\n\n**🆕 新增欄位**：\n- course.main_category: 課程主分類資訊（id, name）\n- course.sub_category: 課程次分類資訊（id, name）"
+          }
+        },
+        {
+          "name": "加入購物車",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/cart",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cart"
+              ]
             },
             "description": "取得購物車內容，包含所有項目詳細資料和摘要統計\n\n**回應資料**：\n- items: 購物車項目列表（包含課程和價格方案詳細資料）\n- summary: 購物車摘要統計（總數量、總金額、有效/無效項目數）\n\n**業務邏輯**：\n- 查詢使用者的所有購物車項目\n- 載入每個項目的課程和價格方案詳細資料\n- 檢查項目有效性（課程是否存在且已發布、價格方案是否存在）\n- 僅有效項目計入總金額\n\n**🆕 新增欄位**：\n- course.main_category: 課程主分類資訊（id, name）\n- course.sub_category: 課程次分類資訊（id, name）"
           }
@@ -2364,8 +2878,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/cart/items",
-              "host": ["{{base_url}}"],
-              "path": ["api", "cart", "items"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cart",
+                "items"
+              ]
             },
             "description": "將課程及其價格方案加入購物車\n\n**業務邏輯**：\n- 驗證課程存在且已發布\n- 驗證價格方案存在且屬於該課程\n- 檢查使用者不是該課程的教師\n- 如果購物車中已有相同的課程+價格方案組合，則增加數量\n- 否則新增購物車項目\n\n**請求參數**：\n- course_id: 課程 ID (必填)\n- price_option_id: 價格方案 ID (必填)\n- quantity: 購買數量 (選填，預設為 1)"
           }
@@ -2386,8 +2906,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/cart/items/:itemId",
-              "host": ["{{base_url}}"],
-              "path": ["api", "cart", "items", ":itemId"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cart",
+                "items",
+                ":itemId"
+              ],
               "variable": [
                 {
                   "key": "itemId",
@@ -2405,8 +2932,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/cart/items/:itemId",
-              "host": ["{{base_url}}"],
-              "path": ["api", "cart", "items", ":itemId"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cart",
+                "items",
+                ":itemId"
+              ],
               "variable": [
                 {
                   "key": "itemId",
@@ -2424,8 +2958,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/cart",
-              "host": ["{{base_url}}"],
-              "path": ["api", "cart"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cart"
+              ]
             },
             "description": "清空目前使用者的整個購物車，移除所有項目\n\n**業務邏輯**：\n- 刪除使用者購物車中的所有項目\n- 此操作無法復原\n\n**注意事項**：\n- 需要使用者身份認證\n- 操作不可逆，請謹慎使用"
           }
@@ -2443,8 +2982,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/orders?page=1&limit=10&status=pending",
-              "host": ["{{base_url}}"],
-              "path": ["api", "orders"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2479,8 +3023,13 @@
             },
             "url": {
               "raw": "{{base_url}}/api/orders",
-              "host": ["{{base_url}}"],
-              "path": ["api", "orders"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
             },
             "description": "從購物車建立訂單"
           }
@@ -2492,8 +3041,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/orders/:uuid",
-              "host": ["{{base_url}}"],
-              "path": ["api", "orders", ":uuid"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                ":uuid"
+              ],
               "variable": [
                 {
                   "key": "uuid",
@@ -2520,8 +3075,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/orders/:uuid/cancel",
-              "host": ["{{base_url}}"],
-              "path": ["api", "orders", ":uuid", "cancel"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                ":uuid",
+                "cancel"
+              ],
               "variable": [
                 {
                   "key": "uuid",
@@ -2545,8 +3107,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/purchases?page=1&limit=10",
-              "host": ["{{base_url}}"],
-              "path": ["api", "purchases"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "purchases"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2568,8 +3135,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/purchases/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "purchases", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "purchases",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2593,8 +3166,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/reservations?page=1&limit=10&status=pending",
-              "host": ["{{base_url}}"],
-              "path": ["api", "reservations"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reservations"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2620,8 +3198,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/reservations/my-reservations?page=1&per_page=10&course_id=2",
-              "host": ["{{base_url}}"],
-              "path": ["api", "reservations", "my-reservations"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reservations",
+                "my-reservations"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2651,7 +3235,7 @@
                 {
                   "key": "date_to",
                   "value": "2025-09-30",
-                  "description": "可選：查詢結束日期", 
+                  "description": "可選：查詢結束日期",
                   "disabled": true
                 }
               ]
@@ -2701,6 +3285,7 @@
                   "        pm.expect(reservation).to.have.property('student_id');",
                   "        pm.expect(reservation).to.have.property('reserve_time');",
                   "        pm.expect(reservation).to.have.property('teacher_status');",
+                  "        pm.expect(reservation).to.have.property('is_reviewed');",
                   "        pm.expect(reservation).to.have.property('student_status');",
                   "        pm.expect(reservation).to.have.property('created_at');",
                   "        pm.expect(reservation).to.have.property('updated_at');",
@@ -2723,8 +3308,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/reservations/course-reservations?page=1&per_page=10&course_id=2&time_range=week&status=pending",
-              "host": ["{{base_url}}"],
-              "path": ["api", "reservations", "course-reservations"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reservations",
+                "course-reservations"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -2844,8 +3435,13 @@
             },
             "url": {
               "raw": "{{base_url}}/api/reservations",
-              "host": ["{{base_url}}"],
-              "path": ["api", "reservations"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reservations"
+              ]
             },
             "description": "建立課程預約"
           },
@@ -2878,8 +3474,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/reservations/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "reservations", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reservations",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2906,8 +3508,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/reservations/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "reservations", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reservations",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2930,8 +3538,15 @@
             ],
             "url": {
               "raw": "{{base_url}}/api/reservations/:id/confirm",
-              "host": ["{{base_url}}"],
-              "path": ["api", "reservations", ":id", "confirm"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reservations",
+                ":id",
+                "confirm"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2976,8 +3591,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/reservations/:id/reject",
-              "host": ["{{base_url}}"],
-              "path": ["api", "reservations", ":id", "reject"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reservations",
+                ":id",
+                "reject"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3014,8 +3636,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/reservations/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "reservations", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reservations",
+                ":id"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -3039,8 +3667,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teacher-dashboard/stats",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teacher-dashboard", "stats"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teacher-dashboard",
+                "stats"
+              ]
             },
             "description": "取得教師儀表板統計資料"
           }
@@ -3052,8 +3686,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teacher-dashboard/courses?page=1&limit=10",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teacher-dashboard", "courses"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teacher-dashboard",
+                "courses"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -3075,8 +3715,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teacher-dashboard/earnings?start_date=2024-01-01&end_date=2024-12-31",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teacher-dashboard", "earnings"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teacher-dashboard",
+                "earnings"
+              ],
               "query": [
                 {
                   "key": "start_date",
@@ -3098,8 +3744,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/teacher-dashboard/students?page=1&limit=10",
-              "host": ["{{base_url}}"],
-              "path": ["api", "teacher-dashboard", "students"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "teacher-dashboard",
+                "students"
+              ],
               "query": [
                 {
                   "key": "page",
@@ -3170,8 +3822,14 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/admin/login",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "admin", "login"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "login"
+                  ]
                 },
                 "description": "管理員登入，返回 JWT token"
               }
@@ -3230,8 +3888,14 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/admin/create",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "admin", "create"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "create"
+                  ]
                 },
                 "description": "建立新的管理員帳號 - 用於系統初始化或建立新管理員"
               }
@@ -3252,8 +3916,14 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/api/admin/logout",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "admin", "logout"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "logout"
+                  ]
                 },
                 "description": "管理員登出"
               }
@@ -3270,8 +3940,14 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/api/admin/profile",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "admin", "profile"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "profile"
+                  ]
                 },
                 "description": "獲取當前登入管理員的基本資訊"
               }
@@ -3293,8 +3969,14 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/api/admin/teacher-applications?status=pending&page=1&limit=20",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "admin", "teacher-applications"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "teacher-applications"
+                  ],
                   "query": [
                     {
                       "key": "status",
@@ -3336,8 +4018,16 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/admin/teachers/:teacherId/approve",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "admin", "teachers", ":teacherId", "approve"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "teachers",
+                    ":teacherId",
+                    "approve"
+                  ],
                   "variable": [
                     {
                       "key": "teacherId",
@@ -3369,8 +4059,16 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/admin/teachers/:teacherId/reject",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "admin", "teachers", ":teacherId", "reject"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "teachers",
+                    ":teacherId",
+                    "reject"
+                  ],
                   "variable": [
                     {
                       "key": "teacherId",
@@ -3399,8 +4097,14 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/api/admin/course-applications?status=submitted&page=1&per_page=20",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "admin", "course-applications"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "course-applications"
+                  ],
                   "query": [
                     {
                       "key": "status",
@@ -3440,8 +4144,14 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/api/admin/course-applications?status=submitted",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "admin", "course-applications"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "course-applications"
+                  ],
                   "query": [
                     {
                       "key": "status",
@@ -3464,8 +4174,14 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/api/admin/course-applications?status=approved",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "admin", "course-applications"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "course-applications"
+                  ],
                   "query": [
                     {
                       "key": "status",
@@ -3488,8 +4204,14 @@
                 ],
                 "url": {
                   "raw": "{{base_url}}/api/admin/course-applications?status=rejected",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "admin", "course-applications"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "course-applications"
+                  ],
                   "query": [
                     {
                       "key": "status",
@@ -3520,8 +4242,16 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/admin/courses/:courseId/approve",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "admin", "courses", ":courseId", "approve"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "courses",
+                    ":courseId",
+                    "approve"
+                  ],
                   "variable": [
                     {
                       "key": "courseId",
@@ -3553,8 +4283,16 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/admin/courses/:courseId/reject",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "admin", "courses", ":courseId", "reject"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "courses",
+                    ":courseId",
+                    "reject"
+                  ],
                   "variable": [
                     {
                       "key": "courseId",
@@ -3598,8 +4336,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/upload/avatar",
-              "host": ["{{base_url}}"],
-              "path": ["api", "upload", "avatar"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "upload",
+                "avatar"
+              ]
             },
             "description": "上傳使用者頭像到 Firebase Storage\n\n**新的業務規則**：\n✅ 使用者只能維護一個頭像\n✅ 上傳新頭像會自動刪除 Firebase Storage 中的舊頭像\n✅ Google 登入用戶的頭像不會從 Google 伺服器刪除，但會在資料庫中更新為新頭像\n\n**支援格式**：\n- 圖片格式: JPEG, JPG, PNG, WebP\n- ❌ 不支援: SVG, GIF, BMP 等其他格式\n\n**限制**：\n- 最大檔案大小: 5MB\n- 每個使用者只能有一個頭像\n\n**業務邏輯**：\n- 驗證使用者已登入\n- 驗證檔案格式和大小\n- 自動刪除舊頭像（如果存在且不是 Google 頭像）\n- 上傳新頭像到 Firebase Storage\n- 更新使用者頭像 URL\n\n**錯誤處理**：\n- 不支援格式會顯示具體格式錯誤訊息\n- 檔案過大會顯示當前大小和限制\n- 舊頭像清理失敗不會影響新頭像上傳"
           },
@@ -3612,8 +4356,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/upload/avatar",
-              "host": ["{{base_url}}"],
-              "path": ["api", "upload", "avatar"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "upload",
+                "avatar"
+              ]
             },
             "description": "刪除使用者頭像\n\n業務邏輯：\n- 驗證使用者已登入\n- 從 Firebase Storage 刪除頭像檔案\n- 清除使用者的頭像 URL"
           },
@@ -3648,8 +4398,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/files/upload",
-              "host": ["{{base_url}}"],
-              "path": ["api", "files", "upload"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "files",
+                "upload"
+              ]
             },
             "description": "上傳單個檔案到 Firebase Storage\n\n支援格式：\n- 圖片: JPEG, PNG, GIF, WebP\n- 文件: PDF, DOC, DOCX, TXT\n\n限制：\n- 最大檔案大小: 10MB\n- 最大檔案數量: 5個"
           },
@@ -3683,8 +4439,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/files/upload",
-              "host": ["{{base_url}}"],
-              "path": ["api", "files", "upload"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "files",
+                "upload"
+              ]
             },
             "description": "上傳多個檔案到 Firebase Storage (最多5個檔案)"
           },
@@ -3706,8 +4468,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/files/delete",
-              "host": ["{{base_url}}"],
-              "path": ["api", "files", "delete"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "files",
+                "delete"
+              ]
             },
             "description": "從 Firebase Storage 刪除指定檔案\n\n請求參數：\n- fileUrl: Firebase Storage 檔案 URL (gs://格式)"
           },
@@ -3720,8 +4488,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/files/metadata/{{encoded_file_url}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "files", "metadata", "{{encoded_file_url}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "files",
+                "metadata",
+                "{{encoded_file_url}}"
+              ]
             },
             "description": "取得指定檔案的詳細資訊\n\n路徑參數：\n- encoded_file_url: URL 編碼的 Firebase Storage 檔案 URL\n\n使用方式：\n1. 先將檔案 URL 進行 URL 編碼\n2. 將編碼後的 URL 作為路徑參數"
           },
@@ -3743,8 +4518,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/files/download-url",
-              "host": ["{{base_url}}"],
-              "path": ["api", "files", "download-url"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "files",
+                "download-url"
+              ]
             },
             "description": "為私有檔案生成帶有過期時間的下載連結\n\n請求參數：\n- fileUrl: Firebase Storage 檔案 URL (gs://格式)\n- expiresInMinutes: 連結有效期限（分鐘），預設60分鐘"
           },
@@ -3789,8 +4570,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/files/upload",
-              "host": ["{{base_url}}"],
-              "path": ["api", "files", "upload"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "files",
+                "upload"
+              ]
             },
             "description": "測試 Firebase 配置是否正確\n\n- 如果返回 503: Firebase 未配置（正常情況）\n- 如果返回 401: 需要登入\n- 如果返回 400: Firebase 已配置但沒有檔案（正常）"
           },

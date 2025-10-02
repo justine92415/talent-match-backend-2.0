@@ -4,7 +4,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid'
-import { Repository, In } from 'typeorm'
+import { Repository, In, EntityManager } from 'typeorm'
 import { dataSource } from '@db/data-source'
 import { UserCoursePurchase } from '@entities/UserCoursePurchase'
 import { Order } from '@entities/Order'
@@ -122,6 +122,8 @@ export class PurchaseService {
     await queryRunner.connect()
     await queryRunner.startTransaction()
 
+    const updatedCourseIds = new Set<number>()
+
     try {
       for (const [courseId, totalQuantity] of courseQuantityMap) {
         const existingPurchase = existingPurchaseMap.get(courseId)
@@ -167,6 +169,12 @@ export class PurchaseService {
             created_at: savedPurchase.created_at
           })
         }
+
+        updatedCourseIds.add(courseId)
+      }
+
+      for (const courseId of updatedCourseIds) {
+        await this.updateCourseStudentCount(queryRunner.manager, courseId)
       }
 
       await queryRunner.commitTransaction()
@@ -177,6 +185,20 @@ export class PurchaseService {
     } finally {
       await queryRunner.release()
     }
+  }
+
+  private async updateCourseStudentCount(manager: EntityManager, courseId: number) {
+    const result = await manager
+      .getRepository(UserCoursePurchase)
+      .createQueryBuilder('purchase')
+      .select('COUNT(DISTINCT purchase.user_id)', 'total')
+      .where('purchase.course_id = :courseId', { courseId })
+      .getRawOne<{ total: string | number | null }>()
+
+    const total = result?.total ?? 0
+    const studentCount = typeof total === 'string' ? parseInt(total, 10) : (total ?? 0)
+
+    await manager.update(Course, { id: courseId }, { student_count: studentCount })
   }
 
   /**

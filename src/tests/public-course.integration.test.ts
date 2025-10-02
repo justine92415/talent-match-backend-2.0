@@ -266,6 +266,8 @@ describe('公開課程瀏覽搜尋 API', () => {
       expect(teacher).toHaveProperty('user')
       expect(teacher.user).toHaveProperty('name')
       expect(teacher.user).toHaveProperty('nick_name')
+      expect(teacher).toHaveProperty('total_completed_lessons')
+      expect(typeof teacher.total_completed_lessons).toBe('number')
     })
 
     it('應該包含推薦課程列表', async () => {

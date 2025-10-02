@@ -183,7 +183,8 @@ export class ReviewService {
         'review.rate',
         'review.comment',
         'review.created_at',
-        'student_user.nick_name as student_name'
+        'student_user.nick_name as student_name',
+        'student_user.avatar_image as student_avatar'
       ])
       .where('review.course_id = :courseId', { courseId: course.id })
 
@@ -232,7 +233,8 @@ export class ReviewService {
       comment: row.review_comment,
       created_at: row.review_created_at,
       student: {
-        name: row.student_name
+        name: row.student_name,
+        avatar_image: row.student_avatar
       }
     }))
 

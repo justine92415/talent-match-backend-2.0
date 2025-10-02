@@ -139,6 +139,7 @@ export interface PublicTeacherDetail {
   total_students: number
   total_courses: number
   average_rating: number
+  total_completed_lessons: number
 }
 
 /** 教師工作經驗（公開版） */
@@ -196,6 +197,7 @@ export interface PublicReview {
   comment: string
   user: {
     nick_name: string
+    avatar_image?: string
   }
   created_at: string
 }
@@ -225,7 +227,6 @@ export interface PublicCourseDetail {
   rate: number
   review_count: number
   student_count: number
-  purchase_count: number
   survey_url?: string | null
   purchase_message?: string | null
   city?: string | null

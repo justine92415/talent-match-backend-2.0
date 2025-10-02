@@ -106,7 +106,6 @@ describe('課程基本管理 API', () => {
             rate: expect.any(String), // 資料庫回傳 "0.00" 字串格式
             review_count: 0,
             view_count: 0,
-            purchase_count: 0,
             student_count: 0,
             created_at: expect.any(String),
             updated_at: expect.any(String)
