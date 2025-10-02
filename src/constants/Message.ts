@@ -424,7 +424,7 @@ export const MESSAGES = {
     // 評價業務規則錯誤
     REVIEW_NOT_FOUND: '評價記錄不存在',
     REVIEW_ALREADY_EXISTS: '此預約已有評價記錄',
-    REVIEW_RESERVATION_NOT_COMPLETED: '只能評價已完成的課程',
+    REVIEW_RESERVATION_NOT_COMPLETED: '課程尚未結束或已取消，無法評價',
     REVIEW_RESERVATION_NOT_OWNED: '無權評價此預約',
     REVIEW_COURSE_NOT_PURCHASED: '未購買此課程，無法評價',
     REVIEW_UNAUTHORIZED_ACCESS: '無權存取此評價',
