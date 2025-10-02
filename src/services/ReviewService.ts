@@ -77,9 +77,11 @@ export class ReviewService {
       )
     }
 
-    // 驗證預約狀態是否已完成
-    if (reservation.student_status !== ReservationStatus.COMPLETED || 
-        reservation.teacher_status !== ReservationStatus.COMPLETED) {
+    // 驗證預約狀態是否已完成或已過期（課程結束）
+    // 允許 COMPLETED 或 OVERDUE 狀態評價
+    // OVERDUE 表示課程已結束但尚未手動確認完成，此時學生可以評價
+    if (reservation.student_status !== ReservationStatus.COMPLETED && 
+        reservation.student_status !== ReservationStatus.OVERDUE) {
       throw new BusinessError(
         ERROR_CODES.REVIEW_RESERVATION_NOT_COMPLETED,
         MESSAGES.BUSINESS.REVIEW_RESERVATION_NOT_COMPLETED,
@@ -118,6 +120,14 @@ export class ReviewService {
       }
 
       const review = await queryRunner.manager.save(Review, newReviewData)
+
+      // 如果學生狀態是 OVERDUE，評價後自動標記為 COMPLETED
+      // 因為評價本身就代表學生認為課程已完成
+      if (reservation.student_status === ReservationStatus.OVERDUE) {
+        await queryRunner.manager.update(Reservation, reservation.id, {
+          student_status: ReservationStatus.COMPLETED
+        })
+      }
 
       // 更新課程評分統計
       await this.updateCourseRatingStats(queryRunner, reservation.course_id)
