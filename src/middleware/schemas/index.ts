@@ -32,12 +32,7 @@ export {
   // 訂單相關 schemas
   createOrderBodySchema,
   getOrderListQuerySchema,
-  orderIdParamSchema,
-  
-  // 購買記錄相關 schemas
-  usePurchaseBodySchema,
-  purchaseIdParamSchema,
-  getPurchaseListQuerySchema
+  orderIdParamSchema
 } from './commerce'
 
 // 系統相關驗證

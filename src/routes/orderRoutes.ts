@@ -5,7 +5,7 @@
  * - POST /api/orders - 從購物車建立訂單
  * - GET /api/orders/:orderId - 取得訂單詳情
  * - GET /api/orders - 取得使用者訂單列表
- * - PUT /api/orders/:orderId/cancel - 取消訂單
+ * - POST /api/orders/:orderId/cancel - 取消訂單
  * - POST /api/orders/:orderId/payment - 處理付款
  * 
  * 所有端點都需要使用者身份認證
@@ -157,8 +157,6 @@ router.post('/', authenticateToken, createSchemasMiddleware({ body: createOrderB
 router.get('/:orderId', authenticateToken, createSchemasMiddleware({ params: orderIdParamSchema }), orderController.getOrderDetails)
 
 router.get('/', authenticateToken, createSchemasMiddleware({ query: getOrderListQuerySchema }), orderController.getOrderList)
-
-router.put('/:orderId/cancel', authenticateToken, createSchemasMiddleware({ params: orderIdParamSchema }), orderController.cancelOrder)
 
 router.post('/:orderId/cancel', authenticateToken, createSchemasMiddleware({ params: orderIdParamSchema }), orderController.cancelOrder)
 

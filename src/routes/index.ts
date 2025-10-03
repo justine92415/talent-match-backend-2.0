@@ -8,7 +8,6 @@ import publicCourseRoutes from '@routes/publicCourseRoutes'
 import publicTeacherRoutes from '@routes/publicTeacherRoutes'
 import reviewRoutes from '@routes/reviewRoutes'
 import favoriteRoutes from '@routes/favoriteRoutes'
-import priceOptionRoutes from '@routes/priceOptionRoutes'
 import videoRoutes from '@routes/videoRoutes'
 import cartRoutes from '@routes/cartRoutes'
 import orderRoutes from '@routes/orderRoutes'
@@ -47,9 +46,6 @@ router.use('/courses', courseRoutes)
 
 // 掛載收藏功能路由  
 router.use('/favorites', favoriteRoutes)
-
-// 掛載課程價格方案相關路由
-router.use('/courses', priceOptionRoutes)
 
 // 掛載影片管理相關路由
 router.use('/videos', videoRoutes)
