@@ -26,8 +26,6 @@ export {
   ReviewSubmitRequest,
   ReviewCreateData,
   CourseReviewsQueryParams,
-  MyReviewsQueryParams,
-  ReceivedReviewsQueryParams,
   ReviewFilterParams,
   ReviewBasicInfo,
   ReviewUserInfo,

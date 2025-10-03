@@ -10,7 +10,6 @@ import { teacherSchemas } from './teacher'
 import { tagsSchemas } from './tags'
 import { courseSchemas } from './course'
 import { videoSchemas } from './video'
-import { priceOptionSchemas } from './priceOption'
 import { publicCourseSchemas } from './publicCourse'
 import { scheduleSchemas } from './schedule'
 import { cartSchemas } from './cart'
@@ -30,7 +29,6 @@ export const allSchemas = {
   ...courseSchemas,
   ...publicCourseSchemas,
   ...videoSchemas,
-  ...priceOptionSchemas,
   ...scheduleSchemas,
   ...cartSchemas,
   ...orderSchemas,
@@ -50,7 +48,6 @@ export {
   courseSchemas,
   publicCourseSchemas,
   videoSchemas,
-  priceOptionSchemas,
   scheduleSchemas,
   cartSchemas,
   orderSchemas,

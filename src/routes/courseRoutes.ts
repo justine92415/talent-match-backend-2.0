@@ -13,9 +13,6 @@
 
 import { Router } from 'express'
 import { CourseController } from '@controllers/CourseController'
-import { CourseVideoController } from '@controllers/CourseVideoController'
-import { CourseFileController } from '@controllers/CourseFileController'
-import { reviewController } from '@controllers/ReviewController'
 import { createSchemasMiddleware } from '@middleware/schemas/core'
 import { 
   createCourseSchema,
@@ -31,29 +28,10 @@ import {
   validateCourseImageFileMiddleware,
   cleanupTempCourseImageFile
 } from '@middleware/upload/courseImageUpload'
-import {
-  linkVideosToCourseBodySchema,
-  updateVideoOrderBodySchema,
-  removeCourseVideoParamSchema,
-  courseVideoIdParamSchema,
-  courseIdForUpdateParamSchema
-} from '@middleware/schemas/course/videoValidationSchemas'
-import {
-  getCourseFilesParamSchema,
-  getCourseFilesQuerySchema,
-  uploadCourseFilesParamSchema,
-  uploadCourseFilesBodySchema,
-  deleteCourseFileParamSchema
-} from '@middleware/schemas/course/fileSchemas'
-import {
-  courseReviewQuerySchema
-} from '@middleware/schemas/course/publicCourseSchemas'
 import { authenticateToken } from '@middleware/auth/userAuth'
 
 const router = Router()
 const courseController = new CourseController()
-const courseVideoController = new CourseVideoController()
-const courseFileController = new CourseFileController()
 
 /**
  * @swagger
@@ -1015,30 +993,6 @@ router.post('/:id/publish', authenticateToken, createSchemasMiddleware({ params:
  */
 // Archive course
 router.post('/:id/archive', authenticateToken, createSchemasMiddleware({ params: courseIdSchema }), courseController.archiveCourse)
-
-// Link videos to course
-router.post('/:id/videos', authenticateToken, createSchemasMiddleware({ body: linkVideosToCourseBodySchema }), CourseVideoController.linkVideos)
-
-// Update video order
-router.put('/:course_id/videos/order', authenticateToken, createSchemasMiddleware({ params: courseIdForUpdateParamSchema, body: updateVideoOrderBodySchema }), CourseVideoController.updateVideoOrder)
-
-// Remove video from course
-router.delete('/:course_id/videos/:video_id', authenticateToken, createSchemasMiddleware({ params: removeCourseVideoParamSchema }), CourseVideoController.removeCourseVideo)
-
-// Get course videos
-router.get('/:id/videos', authenticateToken, createSchemasMiddleware({ params: courseIdSchema }), CourseVideoController.getCourseVideos)
-
-// Get course files
-router.get('/:id/files', authenticateToken, createSchemasMiddleware({ params: getCourseFilesParamSchema, query: getCourseFilesQuerySchema }), CourseFileController.getCourseFiles)
-
-// Upload course files
-router.post('/:id/files', authenticateToken, createSchemasMiddleware({ params: uploadCourseFilesParamSchema, body: uploadCourseFilesBodySchema }), CourseFileController.uploadCourseFiles)
-
-// Delete course file
-router.delete('/:course_id/files/:file_id', authenticateToken, createSchemasMiddleware({ params: deleteCourseFileParamSchema }), CourseFileController.deleteCourseFile)
-
-// Get course reviews
-router.get('/:id/reviews', authenticateToken, createSchemasMiddleware({ params: courseIdSchema, query: courseReviewQuerySchema }), reviewController.getCourseReviews)
 
 /**
  * @swagger
