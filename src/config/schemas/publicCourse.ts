@@ -139,6 +139,12 @@ export const publicCourseSchemas = {
         description: '課程名稱',
         example: '測試課程2'
       },
+      description: {
+        type: 'string',
+        nullable: true,
+        description: '課程簡介說明',
+        example: '這是一門專為初學者設計的實體課程，將帶領您深入了解相關技能...'
+      },
       main_image: {
         type: 'string',
         nullable: true,

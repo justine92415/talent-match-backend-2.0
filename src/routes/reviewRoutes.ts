@@ -20,9 +20,7 @@ import { createSchemasMiddleware } from '@middleware/schemas/core'
 import {
 	reviewCreateSchema,
 	courseUuidParamSchema,
-	courseReviewsQuerySchema,
-	myReviewsQuerySchema,
-	receivedReviewsQuerySchema
+	courseReviewsQuerySchema
 } from '@middleware/schemas/system/reviewSchemas'
 
 const router = Router()
@@ -216,14 +214,5 @@ router.get(
 	createSchemasMiddleware({ params: courseUuidParamSchema, query: courseReviewsQuerySchema }),
 	reviewController.getCourseReviews
 )
-
-router.get(
-	'/my-reviews',
-	authenticateToken,
-	createSchemasMiddleware({ query: myReviewsQuerySchema }),
-	reviewController.getMyReviews
-)
-
-router.get('/received', authenticateToken, createSchemasMiddleware({ query: receivedReviewsQuerySchema }), reviewController.getReceivedReviews)
 
 export default router

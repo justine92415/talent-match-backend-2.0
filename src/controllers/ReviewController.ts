@@ -45,36 +45,6 @@ export class ReviewController {
     // 200 OK 狀態回傳成功訊息
     res.status(200).json(handleSuccess(result, MESSAGES.REVIEW.COURSE_REVIEWS_SUCCESS))
   })
-
-  /**
-   * GET /reviews/my-reviews - 取得我的評價列表
-   * @description 已通過 validateRequest 中間件驗證的資料
-   */
-  getMyReviews = handleErrorAsync(async (req: Request, res: Response) => {
-    const userId = req.user!.userId  // 已認證的使用者 (由 authenticateToken 中間件提供)
-    const queryParams = req.query    // 查詢參數，已通過驗證中間件
-
-    // 呼叫服務層
-    const result = await this.reviewService.getMyReviews(userId, queryParams)
-
-    // 200 OK 狀態回傳成功訊息
-    res.status(200).json(handleSuccess(result, MESSAGES.REVIEW.MY_REVIEWS_SUCCESS))
-  })
-
-  /**
-   * GET /reviews/received - 取得教師收到的評價列表
-   * @description 已通過 validateRequest 中間件驗證的資料
-   */
-  getReceivedReviews = handleErrorAsync(async (req: Request, res: Response) => {
-    const userId = req.user!.userId  // 已認證的使用者 (由 authenticateToken 中間件提供)
-    const queryParams = req.query    // 查詢參數，已通過驗證中間件
-
-    // 呼叫服務層
-    const result = await this.reviewService.getReceivedReviews(userId, queryParams)
-
-    // 200 OK 狀態回傳成功訊息
-    res.status(200).json(handleSuccess(result, MESSAGES.REVIEW.RECEIVED_REVIEWS_SUCCESS))
-  })
 }
 
 // 建立單一實例以供路由使用

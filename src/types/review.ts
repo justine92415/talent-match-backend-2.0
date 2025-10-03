@@ -59,40 +59,6 @@ export interface CourseReviewsQueryParams {
 }
 
 /**
- * 我的評價列表查詢參數（對應驗證 schema）
- */
-export interface MyReviewsQueryParams {
-  /** 頁碼 */
-  page?: number
-  /** 每頁筆數 */
-  limit?: number
-  /** 特定課程篩選 */
-  course_id?: number
-  /** 排序欄位 */
-  sort_by?: 'created_at' | 'rating'
-  /** 排序順序 */
-  sort_order?: 'asc' | 'desc'
-}
-
-/**
- * 教師收到評價查詢參數（對應驗證 schema）
- */
-export interface ReceivedReviewsQueryParams {
-  /** 頁碼 */
-  page?: number
-  /** 每頁筆數 */
-  limit?: number
-  /** 特定課程篩選 */
-  course_id?: number
-  /** 評分篩選（1-5） */
-  rating?: number
-  /** 排序欄位 */
-  sort_by?: 'created_at' | 'rating'
-  /** 排序順序 */
-  sort_order?: 'asc' | 'desc'
-}
-
-/**
  * 評價篩選查詢參數
  */
 export interface ReviewFilterParams extends CourseReviewsQueryParams {
