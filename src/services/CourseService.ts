@@ -999,12 +999,13 @@ export class CourseService {
     }
 
     // 5. 查詢該日期已有的預約記錄（包含所有狀態，除了 cancelled）
+    // 重要：查詢該教師在該日期的所有預約（跨所有課程），因為教師同一時段只能接受一個預約
     const startOfDay = new Date(date + 'T00:00:00.000Z')
     const endOfDay = new Date(date + 'T23:59:59.999Z')
 
     const existingReservations = await this.reservationRepository
       .createQueryBuilder('reservation')
-      .where('reservation.course_id = :courseId', { courseId })
+      .where('reservation.teacher_id = :teacherId', { teacherId: course.teacher_id })
       .andWhere('reservation.reserve_time >= :startOfDay', { startOfDay })
       .andWhere('reservation.reserve_time <= :endOfDay', { endOfDay })
       .andWhere(
