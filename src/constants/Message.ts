@@ -672,6 +672,14 @@ export const MESSAGES = {
     SETTLEMENTS_SUCCESS: '取得結算記錄成功',
     EARNINGS_STATS_SUCCESS: '取得收入統計成功',
   },
+
+  // === 首頁相關訊息 ===
+  HOME: {
+    // 成功訊息
+    SHORT_VIDEOS_SUCCESS: '成功取得短影音列表',
+    RECOMMENDED_COURSES_SUCCESS: '成功取得推薦課程',
+    REVIEWS_SUMMARY_SUCCESS: '成功取得評論摘要',
+  },
 } as const
 
 // === 便捷訪問器 ===

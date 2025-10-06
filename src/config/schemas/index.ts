@@ -18,6 +18,7 @@ import { paymentSchemas } from './payment'
 import { purchaseSchemas } from './purchase'
 import { reservationSchemas } from './reservation'
 import { reviewSchemas } from './review'
+import { homeSchemas } from './home'
 
 // 合併所有 Schema
 export const allSchemas = {
@@ -35,7 +36,8 @@ export const allSchemas = {
   ...paymentSchemas,
   ...purchaseSchemas,
   ...reservationSchemas,
-  ...reviewSchemas
+  ...reviewSchemas,
+  ...homeSchemas
 }
 
 // 也可以分別匯出，供特定需求使用
@@ -54,5 +56,6 @@ export {
   paymentSchemas,
   purchaseSchemas,
   reservationSchemas,
-  reviewSchemas
+  reviewSchemas,
+  homeSchemas
 }
