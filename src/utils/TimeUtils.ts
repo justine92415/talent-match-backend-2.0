@@ -6,6 +6,16 @@
 
 export class TimeUtils {
   /**
+   * 取得台灣時間的 Date 物件（用於與資料庫的 timestamp 比較）
+   * 資料庫使用 timestamp 類型儲存台灣時間，不做時區轉換
+   * @returns Date 物件（數值上等於台灣當前時間）
+   */
+  static getTaiwanTime(): Date {
+    // 台灣時區偏移：UTC + 8 小時
+    return new Date(Date.now() + 8 * 60 * 60 * 1000)
+  }
+
+  /**
    * 將日期和時間轉換為 Date 物件（不做時區轉換，直接使用輸入值）
    * @param date 日期字串 (YYYY-MM-DD)
    * @param time 時間字串 (HH:mm 或 HH:mm:ss)
