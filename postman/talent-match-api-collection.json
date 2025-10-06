@@ -1,8 +1,8 @@
 {
   "info": {
     "name": "Talent Match API 2.0",
-    "description": "Talent Match 後端 API 完整集合 - 包含所有認證、課程、教師、購物車、訂單等功能的 API 端點\n\n🆕 **v2.6 重大更新**：\n- 課程詳情 API 回應格式統一：GET /api/courses/{id} 現在與 GET /api/courses/{id}/edit 格式完全一致\n- 課程詳情 API 新增完整價格方案和短影音資訊\n- 前端可統一使用相同的資料結構處理課程詳情和編輯功能\n- API 回應結構標準化，提升開發效率\n\n🆕 **v2.5 功能**：\n- 短影音課程關聯功能：教師可於新增/編輯課程時選擇短影音\n- 課程建立/編輯 API 支援 selectedVideos 欄位\n- 最多可關聯 3 支短影音，支援自訂顯示順序\n- 課程編輯資料載入 API 包含關聯短影音\n- 公開課程詳情 API 顯示關聯短影音\n- 適用於實體課程的宣傳短片功能\n\n🆕 **v2.4 功能**：\n- 影片管理系統重大更新：統一檔案替換功能\n- 影片更新 API 現在統一使用 FormData 格式（與課程編輯一致）\n- 完整檔案管理：新增/更新/刪除時都會正確處理 Firebase Storage 檔案\n- 影片刪除功能：軟刪除 + 同步清理 Firebase Storage 檔案\n- 可選檔案上傳：更新時檔案為可選，不提供時保持原有檔案\n\n🔧 **v2.3 功能**：\n- 預約確認流程：學生預約後需要教師確認\n- 教師確認/拒絕預約 API\n- 預約狀態自動過期機制（隔天預約12小時內回應，其他24小時內回應）\n- PENDING 狀態預約管理\n\n🔧 **v2.2 功能**：\n- 管理員課程申請列表 API\n- 課程狀態篩選（submitted, approved, rejected, draft, published, archived）\n- 管理員 token 自動保存\n- 增強的測試腳本和變數管理\n\n🔧 **v2.1 功能**：\n- 整合式課程建立 API (支援同時上傳圖片和設定價格方案)\n- multipart/form-data 支援檔案上傳\n- 資料庫交易確保原子性操作\n- 自動錯誤恢復和資源清理",
-    "version": "2.6.0",
+    "description": "Talent Match 後端 API 完整集合 - 包含所有認證、課程、教師、購物車、訂單等功能的 API 端點\n\n🆕 **v2.7 新功能**：\n- 首頁 API：評論摘要、短影片列表、推薦課程\n- 公開端點，不需要認證\n- 智能推薦演算法：依評分、熱門度、地區匹配排序\n\n🆕 **v2.6 重大更新**：\n- 課程詳情 API 回應格式統一：GET /api/courses/{id} 現在與 GET /api/courses/{id}/edit 格式完全一致\n- 課程詳情 API 新增完整價格方案和短影音資訊\n- 前端可統一使用相同的資料結構處理課程詳情和編輯功能\n- API 回應結構標準化，提升開發效率\n\n🆕 **v2.5 功能**：\n- 短影音課程關聯功能：教師可於新增/編輯課程時選擇短影音\n- 課程建立/編輯 API 支援 selectedVideos 欄位\n- 最多可關聯 3 支短影音，支援自訂顯示順序\n- 課程編輯資料載入 API 包含關聯短影音\n- 公開課程詳情 API 顯示關聯短影音\n- 適用於實體課程的宣傳短片功能\n\n🆕 **v2.4 功能**：\n- 影片管理系統重大更新：統一檔案替換功能\n- 影片更新 API 現在統一使用 FormData 格式（與課程編輯一致）\n- 完整檔案管理：新增/更新/刪除時都會正確處理 Firebase Storage 檔案\n- 影片刪除功能：軟刪除 + 同步清理 Firebase Storage 檔案\n- 可選檔案上傳：更新時檔案為可選，不提供時保持原有檔案\n\n🔧 **v2.3 功能**：\n- 預約確認流程：學生預約後需要教師確認\n- 教師確認/拒絕預約 API\n- 預約狀態自動過期機制（隔天預約12小時內回應，其他24小時內回應）\n- PENDING 狀態預約管理\n\n🔧 **v2.2 功能**：\n- 管理員課程申請列表 API\n- 課程狀態篩選（submitted, approved, rejected, draft, published, archived）\n- 管理員 token 自動保存\n- 增強的測試腳本和變數管理\n\n🔧 **v2.1 功能**：\n- 整合式課程建立 API (支援同時上傳圖片和設定價格方案)\n- multipart/form-data 支援檔案上傳\n- 資料庫交易確保原子性操作\n- 自動錯誤恢復和資源清理",
+    "version": "2.7.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -224,6 +224,331 @@
         }
       ],
       "description": "便利工具，用於管理認證狀態和除錯"
+    },
+    {
+      "name": "首頁 (Home)",
+      "item": [
+        {
+          "name": "取得評論摘要",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// 評論摘要測試",
+                  "pm.test('狀態碼應為 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('回應格式應正確', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status', 'success');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    pm.expect(jsonData.data).to.have.property('overallRating');",
+                  "    pm.expect(jsonData.data).to.have.property('featuredReviews');",
+                  "});",
+                  "",
+                  "pm.test('評論資料結構應正確', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.overallRating).to.be.a('number');",
+                  "    pm.expect(jsonData.data.featuredReviews).to.be.an('array');",
+                  "    ",
+                  "    if (jsonData.data.featuredReviews.length > 0) {",
+                  "        const review = jsonData.data.featuredReviews[0];",
+                  "        pm.expect(review).to.have.property('reviewId');",
+                  "        pm.expect(review).to.have.property('student');",
+                  "        pm.expect(review).to.have.property('content');",
+                  "        pm.expect(review).to.have.property('createdAt');",
+                  "    }",
+                  "});",
+                  "",
+                  "console.log('✅ 評論摘要取得成功');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/home/reviews-summary?limit=6",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "home",
+                "reviews-summary"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "6",
+                  "description": "精選評論數量（預設 6，最小 1，最大 20）"
+                }
+              ]
+            },
+            "description": "取得首頁評論摘要，包含整體平均評分和精選評論列表。\n\n**業務邏輯**：\n- 計算所有可見評論的平均評分（四捨五入到小數點第一位）\n- 篩選精選評論條件：評分 >= 4、內容長度 >= 20 字、評論可見、學生身份\n- 每位學生最多顯示一則評論（取最新的）\n- 可透過 limit 參數控制精選評論數量\n\n**公開路由**：不需要認證"
+          },
+          "response": [
+            {
+              "name": "成功回應",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/home/reviews-summary?limit=6",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "home",
+                    "reviews-summary"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "6"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"status\": \"success\",\n    \"message\": \"成功取得評論摘要\",\n    \"data\": {\n        \"overallRating\": 4.5,\n        \"featuredReviews\": [\n            {\n                \"reviewId\": 123,\n                \"student\": {\n                    \"name\": \"王小明\",\n                    \"avatar\": \"https://example.com/avatar.jpg\"\n                },\n                \"title\": \"\",\n                \"content\": \"老師教學非常認真，課程內容豐富，我學到了很多實用的技巧！\",\n                \"createdAt\": \"2024-01-15T10:30:00.000Z\"\n            }\n        ]\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "取得短影片列表",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// 短影片列表測試",
+                  "pm.test('狀態碼應為 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('回應格式應正確', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status', 'success');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    pm.expect(jsonData.data).to.have.property('videos');",
+                  "});",
+                  "",
+                  "pm.test('影片資料結構應正確', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.videos).to.be.an('array');",
+                  "    ",
+                  "    if (jsonData.data.videos.length > 0) {",
+                  "        const video = jsonData.data.videos[0];",
+                  "        pm.expect(video).to.have.property('videoId');",
+                  "        pm.expect(video).to.have.property('courseId');",
+                  "        pm.expect(video).to.have.property('title');",
+                  "        pm.expect(video).to.have.property('videoUrl');",
+                  "        pm.expect(video).to.have.property('mainCategory');",
+                  "        pm.expect(video).to.have.property('teacher');",
+                  "    }",
+                  "});",
+                  "",
+                  "console.log('✅ 短影片列表取得成功');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/home/short-videos?limit=5",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "home",
+                "short-videos"
+              ],
+              "query": [
+                {
+                  "key": "mainCategoryId",
+                  "value": "1",
+                  "description": "主分類 ID（選填，用於篩選特定分類的影片）",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "5",
+                  "description": "返回數量（預設 5，最小 1，最大 20）"
+                }
+              ]
+            },
+            "description": "取得首頁短影片推薦列表，依據評分、熱門度、完整度排序。\n\n**業務邏輯**：\n- 僅顯示已發布課程的影片\n- 可依主分類篩選（選填）\n- 排序優先權（由高到低）：\n  1. 課程評分高（>= 4.5 優先）\n  2. 近期熱門（最近 30 天預約數多）\n  3. 影片完整度（有標題、videoUrl）\n  4. 最新發布（createdAt DESC）\n\n**公開路由**：不需要認證"
+          },
+          "response": [
+            {
+              "name": "成功回應",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/home/short-videos?limit=5",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "home",
+                    "short-videos"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "5"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"status\": \"success\",\n    \"message\": \"成功取得短影音列表\",\n    \"data\": {\n        \"videos\": [\n            {\n                \"videoId\": 1,\n                \"courseId\": 10,\n                \"title\": \"基礎吉他入門教學\",\n                \"thumbnailUrl\": \"https://example.com/video.mp4\",\n                \"videoUrl\": \"https://example.com/video.mp4\",\n                \"duration\": 0,\n                \"mainCategory\": {\n                    \"id\": 1,\n                    \"name\": \"音樂\"\n                },\n                \"course\": {\n                    \"id\": 10,\n                    \"title\": \"吉他初學者必修課\"\n                },\n                \"teacher\": {\n                    \"id\": 5,\n                    \"name\": \"李老師\"\n                }\n            }\n        ]\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "取得推薦課程",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// 推薦課程測試",
+                  "pm.test('狀態碼應為 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('回應格式應正確', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status', 'success');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "    pm.expect(jsonData.data).to.have.property('courses');",
+                  "});",
+                  "",
+                  "pm.test('課程資料結構應正確', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.courses).to.be.an('array');",
+                  "    ",
+                  "    if (jsonData.data.courses.length > 0) {",
+                  "        const course = jsonData.data.courses[0];",
+                  "        pm.expect(course).to.have.property('courseId');",
+                  "        pm.expect(course).to.have.property('title');",
+                  "        pm.expect(course).to.have.property('teacher');",
+                  "        pm.expect(course).to.have.property('priceRange');",
+                  "        pm.expect(course).to.have.property('mainCategory');",
+                  "        pm.expect(course).to.have.property('rating');",
+                  "        pm.expect(course).to.have.property('city');",
+                  "    }",
+                  "});",
+                  "",
+                  "console.log('✅ 推薦課程取得成功');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/home/recommended-courses?limit=6",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "home",
+                "recommended-courses"
+              ],
+              "query": [
+                {
+                  "key": "cityId",
+                  "value": "1",
+                  "description": "縣市 ID（選填，用於優先顯示該地區課程）",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "6",
+                  "description": "返回數量（預設 6，最小 1，最大 20）"
+                }
+              ]
+            },
+            "description": "取得首頁推薦課程列表，依據地區匹配、評分、可預約性、完整度排序。\n\n**業務邏輯**：\n- 僅顯示已發布課程且教師帳號啟用中\n- 可依縣市 ID 優先顯示該地區課程（選填）\n- 排序優先權（由高到低）：\n  1. 地區匹配優先（如有 cityId，該地區課程排前面）\n  2. 評分加權：(平均評分 × 0.7) + (評論數量 × 0.3 / 100)\n  3. 可預約性：教師有設定 TeacherAvailableSlot\n  4. 課程完整度：有 coverImage、description、price\n- 多樣性控制：同一教師最多顯示 1 堂課\n\n**公開路由**：不需要認證"
+          },
+          "response": [
+            {
+              "name": "成功回應",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/home/recommended-courses?limit=6",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "home",
+                    "recommended-courses"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "6"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"status\": \"success\",\n    \"message\": \"成功取得推薦課程\",\n    \"data\": {\n        \"courses\": [\n            {\n                \"courseId\": 15,\n                \"title\": \"吉他初學者必修課\",\n                \"description\": \"本課程專為吉他初學者設計，從基礎指法到和弦練習，循序漸進帶你進入音樂世界...\",\n                \"coverImage\": \"https://example.com/course-cover.jpg\",\n                \"teacher\": {\n                    \"id\": 5,\n                    \"name\": \"李老師\",\n                    \"avatar\": \"https://example.com/teacher-avatar.jpg\"\n                },\n                \"priceRange\": {\n                    \"min\": 500,\n                    \"perUnit\": \"堂\"\n                },\n                \"mainCategory\": {\n                    \"id\": 1,\n                    \"name\": \"音樂\"\n                },\n                \"subCategory\": {\n                    \"id\": 3,\n                    \"name\": \"吉他\"\n                },\n                \"rating\": {\n                    \"average\": 4.5,\n                    \"count\": 120\n                },\n                \"city\": {\n                    \"id\": 0,\n                    \"name\": \"台北市\"\n                }\n            }\n        ]\n    }\n}"
+            }
+          ]
+        }
+      ],
+      "description": "首頁相關 API，包含評論摘要、短影片列表、推薦課程等公開端點"
     },
     {
       "name": "標籤管理 (Tags)",
