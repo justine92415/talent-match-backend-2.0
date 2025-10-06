@@ -11,7 +11,9 @@
  * 使用方式：
  * npm run generate-future-reservations                    # 預設未來 1 個月，每個購買記錄 5 筆
  * npm run generate-future-reservations -- --months=3      # 未來 3 個月
+ * npm run generate-future-reservations -- --weeks=2       # 未來 2 週
  * npm run generate-future-reservations -- --count=10      # 每個購買記錄 10 筆預約
+ * npm run generate-future-reservations -- --student-id=6  # 指定學生
  */
 
 import * as dotenv from 'dotenv'
@@ -64,6 +66,8 @@ interface PurchaseWithCourse {
 interface GenerateOptions {
   /** 往後幾個月的預約資料 */
   months: number
+  /** 往後幾週的預約資料（優先於 months） */
+  weeks?: number
   /** 每個購買記錄要產生的預約數量 */
   reservationsPerPurchase: number
   /** 指定學生 ID（可選） */
@@ -82,7 +86,13 @@ class FutureReservationGenerator {
    */
   async generate(options: GenerateOptions): Promise<void> {
     console.log('🚀 開始產生未來預約資料...')
-    console.log(`📅 時間範圍：未來 ${options.months} 個月`)
+    
+    if (options.weeks) {
+      console.log(`📅 時間範圍：未來 ${options.weeks} 週`)
+    } else {
+      console.log(`📅 時間範圍：未來 ${options.months} 個月`)
+    }
+    
     console.log(`📊 每個購買記錄產生 ${options.reservationsPerPurchase} 筆預約`)
     
     if (options.studentId) {
@@ -240,7 +250,8 @@ class FutureReservationGenerator {
 
     // 產生未來的預約時間（含衝突檢查）
     const futureDates = await this.generateFutureDatesWithoutConflict(
-      options.months,
+      options.weeks || options.months,
+      options.weeks ? 'weeks' : 'months',
       maxReservations,
       purchase.availableSlots,
       purchase.teacherId,
@@ -271,7 +282,7 @@ class FutureReservationGenerator {
     // 批次儲存
     await reservationRepo.save(reservations)
 
-    // 更新已使用堂數
+    // 更新已使用堂數（未來預約都是 reserved 狀態，需要佔用堂數）
     const purchaseRepo = queryRunner.manager.getRepository(UserCoursePurchase)
     await purchaseRepo.update(
       { id: purchase.purchaseId },
@@ -285,7 +296,8 @@ class FutureReservationGenerator {
    * 產生未來的日期時間（基於教師的可預約時段，含衝突檢查）
    */
   private async generateFutureDatesWithoutConflict(
-    months: number,
+    timeValue: number,
+    timeUnit: 'weeks' | 'months',
     count: number,
     availableSlots: TeacherAvailableSlot[],
     teacherId: number,
@@ -295,7 +307,13 @@ class FutureReservationGenerator {
     const startDate = new Date()
     startDate.setDate(startDate.getDate() + 1) // 從明天開始
     const endDate = new Date()
-    endDate.setMonth(endDate.getMonth() + months)
+    
+    // 根據時間單位設定結束日期
+    if (timeUnit === 'weeks') {
+      endDate.setDate(endDate.getDate() + (timeValue * 7))
+    } else {
+      endDate.setMonth(endDate.getMonth() + timeValue)
+    }
 
     const reservationRepo = queryRunner.manager.getRepository(Reservation)
     const maxAttempts = count * 15 // 最多嘗試次數，避免無限迴圈
@@ -387,6 +405,9 @@ function parseArgs(): GenerateOptions {
     switch (key) {
       case 'months':
         options.months = parseInt(value, 10)
+        break
+      case 'weeks':
+        options.weeks = parseInt(value, 10)
         break
       case 'count':
         options.reservationsPerPurchase = parseInt(value, 10)
