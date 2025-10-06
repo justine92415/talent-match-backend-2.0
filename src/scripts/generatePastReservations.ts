@@ -278,12 +278,19 @@ class PastReservationGenerator {
     // 批次儲存
     await reservationRepo.save(reservations)
 
-    // 更新已使用堂數
+    // 更新已使用堂數（只計算 completed 和 overdue 的預約，cancelled 不扣堂數）
+    const usedReservations = reservations.filter(r => 
+      r.teacher_status === ReservationStatus.COMPLETED || 
+      r.teacher_status === ReservationStatus.OVERDUE
+    )
+    
     const purchaseRepo = queryRunner.manager.getRepository(UserCoursePurchase)
     await purchaseRepo.update(
       { id: purchase.purchaseId },
-      { quantity_used: purchase.quantityUsed + reservations.length }
+      { quantity_used: purchase.quantityUsed + usedReservations.length }
     )
+
+    console.log(`  📊 扣除堂數：${usedReservations.length}/${reservations.length} 筆（取消的預約不扣堂數）`)
 
     return reservations
   }
