@@ -20,7 +20,13 @@ export class ReservationExpirationService {
    * 將過期且仍為 PENDING 狀態的預約設為已取消
    */
   async handleExpiredReservations(): Promise<{ count: number; expiredReservations: number[] }> {
+    const startTime = Date.now()
     const now = new Date()
+    
+    console.log('========================================')
+    console.log('📋 [定時任務] 教師回應過期檢查開始')
+    console.log(`⏰ 執行時間: ${now.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}`)
+    console.log('========================================')
     
     // 查找所有已過期但仍處於等待確認狀態的預約
     const expiredReservations = await this.reservationRepository.find({
@@ -31,15 +37,27 @@ export class ReservationExpirationService {
       select: ['id', 'uuid', 'student_id', 'teacher_id', 'course_id', 'response_deadline']
     })
 
+    console.log(`🔍 查詢結果: 找到 ${expiredReservations.length} 筆過期預約`)
+    
     if (expiredReservations.length === 0) {
+      console.log('✅ 沒有需要處理的過期預約')
+      console.log(`⏱️  執行時間: ${Date.now() - startTime}ms`)
+      console.log('========================================\n')
       return { count: 0, expiredReservations: [] }
     }
 
     const expiredIds: number[] = []
+    const failedIds: number[] = []
 
     // 批次更新過期預約的狀態
     for (const reservation of expiredReservations) {
       try {
+        console.log(`  ⚙️  處理預約 ID: ${reservation.id} (UUID: ${reservation.uuid})`)
+        console.log(`      - 教師 ID: ${reservation.teacher_id}`)
+        console.log(`      - 學生 ID: ${reservation.student_id}`)
+        console.log(`      - 課程 ID: ${reservation.course_id}`)
+        console.log(`      - 回應期限: ${reservation.response_deadline?.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}`)
+        
         await this.reservationRepository.update(reservation.id, {
           teacher_status: ReservationStatus.CANCELLED,
           student_status: ReservationStatus.CANCELLED,
@@ -47,10 +65,28 @@ export class ReservationExpirationService {
         })
         
         expiredIds.push(reservation.id)
+        console.log(`  ✅ 預約 ID ${reservation.id} 已標記為已取消`)
       } catch (error) {
-        console.error(`取消預約 ID ${reservation.id} 時發生錯誤:`, error)
+        failedIds.push(reservation.id)
+        const errorMessage = error instanceof Error ? error.message : '未知錯誤'
+        console.error(`  ❌ 取消預約 ID ${reservation.id} 時發生錯誤:`, errorMessage)
+        if (error instanceof Error && error.stack) {
+          console.error(`     堆疊追蹤: ${error.stack}`)
+        }
       }
     }
+
+    console.log('----------------------------------------')
+    console.log(`✅ 成功處理: ${expiredIds.length} 筆`)
+    if (expiredIds.length > 0) {
+      console.log(`   預約 ID: [${expiredIds.join(', ')}]`)
+    }
+    if (failedIds.length > 0) {
+      console.log(`❌ 處理失敗: ${failedIds.length} 筆`)
+      console.log(`   預約 ID: [${failedIds.join(', ')}]`)
+    }
+    console.log(`⏱️  總執行時間: ${Date.now() - startTime}ms`)
+    console.log('========================================\n')
 
     return { 
       count: expiredIds.length, 
@@ -63,7 +99,13 @@ export class ReservationExpirationService {
    * 課程結束後立即執行
    */
   async markReservationsOverdue(): Promise<{ count: number; overdueReservations: number[] }> {
+    const startTime = Date.now()
     const now = new Date()
+    
+    console.log('========================================')
+    console.log('📋 [定時任務] 課程結束檢查開始')
+    console.log(`⏰ 執行時間: ${now.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}`)
+    console.log('========================================')
     
     // 查找所有課程時間已過但狀態仍為 RESERVED 的預約
     const reservationsToMark = await this.reservationRepository.find({
@@ -75,25 +117,56 @@ export class ReservationExpirationService {
       select: ['id', 'reserve_time']
     })
 
+    console.log(`🔍 查詢結果: 找到 ${reservationsToMark.length} 筆已結束但未標記的預約`)
+    
     if (reservationsToMark.length === 0) {
+      console.log('✅ 沒有需要標記為過期的預約')
+      console.log(`⏱️  執行時間: ${Date.now() - startTime}ms`)
+      console.log('========================================\n')
       return { count: 0, overdueReservations: [] }
     }
 
     const overdueIds: number[] = []
+    const failedIds: number[] = []
 
     // 批次更新為 OVERDUE 狀態
     for (const reservation of reservationsToMark) {
       try {
+        const reserveTime = reservation.reserve_time.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
+        const timePassed = Math.floor((now.getTime() - reservation.reserve_time.getTime()) / (1000 * 60))
+        
+        console.log(`  ⚙️  處理預約 ID: ${reservation.id}`)
+        console.log(`      - 預約時間: ${reserveTime}`)
+        console.log(`      - 已過時間: ${timePassed} 分鐘`)
+        
         await this.reservationRepository.update(reservation.id, {
           teacher_status: ReservationStatus.OVERDUE,
           student_status: ReservationStatus.OVERDUE
         })
         
         overdueIds.push(reservation.id)
+        console.log(`  ✅ 預約 ID ${reservation.id} 已標記為 OVERDUE`)
       } catch (error) {
-        console.error(`標記預約 ID ${reservation.id} 為過期時發生錯誤:`, error)
+        failedIds.push(reservation.id)
+        const errorMessage = error instanceof Error ? error.message : '未知錯誤'
+        console.error(`  ❌ 標記預約 ID ${reservation.id} 為過期時發生錯誤:`, errorMessage)
+        if (error instanceof Error && error.stack) {
+          console.error(`     堆疊追蹤: ${error.stack}`)
+        }
       }
     }
+
+    console.log('----------------------------------------')
+    console.log(`✅ 成功標記: ${overdueIds.length} 筆`)
+    if (overdueIds.length > 0) {
+      console.log(`   預約 ID: [${overdueIds.join(', ')}]`)
+    }
+    if (failedIds.length > 0) {
+      console.log(`❌ 標記失敗: ${failedIds.length} 筆`)
+      console.log(`   預約 ID: [${failedIds.join(', ')}]`)
+    }
+    console.log(`⏱️  總執行時間: ${Date.now() - startTime}ms`)
+    console.log('========================================\n')
 
     return { 
       count: overdueIds.length, 
@@ -109,7 +182,15 @@ export class ReservationExpirationService {
    * 2. 一方已完成，另一方還是 OVERDUE
    */
   async autoCompleteOverdueReservations(): Promise<{ count: number; completedReservations: number[] }> {
+    const startTime = Date.now()
+    const now = new Date()
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    
+    console.log('========================================')
+    console.log('📋 [定時任務] 自動完成過期預約開始')
+    console.log(`⏰ 執行時間: ${now.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}`)
+    console.log(`⏰ 檢查範圍: 24小時前 (${twentyFourHoursAgo.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}) 之前的預約`)
+    console.log('========================================')
     
     // 使用更簡單的查詢方式避免enum比較問題
     const overdueReservations = await this.reservationRepository.find({
@@ -136,25 +217,58 @@ export class ReservationExpirationService {
       select: ['id', 'reserve_time', 'teacher_status', 'student_status']
     })
 
+    console.log(`🔍 查詢結果: 找到 ${overdueReservations.length} 筆需要自動完成的預約`)
+    
     if (overdueReservations.length === 0) {
+      console.log('✅ 沒有需要自動完成的預約')
+      console.log(`⏱️  執行時間: ${Date.now() - startTime}ms`)
+      console.log('========================================\n')
       return { count: 0, completedReservations: [] }
     }
 
     const completedIds: number[] = []
+    const failedIds: number[] = []
 
     // 批次更新為 COMPLETED 狀態
     for (const reservation of overdueReservations) {
       try {
+        const reserveTime = reservation.reserve_time.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
+        const hoursPassed = Math.floor((now.getTime() - reservation.reserve_time.getTime()) / (1000 * 60 * 60))
+        
+        console.log(`  ⚙️  處理預約 ID: ${reservation.id}`)
+        console.log(`      - 預約時間: ${reserveTime}`)
+        console.log(`      - 已過時間: ${hoursPassed} 小時`)
+        console.log(`      - 教師狀態: ${reservation.teacher_status}`)
+        console.log(`      - 學生狀態: ${reservation.student_status}`)
+        
         await this.reservationRepository.update(reservation.id, {
           teacher_status: ReservationStatus.COMPLETED,
           student_status: ReservationStatus.COMPLETED
         })
         
         completedIds.push(reservation.id)
+        console.log(`  ✅ 預約 ID ${reservation.id} 已自動標記為 COMPLETED`)
       } catch (error) {
-        console.error(`自動完成預約 ID ${reservation.id} 時發生錯誤:`, error)
+        failedIds.push(reservation.id)
+        const errorMessage = error instanceof Error ? error.message : '未知錯誤'
+        console.error(`  ❌ 自動完成預約 ID ${reservation.id} 時發生錯誤:`, errorMessage)
+        if (error instanceof Error && error.stack) {
+          console.error(`     堆疊追蹤: ${error.stack}`)
+        }
       }
     }
+
+    console.log('----------------------------------------')
+    console.log(`✅ 成功完成: ${completedIds.length} 筆`)
+    if (completedIds.length > 0) {
+      console.log(`   預約 ID: [${completedIds.join(', ')}]`)
+    }
+    if (failedIds.length > 0) {
+      console.log(`❌ 完成失敗: ${failedIds.length} 筆`)
+      console.log(`   預約 ID: [${failedIds.join(', ')}]`)
+    }
+    console.log(`⏱️  總執行時間: ${Date.now() - startTime}ms`)
+    console.log('========================================\n')
 
     return { 
       count: completedIds.length, 

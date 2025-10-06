@@ -6,10 +6,10 @@
 
 export class TimeUtils {
   /**
-   * 將日期和時間轉換為 UTC 時間戳
+   * 將日期和時間轉換為 Date 物件（不做時區轉換，直接使用輸入值）
    * @param date 日期字串 (YYYY-MM-DD)
    * @param time 時間字串 (HH:mm 或 HH:mm:ss)
-   * @returns UTC Date 物件
+   * @returns Date 物件（使用伺服器本地時區，與 created_at/updated_at 一致）
    */
   static dateTimeToUTC(date: string, time: string): Date {
     // 確保時間格式包含秒數
@@ -17,8 +17,10 @@ export class TimeUtils {
       ? `${time}:00` 
       : time
     
-    const utcString = `${date}T${normalizedTime}.000Z`
-    return new Date(utcString)
+    // 🌏 直接使用輸入的日期時間，不做 UTC 轉換
+    // 因為資料庫使用 timestamp（不帶時區），與 created_at/updated_at 處理方式一致
+    const localString = `${date}T${normalizedTime}`
+    return new Date(localString)
   }
 
   /**
