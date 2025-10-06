@@ -81,8 +81,8 @@ server.listen(port, async () => {
       timezone: 'Asia/Taipei'
     })
 
-    // 啟動課程結束檢查排程任務（每1分鐘執行一次 - 測試模式 OVERDUE）
-    cron.schedule('* * * * *', async () => {
+    // 啟動課程結束檢查排程任務（每1小時執行一次）
+    cron.schedule('0 * * * *', async () => {
       const taskStartTime = Date.now()
       const taskName = '課程結束檢查'
       
@@ -155,7 +155,7 @@ server.listen(port, async () => {
     
     logger.info('預約管理排程已啟動：')
     logger.info('- 教師回應過期檢查：每10分鐘')
-    logger.info('- 課程結束檢查：每1分鐘 ⚠️ (測試模式)')
+    logger.info('- 課程結束檢查：每1小時')
     logger.info('- 自動完成：每24小時（凌晨00:00）')
     logger.info(`伺服器運作中. port: ${port}`)
   } catch (error: unknown) {
