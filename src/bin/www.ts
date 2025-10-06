@@ -45,8 +45,8 @@ server.listen(port, async () => {
     await dataSource.initialize()
     logger.info('資料庫連線成功')
     
-    // 啟動預約過期檢查排程任務（每1分鐘執行一次 - 測試模式）
-    cron.schedule('* * * * *', async () => {
+    // 啟動預約過期檢查排程任務（每10分鐘執行一次）
+    cron.schedule('*/10 * * * *', async () => {
       const taskStartTime = Date.now()
       const taskName = '教師回應過期檢查'
       
@@ -81,7 +81,7 @@ server.listen(port, async () => {
       timezone: 'Asia/Taipei'
     })
 
-    // 啟動課程結束檢查排程任務（每1分鐘執行一次 - 測試模式）
+    // 啟動課程結束檢查排程任務（每1分鐘執行一次 - 測試模式 OVERDUE）
     cron.schedule('* * * * *', async () => {
       const taskStartTime = Date.now()
       const taskName = '課程結束檢查'
@@ -117,8 +117,8 @@ server.listen(port, async () => {
       timezone: 'Asia/Taipei'
     })
 
-    // 啟動自動完成排程任務（每1分鐘執行一次 - 測試模式）
-    cron.schedule('* * * * *', async () => {
+    // 啟動自動完成排程任務（每24小時執行一次）
+    cron.schedule('0 0 * * *', async () => {
       const taskStartTime = Date.now()
       const taskName = '自動完成過期預約'
       
@@ -153,11 +153,10 @@ server.listen(port, async () => {
       timezone: 'Asia/Taipei'
     })
     
-    logger.info('預約管理排程已啟動（測試模式）：')
-    logger.info('- 教師回應過期檢查：每1分鐘 ⚠️')
-    logger.info('- 課程結束檢查：每1分鐘 ⚠️')
-    logger.info('- 自動完成：每1分鐘 ⚠️')
-    logger.warn('⚠️  注意：定時任務目前為測試模式，請在正式環境改回正常頻率！')
+    logger.info('預約管理排程已啟動：')
+    logger.info('- 教師回應過期檢查：每10分鐘')
+    logger.info('- 課程結束檢查：每1分鐘 ⚠️ (測試模式)')
+    logger.info('- 自動完成：每24小時（凌晨00:00）')
     logger.info(`伺服器運作中. port: ${port}`)
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : '未知錯誤'
