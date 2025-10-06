@@ -17,8 +17,12 @@ import tagRoutes from '@routes/tagRoutes'
 import paymentRoutes from '@routes/paymentRoutes'
 import { fileUploadRoutes } from './fileUploadRoutes'
 import { uploadRoutes } from './uploadRoutes'
+import homeRoutes from '@routes/homeRoutes'
 
 const router = Router()
+
+// 掛載首頁相關路由
+router.use('/home', homeRoutes)
 
 // 掛載認證相關路由
 router.use('/auth', authRoutes)
