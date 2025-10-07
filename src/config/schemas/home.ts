@@ -147,6 +147,11 @@ export const homeSchemas = {
         description: '影片標題',
         example: '基礎吉他入門教學'
       },
+      description: {
+        type: 'string',
+        description: '影片描述/介紹',
+        example: '本影片將介紹基礎吉他演奏技巧，適合初學者學習'
+      },
       thumbnailUrl: {
         type: 'string',
         description: '縮圖 URL（目前使用影片 URL）',

@@ -227,6 +227,7 @@ export class HomeService {
       .select([
         'video.id AS video_id',
         'video.name AS video_name',
+        'video.intro AS video_intro',
         'video.url AS video_url',
         'video.created_at AS video_created_at',
         'course.id AS course_id',
@@ -270,6 +271,7 @@ export class HomeService {
       videoId: parseInt(row.video_id),
       courseId: parseInt(row.course_id),
       title: row.video_name || '',
+      description: row.video_intro || '',
       thumbnailUrl: row.video_url || '', // 注意：Video 表目前沒有獨立的 thumbnail 欄位，使用 url 作為替代
       videoUrl: row.video_url || '',
       duration: 0, // 注意：Video 表目前沒有 duration 欄位，預設為 0
