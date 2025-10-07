@@ -135,9 +135,9 @@ router.get('/short-videos', createSchemasMiddleware({ query: shortVideosQuerySch
  *       
  *       **業務邏輯**：
  *       - 僅顯示已發布課程且教師帳號啟用中
- *       - 可依縣市 ID 優先顯示該地區課程（選填）
+ *       - 可依城市名稱優先顯示該地區課程（選填）
  *       - 排序優先權（由高到低）：
- *         1. 地區匹配優先（如有 cityId，該地區課程排前面）
+ *         1. 地區匹配優先（如有 city，該地區課程排前面）
  *         2. 評分加權：(平均評分 × 0.7) + (評論數量 × 0.3 / 100)
  *         3. 可預約性：教師有設定 TeacherAvailableSlot
  *         4. 課程完整度：有 coverImage、description、price
@@ -146,11 +146,10 @@ router.get('/short-videos', createSchemasMiddleware({ query: shortVideosQuerySch
  *       **公開路由**：不需要認證
  *     parameters:
  *       - in: query
- *         name: cityId
+ *         name: city
  *         schema:
- *           type: integer
- *           minimum: 1
- *         description: 縣市 ID，用於優先顯示該地區課程（選填）
+ *           type: string
+ *         description: 城市名稱，用於優先顯示該地區課程（選填，例如：臺北市、新北市）
  *         required: false
  *       - in: query
  *         name: limit

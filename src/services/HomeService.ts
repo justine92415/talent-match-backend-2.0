@@ -227,6 +227,7 @@ export class HomeService {
       .select([
         'video.id AS video_id',
         'video.name AS video_name',
+        'video.intro AS video_intro',
         'video.url AS video_url',
         'video.created_at AS video_created_at',
         'course.id AS course_id',
@@ -270,6 +271,7 @@ export class HomeService {
       videoId: parseInt(row.video_id),
       courseId: parseInt(row.course_id),
       title: row.video_name || '',
+      description: row.video_intro || '',
       thumbnailUrl: row.video_url || '', // 注意：Video 表目前沒有獨立的 thumbnail 欄位，使用 url 作為替代
       videoUrl: row.video_url || '',
       duration: 0, // 注意：Video 表目前沒有 duration 欄位，預設為 0
@@ -294,7 +296,7 @@ export class HomeService {
    * 取得推薦課程
    *
    * 排序邏輯（優先權由高到低）：
-   * 1. 地區匹配優先（如果有 cityId，該地區課程排前面）
+   * 1. 地區匹配優先（如果有 city，該地區課程排前面）
    * 2. 評分加權：(平均評分 × 0.7) + (評論數量 × 0.3 / 100)
    * 3. 可預約性：教師有設定 TeacherAvailableSlot
    * 4. 課程完整度：有 coverImage, description, price
@@ -302,18 +304,11 @@ export class HomeService {
    * 多樣性控制：同一教師最多 1 堂課
    * 過濾條件：課程狀態為已發布、教師帳號為啟用狀態
    *
-   * @param cityId - 可選的縣市 ID 篩選
+   * @param city - 可選的城市名稱篩選（如 "臺北市"）
    * @param limit - 返回數量，預設 6
    * @returns 推薦課程列表
    */
-  async getRecommendedCourses(cityId?: number, limit: number = 6): Promise<RecommendedCoursesResponse> {
-    // 如果有 cityId，先取得對應的城市名稱
-    let cityName: string | null = null
-    if (cityId) {
-      const cityRecord = await this.cityRepository.findOne({ where: { id: cityId } })
-      cityName = cityRecord?.city_name || null
-    }
-
+  async getRecommendedCourses(city?: string, limit: number = 6): Promise<RecommendedCoursesResponse> {
     // 使用 TypeORM QueryBuilder 查詢課程
     // 一次性 JOIN 所有需要的關聯資料，避免 N+1 查詢
     const queryBuilder = this.courseRepository
@@ -357,8 +352,8 @@ export class HomeService {
       .addGroupBy('subCategory.id')
 
     // 如果有指定城市，加入城市篩選條件
-    if (cityName) {
-      queryBuilder.andWhere('course.city = :cityName', { cityName })
+    if (city) {
+      queryBuilder.andWhere('course.city = :city', { city })
     }
 
     // 查詢 limit * 3 筆資料，以便後續在應用層過濾（同一教師最多 1 堂課）
@@ -374,7 +369,7 @@ export class HomeService {
 
       // 計算排序分數
       // 1. 地區匹配分數
-      const cityMatchScore = cityName && row.course_city === cityName ? 1000 : 0
+      const cityMatchScore = city && row.course_city === city ? 1000 : 0
 
       // 2. 評分加權分數：(平均評分 × 0.7) + (評論數量 × 0.3 / 100)
       const ratingScore = ((row.course_rate || 0) * 0.7 + (row.course_review_count || 0) * 0.3 / 100) * 10
