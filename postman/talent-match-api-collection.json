@@ -434,7 +434,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n    \"status\": \"success\",\n    \"message\": \"成功取得短影音列表\",\n    \"data\": {\n        \"videos\": [\n            {\n                \"videoId\": 1,\n                \"courseId\": 10,\n                \"title\": \"基礎吉他入門教學\",\n                \"thumbnailUrl\": \"https://example.com/video.mp4\",\n                \"videoUrl\": \"https://example.com/video.mp4\",\n                \"duration\": 0,\n                \"mainCategory\": {\n                    \"id\": 1,\n                    \"name\": \"音樂\"\n                },\n                \"course\": {\n                    \"id\": 10,\n                    \"title\": \"吉他初學者必修課\"\n                },\n                \"teacher\": {\n                    \"id\": 5,\n                    \"name\": \"李老師\"\n                }\n            }\n        ]\n    }\n}"
+              "body": "{\n    \"status\": \"success\",\n    \"message\": \"成功取得短影音列表\",\n    \"data\": {\n        \"videos\": [\n            {\n                \"videoId\": 1,\n                \"courseId\": 10,\n                \"title\": \"基礎吉他入門教學\",\n                \"description\": \"本影片將介紹基礎吉他演奏技巧，適合初學者學習\",\n                \"thumbnailUrl\": \"https://example.com/video.mp4\",\n                \"videoUrl\": \"https://example.com/video.mp4\",\n                \"duration\": 0,\n                \"mainCategory\": {\n                    \"id\": 1,\n                    \"name\": \"音樂\"\n                },\n                \"course\": {\n                    \"id\": 10,\n                    \"title\": \"吉他初學者必修課\"\n                },\n                \"teacher\": {\n                    \"id\": 5,\n                    \"name\": \"李老師\"\n                }\n            }\n        ]\n    }\n}"
             }
           ]
         },
@@ -495,9 +495,9 @@
               ],
               "query": [
                 {
-                  "key": "cityId",
-                  "value": "1",
-                  "description": "縣市 ID（選填，用於優先顯示該地區課程）",
+                  "key": "city",
+                  "value": "臺北市",
+                  "description": "城市名稱（選填，用於優先顯示該地區課程，例如：臺北市、新北市）",
                   "disabled": true
                 },
                 {
@@ -507,7 +507,7 @@
                 }
               ]
             },
-            "description": "取得首頁推薦課程列表，依據地區匹配、評分、可預約性、完整度排序。\n\n**業務邏輯**：\n- 僅顯示已發布課程且教師帳號啟用中\n- 可依縣市 ID 優先顯示該地區課程（選填）\n- 排序優先權（由高到低）：\n  1. 地區匹配優先（如有 cityId，該地區課程排前面）\n  2. 評分加權：(平均評分 × 0.7) + (評論數量 × 0.3 / 100)\n  3. 可預約性：教師有設定 TeacherAvailableSlot\n  4. 課程完整度：有 coverImage、description、price\n- 多樣性控制：同一教師最多顯示 1 堂課\n\n**公開路由**：不需要認證"
+            "description": "取得首頁推薦課程列表，依據地區匹配、評分、可預約性、完整度排序。\n\n**業務邏輯**：\n- 僅顯示已發布課程且教師帳號啟用中\n- 可依城市名稱優先顯示該地區課程（選填）\n- 排序優先權（由高到低）：\n  1. 地區匹配優先（如有 city，該地區課程排前面）\n  2. 評分加權：(平均評分 × 0.7) + (評論數量 × 0.3 / 100)\n  3. 可預約性：教師有設定 TeacherAvailableSlot\n  4. 課程完整度：有 coverImage、description、price\n- 多樣性控制：同一教師最多顯示 1 堂課\n\n**公開路由**：不需要認證"
           },
           "response": [
             {

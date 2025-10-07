@@ -9,10 +9,8 @@ import { MESSAGES } from '@constants/Message'
  * 推薦課程查詢參數驗證 Schema
  */
 export const recommendedCoursesQuerySchema = Joi.object({
-  cityId: Joi.number().integer().positive().optional().messages({
-    'number.base': MESSAGES.VALIDATION.CITY_INVALID,
-    'number.integer': MESSAGES.VALIDATION.CITY_INVALID,
-    'number.positive': MESSAGES.VALIDATION.CITY_INVALID
+  city: Joi.string().optional().messages({
+    'string.base': '城市名稱必須是字串'
   }),
 
   limit: Joi.number().integer().min(1).max(50).default(6).messages({
