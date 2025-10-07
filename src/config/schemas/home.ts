@@ -260,11 +260,10 @@ export const homeSchemas = {
   RecommendedCoursesQueryParams: {
     type: 'object',
     properties: {
-      cityId: {
-        type: 'integer',
-        minimum: 1,
-        description: '縣市 ID（選填，用於優先顯示該地區課程）',
-        example: 1
+      city: {
+        type: 'string',
+        description: '城市名稱（選填，用於優先顯示該地區課程）',
+        example: '臺北市'
       },
       limit: {
         type: 'integer',

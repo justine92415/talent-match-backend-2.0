@@ -48,10 +48,13 @@ export class HomeController {
    * @description 公開路由，不需要認證
    */
   getRecommendedCourses = handleErrorAsync(async (req: Request, res: Response) => {
-    const { cityId, limit } = req.query
+    const { city, limit } = req.query
 
     // 呼叫服務層
-    const result = await this.homeService.getRecommendedCourses(cityId ? Number(cityId) : undefined, limit ? Number(limit) : 6)
+    const result = await this.homeService.getRecommendedCourses(
+      city && typeof city === 'string' && city.trim() ? city.trim() : undefined,
+      limit ? Number(limit) : 6
+    )
 
     // 200 OK 狀態回傳成功訊息
     res.status(200).json(handleSuccess(result, '成功取得推薦課程'))
