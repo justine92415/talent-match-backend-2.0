@@ -41,7 +41,6 @@
 
 本專案是一個展示 **GitHub Copilot** 與 **AI 驅動開發（AIDD）** 的實踐案例：
 
-- 💡 **模擬 SDD 流程**：採用規格驅動開發（Specification-Driven Development）方法論
 - 📋 **完整需求文件**：撰寫詳細的 User Story 規格（`specs/user_story_*.md`）
 - 📝 **開發指南文件**：建立 Instruction 文件（`.github/instructions/*.md`）指導 AI 輔助開發
 - 🎯 **Prompt Engineering**：透過精心設計的 Prompt 文件，提升 AI 程式碼生成品質
@@ -353,4 +352,4 @@ src/tests/
 
 ---
 
-**最後更新時間：2025年10月7日**
+**最後更新時間：2025年10月8日**
